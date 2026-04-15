@@ -2632,8 +2632,204 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 
+
+<style id="ampm-auth-styles">
+  body:not(.auth-ok) .wrap{display:none !important;}
+  #ampmAuthGate{
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(circle at top right, rgba(245,131,32,.28), transparent 34%),
+      radial-gradient(circle at top left, rgba(0,94,167,.24), transparent 30%),
+      linear-gradient(180deg, #07101d 0%, #0b1220 48%, #0f172a 100%);
+  }
+  body.auth-ok #ampmAuthGate{display:none !important;}
+  .ampmAuthCard{
+    width:min(460px, 100%);
+    background:rgba(255,255,255,.98);
+    border:1px solid rgba(226,232,240,.95);
+    border-radius:24px;
+    box-shadow:0 30px 80px rgba(2,6,23,.35);
+    overflow:hidden;
+  }
+  .ampmAuthHero{
+    padding:22px 24px 18px;
+    background:linear-gradient(135deg, rgba(0,94,167,.10), rgba(245,131,32,.14));
+    border-bottom:1px solid rgba(226,232,240,.9);
+  }
+  .ampmAuthEyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    font-size:11px;
+    font-weight:900;
+    color:#11284A;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .ampmAuthTitle{
+    margin:14px 0 6px;
+    font-size:28px;
+    line-height:1.05;
+    font-weight:1000;
+    color:#11284A;
+  }
+  .ampmAuthSub{
+    margin:0;
+    color:#52657f;
+    font-size:13px;
+    line-height:1.45;
+    font-weight:700;
+  }
+  .ampmAuthBody{
+    padding:22px 24px 24px;
+  }
+  .ampmAuthField{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .ampmAuthField label{
+    margin:0;
+    font-size:12px;
+    font-weight:900;
+    color:#516781;
+    letter-spacing:.02em;
+  }
+  .ampmAuthField input{
+    width:100%;
+    border:1px solid #d7e2ee;
+    background:#fff;
+    border-radius:14px;
+    padding:13px 14px;
+    font-size:15px;
+    color:#0f172a;
+    outline:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  }
+  .ampmAuthField input:focus{
+    border-color:rgba(0,94,167,.45);
+    box-shadow:0 0 0 4px rgba(0,94,167,.12);
+  }
+  .ampmAuthActions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+  .ampmAuthBtn{
+    appearance:none;
+    border:0;
+    border-radius:14px;
+    padding:13px 16px;
+    font-size:14px;
+    font-weight:1000;
+    cursor:pointer;
+    background:linear-gradient(135deg, #F58320, #E67425);
+    color:#fff;
+    box-shadow:0 14px 30px rgba(245,131,32,.28);
+    min-width:180px;
+  }
+  .ampmAuthBtn:hover{filter:brightness(.98);}
+  .ampmAuthMsg{
+    min-height:20px;
+    margin-top:14px;
+    font-size:12px;
+    font-weight:900;
+    color:#B42318;
+  }
+  .ampmAuthMsg.ok{color:#067647;}
+  .ampmAuthFoot{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed rgba(148,163,184,.35);
+    color:#64748b;
+    font-size:11.5px;
+    line-height:1.45;
+    font-weight:700;
+  }
+  #ampmLogoutBtn{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:100000;
+    display:none;
+    align-items:center;
+    gap:8px;
+    width:auto !important;
+    min-width:0;
+    max-width:none;
+    border:1px solid rgba(15,23,42,.12);
+    background:rgba(255,255,255,.96);
+    color:#11284A;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:0 12px 24px rgba(2,6,23,.14);
+    backdrop-filter:blur(8px);
+  }
+  body.auth-ok #ampmLogoutBtn{display:inline-flex;}
+  #ampmLogoutBtn small{
+    font-size:11px;
+    font-weight:900;
+    color:#64748b;
+  }
+  @media (max-width: 640px){
+    #ampmAuthGate{padding:14px;}
+    .ampmAuthCard{border-radius:18px;}
+    .ampmAuthHero,.ampmAuthBody{padding-left:16px;padding-right:16px;}
+    .ampmAuthTitle{font-size:24px;}
+    .ampmAuthBtn{width:100%;}
+    #ampmLogoutBtn{top:10px;right:10px;padding:9px 12px;width:auto !important;}
+  }
+</style>
+
 </head>
+
 <body>
+<div id="ampmAuthGate" aria-hidden="false">
+  <div class="ampmAuthCard">
+    <div class="ampmAuthHero">
+      <span class="ampmAuthEyebrow">AMPM · acceso al reporte</span>
+      <h2 class="ampmAuthTitle">Ingresar al dashboard</h2>
+      <p class="ampmAuthSub">Escribe tu usuario y contraseña para habilitar el HTML. La sesión queda activa mientras esta pestaña siga abierta.</p>
+    </div>
+    <div class="ampmAuthBody">
+      <form id="ampmAuthForm" autocomplete="off">
+        <div class="ampmAuthField">
+          <label for="ampmAuthUser">Usuario</label>
+          <input id="ampmAuthUser" name="username" type="text" placeholder="Ingresa tu usuario" />
+        </div>
+        <div class="ampmAuthField">
+          <label for="ampmAuthPass">Contraseña</label>
+          <input id="ampmAuthPass" name="password" type="password" placeholder="Ingresa tu contraseña" />
+        </div>
+        <div class="ampmAuthActions">
+          <button class="ampmAuthBtn" id="ampmAuthSubmit" type="submit">Entrar al reporte</button>
+        </div>
+        <div class="ampmAuthMsg" id="ampmAuthMsg"></div>
+        <div class="ampmAuthFoot">
+          Esta capa es útil como control de acceso local dentro del HTML. Si luego quieres seguridad real a nivel servidor o dominio, se tendría que montar fuera del archivo cliente.
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<button id="ampmLogoutBtn" type="button">Cerrar sesión <small id="ampmLogoutUser">—</small></button>
+
 <div class="wrap">
 <div class="topbar">
 <div class="brand">
@@ -53215,5 +53411,155 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-auth-script">
+(function(){
+  var AUTH_KEY = 'ampm_report_auth_v1';
+  var USERS = {
+    admin: { password: 'Gero240895$', label: 'Administrador' },
+    mercadeo: { password: 'AMPM2026**', label: 'Mercadeo' },
+    AMPM01: { password: 'AMPM2026**', label: 'Gerente AMPM01' },
+    AMPM02: { password: 'AMPM2026**', label: 'Gerente AMPM02' },
+    AMPM03: { password: 'AMPM2026**', label: 'Gerente AMPM03' }
+  };
+
+  function resolveUser(raw){
+    var v = String(raw || '').trim();
+    if(!v) return null;
+    var upper = v.toUpperCase();
+    if(upper === 'ADMIN') return 'admin';
+    if(Object.prototype.hasOwnProperty.call(USERS, upper)) return upper;
+    if(Object.prototype.hasOwnProperty.call(USERS, v)) return v;
+    return null;
+  }
+
+  function readSession(){
+    try{
+      var raw = sessionStorage.getItem(AUTH_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(_e){
+      return null;
+    }
+  }
+
+  function saveSession(user){
+    try{
+      sessionStorage.setItem(AUTH_KEY, JSON.stringify({
+        user: user,
+        at: Date.now()
+      }));
+    }catch(_e){}
+  }
+
+  function clearSession(){
+    try{ sessionStorage.removeItem(AUTH_KEY); }catch(_e){}
+  }
+
+  function getActiveUser(){
+    var session = readSession();
+    if(!session || !session.user) return null;
+    var user = resolveUser(session.user);
+    return user && USERS[user] ? user : null;
+  }
+
+  function setMessage(text, ok){
+    var el = document.getElementById('ampmAuthMsg');
+    if(!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('ok', !!ok);
+  }
+
+  function applyState(){
+    var user = getActiveUser();
+    var ok = !!(user && USERS[user]);
+    document.body.classList.toggle('auth-ok', ok);
+    document.body.classList.toggle('auth-locked', !ok);
+
+    var logoutUser = document.getElementById('ampmLogoutUser');
+    if(logoutUser){
+      logoutUser.textContent = ok ? String(user) : '—';
+    }
+
+    var gate = document.getElementById('ampmAuthGate');
+    if(gate){
+      gate.setAttribute('aria-hidden', ok ? 'true' : 'false');
+    }
+
+    if(ok){
+      setMessage('');
+      setTimeout(function(){
+        try{ window.dispatchEvent(new Event('resize')); }catch(_e){}
+      }, 150);
+      setTimeout(function(){
+        try{ window.dispatchEvent(new Event('resize')); }catch(_e){}
+      }, 420);
+    }else{
+      var userInput = document.getElementById('ampmAuthUser');
+      var passInput = document.getElementById('ampmAuthPass');
+      if(userInput) userInput.value = '';
+      if(passInput) passInput.value = '';
+      setTimeout(function(){
+        try{
+          if(userInput) userInput.focus();
+        }catch(_e){}
+      }, 40);
+    }
+  }
+
+  function onSubmit(ev){
+    ev.preventDefault();
+    var userInput = document.getElementById('ampmAuthUser');
+    var passInput = document.getElementById('ampmAuthPass');
+    var rawUser = userInput ? userInput.value : '';
+    var rawPass = passInput ? passInput.value : '';
+    var user = resolveUser(rawUser);
+
+    if(!user){
+      setMessage('Usuario no reconocido.');
+      if(userInput) userInput.focus();
+      return;
+    }
+
+    if(String(rawPass) !== String(USERS[user].password)){
+      setMessage('Contraseña incorrecta.');
+      if(passInput){
+        passInput.focus();
+        passInput.select();
+      }
+      return;
+    }
+
+    saveSession(user);
+    setMessage('Acceso concedido.', true);
+    applyState();
+  }
+
+  function onLogout(){
+    clearSession();
+    applyState();
+  }
+
+  function init(){
+    var form = document.getElementById('ampmAuthForm');
+    var logoutBtn = document.getElementById('ampmLogoutBtn');
+    if(form && !form.__ampmAuthBound){
+      form.__ampmAuthBound = true;
+      form.addEventListener('submit', onSubmit);
+    }
+    if(logoutBtn && !logoutBtn.__ampmAuthBound){
+      logoutBtn.__ampmAuthBound = true;
+      logoutBtn.addEventListener('click', onLogout);
+    }
+    applyState();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init, { once:true });
+  }else{
+    init();
+  }
+})();
+</script>
 </body>
+
 </html>
