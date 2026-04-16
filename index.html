@@ -3291,7 +3291,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
 <h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-<p class="sub" id="reportSub">Subí <b>Cubo_Unificado_AMPM.xlsx</b> o cargalo desde una ruta publicada en GitHub Pages, por ejemplo <b>./Cubo_Unificado_AMPM.xlsx</b>. El Excel transaccional normal ya no se usa en este HTML.</p>
+<p class="sub" id="reportSub">Usá el cubo publicado <b>./Cubo_Semanal_Compactado.xlsx</b>. Este HTML ya no usa carga manual de Excel ni el archivo transaccional normal.</p>
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
 <span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
@@ -3305,12 +3305,12 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="controlSectionHead">
 <div>
 <h3 class="controlSectionTitle">Base del reporte</h3>
-<p class="controlSectionSub">Primero cargá el cubo compacto .xlsx o una ruta publicada del mismo archivo. En GitHub Pages puedes usar <b>./Cubo_Unificado_AMPM.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+<p class="controlSectionSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
 </div>
 <span class="controlSectionAccent">Carga + vista</span>
 </div>
 <div class="grid gridHero">
-<div class="fieldCard primary">
+<div class="fieldCard primary" style="display:none !important">
 <label>1) Cargar cubo compacto (.xlsx)</label>
 <input accept=".xlsx,.json" id="file" type="file"/>
 <div class="fieldHint"><strong>Recomendado:</strong> usar el cubo compacto <b>.xlsx</b>. Pesa menos porque ya viene comprimido.</div>
@@ -3321,10 +3321,10 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </div>
 </div>
 <div class="fieldCard primary">
-<label>1b) Cargar cubo publicado</label>
-<input class="textInput mini" id="remoteDataUrl" type="text" placeholder="Ejemplo: ./Cubo_Unificado_AMPM.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px;"/>
+<label>1) Cargar cubo publicado</label>
+<input class="textInput mini" id="remoteDataUrl" type="text" value="" placeholder="" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px;"/>
 <div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
-<div class="fieldHint">Usá preferiblemente el cubo compacto <strong>.xlsx</strong>. Si el link es de Google Drive, debe estar público.</div>
+<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta.</div>
 </div>
 <div class="fieldCard primary">
 <label>0) Vista del dashboard</label>
@@ -6108,7 +6108,7 @@ function applyUnifiedModeUI(){
       };
       const titleEl = el('reportTitle'); if(titleEl) titleEl.textContent = titleMap[mode];
       try{ document.title = titleMap[mode]; }catch(e){}
-      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Subí <b>Cubo_Unificado_AMPM.xlsx</b> o cargalo desde una ruta publicada en GitHub Pages, por ejemplo <b>./Cubo_Unificado_AMPM.xlsx</b>. El Excel transaccional normal ya no se usa en este HTML.';
+      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Usá el cubo publicado <b>./Cubo_Semanal_Compactado.xlsx</b>. Este HTML ya no usa carga manual de Excel ni el archivo transaccional normal.';
       const lCur = el('labelCurrentPeriod'); if(lCur) lCur.textContent = `2) ${getModePeriodNoun()} actual (${getCurrentPeriodFormatHint()})`;
       const lyWrap = el('lyWeekOverrideWrap'); if(lyWrap) lyWrap.style.display = isMonthlyReport() ? 'none' : '';
       const lLy = el('labelLyWeekOverride'); if(lLy) lLy.textContent = isMonthlyReport() ? '2b) Comparativo LY (oculto en mensual)' : '2b) Semana comparativa LY (opcional)';
@@ -26520,18 +26520,19 @@ renderShareTable({
     }
 
     async function handleRemoteSource(){
+      const DEFAULT_REMOTE_CUBE = './Cubo_Semanal_Compactado.xlsx';
       const input = el('remoteDataUrl');
       const rawUrl = input && input.value ? String(input.value).trim() : '';
-      if(!rawUrl){
-        alert('Escribe primero una ruta o URL válida del cubo compacto, por ejemplo ./Cubo_Unificado_AMPM.xlsx');
-        return;
+      const finalUrl = rawUrl || DEFAULT_REMOTE_CUBE;
+      if(input && !rawUrl){
+        input.value = '';
       }
-      el('filename').textContent = rawUrl;
+      el('filename').textContent = finalUrl;
       startLoadingProgress('Leyendo fuente web remota…');
       await uiYield(20);
       try{
-        const wb = await parseWorkbookFromRemoteUrl(rawUrl);
-        await loadWorkbookIntoState(wb, rawUrl);
+        const wb = await parseWorkbookFromRemoteUrl(finalUrl);
+        await loadWorkbookIntoState(wb, finalUrl);
       } catch(err){
         console.error(err);
         failLoadingProgress('Error al cargar el link');
@@ -26628,7 +26629,7 @@ renderShareTable({
 
     setSelectOptions(el('dowFilter'), [{value:'__ALL__', label:'Todos'},{value:'1', label:'Lunes'},{value:'2', label:'Martes'},{value:'3', label:'Miércoles'},{value:'4', label:'Jueves'},{value:'5', label:'Viernes'},{value:'6', label:'Sábado'},{value:'7', label:'Domingo'}], parseDowFilterValues(state.dowFilter).length ? parseDowFilterValues(state.dowFilter) : ['__ALL__']);
 
-    el('file').addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
+    const fileEl = el('file'); if(fileEl) fileEl.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
     const remoteBtn = el('remoteLoadBtn'); if(remoteBtn) remoteBtn.addEventListener('click', ()=>{ handleRemoteSource(); });
     const remoteInp = el('remoteDataUrl'); if(remoteInp) remoteInp.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); handleRemoteSource(); } });
 
