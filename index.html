@@ -3314,16 +3314,21 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <label>1) Cargar cubo compacto (.xlsx)</label>
 <input accept=".xlsx,.json" id="file" type="file"/>
 <div class="fieldHint"><strong>Recomendado:</strong> usar el cubo compacto <b>.xlsx</b>. Pesa menos porque ya viene comprimido.</div>
+<div class="loading" id="loadingLegacy" aria-hidden="true">
+<div class="loadingTop"><span class="loadingText">Preparando carga…</span><span class="loadingPct">0%</span></div>
+<div class="loadingBar"><div class="loadingFill"></div></div>
+<div class="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
+</div>
+</div>
+<div class="fieldCard primary">
+<label>1) Cargar cubo publicado</label>
+<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px;"/>
+<div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
 <div class="loading" id="loading">
 <div class="loadingTop"><span class="loadingText" id="loadingText">Preparando carga…</span><span class="loadingPct" id="loadingPct">0%</span></div>
 <div class="loadingBar"><div class="loadingFill" id="loadingFill"></div></div>
 <div class="loadingHint" id="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
 </div>
-</div>
-<div class="fieldCard primary">
-<label>1) Cargar cubo publicado</label>
-<input class="textInput mini" id="remoteDataUrl" type="text" value="" placeholder="" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px;"/>
-<div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
 <div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta.</div>
 </div>
 <div class="fieldCard primary">
@@ -26525,7 +26530,7 @@ renderShareTable({
       const rawUrl = input && input.value ? String(input.value).trim() : '';
       const finalUrl = rawUrl || DEFAULT_REMOTE_CUBE;
       if(input && !rawUrl){
-        input.value = '';
+        input.value = DEFAULT_REMOTE_CUBE;
       }
       el('filename').textContent = finalUrl;
       startLoadingProgress('Leyendo fuente web remota…');
@@ -54422,6 +54427,29 @@ function innovationOnePagerCreateBrandedShell(){
   window.addEventListener('load', removeDeliverySpark);
   window.addEventListener('ampm:refresh', function(){ setTimeout(removeDeliverySpark, 120); });
   setInterval(removeDeliverySpark, 1500);
+})();
+</script>
+
+
+<style id="ampm-sales-spark-hide">
+  #kpiBoard .kpiCard[data-kpi="sales_cur"] .spark{
+    display:none !important;
+  }
+</style>
+<script id="ampm-sales-spark-remove-js">
+(function(){
+  function removeSalesSpark(){
+    try{
+      var card = document.querySelector('#kpiBoard .kpiCard[data-kpi="sales_cur"]');
+      if(!card) return;
+      var spark = card.querySelector('.spark');
+      if(spark) spark.remove();
+    }catch(_e){}
+  }
+  document.addEventListener('DOMContentLoaded', removeSalesSpark);
+  window.addEventListener('load', removeSalesSpark);
+  window.addEventListener('ampm:refresh', function(){ setTimeout(removeSalesSpark, 120); });
+  setInterval(removeSalesSpark, 1500);
 })();
 </script>
 
