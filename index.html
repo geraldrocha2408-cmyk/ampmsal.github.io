@@ -61,7 +61,9 @@
     .controlSectionAccent{display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; font-size:11px; font-weight:900; letter-spacing:.35px; text-transform:uppercase; white-space:nowrap;}
     .controlSection.hero .controlSectionAccent{background:linear-gradient(135deg, #d9efff, #eef7ff); color:#0C4D8F; border:1px solid rgba(0,94,167,.34); box-shadow:0 10px 22px rgba(0,94,167,.14);}
     .controlSection.filters .controlSectionAccent{background:linear-gradient(135deg, #ffe4cd, #fff4e9); color:#9a4a0d; border:1px solid rgba(245,131,32,.36); box-shadow:0 10px 22px rgba(245,131,32,.14);}
-    .gridHero{padding:16px 18px 18px; grid-template-columns:1.05fr 1.05fr .9fr 1.1fr;}
+    .gridHero{padding:16px 18px 18px; grid-template-columns:minmax(390px,440px) minmax(200px,250px); justify-content:start; align-items:start; gap:16px;}
+    .gridHero > .fieldCard.primary:first-child{width:min(440px,100%); max-width:440px;}
+    .gridHero > .fieldCard.primary:last-child{width:min(250px,100%); max-width:250px;}
     .gridFilters{padding:14px 14px 12px; grid-template-columns: .9fr .98fr 1.02fr .92fr .86fr .95fr; gap:10px; align-items:start;}
     .fieldCard{padding:10px 12px; border:1px solid rgba(226,232,240,.95); border-radius:16px; background:linear-gradient(180deg,#ffffff 0%, #f8fafc 100%); min-height:0; height:auto; align-self:start;}
     .fieldCard.primary{background:linear-gradient(180deg, rgba(0,94,167,.08), rgba(255,255,255,1)); border-color:rgba(0,94,167,.24); box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 8px 20px rgba(0,94,167,.06);}
@@ -1415,6 +1417,13 @@ tr.invFocus{ outline:2px solid rgba(237,117,35,.25); outline-offset:-2px; }
 #t_rop_sug td:nth-child(11) .ropPropBadge{
   min-width:52px;
 }
+
+.ropDescCellWrap{position:relative; display:block; width:100%; min-width:0; padding-right:24px;}
+.ropDescText{display:block; min-width:0; white-space:normal; word-break:break-word; line-height:1.2;}
+.ropCopyBtn{position:absolute; top:50%; right:0; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; min-width:18px; padding:0; border-radius:6px; border:1px solid rgba(12,77,143,.14); background:rgba(238,246,255,.88); color:#0C4D8F; font-size:11px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:none; opacity:.82; line-height:1;}
+.ropDescCellWrap:hover .ropCopyBtn{opacity:1; background:#dcecff;}
+.ropCopyBtn:hover{opacity:1; background:#dcecff;}
+.ropCopyBtn.done{background:#dcfce7; border-color:rgba(34,197,94,.25); color:#166534;}
 .ropHeadX, .nobuyHeadX{
   scrollbar-gutter: stable;
 }
@@ -2237,6 +2246,54 @@ body.report-mode-mensual #sbf_provider_trend_cards{
 [data-tabpage="innovacion"] table tbody tr.summary:hover td:first-child,
 [data-tabpage="innovacion"] table tbody tr.turno:hover td:first-child{
   box-shadow: inset 4px 0 0 rgba(17,40,74,.82), inset 0 2px 0 rgba(17,40,74,.18), inset 0 -2px 0 rgba(17,40,74,.18);
+}
+
+
+/* Sticky titles — Hallazgos / PRD */
+:root{
+  --panelStickyTop: 74px;
+}
+[data-tabpage="hallazgos"] .hallControlBar{
+  position:sticky;
+  top:var(--panelStickyTop);
+  z-index:85;
+  background:#f1f5f9;
+  padding:10px 0 12px;
+  margin:0 0 12px;
+  border-bottom:1px solid rgba(219,231,243,.88);
+}
+[data-tabpage="hallazgos"] .hallPanelHead{
+  position:sticky;
+  top:calc(var(--panelStickyTop) + 72px);
+  z-index:80;
+  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,255,.96));
+  padding:10px 0 10px;
+  margin:0 0 8px;
+  border-bottom:1px solid rgba(219,231,243,.92);
+  box-shadow:0 8px 20px rgba(15,23,42,.05);
+}
+[data-tabpage="hallazgos"] .hallSavedHead{
+  position:sticky;
+  top:var(--panelStickyTop);
+  z-index:78;
+  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,255,.96));
+  padding:10px 0 10px;
+  margin:0 0 8px;
+  border-bottom:1px solid rgba(219,231,243,.92);
+  box-shadow:0 8px 20px rgba(15,23,42,.05);
+}
+.section.mermaTitle2{
+  position:sticky;
+  top:var(--panelStickyTop);
+  z-index:82;
+  background:#f1f5f9;
+  padding-top:8px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(219,231,243,.88);
+}
+@media (max-width: 860px){
+  :root{ --panelStickyTop: 66px; }
+  [data-tabpage="hallazgos"] .hallPanelHead{ top:calc(var(--panelStickyTop) + 84px); }
 }
 </style>
 <style id="execV7Override">
@@ -3253,6 +3310,63 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </style>
 
 
+
+<style id="kpiSparkHardRemove">
+  .spark, #kpiBoard .spark{display:none !important; visibility:hidden !important; opacity:0 !important; width:0 !important; height:0 !important; overflow:hidden !important; pointer-events:none !important;}
+</style>
+
+<style id="hallazgos-sticky-fix-v1">
+/* Fix focalizado: sticky solo dentro del cuadro principal de Hallazgos */
+[data-tabpage="hallazgos"] .hallControlBar,
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  position:static !important;
+  top:auto !important;
+  z-index:auto !important;
+  box-shadow:none !important;
+}
+
+[data-tabpage="hallazgos"] .hallControlBar{
+  background:transparent !important;
+  padding:0 !important;
+  margin:2px 0 14px !important;
+  border-bottom:0 !important;
+}
+
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  background:transparent !important;
+  padding:0 !important;
+  margin:0 0 10px !important;
+  border-bottom:0 !important;
+}
+
+.hallTableWrap,
+.hallSavedMatrixWrap{
+  position:relative;
+  overflow:auto;
+  background:#fff;
+}
+
+.hallTable,
+.hallSavedMatrix{
+  border:0 !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+}
+
+.hallTable thead th,
+.hallSavedMatrix thead th{
+  position:sticky;
+  top:0;
+  background-clip:padding-box;
+  box-shadow:0 2px 0 rgba(15,23,42,.10);
+}
+
+.hallTable thead th{ z-index:6; }
+.hallSavedMatrix thead th{ z-index:4; }
+</style>
+
 </head>
 
 <body>
@@ -3291,7 +3405,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
 <h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-<p class="sub" id="reportSub">Usá el cubo publicado <b>./Cubo_Semanal_Compactado.xlsx</b>. Este HTML ya no usa carga manual de Excel ni el archivo transaccional normal.</p>
+<p class="sub" id="reportSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
 <span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
@@ -3310,19 +3424,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <span class="controlSectionAccent">Carga + vista</span>
 </div>
 <div class="grid gridHero">
-<div class="fieldCard primary" style="display:none !important">
-<label>1) Cargar cubo compacto (.xlsx)</label>
-<input accept=".xlsx,.json" id="file" type="file"/>
-<div class="fieldHint"><strong>Recomendado:</strong> usar el cubo compacto <b>.xlsx</b>. Pesa menos porque ya viene comprimido.</div>
-<div class="loading" id="loadingLegacy" aria-hidden="true">
-<div class="loadingTop"><span class="loadingText">Preparando carga…</span><span class="loadingPct">0%</span></div>
-<div class="loadingBar"><div class="loadingFill"></div></div>
-<div class="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
-</div>
-</div>
 <div class="fieldCard primary">
 <label>1) Cargar cubo publicado</label>
-<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px;"/>
+<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="./Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;"/>
 <div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
 <div class="loading" id="loading">
 <div class="loadingTop"><span class="loadingText" id="loadingText">Preparando carga…</span><span class="loadingPct" id="loadingPct">0%</span></div>
@@ -4298,11 +4402,11 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="section sbf" data-tabpage="sbf"><h2>SBF — TX por Hora (0-23)</h2></div>
 <div class="tablewrap" data-tabpage="sbf"><div style="overflow:auto"><table id="t_sbf_hour"><thead><tr id="thead_sbf_hour"></tr></thead><tbody id="tbody_sbf_hour"></tbody></table></div></div>
 <div class="chartCard" data-tabpage="sbf" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px; padding:14px; margin-top:14px; margin-bottom:2px">
-<div class="muted" style="margin-bottom:8px">
-          Líneas = TX SBF por hora (LW vs Prom S8). Línea naranja = Delta vs Prom (LW/Prom) en eje derecho.
+<div class="muted" id="sbfHourCompareNote" style="margin-bottom:8px">
+          Líneas = TX SBF por hora (período actual vs promedio comparable). Línea naranja = Delta vs Prom (Actual/Prom) en eje derecho.
         </div>
 <div style="position:relative; width:100%; height:420px">
-<canvas aria-label="SBF TX por Hora LW vs Prom S8" id="chart_sbf_hour_s8"></canvas>
+<canvas aria-label="SBF TX por Hora vs promedio comparable" id="chart_sbf_hour_s8"></canvas>
 </div>
 </div>
 <!-- Inventario (Días Inventario) -->
@@ -4372,7 +4476,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="invRopCard" data-tabpage="inventario">
 <div class="section invTitle" data-tabpage="inventario" style="padding:0;">
 <div class="invDrillHead">
-<h2 style="margin:0">ROP sugerido — Ajustes por importancia de venta</h2>
+<h2 style="margin:0">ROP sugerido — Ajustes por impacto económico real del ajuste</h2>
 <div class="invDrillActions">
 <select class="select mini" id="ropSupplierSel" title="Filtrar por proveedor"><option value="__ALL__">Todos proveedores</option></select>
 <button class="btn mini secondary" id="ropViewDown" type="button">Bajar días Inv</button>
@@ -4381,7 +4485,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </div>
 </div>
 <div class="muted" style="margin-top:8px; white-space:normal;">
-            Regla: Normal = QTY Sales S4 ÷ 2 · LA CONSTANCIA = ÷ 2.5 · ROP propuesto = Máx(ideal, Planimetría).
+            Regla: Normal = QTY Sales S4 ÷ 2 · LA CONSTANCIA = ÷ 2.5 · ROP propuesto = Máx(ideal, Planimetría). Orden: impacto económico real = (Amount ÷ Qty) × |ΔROP ajustado|.
           </div>
 <div class="muted" id="ropAutoMsg" style="margin-top:6px; white-space:normal;"></div>
 </div>
@@ -6113,7 +6217,7 @@ function applyUnifiedModeUI(){
       };
       const titleEl = el('reportTitle'); if(titleEl) titleEl.textContent = titleMap[mode];
       try{ document.title = titleMap[mode]; }catch(e){}
-      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Usá el cubo publicado <b>./Cubo_Semanal_Compactado.xlsx</b>. Este HTML ya no usa carga manual de Excel ni el archivo transaccional normal.';
+      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.';
       const lCur = el('labelCurrentPeriod'); if(lCur) lCur.textContent = `2) ${getModePeriodNoun()} actual (${getCurrentPeriodFormatHint()})`;
       const lyWrap = el('lyWeekOverrideWrap'); if(lyWrap) lyWrap.style.display = isMonthlyReport() ? 'none' : '';
       const lLy = el('labelLyWeekOverride'); if(lLy) lLy.textContent = isMonthlyReport() ? '2b) Comparativo LY (oculto en mensual)' : '2b) Semana comparativa LY (opcional)';
@@ -7745,7 +7849,7 @@ parseMetricDateRangesSheet(wb);
           if (rs && rs.length){
             const k = Object.keys(rs[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDept = pickCol(k, ['Department','Departamento','department']);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
@@ -7791,7 +7895,7 @@ parseMetricDateRangesSheet(wb);
           if (rs && rs.length){
             const k = Object.keys(rs[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDept = pickCol(k, ['Department','Departamento','department']);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
@@ -7830,7 +7934,7 @@ parseMetricDateRangesSheet(wb);
           if (rt && rt.length){
             const k = Object.keys(rt[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
             const cDow = pickCol(k, ['DOW','Dow','Dia','Día','Weekday','Day','dayofweek']);
@@ -7858,7 +7962,7 @@ parseMetricDateRangesSheet(wb);
           if (rt && rt.length){
             const k = Object.keys(rt[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
@@ -7908,7 +8012,7 @@ parseMetricDateRangesSheet(wb);
           if (rf && rf.length){
             const k = Object.keys(rf[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cProv = pickCol(k, ['Provider','Proveedor','Service','Servicio','provider']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
@@ -7973,7 +8077,7 @@ parseMetricDateRangesSheet(wb);
           if (rp && rp.length){
             const k = Object.keys(rp[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cProv = pickCol(k, ['Provider','Proveedor','Service','Servicio']);
             const cTx = pickCol(k, ['Transactions','TX','transactions','tx']);
             if (cStore && cYM && cProv && cTx){
@@ -7995,7 +8099,7 @@ parseMetricDateRangesSheet(wb);
           if (rd && rd.length){
             const k = Object.keys(rd[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
             const cTx = pickCol(k, ['Transactions','TX','transactions','tx']);
@@ -8018,7 +8122,7 @@ parseMetricDateRangesSheet(wb);
           if (rw && rw.length){
             const k = Object.keys(rw[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDow = pickCol(k, ['DOW','Dow','Dia','Día','Weekday']);
             const cTx = pickCol(k, ['Transactions','TX','transactions','tx']);
             if (cStore && cYM && cDow && cTx){
@@ -8040,7 +8144,7 @@ parseMetricDateRangesSheet(wb);
           if (rh && rh.length){
             const k = Object.keys(rh[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cHr = pickCol(k, ['Hour','Hora','hour']);
             const cTx = pickCol(k, ['Transactions','TX','transactions','tx']);
             if (cStore && cYM && cHr && cTx){
@@ -8792,7 +8896,7 @@ try{
           if (rs && rs.length){
             const k = Object.keys(rs[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDept = pickCol(k, ['Department','Departamento','department']);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
@@ -8825,7 +8929,7 @@ try{
           if (rt && rt.length){
             const k = Object.keys(rt[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store']);
-            const cYM = pickCol(k, ['YearMonth','YM','Year Month','ym','yearmonth']);
+            const cYM = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','Month','Mes']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
@@ -10304,6 +10408,32 @@ try{
             sales: r.sales,
             gross_margin: r.gross_margin
           }));
+        }
+      }catch(e){ console.warn('Chart_Month_XF parse warning', e); }
+
+      try{
+        if(hasSheet(wb, 'Cubo_TX_Month_Fact')){
+          const rs = sheetRows(wb, 'Cubo_TX_Month_Fact', {defval:null});
+          state.monthlyXfTxRows = rs.map(r=>{
+            const store = String(r['Store'] ?? '').trim().toUpperCase();
+            const ym = normalizeCalMonth(r['CalMonth'] ?? r['YearMonth'] ?? r['Month']);
+            if(!store || !ym) return null;
+            return {
+              store,
+              ym,
+              department: '',
+              category: '',
+              brand: '',
+              daypart: String(r['Daypart'] ?? '').trim(),
+              dow: String(r['DOW'] ?? '').trim(),
+              is_delivery: toBool(r['Is_Delivery']),
+              delivery_channel: String(r['Delivery_Channel'] ?? '').trim(),
+              transactions: Number(r['Transactions'] ?? r['TX'] ?? 0) || 0
+            };
+          }).filter(Boolean);
+        }else if(hasSheet(wb, 'Chart_Month_XF')){
+          const rs = sheetRows(wb, 'Chart_Month_XF', {defval:null});
+          const parsed = rs.map(mapMonthXfRow).filter(Boolean);
           state.monthlyXfTxRows = parsed.map(r=>({
             store: r.store,
             ym: r.ym,
@@ -10316,53 +10446,9 @@ try{
             delivery_channel: r.delivery_channel,
             transactions: r.transactions
           }));
-        }else{
-          try{
-            if(hasSheet(wb, 'Chart_Sales_Month_XF')){
-              const rs = sheetRows(wb, 'Chart_Sales_Month_XF', {defval:null});
-              state.monthlyXfSalesRows = rs.map(r=>{
-                const base = mapMonthXfRow(r);
-                if(!base) return null;
-                return {
-                  store: base.store,
-                  ym: base.ym,
-                  department: base.department,
-                  category: base.category,
-                  brand: base.brand,
-                  daypart: base.daypart,
-                  dow: base.dow,
-                  is_delivery: base.is_delivery,
-                  delivery_channel: base.delivery_channel,
-                  sales: base.sales,
-                  gross_margin: base.gross_margin
-                };
-              }).filter(Boolean);
-            }
-          }catch(e){ console.warn('Chart_Sales_Month_XF parse warning', e); }
-
-          try{
-            if(hasSheet(wb, 'Chart_TX_Month_XF')){
-              const rs = sheetRows(wb, 'Chart_TX_Month_XF', {defval:null});
-              state.monthlyXfTxRows = rs.map(r=>{
-                const base = mapMonthXfRow(r);
-                if(!base) return null;
-                return {
-                  store: base.store,
-                  ym: base.ym,
-                  department: base.department,
-                  category: base.category,
-                  brand: base.brand,
-                  daypart: base.daypart,
-                  dow: base.dow,
-                  is_delivery: base.is_delivery,
-                  delivery_channel: base.delivery_channel,
-                  transactions: base.transactions
-                };
-              }).filter(Boolean);
-            }
-          }catch(e){ console.warn('Chart_TX_Month_XF parse warning', e); }
         }
-      }catch(e){ console.warn('Chart_Month_XF parse warning', e); }
+      }catch(e){ console.warn('Cubo_TX_Month_Fact parse warning', e); }
+
 
       try{
         if(hasSheet(wb, 'Chart_SBF_Month_XF')){
@@ -11913,8 +11999,9 @@ const colgroup = (() => {
       const markOk = ()=>{
         if(btn){
           const prev = btn.dataset.prevText || btn.textContent;
+          const doneText = btn.dataset.doneText || 'Copiado';
           btn.dataset.prevText = prev;
-          btn.textContent = 'Copiado';
+          btn.textContent = doneText;
           btn.classList.add('done');
           setTimeout(()=>{ try{ btn.textContent = btn.dataset.prevText || prev; btn.classList.remove('done'); }catch(e){} }, 1400);
         }
@@ -11960,6 +12047,11 @@ const colgroup = (() => {
 
     window.prd0CopyCode = function(btn, raw){
       return window.prd0CopyText(btn, raw, 'Código copiado', 'No se pudo copiar el código');
+    }
+
+
+    window.ropCopyDescription = function(btn, raw){
+      return window.prd0CopyText(btn, raw, 'Descripción copiada', 'No se pudo copiar la descripción');
     }
 
     function getPedYaScopePeriods(){
@@ -13063,7 +13155,7 @@ function prd0BuildPedYaAuditFromWorkbook(storeList, uploadedRows){
       if(activeTab === 'resumen'){
         try{ refreshKpiDashboard(currentYm, prevYms, storeList); } catch(e){ console.warn('KPI dashboard error', e); }
         try{ updateExecbar(currentYm, storeList); }catch(e){}
-        try{ renderSparks(currentYm, storeList); }catch(e){}
+        try{}catch(e){}
         try{ renderActions(); }catch(e){}
         rememberTabRender('resumen', currentYm, prevYms, storeList);
       }
@@ -13525,8 +13617,10 @@ function prd0BuildPedYaAuditFromWorkbook(storeList, uploadedRows){
       const groupMap = new Map();
       const brandCounter = new Map();
       try{
-        if(!wb || !hasSheet(wb, 'Sales_Cal_Detail')) return { skuMap, groupMap, brandLookup:new Map(), source:'' };
-        const rows = sheetRows(wb, 'Sales_Cal_Detail', {defval:null});
+        if(!wb) return { skuMap, groupMap, brandLookup:new Map(), source:'' };
+        const rows = (typeof innovationWorkbookSheetRows === 'function')
+          ? innovationWorkbookSheetRows(wb, 'Sales_Cal_Detail')
+          : (typeof sheetRows === 'function' ? (sheetRows(wb, 'Sales_Cal_Detail', {defval:null}) || []) : []);
         if(!rows || !rows.length) return { skuMap, groupMap, brandLookup:new Map(), source:'' };
         const cols = Object.keys(rows[0] || {});
         const cStore = pickCol(cols, ['Store','Store Name','Tienda']);
@@ -14989,6 +15083,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         sp = document.createElement('div');
         sp.className = 'spark';
         sp.id = sparkId;
+        sp.style.display = 'none';
         card.appendChild(sp);
       }
       return sp;
@@ -15488,6 +15583,25 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         return arr.slice(0, n);
       };
 
+      const getRopPropDisplay = (r)=> (r && r.huesoMatched)
+        ? 0
+        : Math.max(Number(r?.ropProp ?? 0), Number(r?.plan ?? 0));
+      const getRopDeltaDisplay = (r)=> getRopPropDisplay(r) - Number(r?.rop ?? 0);
+      const getRopUnitCost = (r)=> {
+        const qty = Number(r?.qty ?? 0);
+        const amount = Number(r?.amount ?? 0);
+        return (qty > 0) ? (amount / qty) : 0;
+      };
+      const getRopAdjustmentDollarImpact = (r)=> Math.abs(getRopDeltaDisplay(r)) * getRopUnitCost(r);
+      const sortRopByDollarImpact = (a,b)=>
+        (getRopAdjustmentDollarImpact(b) - getRopAdjustmentDollarImpact(a))
+        || (getRopUnitCost(b) - getRopUnitCost(a))
+        || (Math.abs(getRopDeltaDisplay(b)) - Math.abs(getRopDeltaDisplay(a)))
+        || (Number(b?.amount ?? 0) - Number(a?.amount ?? 0))
+        || (Number(b?.s4s ?? 0) - Number(a?.s4s ?? 0))
+        || (Number(b?.s4q ?? 0) - Number(a?.s4q ?? 0))
+        || (Number(b?.days ?? 0) - Number(a?.days ?? 0));
+
       const headers = ['Acción','Store','Supplier','Description','Amount','Qty','QTY Sales S4','Days (Qty)','ROP actual','Planimetría','ROP propuesto','ΔROP'];
       const headerHtml = headers.map(h=>`<th>${h}</th>`).join('');
       if(tHead) tHead.innerHTML = headerHtml;
@@ -15526,18 +15640,11 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       if(state._ropView === 'up'){
         candRop = rowsAll
           .filter(r=>r.deltaStrict > 0 && r.s4q > 0)
-          .sort((a,b)=> (b.s4q - a.s4q) || (b.amount - a.amount));
+          .sort(sortRopByDollarImpact);
       } else {
         candRop = rowsAll
           .filter(r=> isStrictDownCandidate(r) || isRecalibrationDownCandidate(r))
-          .sort((a,b)=> {
-            const aStrict = isStrictDownCandidate(a) ? 1 : 0;
-            const bStrict = isStrictDownCandidate(b) ? 1 : 0;
-            return (bStrict - aStrict)
-              || ((b.amount * Math.max(0,(b.days||0)-10)) - (a.amount * Math.max(0,(a.days||0)-10)))
-              || (Math.abs(Number(b.deltaStrict||0)) - Math.abs(Number(a.deltaStrict||0)))
-              || (b.amount - a.amount);
-          });
+          .sort(sortRopByDollarImpact);
       }
 
       const ropSupSel = document.getElementById('ropSupplierSel');
@@ -15657,7 +15764,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
               <td style="text-align:left">${action}</td>
               <td>${esc(r.store)}</td>
               <td style="text-align:left">${esc(r.supplier)}</td>
-              <td style="text-align:left"${descClass}>${esc(r.description)}</td>
+              <td style="text-align:left"${descClass}><div class="ropDescCellWrap"><span class="ropDescText">${esc(r.description)}</span><button type="button" class="ropCopyBtn" onclick="return ropCopyDescription(this, this.dataset.text)" data-text="${esc(r.description)}" data-done-text="✓" aria-label="Copiar descripción" title="Copiar descripción">⧉</button></div></td>
               <td>${money(r.amount)}</td>
               <td>${fmtInt(r.qty)}</td>
               <td>${fmtInt(r.s4q)}</td>
@@ -23027,7 +23134,7 @@ const options = {
           scales: {
             x: { stacked:true, ticks:{ maxRotation:0, autoSkip:false, color:'#000000' } },
             y: { stacked:true, beginAtZero:true, ticks:{ color:'#000000', callback:(v)=> axisMoneyCompact1(v) } },
-            y1: { beginAtZero:true, position:'right', suggestedMax:y1Max, grid:{ drawOnChartArea:false }, title:{ display:true, text:'Delta vs LY', color:'#000000', font:{ size:INNOVATION_UI.axisTitle, weight:'800' } }, border:{ display:true, color:ORANGE }, ticks:{ color:'#000000', font:{ size:INNOVATION_UI.axis, weight:'700' } } }
+            y1: { beginAtZero:true, position:'right', suggestedMax:y1Max, grid:{ drawOnChartArea:false }, title:{ display:true, text:'Delta vs Prom', color:'#000000', font:{ size:INNOVATION_UI.axisTitle, weight:'800' } }, border:{ display:true, color:ORANGE }, ticks:{ color:'#000000', font:{ size:INNOVATION_UI.axis, weight:'700' } } }
           }
         }
       });
@@ -25346,12 +25453,24 @@ const options = {
         ? prevYms.slice().sort()
         : (function(){ const a=[]; for(let i=8;i>=1;i--){ const k=shiftIsoWeekKey(currentYm,-i); if(k) a.push(k);} return a; })();
 
-            const __fh = (typeof xfFiltersText==='function') ? xfFiltersText('sbf') : '';
+      const compareLabel = (typeof getPrevCompareLabel === 'function')
+        ? getPrevCompareLabel(prevSorted)
+        : (isMonthlyReport() ? 'Prom 3M' : 'Prom S8');
+      const currentPeriodLabel = isMonthlyReport() ? monthLabel(currentYm) : `${currentYm}`;
+      const currentSeriesLabel = isMonthlyReport() ? monthLabel(currentYm) : `${currentYm} (LW)`;
+      const __fh = (typeof xfFiltersText==='function') ? xfFiltersText('sbf') : '';
       const sbfHourTitle = [
-        `SBF — TX por Hora: ${monthLabel(currentYm)} vs Prom S8`,
+        `SBF — TX por Hora: ${currentPeriodLabel} vs ${compareLabel}`,
         __fh ? ('Filtros: ' + __fh) : 'Filtros: Tienda=ALL',
         chartTitleDayLine('sbf')
       ];
+      const noteEl = document.getElementById('sbfHourCompareNote');
+      if (noteEl){
+        noteEl.textContent = `Líneas = TX SBF por hora (${currentPeriodLabel} vs ${compareLabel}). Línea naranja = Delta vs Prom (Actual/Prom) en eje derecho.`;
+      }
+      try{
+        canvas.setAttribute('aria-label', `SBF TX por Hora ${currentPeriodLabel} vs ${compareLabel}`);
+      }catch(_e){}
 const hours = Array.from({length:24}, (_,i)=>i);
       const lw = hours.map(h => mapGet(sbfHourMap, String(h), currentYm));
       const prom = hours.map(h => {
@@ -25436,7 +25555,7 @@ const hours = Array.from({length:24}, (_,i)=>i);
           labels,
           datasets:[
             {
-              label: `${monthLabel(currentYm)} (LW)`,
+              label: currentSeriesLabel,
               data: lw,
               borderColor: AMPM_NAVY,
               backgroundColor: AMPM_NAVY,
@@ -25449,7 +25568,7 @@ const hours = Array.from({length:24}, (_,i)=>i);
               tension: 0.25
             },
             {
-              label: 'Prom S8',
+              label: compareLabel,
               data: prom,
               borderColor: 'rgba(17,40,74,0.35)',
               backgroundColor: 'rgba(17,40,74,0.35)',
@@ -26222,7 +26341,7 @@ renderShareTable({
     }
     async function parseWorkbookFromRemoteUrl(rawUrl){
       const finalUrl = normalizeRemoteDataUrl(rawUrl);
-      if(!finalUrl) throw new Error('Escribe una ruta o URL válida del cubo compacto.');
+      if(!finalUrl) throw new Error('Pegá un link público válido.');
       setLoadingProgress(14, 'Descargando archivo…', 'El link puede ser .xlsx o una salida web pública.');
       await uiYield(20);
       const resp = await fetch(finalUrl, { cache:'no-store' });
@@ -26525,19 +26644,18 @@ renderShareTable({
     }
 
     async function handleRemoteSource(){
-      const DEFAULT_REMOTE_CUBE = './Cubo_Semanal_Compactado.xlsx';
       const input = el('remoteDataUrl');
       const rawUrl = input && input.value ? String(input.value).trim() : '';
-      const finalUrl = rawUrl || DEFAULT_REMOTE_CUBE;
-      if(input && !rawUrl){
-        input.value = DEFAULT_REMOTE_CUBE;
+      if(!rawUrl){
+        alert('La ruta del cubo publicado está vacía. Usá ./Cubo_Semanal_Compactado.xlsx o pegá un link público válido.');
+        return;
       }
-      el('filename').textContent = finalUrl;
+      el('filename').textContent = rawUrl;
       startLoadingProgress('Leyendo fuente web remota…');
       await uiYield(20);
       try{
-        const wb = await parseWorkbookFromRemoteUrl(finalUrl);
-        await loadWorkbookIntoState(wb, finalUrl);
+        const wb = await parseWorkbookFromRemoteUrl(rawUrl);
+        await loadWorkbookIntoState(wb, rawUrl);
       } catch(err){
         console.error(err);
         failLoadingProgress('Error al cargar el link');
@@ -26634,7 +26752,7 @@ renderShareTable({
 
     setSelectOptions(el('dowFilter'), [{value:'__ALL__', label:'Todos'},{value:'1', label:'Lunes'},{value:'2', label:'Martes'},{value:'3', label:'Miércoles'},{value:'4', label:'Jueves'},{value:'5', label:'Viernes'},{value:'6', label:'Sábado'},{value:'7', label:'Domingo'}], parseDowFilterValues(state.dowFilter).length ? parseDowFilterValues(state.dowFilter) : ['__ALL__']);
 
-    const fileEl = el('file'); if(fileEl) fileEl.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
+    const fileInput = el('file'); if(fileInput) fileInput.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
     const remoteBtn = el('remoteLoadBtn'); if(remoteBtn) remoteBtn.addEventListener('click', ()=>{ handleRemoteSource(); });
     const remoteInp = el('remoteDataUrl'); if(remoteInp) remoteInp.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); handleRemoteSource(); } });
 
@@ -28143,6 +28261,63 @@ async function ensureJsPDF(){
 }
 </style>
 
+
+<style id="kpiSparkHardRemove">
+  .spark, #kpiBoard .spark{display:none !important; visibility:hidden !important; opacity:0 !important; width:0 !important; height:0 !important; overflow:hidden !important; pointer-events:none !important;}
+</style>
+
+<style id="hallazgos-sticky-fix-v1">
+/* Fix focalizado: sticky solo dentro del cuadro principal de Hallazgos */
+[data-tabpage="hallazgos"] .hallControlBar,
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  position:static !important;
+  top:auto !important;
+  z-index:auto !important;
+  box-shadow:none !important;
+}
+
+[data-tabpage="hallazgos"] .hallControlBar{
+  background:transparent !important;
+  padding:0 !important;
+  margin:2px 0 14px !important;
+  border-bottom:0 !important;
+}
+
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  background:transparent !important;
+  padding:0 !important;
+  margin:0 0 10px !important;
+  border-bottom:0 !important;
+}
+
+.hallTableWrap,
+.hallSavedMatrixWrap{
+  position:relative;
+  overflow:auto;
+  background:#fff;
+}
+
+.hallTable,
+.hallSavedMatrix{
+  border:0 !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+}
+
+.hallTable thead th,
+.hallSavedMatrix thead th{
+  position:sticky;
+  top:0;
+  background-clip:padding-box;
+  box-shadow:0 2px 0 rgba(15,23,42,.10);
+}
+
+.hallTable thead th{ z-index:6; }
+.hallSavedMatrix thead th{ z-index:4; }
+</style>
+
 </head>
 <body>
   <h1>${title}</h1>
@@ -28354,6 +28529,41 @@ async function ensureJsPDF(){
 </style>
 
 
+
+<style id="innovation-fs-margin-card-fill-v72-overrides">
+/* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
+  align-items:start !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
+  align-self:start !important;
+  display:flex !important;
+  flex-direction:column !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+  flex:0 0 360px !important;
+  height:360px !important;
+  min-height:360px !important;
+  max-height:none !important;
+  padding:8px 10px 6px !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+}
+@media (max-width:1100px){
+  body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+    flex-basis:300px !important;
+    height:300px !important;
+    min-height:300px !important;
+  }
+}
+</style>
+
 </html>`;
 
           const baseName = `Reporte_${slugifyExportName(activeExport.label)}_graficas_${ym || 'NA'}`;
@@ -28415,8 +28625,104 @@ async function ensureJsPDF(){
 }
 </style>
 
+
+<style id="kpiSalesSparkOff">
+  .kpiCard[data-kpi="sales_cur"] .spark{ display:none !important; }
+</style>
+
+<style id="kpiSparkHardRemove">
+  .spark, #kpiBoard .spark{display:none !important; visibility:hidden !important; opacity:0 !important; width:0 !important; height:0 !important; overflow:hidden !important; pointer-events:none !important;}
+</style>
+
+<style id="hallazgos-sticky-fix-v1">
+/* Fix focalizado: sticky solo dentro del cuadro principal de Hallazgos */
+[data-tabpage="hallazgos"] .hallControlBar,
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  position:static !important;
+  top:auto !important;
+  z-index:auto !important;
+  box-shadow:none !important;
+}
+
+[data-tabpage="hallazgos"] .hallControlBar{
+  background:transparent !important;
+  padding:0 !important;
+  margin:2px 0 14px !important;
+  border-bottom:0 !important;
+}
+
+[data-tabpage="hallazgos"] .hallPanelHead,
+[data-tabpage="hallazgos"] .hallSavedHead{
+  background:transparent !important;
+  padding:0 !important;
+  margin:0 0 10px !important;
+  border-bottom:0 !important;
+}
+
+.hallTableWrap,
+.hallSavedMatrixWrap{
+  position:relative;
+  overflow:auto;
+  background:#fff;
+}
+
+.hallTable,
+.hallSavedMatrix{
+  border:0 !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+}
+
+.hallTable thead th,
+.hallSavedMatrix thead th{
+  position:sticky;
+  top:0;
+  background-clip:padding-box;
+  box-shadow:0 2px 0 rgba(15,23,42,.10);
+}
+
+.hallTable thead th{ z-index:6; }
+.hallSavedMatrix thead th{ z-index:4; }
+</style>
+
 </head>
 ${bodyHtml}
+
+<style id="innovation-fs-margin-card-fill-v72-overrides">
+/* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
+  align-items:start !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
+  align-self:start !important;
+  display:flex !important;
+  flex-direction:column !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+  flex:0 0 360px !important;
+  height:360px !important;
+  min-height:360px !important;
+  max-height:none !important;
+  padding:8px 10px 6px !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+}
+@media (max-width:1100px){
+  body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+    flex-basis:300px !important;
+    height:300px !important;
+    min-height:300px !important;
+  }
+}
+</style>
+
 </html>`;
         const ym = (document.getElementById('currentMonth')?.value || 'NA');
         downloadBlob(`Reporte_Mensual_${ym}.xls`, 'application/vnd.ms-excel', '\ufeff' + html);
@@ -30688,14 +30994,97 @@ function innovationPeriodKeyFromRow(row, monthlyMode){
   }
 }
 
+function innovationSyntheticNormKey(v){
+  try{
+    return String(v ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toUpperCase()
+      .replace(/[’'`´]/g,'')
+      .replace(/&/g,' Y ')
+      .replace(/\bAND\b/g,' Y ')
+      .replace(/[^A-Z0-9]+/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
+  }catch(_e){ return String(v ?? '').trim().toUpperCase(); }
+}
+function innovationBuildSyntheticFsDetailRows(wb){
+  try{
+    const base = innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos');
+    if(!Array.isArray(base) || !base.length) return [];
+    return base.filter(r => innovationSyntheticNormKey(r?.Department ?? r?.department ?? '') === 'FOODSERVICE')
+      .map(r => Object.assign({}, r))
+      .sort((a,b) => {
+        const ak = `${String(a?.['Date Sold'] ?? a?.DateSold ?? '')}|${String(a?.Store ?? '').toUpperCase()}|${String(a?.Category ?? '')}|${String(a?.Description ?? '')}`;
+        const bk = `${String(b?.['Date Sold'] ?? b?.DateSold ?? '')}|${String(b?.Store ?? '').toUpperCase()}|${String(b?.Category ?? '')}|${String(b?.Description ?? '')}`;
+        return ak.localeCompare(bk);
+      });
+  }catch(e){ console.warn('Synthetic Innovation_FS_Detail build failed', e); return []; }
+}
+function innovationBuildSyntheticSalesCalDetailRows(wb){
+  try{
+    const base = innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos');
+    if(!Array.isArray(base) || !base.length) return [];
+    const agg = new Map();
+    base.forEach(r => {
+      const store = String(r?.Store ?? r?.store ?? '').trim().toUpperCase();
+      const calMonth = String(r?.CalMonth ?? r?.calmonth ?? '').trim();
+      const supplier = String(r?.Supplier ?? r?.supplier ?? '').trim();
+      const supplierKey = String(r?.SupplierKey ?? r?.supplierkey ?? '').trim() || innovationSyntheticNormKey(supplier);
+      const category = String(r?.Category ?? r?.category ?? '').trim();
+      const categoryKey = innovationSyntheticNormKey(category);
+      const brand = String(r?.Brand ?? r?.brand ?? '').trim();
+      const description = String(r?.Description ?? r?.description ?? '').trim();
+      const descriptionKey = String(r?.DescriptionKey ?? r?.descriptionkey ?? '').trim() || innovationSyntheticNormKey(description);
+      const sales = Number(r?.Sales ?? r?.sales ?? 0) || 0;
+      if(!store || !calMonth || !description || !Number.isFinite(sales) || sales === 0) return;
+      const key = [store, calMonth, supplierKey, categoryKey, brand, descriptionKey].join('||');
+      const cur = agg.get(key) || {
+        'Store': store,
+        'CalMonth': calMonth,
+        'Supplier': supplier,
+        'SupplierKey': supplierKey,
+        'Category': category,
+        'CategoryKey': categoryKey,
+        'Brand': brand,
+        'Description': description,
+        'DescriptionKey': descriptionKey,
+        'Total Sales': 0
+      };
+      cur['Total Sales'] += sales;
+      agg.set(key, cur);
+    });
+    return Array.from(agg.values()).sort((a,b) => {
+      const ak = `${a?.CalMonth || ''}|${a?.Store || ''}|${a?.Supplier || ''}|${a?.Category || ''}|${a?.Description || ''}`;
+      const bk = `${b?.CalMonth || ''}|${b?.Store || ''}|${b?.Supplier || ''}|${b?.Category || ''}|${b?.Description || ''}`;
+      return ak.localeCompare(bk);
+    });
+  }catch(e){ console.warn('Synthetic Sales_Cal_Detail build failed', e); return []; }
+}
+function innovationSyntheticWorkbookRows(wb, sheetName){
+  try{
+    if(!wb || !sheetName) return [];
+    if(sheetName === 'Innovation_FS_Detail') return innovationBuildSyntheticFsDetailRows(wb);
+    if(sheetName === 'Sales_Cal_Detail') return innovationBuildSyntheticSalesCalDetailRows(wb);
+  }catch(e){ console.warn('Synthetic workbook rows failed', sheetName, e); }
+  return [];
+}
 function innovationWorkbookSheetRows(wb, sheetName){
   try{
     if(!wb || !sheetName) return [];
-    const hydratedRows = wb && wb.__rowsBySheet && Array.isArray(wb.__rowsBySheet[sheetName]) ? wb.__rowsBySheet[sheetName] : null;
+    if(!wb.__rowsBySheet || typeof wb.__rowsBySheet !== 'object') wb.__rowsBySheet = {};
+    const hydratedRows = Array.isArray(wb.__rowsBySheet[sheetName]) ? wb.__rowsBySheet[sheetName] : null;
     if(hydratedRows && hydratedRows.length) return hydratedRows.slice();
+    const synth = innovationSyntheticWorkbookRows(wb, sheetName);
+    if(Array.isArray(synth) && synth.length){
+      wb.__rowsBySheet[sheetName] = synth;
+      return synth.slice();
+    }
     if(!wb.Sheets || !wb.Sheets[sheetName] || !window.XLSX || !XLSX.utils || typeof XLSX.utils.sheet_to_json !== 'function') return [];
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval:null, raw:false });
-    return Array.isArray(rows) ? rows : [];
+    const out = Array.isArray(rows) ? rows : [];
+    if(out.length) wb.__rowsBySheet[sheetName] = out;
+    return out;
   }catch(e){ console.warn('Innovation workbook sheet read failed', sheetName, e); return []; }
 }
 function innovationFoodServiceDetailRows(){
@@ -30706,7 +31095,7 @@ function innovationFoodServiceDetailRows(){
     return state._innovationFSDetailRows;
   }
   let rows = [];
-  if(wb && hasSheet(wb, 'Innovation_FS_Detail')){
+  if(wb && typeof innovationWorkbookSheetRows === 'function'){
     rows = innovationWorkbookSheetRows(wb, 'Innovation_FS_Detail');
   }
   state._innovationFSDetailRowsKey = key;
@@ -30806,7 +31195,7 @@ function innovationMonthlyAnchorPeriod(){
       });
     }catch(_e){}
     try{
-      innovationWorkbookSheetRows(state?.__hallWorkbook || null, 'Chart_Sales_Month_XF').forEach(r => {
+      innovationWorkbookSheetRows(state?.__hallWorkbook || null, 'Chart_Month_XF').forEach(r => {
         const mk = innovationNormalizePeriodKey(r?.CalMonth ?? r?.calmonth ?? r?.month ?? '');
         if(mk) monthKeys.push(mk);
       });
@@ -31008,7 +31397,7 @@ function innovationChartSalesMonthRows(){
   }
   let rows = [];
   if(wb){
-    rows = innovationWorkbookSheetRows(wb, 'Chart_Sales_Month_XF');
+    rows = innovationWorkbookSheetRows(wb, 'Chart_Month_XF');
   }
   state._innovationChartSalesMonthRowsKey = key;
   state._innovationChartSalesMonthRows = Array.isArray(rows) ? rows : [];
@@ -31238,8 +31627,9 @@ function innovationResolvePostresRows(storeList){
     const categoryNorm = innovationNormText(r?.Category ?? r?.category ?? '');
     const departmentNorm = innovationNormText(r?.Department ?? r?.department ?? '');
     const meta = innovationPostresMeta(description);
+    const comboMeta = innovationPostresComboMeta(description);
     const isPostresCategory = /^POSTRE$/.test(categoryNorm);
-    const isPostres = !!meta || isPostresCategory;
+    const isPostres = !!meta || !!comboMeta || isPostresCategory;
     if(!isPostres) return false;
     const qty = Number(r?.['Qty Sold'] ?? r?.qty ?? 0) || 0;
     const sales = Number(r?.Sales ?? r?.['Total Sales'] ?? r?.sales ?? 0) || 0;
@@ -31248,7 +31638,7 @@ function innovationResolvePostresRows(storeList){
     const description = String(r?.Description ?? r?.description ?? '').trim();
     const meta = innovationPostresMeta(description);
     const comboMeta = innovationPostresComboMeta(description);
-    const parentMeta = meta || INNOVATION_POSTRES_OTHER;
+    const parentMeta = meta || comboMeta || INNOVATION_POSTRES_OTHER;
     return {
       store: String(r?.Store ?? r?.store ?? r?.['Store Name'] ?? '').trim().toUpperCase(),
       periodKey: String(innovationPeriodKeyFromRow(r, isMonthlyReport()) || '').trim(),
@@ -31268,6 +31658,43 @@ function innovationResolvePostresRows(storeList){
     };
   }).filter(r => r.periodKey && ((r.qty > 0) || (r.sales > 0)));
 }
+
+function innovationResolvePostresComboRows(storeList){
+  const comboRows = innovationComboDetailRows();
+  if(!Array.isArray(comboRows) || !comboRows.length) return [];
+  const stores = Array.isArray(storeList) && storeList.length ? storeList.slice() : (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : (state.stores || []));
+  const storeSet = new Set(Array.from(new Set(stores.map(s => String(s || '').trim().toUpperCase()).filter(Boolean))));
+  return comboRows.filter(r => {
+    const comboKey = String(r?.ComboKey ?? r?.combokey ?? '').trim();
+    if(!/^POSTRES__/i.test(comboKey)) return false;
+    const store = String(r?.Store ?? r?.store ?? r?.['Store Name'] ?? '').trim().toUpperCase();
+    if(!store || (storeSet.size && !storeSet.has(store))) return false;
+    if(typeof rowMatchesGlobalDow === 'function' && !rowMatchesGlobalDow(r)) return false;
+    const qty = Number(r?.['Qty Sold'] ?? r?.qty ?? 0) || 0;
+    const sales = Number(r?.Sales ?? r?.['Total Sales'] ?? r?.sales ?? 0) || 0;
+    return qty > 0 || sales > 0;
+  }).map(r => {
+    const comboKeyRaw = String(r?.ComboKey ?? r?.combokey ?? '').trim();
+    const parentKeyRaw = comboKeyRaw.replace(/^POSTRES__+/i, '').trim();
+    const comboLabel = String(r?.ComboLabel ?? r?.combolabel ?? r?.ComboShortLabel ?? r?.comboshortlabel ?? '').trim();
+    const meta = innovationPostresMeta(comboLabel) || innovationPostresMeta(String(r?.Description ?? r?.description ?? '').trim()) || null;
+    const parentKey = String(meta?.key || parentKeyRaw || INNOVATION_POSTRES_OTHER.key);
+    return {
+      store: String(r?.Store ?? r?.store ?? r?.['Store Name'] ?? '').trim().toUpperCase(),
+      periodKey: String(innovationPeriodKeyFromRow(r, isMonthlyReport()) || '').trim(),
+      qty: Number(r?.['Qty Sold'] ?? r?.qty ?? 0) || 0,
+      sales: Number(r?.Sales ?? r?.['Total Sales'] ?? r?.sales ?? 0) || 0,
+      description: String(r?.Description ?? r?.description ?? '').trim(),
+      comboKey: comboKeyRaw,
+      parentKey,
+      parentLabel: String(meta?.label || comboLabel || parentKey || INNOVATION_POSTRES_OTHER.label),
+      parentShortLabel: String(meta?.shortLabel || meta?.label || comboLabel || parentKey || INNOVATION_POSTRES_OTHER.shortLabel),
+      parentColor: String(meta?.color || INNOVATION_POSTRES_OTHER.color)
+    };
+  }).filter(r => r.periodKey && ((r.qty > 0) || (r.sales > 0)));
+}
+
+
 function innovationBuildPostresAggregate(storeList, periods){
   const orderedPeriods = Array.isArray(periods) && periods.length ? periods.slice() : innovationSelectedPeriods();
   const stores = Array.isArray(storeList) && storeList.length ? storeList.slice() : (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : INNOVATION_STORE_ORDER.slice());
@@ -31276,16 +31703,46 @@ function innovationBuildPostresAggregate(storeList, periods){
   const dowToken = (typeof getGlobalDowFilter === 'function') ? normalizeDowFilterToken(getGlobalDowFilter()) : '__ALL__';
   const cacheKey = ['postresagg', isMonthlyReport() ? 'month' : 'week', orderedPeriods.join('|'), Array.from(storeSet).sort().join('|'), String(dowToken || '__ALL__')].join('||');
   if(state._innovationPostresAggKey === cacheKey && state._innovationPostresAgg) return state._innovationPostresAgg;
+
   const periodIndex = new Map(orderedPeriods.map((pk, idx) => [String(pk || '').trim(), idx]));
-  const totalSales = orderedPeriods.map(() => 0);
-  const totalQty = orderedPeriods.map(() => 0);
-  const comboSales = orderedPeriods.map(() => 0);
-  const comboQty = orderedPeriods.map(() => 0);
-  const totalSalesByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)]));
-  const totalQtyByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)]));
-  const comboSalesByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)]));
-  const comboQtyByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)]));
+  const zeroArr = () => orderedPeriods.map(() => 0);
+
+  const totalSales = zeroArr();
+  const totalQty = zeroArr();
+  const comboSales = zeroArr();
+  const comboQty = zeroArr();
+
+  const totalSalesByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()]));
+  const totalQtyByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()]));
+  const comboSalesByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()]));
+  const comboQtyByStore = new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()]));
+
   const parentSeries = new Map();
+  const ensureParent = (parentKey, parentLabel, parentShortLabel, parentColor) => {
+    const key = String(parentKey || INNOVATION_POSTRES_OTHER.key);
+    if(!parentSeries.has(key)){
+      parentSeries.set(key, {
+        key,
+        label: String(parentLabel || INNOVATION_POSTRES_OTHER.label),
+        shortLabel: String(parentShortLabel || parentLabel || INNOVATION_POSTRES_OTHER.shortLabel),
+        color: String(parentColor || INNOVATION_POSTRES_OTHER.color),
+        salesByPeriod: zeroArr(),
+        qtyByPeriod: zeroArr(),
+        comboSalesByPeriod: zeroArr(),
+        comboQtyByPeriod: zeroArr(),
+        salesByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()])),
+        qtyByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()])),
+        comboSalesByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()])),
+        comboQtyByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, zeroArr()])),
+        totalSales: 0,
+        totalQty: 0,
+        comboTotalSales: 0,
+        comboTotalQty: 0
+      });
+    }
+    return parentSeries.get(key);
+  };
+
   innovationResolvePostresRows(storeList).forEach(row => {
     const idx = periodIndex.get(String(row?.periodKey || '').trim());
     if(idx == null) return;
@@ -31294,51 +31751,52 @@ function innovationBuildPostresAggregate(storeList, periods){
     const sales = Number(row?.sales || 0);
     const qty = Number(row?.qty || 0);
     if(!(sales > 0 || qty > 0)) return;
+
     totalSales[idx] += sales;
     totalQty[idx] += qty;
-    if(!totalSalesByStore.has(store)) totalSalesByStore.set(store, orderedPeriods.map(() => 0));
-    if(!totalQtyByStore.has(store)) totalQtyByStore.set(store, orderedPeriods.map(() => 0));
+    if(!totalSalesByStore.has(store)) totalSalesByStore.set(store, zeroArr());
+    if(!totalQtyByStore.has(store)) totalQtyByStore.set(store, zeroArr());
     totalSalesByStore.get(store)[idx] += sales;
     totalQtyByStore.get(store)[idx] += qty;
-    if(row?.isCombo){
-      comboSales[idx] += sales;
-      comboQty[idx] += qty;
-      if(!comboSalesByStore.has(store)) comboSalesByStore.set(store, orderedPeriods.map(() => 0));
-      if(!comboQtyByStore.has(store)) comboQtyByStore.set(store, orderedPeriods.map(() => 0));
-      comboSalesByStore.get(store)[idx] += sales;
-      comboQtyByStore.get(store)[idx] += qty;
-    }
-    const parentKey = String(row?.parentKey || INNOVATION_POSTRES_OTHER.key);
-    if(!parentSeries.has(parentKey)){
-      parentSeries.set(parentKey, {
-        key: parentKey,
-        label: String(row?.parentLabel || INNOVATION_POSTRES_OTHER.label),
-        shortLabel: String(row?.parentShortLabel || row?.parentLabel || INNOVATION_POSTRES_OTHER.shortLabel),
-        color: String(row?.parentColor || INNOVATION_POSTRES_OTHER.color),
-        salesByPeriod: orderedPeriods.map(() => 0),
-        qtyByPeriod: orderedPeriods.map(() => 0),
-        comboSalesByPeriod: orderedPeriods.map(() => 0),
-        comboQtyByPeriod: orderedPeriods.map(() => 0),
-        salesByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)])),
-        qtyByStore: new Map(resolvedStoreOrder.map(storeName => [storeName, orderedPeriods.map(() => 0)])),
-        totalSales: 0,
-        totalQty: 0
-      });
-    }
-    const item = parentSeries.get(parentKey);
+
+    const item = ensureParent(row?.parentKey, row?.parentLabel, row?.parentShortLabel, row?.parentColor);
     item.salesByPeriod[idx] += sales;
     item.qtyByPeriod[idx] += qty;
     item.totalSales += sales;
     item.totalQty += qty;
-    if(!item.salesByStore.has(store)) item.salesByStore.set(store, orderedPeriods.map(() => 0));
-    if(!item.qtyByStore.has(store)) item.qtyByStore.set(store, orderedPeriods.map(() => 0));
+    if(!item.salesByStore.has(store)) item.salesByStore.set(store, zeroArr());
+    if(!item.qtyByStore.has(store)) item.qtyByStore.set(store, zeroArr());
     item.salesByStore.get(store)[idx] += sales;
     item.qtyByStore.get(store)[idx] += qty;
-    if(row?.isCombo){
-      item.comboSalesByPeriod[idx] += sales;
-      item.comboQtyByPeriod[idx] += qty;
-    }
   });
+
+  innovationResolvePostresComboRows(storeList).forEach(row => {
+    const idx = periodIndex.get(String(row?.periodKey || '').trim());
+    if(idx == null) return;
+    const store = String(row?.store || '').trim().toUpperCase();
+    if(!store || (storeSet.size && !storeSet.has(store))) return;
+    const sales = Number(row?.sales || 0);
+    const qty = Number(row?.qty || 0);
+    if(!(sales > 0 || qty > 0)) return;
+
+    comboSales[idx] += sales;
+    comboQty[idx] += qty;
+    if(!comboSalesByStore.has(store)) comboSalesByStore.set(store, zeroArr());
+    if(!comboQtyByStore.has(store)) comboQtyByStore.set(store, zeroArr());
+    comboSalesByStore.get(store)[idx] += sales;
+    comboQtyByStore.get(store)[idx] += qty;
+
+    const item = ensureParent(row?.parentKey, row?.parentLabel, row?.parentShortLabel, row?.parentColor);
+    item.comboSalesByPeriod[idx] += sales;
+    item.comboQtyByPeriod[idx] += qty;
+    item.comboTotalSales += sales;
+    item.comboTotalQty += qty;
+    if(!item.comboSalesByStore.has(store)) item.comboSalesByStore.set(store, zeroArr());
+    if(!item.comboQtyByStore.has(store)) item.comboQtyByStore.set(store, zeroArr());
+    item.comboSalesByStore.get(store)[idx] += sales;
+    item.comboQtyByStore.get(store)[idx] += qty;
+  });
+
   const agg = {
     periods: orderedPeriods,
     stores: resolvedStoreOrder,
@@ -31350,7 +31808,13 @@ function innovationBuildPostresAggregate(storeList, periods){
     totalQtyByStore,
     comboSalesByStore,
     comboQtyByStore,
-    parentSeries: Array.from(parentSeries.values()).filter(item => item.totalSales > 0 || item.totalQty > 0).sort((a,b) => Number(b.totalSales || 0) - Number(a.totalSales || 0)),
+    parentSeries: Array.from(parentSeries.values())
+      .filter(item => item.totalSales > 0 || item.totalQty > 0 || item.comboTotalSales > 0 || item.comboTotalQty > 0)
+      .sort((a,b) => {
+        const av = Number(a.comboTotalSales || 0) || Number(a.totalSales || 0);
+        const bv = Number(b.comboTotalSales || 0) || Number(b.totalSales || 0);
+        return bv - av;
+      }),
     grandTotalSales: totalSales.reduce((sum, v) => sum + Number(v || 0), 0),
     grandTotalQty: totalQty.reduce((sum, v) => sum + Number(v || 0), 0),
     grandComboSales: comboSales.reduce((sum, v) => sum + Number(v || 0), 0),
@@ -31361,6 +31825,7 @@ function innovationBuildPostresAggregate(storeList, periods){
   state._innovationPostresAggLast = agg;
   return agg;
 }
+
 function innovationPeriodSorter(a,b){
   if(isMonthlyReport()) return String(a||'').localeCompare(String(b||''));
   const pa = (typeof parseIsoWeekKey === 'function') ? parseIsoWeekKey(a) : null;
@@ -33378,6 +33843,7 @@ function innovationRenderPostresPieLegend(items, totalQty, totalSales){
     elItem.ondblclick = () => innovationSetPostresPieSelection(elItem.getAttribute('data-postres-key') || '');
   });
 }
+
 function renderInnovationPostresPieChart(agg){
   const canvas = document.getElementById('chart_innovation_postres_parent');
   if(!canvas) return;
@@ -33386,18 +33852,20 @@ function renderInnovationPostresPieChart(agg){
   try{ state.chartInnovationPostresParent?.destroy?.(); }catch(_e){}
   const mode = innovationGetPostresPieMode();
   const periods = Array.isArray(agg?.periods) ? agg.periods : [];
-  const series = Array.isArray(agg?.parentSeries) ? agg.parentSeries.filter(item => (item?.totalSales > 0 || item?.totalQty > 0)) : [];
+  const series = Array.isArray(agg?.parentSeries)
+    ? agg.parentSeries.filter(item => (Number(item?.comboTotalSales || 0) > 0 || Number(item?.comboTotalQty || 0) > 0))
+    : [];
   const lastIdx = periods.length ? periods.length - 1 : -1;
   const totals = series.map(item => ({
     key:item.key,
     label:item.label,
     shortLabel:item.shortLabel,
     color:item.color,
-    qty: mode === 'latest' ? Number(item?.qtyByPeriod?.[lastIdx] || 0) : Number(item?.totalQty || 0),
-    sales: mode === 'latest' ? Number(item?.salesByPeriod?.[lastIdx] || 0) : Number(item?.totalSales || 0)
+    qty: mode === 'latest' ? Number(item?.comboQtyByPeriod?.[lastIdx] || 0) : Number(item?.comboTotalQty || 0),
+    sales: mode === 'latest' ? Number(item?.comboSalesByPeriod?.[lastIdx] || 0) : Number(item?.comboTotalSales || 0)
   })).filter(item => item.qty > 0 || item.sales > 0);
   if(!totals.length){
-    innovationNoData('chart_innovation_postres_parent', 'No hay datos suficientes de postres por item padre para los filtros actuales.');
+    innovationNoData('chart_innovation_postres_parent', 'No hay datos suficientes de combos postres por item padre para los filtros actuales.');
     const legendRoot = document.getElementById('innovationPostresPieLegend');
     if(legendRoot) legendRoot.innerHTML = '';
     innovationSetChartCardActive('chart_innovation_postres_parent', false);
@@ -33489,11 +33957,10 @@ function renderInnovationPostresPieChart(agg){
             label(ctx){
               const src = totals[ctx.dataIndex] || {qty:0,sales:0};
               const shareQty = grandQty > 0 ? src.qty / grandQty : 0;
-              const shareSales = grandSales > 0 ? src.sales / grandSales : 0;
               return `${ctx.label}: ${fmtInt(src.qty)} unid. • ${fmtMoney(src.sales)} • % mix ${(shareQty * 100).toFixed(1)}%`;
             },
             footer(){
-              return `Doble click para filtrar/quitar filtro · Total: ${fmtInt(grandQty)} unid. • ${fmtMoney(grandSales)}`;
+              return `Doble click para filtrar/quitar filtro · Total combos: ${fmtInt(grandQty)} unid. • ${fmtMoney(grandSales)}`;
             }
           }
         }
@@ -33510,11 +33977,12 @@ function renderInnovationPostresPieChart(agg){
   const hint = document.getElementById('innovationPostresPieHint');
   if(hint){
     const baseText = mode === 'latest'
-      ? `Mix y ventas del último ${isMonthlyReport() ? 'mes' : 'período'} seleccionado.`
-      : `Mix y ventas acumuladas de ${periods.length} ${isMonthlyReport() ? 'meses' : 'períodos'}.`;
+      ? `Mix y ventas de combos postres del último ${isMonthlyReport() ? 'mes' : 'período'} seleccionado.`
+      : `Mix y ventas acumuladas de combos postres en ${periods.length} ${isMonthlyReport() ? 'meses' : 'períodos'}.`;
     hint.textContent = selectedItem ? `${baseText} Filtro activo: ${selectedItem.shortLabel || selectedItem.label}. Doble click para quitar.` : `${baseText} Doble click en un segmento para filtrar el gráfico izquierdo.`;
   }
 }
+
 
 function renderInnovationPostresShareChart(agg){
   const canvas = document.getElementById('chart_innovation_postres_share');
@@ -33524,7 +33992,7 @@ function renderInnovationPostresShareChart(agg){
   const periods = Array.isArray(agg?.periods) ? agg.periods : [];
   const selectedKey = innovationGetPostresPieSelection();
   const selectedParent = Array.isArray(agg?.parentSeries) ? (agg.parentSeries.find(item => item?.key === selectedKey) || null) : null;
-  const totalSales = selectedParent ? (Array.isArray(selectedParent.salesByPeriod) ? selectedParent.salesByPeriod : periods.map(() => 0)) : (Array.isArray(agg?.totalSales) ? agg.totalSales : periods.map(() => 0));
+  let totalSales = selectedParent ? (Array.isArray(selectedParent.salesByPeriod) ? selectedParent.salesByPeriod.slice() : periods.map(() => 0)) : (Array.isArray(agg?.totalSales) ? agg.totalSales.slice() : periods.map(() => 0));
   const totalQty = selectedParent ? (Array.isArray(selectedParent.qtyByPeriod) ? selectedParent.qtyByPeriod : periods.map(() => 0)) : (Array.isArray(agg?.totalQty) ? agg.totalQty : periods.map(() => 0));
   const comboSales = selectedParent ? (Array.isArray(selectedParent.comboSalesByPeriod) ? selectedParent.comboSalesByPeriod : periods.map(() => 0)) : (Array.isArray(agg?.comboSales) ? agg.comboSales : periods.map(() => 0));
   const comboQty = selectedParent ? (Array.isArray(selectedParent.comboQtyByPeriod) ? selectedParent.comboQtyByPeriod : periods.map(() => 0)) : (Array.isArray(agg?.comboQty) ? agg.comboQty : periods.map(() => 0));
@@ -33532,6 +34000,29 @@ function renderInnovationPostresShareChart(agg){
   const comboSalesByStore = selectedParent ? (selectedParent.comboSalesByStore instanceof Map ? selectedParent.comboSalesByStore : new Map()) : (agg?.comboSalesByStore instanceof Map ? agg.comboSalesByStore : new Map());
   const tooltipStores = Array.isArray(agg?.stores) ? agg.stores.slice() : [];
   const compactStoreLabel = (storeName) => { const raw = String(storeName || '').trim(); const digits = raw.replace(/^AMPM/i, '').trim(); return digits ? `A${digits.padStart(2,'0')}` : raw; };
+  if(isMonthlyReport() && !selectedParent){
+    try{
+      const postresNorm = innovationNormText('Postre');
+      const periodSet = new Set(periods.map(pk => String(pk || '').trim()).filter(Boolean));
+      const monthRows = innovationChartSalesMonthRows();
+      const storeList = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []);
+      const storeSet = new Set(Array.from(new Set((Array.isArray(storeList) ? storeList : []).map(s => String(s || '').trim().toUpperCase()).filter(Boolean))));
+      const overrideMap = new Map();
+      (Array.isArray(monthRows) ? monthRows : []).forEach(r=>{
+        const periodKey = innovationNormalizePeriodKey(r?.CalMonth ?? r?.calmonth ?? r?.month ?? '');
+        if(!periodSet.has(periodKey)) return;
+        const store = String(r?.store || r?.Store || '').trim().toUpperCase();
+        if(storeSet.size && !storeSet.has(store)) return;
+        const category = String(r?.category || r?.Category || '').trim();
+        if(innovationNormText(category) !== postresNorm) return;
+        overrideMap.set(periodKey, Number(overrideMap.get(periodKey) || 0) + Number(r?.sales ?? r?.Sales ?? r?.['Total Sales'] ?? 0));
+      });
+      totalSales = periods.map((pk, idx)=>{
+        const overrideVal = Number(overrideMap.get(pk) || 0);
+        return overrideVal > 0 ? overrideVal : Number(totalSales[idx] || 0);
+      });
+    }catch(_e){}
+  }
   const remainderSales = periods.map((_, idx) => Math.max(0, Number(totalSales[idx] || 0) - Number(comboSales[idx] || 0)));
   const remainderQty = periods.map((_, idx) => Math.max(0, Number(totalQty[idx] || 0) - Number(comboQty[idx] || 0)));
   const shareData = periods.map((_, idx) => {
@@ -42158,14 +42649,16 @@ function initHallazgosUI(){
     }
     let rows = [];
     try{
-      if(wb && typeof hasSheet === 'function' && hasSheet(wb, 'Innovation_FS_Detail') && typeof innovationWorkbookSheetRows === 'function'){
+      if(wb && typeof innovationWorkbookSheetRows === 'function'){
         rows = innovationWorkbookSheetRows(wb, 'Innovation_FS_Detail');
       }
     }catch(_e){}
     if(!Array.isArray(rows) || !rows.length){
       try{
-        const base = (wb && typeof hasSheet === 'function' && hasSheet(wb, 'Data Venta') && typeof innovationWorkbookSheetRows === 'function')
-          ? innovationWorkbookSheetRows(wb, 'Data Venta')
+        const base = (wb && typeof innovationWorkbookSheetRows === 'function')
+          ? (innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos').length
+              ? innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos')
+              : innovationWorkbookSheetRows(wb, 'Data Venta'))
           : [];
         const agg = new Map();
         (Array.isArray(base) ? base : []).forEach(r => {
@@ -42516,8 +43009,9 @@ function initHallazgosUI(){
   }
   function _sheetRows(sheetName){
     try{
-      if(state?.__hallWorkbook && typeof hasSheet === 'function' && hasSheet(state.__hallWorkbook, sheetName) && typeof innovationWorkbookSheetRows === 'function'){
-        return innovationWorkbookSheetRows(state.__hallWorkbook, sheetName) || [];
+      if(state?.__hallWorkbook && typeof innovationWorkbookSheetRows === 'function'){
+        const rows = innovationWorkbookSheetRows(state.__hallWorkbook, sheetName) || [];
+        if(Array.isArray(rows) && rows.length) return rows;
       }
     }catch(_e){}
     return [];
@@ -42892,8 +43386,9 @@ function initHallazgosUI(){
   }
   function _sheetRows(name){
     try{
-      if(state?.__hallWorkbook && typeof hasSheet === 'function' && hasSheet(state.__hallWorkbook, name) && typeof innovationWorkbookSheetRows === 'function'){
-        return innovationWorkbookSheetRows(state.__hallWorkbook, name) || [];
+      if(state?.__hallWorkbook && typeof innovationWorkbookSheetRows === 'function'){
+        const rows = innovationWorkbookSheetRows(state.__hallWorkbook, name) || [];
+        if(Array.isArray(rows) && rows.length) return rows;
       }
     }catch(_e){}
     return [];
@@ -44948,10 +45443,14 @@ function initHallazgosUI(){
     const hasHdWeekly = (typeof hasSheet === 'function') && hasSheet(wb, 'Innovation_HotDog_Merma_Weekly');
     const hasHdMonthly = (typeof hasSheet === 'function') && hasSheet(wb, 'Innovation_HotDog_Merma_Monthly');
     if(hasHdWeekly || hasHdMonthly){
+      const readRows = (name) => {
+        if(typeof innovationWorkbookSheetRows === 'function') return innovationWorkbookSheetRows(wb, name) || [];
+        return sheetRows(wb, name, {defval:null, raw:false}) || [];
+      };
       return {
         mode:'hotdogDedicated',
-        rowsWeekly: hasHdWeekly ? (sheetRows(wb, 'Innovation_HotDog_Merma_Weekly', {defval:null, raw:false}) || []) : [],
-        rowsMonthly: hasHdMonthly ? (sheetRows(wb, 'Innovation_HotDog_Merma_Monthly', {defval:null, raw:false}) || []) : []
+        rowsWeekly: hasHdWeekly ? readRows('Innovation_HotDog_Merma_Weekly') : [],
+        rowsMonthly: hasHdMonthly ? readRows('Innovation_HotDog_Merma_Monthly') : []
       };
     }
     if(typeof hasSheet === 'function' && hasSheet(wb, 'Innovation_FS_Merma_Detail')){
@@ -45040,8 +45539,13 @@ function initHallazgosUI(){
     const n = Number(value || 0);
     return n > 0 ? 'diffPos' : (n < 0 ? 'diffNeg' : '');
   }
+  function _catPagerExerciseNum(v){
+    if(typeof num === 'function') return num(v);
+    const n = Number(String(v == null ? '' : v).replace(/[$,%\s]/g,'').replace(/,/g,''));
+    return Number.isFinite(n) ? n : 0;
+  }
   function _catPagerExerciseFmtMoney(v){
-    return fmtMoney(Number(v || 0));
+    return fmtMoney(_catPagerExerciseNum(v));
   }
   function _catPagerExerciseFmtPct(v){
     return _catPagerExercisePctLabel(v, 1);
@@ -45112,18 +45616,29 @@ function initHallazgosUI(){
     const hotDogExercise = /HOT\s*DOG|HOTDOG/.test(String(catNorm || '').replace(/\s+/g,''));
     const hotDogMermaDescKeys = _catPagerExerciseHotDogMermaDescKeys();
     const selectedStores = new Set(Array.from(stores).map(s => _catPagerExerciseNormalizeStore(s)));
+    const hotDogDedicatedMetrics = new Map();
 
     if(hotDogExercise && mermaPayload.mode === 'hotdogDedicated'){
       const sourceRows = monthly ? (mermaPayload.rowsMonthly || []) : (mermaPayload.rowsWeekly || []);
       sourceRows.filter(r => {
         const store = _catPagerExerciseNormalizeStore(r?.Store || r?.store || '');
         if(selectedStores.size && !selectedStores.has(store)) return false;
+        if((r?.DOW != null || r?.DOW_Name != null) && typeof rowMatchesGlobalDow === 'function' && !rowMatchesGlobalDow(r)) return false;
         const pk = monthly ? _catPagerExerciseMonthKey(r?.CalMonth || r?.calMonth || '') : String(r?.YearWeek || r?.yearWeek || '').trim();
         return periodSet.has(pk);
       }).forEach(r => {
         const pk = monthly ? _catPagerExerciseMonthKey(r?.CalMonth || r?.calMonth || '') : String(r?.YearWeek || r?.yearWeek || '').trim();
         if(!pk) return;
-        mermaMap.set(pk, Number(mermaMap.get(pk) || 0) + Number(r?.Merma || r?.merma || 0));
+        const salesVal = _catPagerExerciseNum(r?.Sales ?? r?.sales ?? 0);
+        const marginVal = _catPagerExerciseNum(r?.Margin ?? r?.margin ?? r?.['Total Gross Margin'] ?? 0);
+        const qtyVal = _catPagerExerciseNum(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty ?? 0);
+        const prevMetric = hotDogDedicatedMetrics.get(pk) || {sales:0, margin:0, qty:0, hasMetric:false};
+        prevMetric.sales += salesVal;
+        prevMetric.margin += marginVal;
+        prevMetric.qty += qtyVal;
+        prevMetric.hasMetric = true;
+        hotDogDedicatedMetrics.set(pk, prevMetric);
+        mermaMap.set(pk, _catPagerExerciseNum(mermaMap.get(pk) || 0) + _catPagerExerciseNum(r?.Merma || r?.merma || 0));
         mermaPeriodsWithData.add(pk);
       });
     }else{
@@ -45150,16 +45665,18 @@ function initHallazgosUI(){
       mermaRows.forEach(r => {
         const pk = monthly ? _catPagerExerciseMonthKey(r?.CalMonth || r?.calMonth || '') : String(r?.YearWeek || r?.yearWeek || '').trim();
         if(!pk) return;
-        mermaMap.set(pk, Number(mermaMap.get(pk) || 0) + Number(r?.Merma || r?.merma || 0));
+        mermaMap.set(pk, _catPagerExerciseNum(mermaMap.get(pk) || 0) + _catPagerExerciseNum(r?.Merma || r?.merma || 0));
         mermaPeriodsWithData.add(pk);
       });
     }
 
     const periodRows = periods.map(pk => {
-      const sales = Number(salesMap.get(pk)?.sales || 0);
-      const margin = Number(salesMap.get(pk)?.margin || 0);
+      const dedicatedMetric = hotDogDedicatedMetrics.get(pk);
+      const useDedicatedMetric = !!(dedicatedMetric && dedicatedMetric.hasMetric);
+      const sales = useDedicatedMetric ? _catPagerExerciseNum(dedicatedMetric.sales || 0) : _catPagerExerciseNum(salesMap.get(pk)?.sales || 0);
+      const margin = useDedicatedMetric ? _catPagerExerciseNum(dedicatedMetric.margin || 0) : _catPagerExerciseNum(salesMap.get(pk)?.margin || 0);
       const hasMermaData = mermaPeriodsWithData.has(pk);
-      const mermaRaw = Number(mermaMap.get(pk) || 0);
+      const mermaRaw = _catPagerExerciseNum(mermaMap.get(pk) || 0);
       const merma = Math.abs(mermaRaw) < 1e-9 ? 0 : mermaRaw;
       const finalMargin = margin + merma;
       return {
@@ -47715,8 +48232,9 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
   function _sheetRows(name){
     try{
       const wb = _wb();
-      if(!wb || typeof hasSheet !== 'function' || !hasSheet(wb, name) || typeof innovationWorkbookSheetRows !== 'function') return [];
-      return innovationWorkbookSheetRows(wb, name) || [];
+      if(!wb || typeof innovationWorkbookSheetRows !== 'function') return [];
+      const rows = innovationWorkbookSheetRows(wb, name) || [];
+      return Array.isArray(rows) ? rows : [];
     }catch(_e){ return []; }
   }
   function _conversionMap(){
@@ -48252,8 +48770,11 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
   function _imWorkbookRows(sheetName){
     try{
       const wb = state?.__hallWorkbook || null;
-      if(!wb || typeof hasSheet !== 'function' || !hasSheet(wb, sheetName)) return [];
-      if(typeof innovationWorkbookSheetRows === 'function') return innovationWorkbookSheetRows(wb, sheetName) || [];
+      if(!wb) return [];
+      if(typeof innovationWorkbookSheetRows === 'function'){
+        const rows = innovationWorkbookSheetRows(wb, sheetName) || [];
+        if(Array.isArray(rows) && rows.length) return rows;
+      }
       if(typeof sheetRows === 'function') return sheetRows(wb, sheetName, {defval:null, raw:false}) || [];
     }catch(_e){}
     return [];
@@ -48626,8 +49147,11 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
   function _fmWorkbookRows(sheetName){
     try{
       const wb = state?.__hallWorkbook || null;
-      if(!wb || typeof hasSheet !== 'function' || !hasSheet(wb, sheetName)) return [];
-      if(typeof innovationWorkbookSheetRows === 'function') return innovationWorkbookSheetRows(wb, sheetName) || [];
+      if(!wb) return [];
+      if(typeof innovationWorkbookSheetRows === 'function'){
+        const rows = innovationWorkbookSheetRows(wb, sheetName) || [];
+        if(Array.isArray(rows) && rows.length) return rows;
+      }
       if(typeof sheetRows === 'function') return sheetRows(wb, sheetName, {defval:null, raw:false}) || [];
     }catch(_e){}
     return [];
@@ -50549,7 +51073,7 @@ function innovationOnePagerCreateBrandedShell(){
 
   window.addEventListener('ampm:tabshown', onTabShown);
   window.addEventListener('resize', function(){ recoverTab(activeTab(), false); }, { passive:true });
-  window.addEventListener('focus', function(){ recoverTab(activeTab(), false); }, { passive:true });
+  window.addEventListener('focus', function(){ try{ resizeVisibleCharts(activeTab()); }catch(_e){} }, { passive:true });
 
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', function(){
@@ -51608,8 +52132,13 @@ function innovationOnePagerCreateBrandedShell(){
     }catch(_e){}
   });
   window.addEventListener('focus', function(){
-    if(activeTab() === 'ventas' && isMonthly()) scheduleVentasMamRecovery();
-    if(activeTab() === 'delivery') scheduleDeliveryMamRecovery();
+    try{
+      var tab = activeTab();
+      if(tab === 'ventas' || tab === 'delivery'){
+        if(typeof resizeCharts === 'function') resizeCharts();
+        if(typeof updateAllChartTitles === 'function') updateAllChartTitles();
+      }
+    }catch(_e){}
   }, { passive:true });
 })();
 </script>
@@ -51617,6 +52146,7 @@ function innovationOnePagerCreateBrandedShell(){
 
 <script id="sbf-general-chart-recovery-patch">
 (function(){
+  var _recoverTimer = null;
   function activeTab(){
     try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim(); }catch(e){ return ''; }
   }
@@ -51628,14 +52158,26 @@ function innovationOnePagerCreateBrandedShell(){
       return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
     }catch(e){ return false; }
   }
-  function recoverSbfGeneralChart(){
+  function getStores(){
+    try{ return (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) ? state.stores : []); }catch(_e){ return []; }
+  }
+  function resizeExistingChart(){
     try{
-      if(activeTab() !== 'sbf') return;
+      const chart = (window.state && state.chartSbfMam) ? state.chartSbfMam : null;
+      const canvas = chart && chart.canvas ? chart.canvas : document.getElementById('chart_sbf_mam');
+      if(!chart || !canvas || !isVisible(canvas)) return false;
+      if(typeof chart.resize === 'function') chart.resize();
+      if(typeof chart.update === 'function') chart.update('none');
+      return true;
+    }catch(_e){ return false; }
+  }
+  function rebuildChart(){
+    try{
+      const stores = getStores();
       const canvas = document.getElementById('chart_sbf_mam');
       if(!canvas) return;
       const card = canvas.closest('.chartCard');
       if(card && card.style.display === 'none') return;
-      const stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) ? state.stores : []);
       try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
       if(!isVisible(canvas)) return;
       try{
@@ -51643,31 +52185,50 @@ function innovationOnePagerCreateBrandedShell(){
           state.chartSbfMam.destroy();
           state.chartSbfMam = null;
         }
-      }catch(e){}
+      }catch(_e){}
       try{ if(typeof renderSbfMamChart === 'function') renderSbfMamChart(stores); }catch(e){ console.warn('recoverSbfGeneralChart render failed', e); }
       setTimeout(function(){
-        try{
-          if(window.state && state.chartSbfMam && typeof state.chartSbfMam.resize === 'function' && isVisible(state.chartSbfMam.canvas)){
-            state.chartSbfMam.resize();
-            state.chartSbfMam.update('none');
-          }
-        }catch(e){}
-      }, 120);
+        try{ resizeExistingChart(); }catch(_e){}
+      }, 90);
     }catch(e){ console.warn('recoverSbfGeneralChart failed', e); }
   }
-  function scheduleRecover(){
-    setTimeout(recoverSbfGeneralChart, 60);
-    setTimeout(recoverSbfGeneralChart, 220);
+  function runRecover(mode){
+    try{
+      if(activeTab() !== 'sbf') return;
+      const stores = getStores();
+      try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
+      const canvas = document.getElementById('chart_sbf_mam');
+      if(!canvas) return;
+      if(!isVisible(canvas)) return;
+      if(mode === 'rebuild'){
+        rebuildChart();
+        return;
+      }
+      if(!resizeExistingChart()) rebuildChart();
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(e){ console.warn('runRecover SBF failed', e); }
+  }
+  function scheduleRecover(mode){
+    try{ if(_recoverTimer) clearTimeout(_recoverTimer); }catch(_e){}
+    const safeMode = (mode === 'rebuild') ? 'rebuild' : 'light';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ runRecover(safeMode); }); });
+    _recoverTimer = setTimeout(function(){ runRecover(safeMode); }, safeMode === 'rebuild' ? 140 : 90);
   }
   document.addEventListener('click', function(ev){
     const btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab="sbf"]') : null;
     if(!btn) return;
-    scheduleRecover();
+    scheduleRecover('light');
   }, true);
-  window.addEventListener('focus', scheduleRecover);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) scheduleRecover(); });
-  window.addEventListener('resize', function(){ if(activeTab() === 'sbf') scheduleRecover(); });
-  setTimeout(scheduleRecover, 400);
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = String(ev && ev.detail && ev.detail.tab || '').trim().toLowerCase();
+      if(tab === 'sbf') scheduleRecover('light');
+    }catch(_e){}
+  });
+  window.addEventListener('resize', function(){ if(activeTab() === 'sbf') scheduleRecover('light'); }, { passive:true });
+  setTimeout(function(){ try{ if(activeTab() === 'sbf') scheduleRecover('light'); }catch(_e){} }, 400);
 })();
 </script>
 
@@ -53664,9 +54225,6 @@ function innovationOnePagerCreateBrandedShell(){
   window.addEventListener('resize', function(){
     try{ if(_activeTab() === 'ventas') _schedule(false); }catch(_e){}
   }, { passive:true });
-  document.addEventListener('visibilitychange', function(){
-    try{ if(!document.hidden && _activeTab() === 'ventas') _schedule(false); }catch(_e){}
-  });
   setTimeout(function(){ try{ if(_activeTab() === 'ventas') _schedule(false); }catch(_e){} }, 900);
 })();
 </script>
@@ -54431,28 +54989,1779 @@ function innovationOnePagerCreateBrandedShell(){
 </script>
 
 
-<style id="ampm-sales-spark-hide">
-  #kpiBoard .kpiCard[data-kpi="sales_cur"] .spark{
-    display:none !important;
-  }
-</style>
-<script id="ampm-sales-spark-remove-js">
+<script id="innovation-fs-hours-authoritative-v81">
 (function(){
-  function removeSalesSpark(){
-    try{
-      var card = document.querySelector('#kpiBoard .kpiCard[data-kpi="sales_cur"]');
-      if(!card) return;
-      var spark = card.querySelector('.spark');
-      if(spark) spark.remove();
-    }catch(_e){}
+  function _txt(v){ return String(v ?? '').trim(); }
+  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _bool(v){
+    if(v === true || v === 1) return true;
+    if(v === false || v === 0 || v == null) return false;
+    const s = _txt(v).toLowerCase();
+    return s === 'true' || s === '1' || s === 'yes' || s === 'y' || s === 'si' || s === 'sí';
   }
-  document.addEventListener('DOMContentLoaded', removeSalesSpark);
-  window.addEventListener('load', removeSalesSpark);
-  window.addEventListener('ampm:refresh', function(){ setTimeout(removeSalesSpark, 120); });
-  setInterval(removeSalesSpark, 1500);
+  function _date(raw){
+    try{ if(typeof toDateTime === 'function'){ const d = toDateTime(raw); if(d && !Number.isNaN(d.getTime())) return d; } }catch(_e){}
+    try{
+      const d = raw instanceof Date ? raw : new Date(raw);
+      return (!d || Number.isNaN(d.getTime())) ? null : d;
+    }catch(_e){ return null; }
+  }
+  function _normDept(raw){
+    try{ if(typeof innovationNormText === 'function') return innovationNormText(raw); }catch(_e){}
+    return _txt(raw).toUpperCase().replace(/\s+/g,'');
+  }
+  function _dow(rawNum, rawName, rawDate){
+    try{
+      if(typeof normalizeDowKey === 'function'){
+        const dk = normalizeDowKey(rawNum || rawName || '');
+        if(dk) return String(dk).trim();
+      }
+    }catch(_e){}
+    const d = _date(rawDate);
+    if(d){
+      const js = d.getDay();
+      return String(js === 0 ? 7 : js);
+    }
+    return _txt(rawNum || rawName);
+  }
+  function _dowName(n){
+    return ({'1':'Lunes','2':'Martes','3':'Miércoles','4':'Jueves','5':'Viernes','6':'Sábado','7':'Domingo'})[String(n || '').trim()] || '';
+  }
+  function _daypart(rawDaypart, rawHour, rawDate){
+    const existing = _txt(rawDaypart);
+    if(existing) return existing;
+    let hour = Number(rawHour);
+    if(!Number.isFinite(hour)){
+      const d = _date(rawDate);
+      hour = d ? Number(d.getHours()) : NaN;
+    }
+    if(!Number.isFinite(hour)) return '';
+    if(hour < 6) return '1. Nocturno';
+    if(hour < 12) return '2. Desayuno';
+    if(hour < 18) return '3. Almuerzo';
+    if(hour < 21) return '4. Cena-1';
+    return '4. Cena-2';
+  }
+  function _periodWeek(row){
+    try{
+      if(typeof innovationPeriodKeyFromRow === 'function'){
+        const v = innovationPeriodKeyFromRow(row, false);
+        if(v) return _txt(v);
+      }
+    }catch(_e){}
+    return _txt(row?.YearWeek ?? row?.week ?? '');
+  }
+  function _periodMonth(row){
+    try{
+      if(typeof innovationPeriodKeyFromRow === 'function'){
+        const v = innovationPeriodKeyFromRow(row, true);
+        if(v) return _txt(v);
+      }
+    }catch(_e){}
+    return _txt(row?.CalMonth ?? row?.calmonth ?? row?.month ?? '');
+  }
+  function _buildFromRows(baseRows){
+    const out = [];
+    (Array.isArray(baseRows) ? baseRows : []).forEach(r => {
+      const dept = _txt(r?.Department ?? r?.department);
+      if(_normDept(dept) !== 'FOODSERVICE') return;
+      const dateSold = r?.['Date Sold'] ?? r?.DateSold ?? r?.date ?? '';
+      const dow = _dow(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name, dateSold);
+      out.push({
+        'Date Sold': _txt(dateSold),
+        'YearWeek': _periodWeek(r),
+        'CalMonth': _periodMonth(r),
+        'Store': _txt(r?.Store ?? r?.store ?? r?.['Store Name']).toUpperCase(),
+        'Department': dept,
+        'Category': _txt(r?.Category ?? r?.category),
+        'Supplier': _txt(r?.Supplier ?? r?.supplier),
+        'Brand': _txt(r?.Brand ?? r?.brand ?? r?.Marca),
+        'Description': _txt(r?.Description ?? r?.description ?? r?.Descripcion),
+        'Daypart': _daypart(r?.Daypart ?? r?.daypart, r?.Hour ?? r?.hour, dateSold),
+        'DOW': dow,
+        'DOW_Name': _txt(r?.DOW_Name ?? r?.dow_name) || _dowName(dow),
+        'Is_Delivery': _bool(r?.Is_Delivery ?? r?.is_delivery),
+        'Delivery_Channel': _txt(r?.Delivery_Channel ?? r?.delivery_channel),
+        'Qty Sold': _num(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty),
+        'Sales': _num(r?.Sales ?? r?.sales ?? r?.['Total Sales']),
+        'Total Gross Margin': _num(r?.['Total Gross Margin'] ?? r?.margin ?? r?.['Gross Margin'])
+      });
+    });
+    return out.filter(r => r.Store && (r.YearWeek || r.CalMonth));
+  }
+
+  innovationFoodServiceDetailRows = function(){
+    const wb = state?.__hallWorkbook || null;
+    const stamp = state?.__hallWorkbookStamp || 'nostamp';
+    const key = `innovationfsdetail|${stamp}|v81authoritative`;
+    if(state._innovationFSDetailRowsKey === key && Array.isArray(state._innovationFSDetailRows)){
+      return state._innovationFSDetailRows;
+    }
+    let rows = [];
+    try{
+      if(wb && typeof innovationWorkbookSheetRows === 'function'){
+        const fsSheetRows = innovationWorkbookSheetRows(wb, 'Innovation_FS_Detail');
+        if(Array.isArray(fsSheetRows) && fsSheetRows.length){
+          rows = _buildFromRows(fsSheetRows);
+        }
+        if((!rows || !rows.length) && typeof hasSheet === 'function' && hasSheet(wb, 'Cubo_Sales_DetailHallazgos')){
+          rows = _buildFromRows(innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos'));
+        }
+      }
+    }catch(e){ console.warn('Innovation FS authoritative rows failed', e); }
+    state._innovationFSDetailRowsKey = key;
+    state._innovationFSDetailRows = Array.isArray(rows) ? rows : [];
+    return state._innovationFSDetailRows;
+  };
 })();
 </script>
 
+
+<script id="ampm-innovation-monthly-fix-v3">
+(function(){
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function _num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _bool(v){
+    if(v === true || v === 1) return true;
+    var s = _txt(v).toLowerCase();
+    return s === 'true' || s === '1' || s === 'si' || s === 'sí' || s === 'yes' || s === 'y';
+  }
+  function _norm(v){
+    try{
+      if(typeof innovationNormText === 'function') return String(innovationNormText(v || '') || '').trim();
+    }catch(_e){}
+    return _txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'');
+  }
+  function _selectedStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function'){
+        var list = getSelectedStoresOrAll() || [];
+        if(Array.isArray(list) && list.length) return list.map(function(s){ return _txt(s).toUpperCase(); }).filter(Boolean);
+      }
+    }catch(_e){}
+    try{
+      if(window.state && Array.isArray(state.stores) && state.stores.length){
+        return state.stores.map(function(s){ return _txt(s).toUpperCase(); }).filter(Boolean);
+      }
+    }catch(_e){}
+    return ['AMPM01','AMPM02','AMPM03'];
+  }
+  function _wantedDow(){
+    try{
+      if(typeof parseDowFilterValues === 'function' && typeof getGlobalDowFilter === 'function'){
+        var vals = parseDowFilterValues(getGlobalDowFilter());
+        return Array.isArray(vals) ? vals.map(function(v){ return _txt(v); }).filter(Boolean) : [];
+      }
+    }catch(_e){}
+    return [];
+  }
+  function _dowKey(rawNum, rawName){
+    try{
+      if(typeof normalizeDowKey === 'function'){
+        return _txt(normalizeDowKey(rawNum || rawName || ''));
+      }
+    }catch(_e){}
+    return _txt(rawNum || rawName);
+  }
+  function _storeMeta(store){
+    try{
+      if(typeof innovationFsExecStoreMeta === 'function') return innovationFsExecStoreMeta(store);
+    }catch(_e){}
+    return { short:store, name:store, full:store };
+  }
+  function _periodsMonthly(){
+    try{
+      if(typeof innovationMonthlyAnchorPeriod === 'function' && typeof innovationBuildContinuousMonthWindow === 'function'){
+        var anchor = innovationMonthlyAnchorPeriod();
+        var out = innovationBuildContinuousMonthWindow(anchor, 8) || [];
+        if(Array.isArray(out) && out.length) return out.map(function(v){ return _txt(v); }).filter(Boolean);
+      }
+    }catch(_e){}
+    return [];
+  }
+  function _salesMonthRows(){
+    try{
+      if(typeof innovationChartSalesMonthRows === 'function'){
+        var rows = innovationChartSalesMonthRows() || [];
+        return Array.isArray(rows) ? rows : [];
+      }
+    }catch(_e){}
+    return [];
+  }
+  function _deliveryPeriodRows(){
+    try{
+      if(window.state && state.__hallWorkbook && typeof innovationWorkbookSheetRows === 'function'){
+        var rows = innovationWorkbookSheetRows(state.__hallWorkbook, 'Chart_Delivery_Periods') || [];
+        return Array.isArray(rows) ? rows : [];
+      }
+    }catch(_e){}
+    return [];
+  }
+  function _clearInnovationCaches(){
+    try{
+      if(!window.state) return;
+      delete state._innovationPostresAggKey;
+      delete state._innovationPostresAgg;
+      delete state._innovationPostresAggLast;
+    }catch(_e){}
+  }
+
+  if(typeof window.innovationProductKind === 'function' && !window.innovationProductKind.__ampmBroadFixV3){
+    var _baseInnovationProductKind = window.innovationProductKind;
+    window.innovationProductKind = function(desc){
+      var base = _baseInnovationProductKind(desc);
+      if(base) return base;
+      var norm = _norm(desc);
+      if(!norm || norm.indexOf('HAMBURGUESA') < 0) return '';
+      if(/RES.*DOBLE|DOBLE.*RES|RESDOBLE|DOBLECARNE|HAMBURGUESADERESDOBLE|FSIHAMBURGUESADERESDOBLE/.test(norm)) return 'double';
+      if(/RES.*QUESO|QUESO.*RES|HAMBURGUESADERESYQUESO|FSIHAMBURGUESADERESYQUESO/.test(norm)) return 'normal';
+      return '';
+    };
+    window.innovationProductKind.__ampmBroadFixV3 = true;
+  }
+
+  if(typeof window.innovationBurritoMeta === 'function' && !window.innovationBurritoMeta.__ampmBroadFixV3){
+    var _baseInnovationBurritoMeta = window.innovationBurritoMeta;
+    window.innovationBurritoMeta = function(desc){
+      var base = _baseInnovationBurritoMeta(desc);
+      if(base) return base;
+      var norm = _norm(desc);
+      if(!norm || norm.indexOf('BURRITO') < 0) return null;
+      if(/DESAYUNO|HUEVO|JAMON|FRIJOLES/.test(norm)) return { key:'desayuno', label:'Burrito de desayuno', color:'#A8A8A8' };
+      if(/POLLO/.test(norm)) return { key:'pollo', label:'Burrito de Pollo', color:'#005EA7' };
+      if(/RES|CARNE/.test(norm)) return { key:'res', label:'Burrito de Res', color:'#F58320' };
+      return null;
+    };
+    window.innovationBurritoMeta.__ampmBroadFixV3 = true;
+  }
+
+  function _postresParentMeta(desc){
+    var norm = _norm(desc);
+    if(!norm) return null;
+    if(/BUDIN/.test(norm)) return { key:'budin', label:'Budín', shortLabel:'Budín', color:'#005EA7' };
+    if(/TRESLECHES/.test(norm)) return { key:'tres_leches', label:'Tres Leches', shortLabel:'Tres Leches', color:'#FAA21E' };
+    if(/CHEESECAKE/.test(norm) && /FRESA/.test(norm)) return { key:'cheesecake_fresa', label:'Cheesecake Fresa', shortLabel:'Cheesecake Fresa', color:'#A8A8A8' };
+    if(/CHEESECAKE/.test(norm) && /CARAMELO/.test(norm)) return { key:'cheesecake_caramelo', label:'Cheesecake Caramelo', shortLabel:'Cheesecake Caramelo', color:'#F58320' };
+    if(/CHEESECAKE/.test(norm) && /OREO/.test(norm)) return { key:'cheesecake_oreo', label:'Cheesecake Oreo', shortLabel:'Cheesecake Oreo', color:'#11284A' };
+    if(/CHEESECAKE/.test(norm) && /BLUEBERRY/.test(norm)) return { key:'cheesecake_blueberry', label:'Cheesecake Blueberry', shortLabel:'Cheesecake Blueberry', color:'#4E79A7' };
+    return null;
+  }
+  if(typeof window.innovationPostresMeta === 'function' && !window.innovationPostresMeta.__ampmBroadFixV3){
+    var _baseInnovationPostresMeta = window.innovationPostresMeta;
+    window.innovationPostresMeta = function(desc){
+      var base = _baseInnovationPostresMeta(desc);
+      if(base) return base;
+      return _postresParentMeta(desc);
+    };
+    window.innovationPostresMeta.__ampmBroadFixV3 = true;
+  }
+  if(typeof window.innovationPostresComboMeta === 'function' && !window.innovationPostresComboMeta.__ampmBroadFixV3){
+    var _baseInnovationPostresComboMeta = window.innovationPostresComboMeta;
+    window.innovationPostresComboMeta = function(desc){
+      var base = _baseInnovationPostresComboMeta(desc);
+      if(base) return base;
+      var norm = _norm(desc);
+      if(!norm) return null;
+      if(!(/CAFE|COMBO|GRATIS/.test(norm))) return null;
+      return _postresParentMeta(desc);
+    };
+    window.innovationPostresComboMeta.__ampmBroadFixV3 = true;
+  }
+
+  function _buildMonthlyDeliveryPack(storeList){
+    var periods = _periodsMonthly();
+    if(!periods.length) return null;
+    var stores = Array.isArray(storeList) && storeList.length ? storeList : _selectedStores();
+    var storeSet = new Set(stores.map(function(s){ return _txt(s).toUpperCase(); }).filter(Boolean));
+    var wantedDow = _wantedDow();
+    var fsTotalByPeriod = Object.create(null);
+    var delFsByPeriod = Object.create(null);
+    var delTotalByPeriod = Object.create(null);
+    var byStore = Object.create(null);
+    periods.forEach(function(pk){
+      fsTotalByPeriod[pk] = 0;
+      delFsByPeriod[pk] = 0;
+      delTotalByPeriod[pk] = 0;
+    });
+    stores.forEach(function(st){
+      var key = _txt(st).toUpperCase();
+      var map = Object.create(null);
+      periods.forEach(function(pk){ map[pk] = 0; });
+      byStore[key] = map;
+    });
+
+    _salesMonthRows().forEach(function(r){
+      var pk = _txt(r && (r.CalMonth || r.calmonth || r.month));
+      if(!pk || !Object.prototype.hasOwnProperty.call(fsTotalByPeriod, pk)) return;
+      var store = _txt(r && (r.Store || r.store)).toUpperCase();
+      if(storeSet.size && !storeSet.has(store)) return;
+      var dept = _norm(r && (r.Department || r.department));
+      if(dept !== 'FOODSERVICE') return;
+      var gotDow = _dowKey(r && (r.DOW || r.dow), r && (r.DOW_Name || r.dow_name));
+      if(wantedDow.length && !wantedDow.includes(gotDow)) return;
+      var sales = _num(r && (r.Sales || r.sales || r['Total Sales']));
+      fsTotalByPeriod[pk] += sales;
+      var isDel = _bool(r && (r.Is_Delivery || r.is_delivery)) || /UBER|PEDIDO|PEYA|PYA/.test(_txt(r && (r.Delivery_Channel || r.delivery_channel || r.Channel)));
+      if(isDel){
+        delFsByPeriod[pk] += sales;
+        if(!byStore[store]){
+          var map2 = Object.create(null);
+          periods.forEach(function(p){ map2[p] = 0; });
+          byStore[store] = map2;
+        }
+        byStore[store][pk] += sales;
+      }
+    });
+
+    _deliveryPeriodRows().forEach(function(r){
+      var periodType = _txt(r && (r.PeriodType || r.periodtype)).toLowerCase();
+      if(periodType && periodType !== 'month') return;
+      var pk = _txt(r && (r.PeriodKey || r.periodkey));
+      if(!pk || !Object.prototype.hasOwnProperty.call(delTotalByPeriod, pk)) return;
+      var store = _txt(r && (r.Store || r.store)).toUpperCase();
+      if(storeSet.size && !storeSet.has(store)) return;
+      var dow = _txt(r && (r.DOW || r.dow));
+      if(wantedDow.length){
+        var got = _dowKey(dow, dow);
+        if(!wantedDow.includes(got)) return;
+      }else if(dow && dow !== '__ALL__'){
+        return;
+      }
+      delTotalByPeriod[pk] += _num(r && (r['Delivery Sales'] || r.sales || r.Sales || r.Amount || r.Venta));
+    });
+
+    var historyStores = stores.map(function(st){
+      var storeKey = _txt(st).toUpperCase();
+      var meta = _storeMeta(storeKey);
+      var values = periods.map(function(pk){ return _num(byStore[storeKey] && byStore[storeKey][pk]); });
+      return { store:storeKey, label:meta.short || storeKey, name:meta.name || storeKey, full:meta.full || storeKey, values:values };
+    });
+    return {
+      periods: periods.slice(),
+      fsTotal: periods.map(function(pk){ return _num(fsTotalByPeriod[pk]); }),
+      delFs: periods.map(function(pk){ return _num(delFsByPeriod[pk]); }),
+      delTotal: periods.map(function(pk){ return _num(delTotalByPeriod[pk]); }),
+      historyStores: historyStores
+    };
+  }
+
+  if(typeof window.innovationFsDelExecBuildModel === 'function' && !window.innovationFsDelExecBuildModel.__ampmMonthlyFixV3){
+    var _baseInnovationFsDelExecBuildModel = window.innovationFsDelExecBuildModel;
+    window.innovationFsDelExecBuildModel = function(storeList){
+      var model = _baseInnovationFsDelExecBuildModel.apply(this, arguments);
+      try{
+        var scenario = (model && model.scenario) ? model.scenario : (typeof innovationFsExecScenario === 'function' ? innovationFsExecScenario(storeList) : null);
+        if(!scenario || !scenario.monthly) return model;
+        var pack = _buildMonthlyDeliveryPack((scenario.stores && scenario.stores.length) ? scenario.stores : storeList);
+        if(!pack || !pack.periods || !pack.periods.length) return model;
+        if(!model) model = {};
+        model.scenario = Object.assign({}, model.scenario || scenario, { trendWeeks:pack.periods.slice(), lyPeriod:'' });
+        model.historyStores = pack.historyStores.slice();
+        model.shareInFsTrend = pack.periods.map(function(pk, i){
+          var den = _num(pack.fsTotal[i]);
+          return { periodKey:pk, value: den > 0 ? (_num(pack.delFs[i]) / den) * 100 : 0 };
+        });
+        model.shareInDeliveryTrend = pack.periods.map(function(pk, i){
+          var den = _num(pack.delTotal[i]);
+          return { periodKey:pk, value: den > 0 ? (_num(pack.delFs[i]) / den) * 100 : 0 };
+        });
+      }catch(err){
+        try{ console.warn('AMPM v3 monthly delivery fix failed', err); }catch(_e){}
+      }
+      return model;
+    };
+    window.innovationFsDelExecBuildModel.__ampmMonthlyFixV3 = true;
+  }
+
+  if(typeof window.renderInnovationCharts === 'function' && !window.renderInnovationCharts.__ampmMonthlyFixV3){
+    var _baseRenderInnovationCharts = window.renderInnovationCharts;
+    window.renderInnovationCharts = function(){
+      _clearInnovationCaches();
+      return _baseRenderInnovationCharts.apply(this, arguments);
+    };
+    window.renderInnovationCharts.__ampmMonthlyFixV3 = true;
+  }
+
+  if(typeof window.applyFilters === 'function' && !window.applyFilters.__ampmMonthlyFixV3){
+    var _baseApplyFiltersAmpmV3 = window.applyFilters;
+    window.applyFilters = function(){
+      _clearInnovationCaches();
+      return _baseApplyFiltersAmpmV3.apply(this, arguments);
+    };
+    window.applyFilters.__ampmMonthlyFixV3 = true;
+  }
+})();
+</script>
+
+
+<script id="innovation-monthly-hotfix-v4">
+(function(){
+  if(window.__innovationMonthlyHotfixV4) return;
+  window.__innovationMonthlyHotfixV4 = true;
+
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _norm(v){ try{ return innovationNormText(v); }catch(_e){ return String(v == null ? '' : v).trim().toUpperCase().replace(/[^A-Z0-9]+/g,''); } }
+  function _uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(v => _txt(v)).filter(Boolean))); }
+  function _channelKind(raw){ const s = _txt(raw).toUpperCase(); if(!s) return ''; if(s.includes('UBER')) return 'UBER'; if(s.includes('PEDIDO') || s.includes('PEYA') || s.includes('PYA')) return 'PYA'; return ''; }
+  function _matchDowRow(r){ try{ return (typeof rowMatchesGlobalDow === 'function') ? rowMatchesGlobalDow(r) : true; }catch(_e){ return true; } }
+  function _selectedStores(list){
+    const base = _uniq(Array.isArray(list) && list.length ? list : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || [])));
+    return base.map(v => _txt(v).toUpperCase()).filter(Boolean);
+  }
+  function _selectedMonthPeriods(){
+    let periods = [];
+    try{ periods = (typeof innovationSelectedPeriods === 'function') ? innovationSelectedPeriods() : []; }catch(_e){ periods = []; }
+    periods = _uniq(periods);
+    if(!periods.length && typeof innovationBuildContinuousMonthWindow === 'function' && typeof innovationMonthlyAnchorPeriod === 'function'){
+      try{ periods = _uniq(innovationBuildContinuousMonthWindow(innovationMonthlyAnchorPeriod(), 8)); }catch(_e){}
+    }
+    return periods;
+  }
+  function _monthRowsForStores(storeList){
+    const stores = new Set(_selectedStores(storeList));
+    let rows = [];
+    try{ rows = (typeof innovationChartSalesMonthRows === 'function') ? innovationChartSalesMonthRows() : []; }catch(_e){ rows = []; }
+    return (Array.isArray(rows) ? rows : []).filter(r => {
+      const store = _txt(r && (r.store || r.Store)).toUpperCase();
+      if(!store) return false;
+      if(stores.size && !stores.has(store)) return false;
+      return _matchDowRow(r);
+    });
+  }
+  function _postresMonthCategoryNorm(catNorm){
+    return catNorm === 'POSTRE' || catNorm === 'PUDINES' || catNorm === 'REPOSTERIA';
+  }
+
+  if(typeof window.innovationProductKind === 'function' && !window.innovationProductKind.__ampmV4){
+    const _baseInnovationProductKind = window.innovationProductKind;
+    window.innovationProductKind = function(desc){
+      const direct = _baseInnovationProductKind(desc);
+      if(direct) return direct;
+      const norm = _norm(desc);
+      if(!norm) return '';
+      if(norm.includes('HAMBURGUESA') && norm.includes('DOBLE')) return 'double';
+      if(norm.includes('HAMBURGUESA') && (norm.includes('RES') || norm.includes('MATAHAMBRITA'))) return 'normal';
+      return '';
+    };
+    window.innovationProductKind.__ampmV4 = true;
+  }
+
+  if(typeof window.innovationPostresComboMeta === 'function' && !window.innovationPostresComboMeta.__ampmV4){
+    const _baseInnovationPostresComboMeta = window.innovationPostresComboMeta;
+    window.innovationPostresComboMeta = function(desc){
+      const direct = _baseInnovationPostresComboMeta(desc);
+      if(direct) return direct;
+      const norm = _norm(desc);
+      if(!norm) return null;
+      const comboSignal = /(COMBO|CAFE|CAF|GRATIS|PROMO|AMPM)/.test(norm);
+      if(!comboSignal) return null;
+      const items = Array.isArray(window.INNOVATION_POSTRES_ITEMS) ? window.INNOVATION_POSTRES_ITEMS : [];
+      const findItem = (key) => items.find(it => _txt(it && it.key) === key) || null;
+      if(/TRESLECHES/.test(norm)) return findItem('tres_leches');
+      if(/BUDIN/.test(norm)) return findItem('budin');
+      if(/CHEESECAKE/.test(norm) && /OREO/.test(norm)) return findItem('cheesecake_oreo');
+      if(/CHEESECAKE/.test(norm) && /FRESA/.test(norm)) return findItem('cheesecake_fresa');
+      if(/CHEESECAKE/.test(norm) && /(CARAMELO|CARAMEL)/.test(norm)) return findItem('cheesecake_caramelo');
+      return null;
+    };
+    window.innovationPostresComboMeta.__ampmV4 = true;
+  }
+
+  if(typeof window.innovationResolvePostresRows === 'function' && !window.innovationResolvePostresRows.__ampmV4){
+    const _baseInnovationResolvePostresRows = window.innovationResolvePostresRows;
+    window.innovationResolvePostresRows = function(storeList){
+      let base = [];
+      try{ base = _baseInnovationResolvePostresRows(storeList) || []; }catch(_e){ base = []; }
+      const rowsBase = [];
+      if(Array.isArray(base) && base.length) rowsBase.push.apply(rowsBase, base);
+      let sourceRows = [];
+      try{ sourceRows = (typeof innovationSourceRows === 'function') ? innovationSourceRows() : []; }catch(_e){ sourceRows = []; }
+      const stores = new Set(_selectedStores(storeList));
+      (Array.isArray(sourceRows) ? sourceRows : []).forEach(r => {
+        const store = _txt(r && (r.Store || r.store || r['Store Name'])).toUpperCase();
+        if(!store || (stores.size && !stores.has(store))) return;
+        if(!_matchDowRow(r)) return;
+        const description = _txt(r && (r.Description || r.description));
+        const categoryNorm = _norm(r && (r.Category || r.category));
+        const departmentNorm = _norm(r && (r.Department || r.department));
+        const meta = (typeof innovationPostresMeta === 'function') ? innovationPostresMeta(description) : null;
+        const comboMeta = (typeof innovationPostresComboMeta === 'function') ? innovationPostresComboMeta(description) : null;
+        const isPostres = !!meta || !!comboMeta || _postresMonthCategoryNorm(categoryNorm);
+        const qty = _num(r && (r['Qty Sold'] || r.qty));
+        const sales = _num(r && (r.Sales || r['Total Sales'] || r.sales));
+        if(!isPostres || !(qty > 0 || sales > 0)) return;
+        const parentMeta = meta || comboMeta || window.INNOVATION_POSTRES_OTHER || { key:'otros_postres', label:'Otros postres', shortLabel:'Otros postres', color:'#7A8899' };
+        rowsBase.push({
+          store,
+          periodKey: _txt((typeof innovationPeriodKeyFromRow === 'function') ? innovationPeriodKeyFromRow(r, (typeof isMonthlyReport === 'function' && isMonthlyReport())) : ''),
+          qty,
+          sales,
+          description,
+          descriptionNorm: _norm(description),
+          categoryNorm,
+          departmentNorm,
+          parentKey: _txt(parentMeta.key || 'otros_postres'),
+          parentLabel: _txt(parentMeta.label || 'Otros postres'),
+          parentShortLabel: _txt(parentMeta.shortLabel || parentMeta.label || 'Otros postres'),
+          parentColor: _txt(parentMeta.color || '#7A8899'),
+          isCombo: !!comboMeta,
+          comboKey: comboMeta ? _txt(comboMeta.key) : '',
+          comboLabel: comboMeta ? _txt(comboMeta.label) : ''
+        });
+      });
+      const dedup = new Map();
+      rowsBase.forEach(r => {
+        const key = [_txt(r.store).toUpperCase(), _txt(r.periodKey), _txt(r.descriptionNorm || r.description), String(_num(r.qty)), String(_num(r.sales)), r.isCombo ? '1' : '0'].join('||');
+        if(!dedup.has(key)) dedup.set(key, r);
+      });
+      return Array.from(dedup.values()).filter(r => _txt(r.periodKey));
+    };
+    window.innovationResolvePostresRows.__ampmV4 = true;
+  }
+
+  if(typeof window.innovationFsDelExecBuildModel === 'function' && !window.innovationFsDelExecBuildModel.__ampmV4){
+    const _baseInnovationFsDelExecBuildModel = window.innovationFsDelExecBuildModel;
+    window.innovationFsDelExecBuildModel = function(storeList){
+      const model = _baseInnovationFsDelExecBuildModel(storeList);
+      if(!model) return model;
+      try{
+        if(!(typeof innovationFsExecIsMonthly === 'function' && innovationFsExecIsMonthly())) return model;
+        const periods = _selectedMonthPeriods();
+        if(!periods.length) return model;
+        const monthRows = _monthRowsForStores(model && model.scenario && model.scenario.stores);
+        if(!monthRows.length){
+          if(model.scenario) {
+            model.scenario.trendWeeks = periods.slice();
+            model.scenario.lyPeriod = '';
+          }
+          return model;
+        }
+        const historyByStore = new Map(_selectedStores(model && model.scenario && model.scenario.stores).map(st => [st, periods.map(() => 0)]));
+        const fsTotals = periods.map(() => 0);
+        const delTotals = periods.map(() => 0);
+        const delFsTotals = periods.map(() => 0);
+        const pIndex = new Map(periods.map((pk, idx) => [_txt(pk), idx]));
+        monthRows.forEach(r => {
+          const pk = _txt((typeof innovationNormalizePeriodKey === 'function') ? innovationNormalizePeriodKey(r && (r.CalMonth || r.calmonth || r.month || '')) : (r && (r.CalMonth || r.calmonth || r.month || '')));
+          const idx = pIndex.get(pk);
+          if(idx == null) return;
+          const store = _txt(r && (r.store || r.Store)).toUpperCase();
+          const deptNorm = _norm(r && (r.Department || r.department));
+          const channelKind = _channelKind(r && (r.Delivery_Channel || r.delivery_channel));
+          const isDelivery = (r && (r.Is_Delivery === true || String(r.Is_Delivery).toLowerCase() === 'true' || String(r.Is_Delivery) === '1')) || !!channelKind;
+          const sales = _num(r && (r.Sales || r.sales || r['Total Sales']));
+          if(deptNorm === 'FOODSERVICE') fsTotals[idx] += sales;
+          if(isDelivery) delTotals[idx] += sales;
+          if(deptNorm === 'FOODSERVICE' && isDelivery){
+            delFsTotals[idx] += sales;
+            if(!historyByStore.has(store)) historyByStore.set(store, periods.map(() => 0));
+            historyByStore.get(store)[idx] += sales;
+          }
+        });
+        model.historyStores = _selectedStores(model && model.scenario && model.scenario.stores).map(st => ({
+          store: st,
+          label: (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(st).short : st,
+          name: (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(st).name : st,
+          full: (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(st).full : st,
+          values: historyByStore.get(st) || periods.map(() => 0)
+        }));
+        model.shareInFsTrend = periods.map((pk, i) => ({ periodKey: pk, value: fsTotals[i] > 0 ? (delFsTotals[i] / fsTotals[i]) * 100 : 0 }));
+        model.shareInDeliveryTrend = periods.map((pk, i) => ({ periodKey: pk, value: delTotals[i] > 0 ? (delFsTotals[i] / delTotals[i]) * 100 : 0 }));
+        if(model.scenario){
+          model.scenario.trendWeeks = periods.slice();
+          model.scenario.lyPeriod = '';
+        }
+      }catch(_e){}
+      return model;
+    };
+    window.innovationFsDelExecBuildModel.__ampmV4 = true;
+  }
+
+  if(typeof window.innovationFsDelExecRenderHistoryChart === 'function' && !window.innovationFsDelExecRenderHistoryChart.__ampmV4){
+    const _baseInnovationFsDelExecRenderHistoryChart = window.innovationFsDelExecRenderHistoryChart;
+    window.innovationFsDelExecRenderHistoryChart = function(model){
+      try{ if(model && model.scenario && typeof innovationFsExecIsMonthly === 'function' && innovationFsExecIsMonthly()){ model.scenario.lyPeriod = ''; } }catch(_e){}
+      return _baseInnovationFsDelExecRenderHistoryChart.apply(this, arguments);
+    };
+    window.innovationFsDelExecRenderHistoryChart.__ampmV4 = true;
+  }
+
+  if(typeof window.renderInnovationMixChart === 'function' && !window.renderInnovationMixChart.__ampmV4){
+    const _baseRenderInnovationMixChart = window.renderInnovationMixChart;
+    window.renderInnovationMixChart = function(rows, periods){
+      try{
+        if(!(typeof isMonthlyReport === 'function' && isMonthlyReport())) return _baseRenderInnovationMixChart.apply(this, arguments);
+        const canvas = document.getElementById('chart_innovation_mix');
+        if(!canvas || typeof Chart === 'undefined') return _baseRenderInnovationMixChart.apply(this, arguments);
+        innovationClearNoData('chart_innovation_mix');
+        try{ state.chartInnovationMix && state.chartInnovationMix.destroy && state.chartInnovationMix.destroy(); }catch(_e){}
+        const dblMap = new Map(), nrmMap = new Map(), dblQtyMap = new Map(), nrmQtyMap = new Map();
+        (Array.isArray(rows) ? rows : []).forEach(r => {
+          const key = _txt(r && r.periodKey);
+          if(!key) return;
+          if(r && r.kind === 'double'){
+            dblMap.set(key, _num(dblMap.get(key)) + _num(r.sales));
+            dblQtyMap.set(key, _num(dblQtyMap.get(key)) + _num(r.qty));
+          }
+          if(r && r.kind === 'normal'){
+            nrmMap.set(key, _num(nrmMap.get(key)) + _num(r.sales));
+            nrmQtyMap.set(key, _num(nrmQtyMap.get(key)) + _num(r.qty));
+          }
+        });
+        const mhNorm = _norm(window.INNOVATION_MATAHAMBRITA_LABEL || 'Matahambrita');
+        const monthRows = _monthRowsForStores((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
+        const totalOverrideMap = new Map();
+        monthRows.forEach(r => {
+          const pk = _txt((typeof innovationNormalizePeriodKey === 'function') ? innovationNormalizePeriodKey(r && (r.CalMonth || r.calmonth || r.month || '')) : (r && (r.CalMonth || r.calmonth || r.month || '')));
+          if(!pk) return;
+          const catNorm = _norm(r && (r.Category || r.category));
+          if(catNorm !== mhNorm) return;
+          totalOverrideMap.set(pk, _num(totalOverrideMap.get(pk)) + _num(r && (r.Sales || r.sales || r['Total Sales'])));
+        });
+        const usePeriods = _uniq(Array.isArray(periods) && periods.length ? periods : _selectedMonthPeriods());
+        const doubleData = usePeriods.map(pk => _num(dblMap.get(pk)));
+        const normalData = usePeriods.map(pk => _num(nrmMap.get(pk)));
+        const totalData = usePeriods.map((pk, idx) => {
+          const overrideVal = _num(totalOverrideMap.get(pk));
+          const current = _num(doubleData[idx]) + _num(normalData[idx]);
+          if(overrideVal > current){
+            normalData[idx] += (overrideVal - current);
+            return overrideVal;
+          }
+          return current;
+        });
+        const shareData = usePeriods.map((pk, idx) => totalData[idx] > 0 ? (doubleData[idx] / totalData[idx]) : null);
+        const lyTotals = usePeriods.map(pk => {
+          let lyKey = '';
+          try{ lyKey = (typeof getLyPeriodKey === 'function') ? (getLyPeriodKey(pk) || '') : ''; }catch(_e){}
+          if(!lyKey){ try{ lyKey = (typeof shiftMonthKey === 'function') ? (shiftMonthKey(pk, -12) || '') : ''; }catch(_e){} }
+          const overrideLy = _num(totalOverrideMap.get(lyKey));
+          const lyCurrent = _num(dblMap.get(lyKey)) + _num(nrmMap.get(lyKey));
+          return overrideLy > lyCurrent ? overrideLy : lyCurrent;
+        });
+        const deltaData = usePeriods.map((pk, idx) => {
+          const ly = _num(lyTotals[idx]);
+          const cur = _num(totalData[idx]);
+          if(!(ly > 0) || !(cur > 0)) return null;
+          const ratio = cur / ly;
+          return ratio > 0 ? ratio : null;
+        });
+        const maxDelta = Math.max.apply(null, deltaData.filter(v => v != null).map(Number).concat([1.2]));
+        const labels = usePeriods.map(periodChartLabel);
+        const ySuggestedMax = (typeof innovationStackSuggestedMax === 'function') ? innovationStackSuggestedMax([doubleData, normalData], 1.14) : undefined;
+        state.chartInnovationMix = new Chart(canvas.getContext('2d'), {
+          type:'bar',
+          data:{
+            labels,
+            datasets:[
+              { type:'line', label:'Delta vs LY', data:deltaData, order:0, borderColor:'#F7C600', backgroundColor:'#F7C600', pointBackgroundColor:'#ffffff', pointBorderColor:'#F7C600', pointBorderWidth:2, pointRadius:4, pointHoverRadius:5, spanGaps:false, tension:0.25, yAxisID:'y1' },
+              { type:'bar', label:'Vta Hamburguesa doble', data:doubleData, order:1, stack:'mix', backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#005EA7', 'double_v4'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+              { type:'bar', label:'Vta Hamburguesa normal', data:normalData, order:1, stack:'mix', backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#F58320', 'normal_v4'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+              { type:'line', label:'Share doble', data:shareData, yAxisID:'y2', borderColor:'rgba(0,0,0,0)', backgroundColor:'rgba(0,0,0,0)', pointRadius:0, pointHoverRadius:0, borderWidth:0, tension:0 }
+            ]
+          },
+          options:{
+            responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false }, layout:{ padding: (typeof innovationChartPadding === 'function') ? innovationChartPadding('mix') : {left:6,right:10,top:6,bottom:0} },
+            plugins:{
+              legend:{ position:'bottom', align:'center', labels:{ color:'#11284A', boxWidth:12, boxHeight:8, padding:10, font:{weight:'700', size:(window.INNOVATION_UI && INNOVATION_UI.legend) || 11}, filter:function(item){ return item.text !== 'Share doble'; }, sort:function(a,b){ const order = {'Delta vs LY':0,'Vta Hamburguesa doble':1,'Vta Hamburguesa normal':2}; return (order[a.text] || 99) - (order[b.text] || 99); } } },
+              title:{ display:true, text: innovationTitleLines((typeof isMonthlyReport === 'function' && isMonthlyReport() ? 'Share Venta' : 'Share Venta') + ' ' + (window.INNOVATION_BURGER_DOUBLE || 'Hamburguesa de res doble') + ' ' + (typeof getSasMamLabel === 'function' ? getSasMamLabel() : 'MaM')), color:'#000', font:{weight:'800', size:(window.INNOVATION_UI && INNOVATION_UI.title) || 14}, padding:{top:10,bottom:10} },
+              tooltip:{ mode:'index', intersect:false, callbacks:{ label:function(ctx){ const raw = ctx.raw; const idx = ctx.dataIndex; if(ctx.dataset.label === 'Vta Hamburguesa doble') return 'Vta Hamburguesa doble: ' + fmtMoney(_num(raw)) + ' • Qty: ' + fmtInt(_num(dblQtyMap.get(usePeriods[idx]))); if(ctx.dataset.label === 'Vta Hamburguesa normal') return 'Vta Hamburguesa normal: ' + fmtMoney(_num(raw)) + ' • Qty: ' + fmtInt(_num(nrmQtyMap.get(usePeriods[idx]))); if(ctx.dataset.label === 'Delta vs LY') return 'Delta vs LY: ' + (raw == null ? '—' : Number(raw).toFixed(2)); return null; }, footer:function(items){ const idx = items && items[0] ? items[0].dataIndex : -1; if(idx < 0) return ''; const total = _num(totalData[idx]); const share = shareData[idx]; const qtyTotal = _num(dblQtyMap.get(usePeriods[idx])) + _num(nrmQtyMap.get(usePeriods[idx])); return ['Total ventas: ' + fmtMoney(total), 'Total qty: ' + fmtInt(qtyTotal), 'Share doble: ' + (share == null ? '—' : (share * 100).toFixed(1) + '%')]; } } }
+            },
+            scales:{ x:{ stacked:true, offset:true, bounds:'ticks', ticks:{ maxRotation:0, autoSkip:false, color:'#11284A', font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} }, grid:{ display:false } }, y:{ stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{ color:'#11284A', callback:function(v){ return fmtMoney(v); }, font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} } }, y1:{ beginAtZero:true, position:'right', suggestedMax: Math.max(1.2, Math.ceil((maxDelta + 0.15) * 10) / 10), grid:{ drawOnChartArea:false }, title:{ display:true, text:'Delta vs LY', color:'#000', font:{ size:(window.INNOVATION_UI && INNOVATION_UI.axisTitle) || 12, weight:'800' } }, border:{ display:true, color:'#F7C600' }, ticks:{ color:'#000', font:{ size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700' } } }, y2:{ display:false, min:0, max:1 } }
+          },
+          plugins:[ innovationCreateMixBarLabelPlugin(shareData), innovationCreateTotalLabelPlugin(fmtMoney, {fontSize:(window.INNOVATION_UI && INNOVATION_UI.total) || 11, padX:4, boxH:14, radius:6}), innovationCreateLineValueLabelPlugin() ]
+        });
+      }catch(_e){ return _baseRenderInnovationMixChart.apply(this, arguments); }
+    };
+    window.renderInnovationMixChart.__ampmV4 = true;
+  }
+
+  if(typeof window.renderInnovationPostresShareChart === 'function' && !window.renderInnovationPostresShareChart.__ampmV4){
+    const _baseRenderInnovationPostresShareChart = window.renderInnovationPostresShareChart;
+    window.renderInnovationPostresShareChart = function(agg){
+      const canvas = document.getElementById('chart_innovation_postres_share');
+      if(!canvas || typeof Chart === 'undefined') return _baseRenderInnovationPostresShareChart.apply(this, arguments);
+      try{
+        innovationClearNoData('chart_innovation_postres_share');
+        try{ state.chartInnovationPostresShare && state.chartInnovationPostresShare.destroy && state.chartInnovationPostresShare.destroy(); }catch(_e){}
+        const periods = Array.isArray(agg && agg.periods) ? agg.periods.slice() : [];
+        const selectedKey = (typeof innovationGetPostresPieSelection === 'function') ? innovationGetPostresPieSelection() : '';
+        const selectedParent = Array.isArray(agg && agg.parentSeries) ? (agg.parentSeries.find(item => item && item.key === selectedKey) || null) : null;
+        let totalSales = selectedParent ? (Array.isArray(selectedParent.salesByPeriod) ? selectedParent.salesByPeriod.slice() : periods.map(() => 0)) : (Array.isArray(agg && agg.totalSales) ? agg.totalSales.slice() : periods.map(() => 0));
+        const totalQty = selectedParent ? (Array.isArray(selectedParent.qtyByPeriod) ? selectedParent.qtyByPeriod.slice() : periods.map(() => 0)) : (Array.isArray(agg && agg.totalQty) ? agg.totalQty.slice() : periods.map(() => 0));
+        const comboSales = selectedParent ? (Array.isArray(selectedParent.comboSalesByPeriod) ? selectedParent.comboSalesByPeriod.slice() : periods.map(() => 0)) : (Array.isArray(agg && agg.comboSales) ? agg.comboSales.slice() : periods.map(() => 0));
+        const comboQty = selectedParent ? (Array.isArray(selectedParent.comboQtyByPeriod) ? selectedParent.comboQtyByPeriod.slice() : periods.map(() => 0)) : (Array.isArray(agg && agg.comboQty) ? agg.comboQty.slice() : periods.map(() => 0));
+        const totalSalesByStore = selectedParent ? (selectedParent.salesByStore instanceof Map ? selectedParent.salesByStore : new Map()) : (agg && agg.totalSalesByStore instanceof Map ? agg.totalSalesByStore : new Map());
+        const comboSalesByStore = selectedParent ? (selectedParent.comboSalesByStore instanceof Map ? selectedParent.comboSalesByStore : new Map()) : (agg && agg.comboSalesByStore instanceof Map ? agg.comboSalesByStore : new Map());
+        const tooltipStores = Array.isArray(agg && agg.stores) ? agg.stores.slice() : [];
+        const compactStoreLabel = function(storeName){ const raw = _txt(storeName); const digits = raw.replace(/^AMPM/i, '').trim(); return digits ? ('A' + digits.padStart(2,'0')) : raw; };
+        if(typeof isMonthlyReport === 'function' && isMonthlyReport() && !selectedParent){
+          const periodSet = new Set(periods.map(pk => _txt(pk)).filter(Boolean));
+          const monthRows = _monthRowsForStores((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
+          const overrideMap = new Map();
+          monthRows.forEach(r => {
+            const periodKey = _txt((typeof innovationNormalizePeriodKey === 'function') ? innovationNormalizePeriodKey(r && (r.CalMonth || r.calmonth || r.month || '')) : (r && (r.CalMonth || r.calmonth || r.month || '')));
+            if(!periodSet.has(periodKey)) return;
+            const categoryNorm = _norm(r && (r.Category || r.category));
+            if(!_postresMonthCategoryNorm(categoryNorm)) return;
+            overrideMap.set(periodKey, _num(overrideMap.get(periodKey)) + _num(r && (r.sales || r.Sales || r['Total Sales'])));
+          });
+          totalSales = periods.map((pk, idx) => {
+            const overrideVal = _num(overrideMap.get(pk));
+            return overrideVal > 0 ? overrideVal : _num(totalSales[idx]);
+          });
+        }
+        const remainderSales = periods.map((_, idx) => Math.max(0, _num(totalSales[idx]) - _num(comboSales[idx])));
+        const remainderQty = periods.map((_, idx) => Math.max(0, _num(totalQty[idx]) - _num(comboQty[idx])));
+        const shareData = periods.map((_, idx) => _num(totalSales[idx]) > 0 ? (_num(comboSales[idx]) / _num(totalSales[idx])) : null);
+        if(!totalSales.some(v => _num(v) > 0)) return _baseRenderInnovationPostresShareChart.apply(this, arguments);
+        const labels = periods.map(periodChartLabel);
+        const ySuggestedMax = (typeof innovationNiceAxisMax === 'function') ? innovationNiceAxisMax(Math.max.apply(null, totalSales.map(v => _num(v)).concat([0])), 1.16) : undefined;
+        if(typeof innovationSetChartCardActive === 'function') innovationSetChartCardActive('chart_innovation_postres_share', !!selectedParent, selectedParent && selectedParent.color ? selectedParent.color : '#F58320');
+        state.chartInnovationPostresShare = new Chart(canvas.getContext('2d'), {
+          type:'bar',
+          data:{ labels: labels, datasets:[
+            { type:'bar', label:'Resto Postres', data:remainderSales, _qtyByPeriod: remainderQty, stack:'postres_share', order:0, backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#005EA7', 'postres_share_resto_v4'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+            { type:'bar', label:'Vta Combos Postres', data:comboSales, _qtyByPeriod: comboQty, stack:'postres_share', order:1, backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#F58320', 'postres_share_combo_v4'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 }
+          ]},
+          options:{
+            responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false }, layout:{ padding: (typeof innovationChartPadding === 'function') ? innovationChartPadding('mh') : {left:6,right:8,top:6,bottom:0} },
+            plugins:{
+              legend:{ position:'bottom', labels:{ color:'#11284A', boxWidth:12, boxHeight:8, padding:4, font:{weight:'700', size:(window.INNOVATION_UI && INNOVATION_UI.legend) || 11} } },
+              title:{ display:true, text: innovationTitleLines('Share Vta Combos Postres en Total Postres ' + (typeof getSasMamLabel === 'function' ? getSasMamLabel() : 'MaM') + (selectedParent ? (' · ' + (_txt(selectedParent.shortLabel || selectedParent.label))) : '')), color:'#000', font:{weight:'800', size:(window.INNOVATION_UI && INNOVATION_UI.title) || 14}, padding:{top:10,bottom:10} },
+              tooltip:{ mode:'index', intersect:false, callbacks:{ label:function(ctx){ const idx = ctx.dataIndex; const ds = ctx.dataset || {}; const units = _num(ds._qtyByPeriod && ds._qtyByPeriod[idx]); return ctx.dataset.label + ': ' + fmtMoney(_num(ctx.raw)) + ' • Qty: ' + fmtInt(units); }, footer:function(items){ const idx = items && items[0] ? items[0].dataIndex : -1; if(idx < 0) return ''; const share = shareData[idx]; const lines = [ (selectedParent ? (_txt(selectedParent.shortLabel || selectedParent.label)) : 'Total Postres') + ': ' + fmtMoney(_num(totalSales[idx])) + ' • Qty: ' + fmtInt(_num(totalQty[idx])), 'Share combos: ' + (share == null ? '—' : ((share * 100).toFixed(1) + '%')) ]; const storeLines = tooltipStores.map(function(storeName){ const totalStore = _num(totalSalesByStore && totalSalesByStore.get && totalSalesByStore.get(storeName) ? totalSalesByStore.get(storeName)[idx] : 0); const comboStore = _num(comboSalesByStore && comboSalesByStore.get && comboSalesByStore.get(storeName) ? comboSalesByStore.get(storeName)[idx] : 0); if(!(totalStore > 0 || comboStore > 0)) return ''; const shareStore = totalStore > 0 ? (comboStore / totalStore) : null; return compactStoreLabel(storeName) + ' ' + fmtMoney(totalStore) + ' · C ' + fmtMoney(comboStore) + ' · ' + (shareStore == null ? '—' : ((shareStore * 100).toFixed(0) + '%')); }).filter(Boolean); if(storeLines.length) lines.push.apply(lines, storeLines); return lines; } }
+            }},
+            scales:{ x:{ stacked:true, offset:true, bounds:'ticks', ticks:{ maxRotation:0, autoSkip:false, color:'#11284A', font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} }, grid:{ display:false } }, y:{ stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{ color:'#11284A', callback:function(v){ return fmtMoney(v); }, font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} } } }
+          },
+          plugins:[ innovationCreateMixBarLabelPlugin(shareData), innovationCreateTotalLabelPlugin(fmtMoney, {fontSize:(window.INNOVATION_UI && INNOVATION_UI.total) || 11, padX:4, boxH:14, radius:6}) ]
+        });
+      }catch(_e){ return _baseRenderInnovationPostresShareChart.apply(this, arguments); }
+    };
+    window.renderInnovationPostresShareChart.__ampmV4 = true;
+  }
+
+  function _clearInnovationCachesV4(){
+    try{
+      state._innovationPostresAggKey = null;
+      state._innovationPostresAgg = null;
+      state._innovationPostresAggLast = null;
+      state._innovationFSDetailRowsKey = null;
+      state._innovationFSDetailRows = null;
+    }catch(_e){}
+  }
+
+  if(typeof window.renderInnovationCharts === 'function' && !window.renderInnovationCharts.__ampmV4){
+    const _baseRenderInnovationChartsV4 = window.renderInnovationCharts;
+    window.renderInnovationCharts = function(){ _clearInnovationCachesV4(); return _baseRenderInnovationChartsV4.apply(this, arguments); };
+    window.renderInnovationCharts.__ampmV4 = true;
+  }
+  if(typeof window.applyFilters === 'function' && !window.applyFilters.__ampmV4){
+    const _baseApplyFiltersV4 = window.applyFilters;
+    window.applyFilters = function(){ _clearInnovationCachesV4(); return _baseApplyFiltersV4.apply(this, arguments); };
+    window.applyFilters.__ampmV4 = true;
+  }
+})();
+</script>
+
+
+<script id="innovation-forensic-final-fix-v1">
+(function(){
+  if(window.__innovationForensicFinalFixV1) return;
+  window.__innovationForensicFinalFixV1 = true;
+
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _norm(v){
+    try{ return innovationNormText(v); }catch(_e){
+      return _txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'');
+    }
+  }
+  function _isMonthly(){
+    try{ return typeof innovationFsExecIsMonthly === 'function' ? !!innovationFsExecIsMonthly() : (typeof isMonthlyReport === 'function' ? !!isMonthlyReport() : false); }catch(_e){ return false; }
+  }
+  function _isPostresComboKey(v){ return /^POSTRES__/i.test(_txt(v)); }
+  function _rawSheetRows(sheetName){
+    try{
+      const wb = state && state.__hallWorkbook ? state.__hallWorkbook : null;
+      return (wb && typeof innovationWorkbookSheetRows === 'function') ? (innovationWorkbookSheetRows(wb, sheetName) || []) : [];
+    }catch(_e){ return []; }
+  }
+  function _selectedStores(list){
+    const base = Array.isArray(list) && list.length ? list : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state && state.stores ? state.stores : []));
+    return Array.from(new Set((base || []).map(v => _txt(v).toUpperCase()).filter(Boolean)));
+  }
+  function _rowMatchesDow(r){
+    try{ return (typeof rowMatchesGlobalDow === 'function') ? rowMatchesGlobalDow(r) : true; }catch(_e){ return true; }
+  }
+
+  if(typeof window.innovationComboDetailRows === 'function' && !window.innovationComboDetailRows.__forensicFiltered){
+    const _baseComboDetailRows = window.innovationComboDetailRows;
+    window.innovationComboDetailRows = function(){
+      const rows = _baseComboDetailRows.apply(this, arguments) || [];
+      return rows.filter(r => !_isPostresComboKey(r && (r.ComboKey || r.combokey)));
+    };
+    window.innovationComboDetailRows.__forensicFiltered = true;
+  }
+
+  if(typeof window.innovationComboAggRows === 'function' && !window.innovationComboAggRows.__forensicFiltered){
+    const _baseComboAggRows = window.innovationComboAggRows;
+    window.innovationComboAggRows = function(){
+      const rows = _baseComboAggRows.apply(this, arguments) || [];
+      return rows.filter(r => !_isPostresComboKey(r && (r.ComboKey || r.combokey)));
+    };
+    window.innovationComboAggRows.__forensicFiltered = true;
+  }
+
+  if(typeof window.innovationResolvePostresRows === 'function' && !window.innovationResolvePostresRows.__forensicMergedCombos){
+    const _baseResolvePostresRows = window.innovationResolvePostresRows;
+    window.innovationResolvePostresRows = function(storeList){
+      let rows = [];
+      try{ rows = _baseResolvePostresRows.apply(this, arguments) || []; }catch(_e){ rows = []; }
+      const rawComboRows = _rawSheetRows('Innovation_Combos_Detail');
+      if(!Array.isArray(rawComboRows) || !rawComboRows.length) return rows;
+
+      const stores = new Set(_selectedStores(storeList));
+      const extra = [];
+      rawComboRows.forEach(r => {
+        const comboKeyRaw = _txt(r && (r.ComboKey || r.combokey));
+        if(!_isPostresComboKey(comboKeyRaw)) return;
+        const store = _txt(r && (r.Store || r.store)).toUpperCase();
+        if(!store || (stores.size && !stores.has(store))) return;
+        if(!_rowMatchesDow(r)) return;
+        const periodKey = _txt((typeof innovationPeriodKeyFromRow === 'function') ? innovationPeriodKeyFromRow(r, _isMonthly()) : (r && (r.CalMonth || r.YearWeek || r.PeriodKey || '')));
+        if(!periodKey) return;
+        const parentKey = comboKeyRaw.replace(/^POSTRES__/i,'');
+        extra.push({
+          store,
+          periodKey,
+          qty:_num(r && (r['Qty Sold'] || r.qty || r.Qty)),
+          sales:_num(r && (r.Sales || r.sales || r['Total Sales'])),
+          description:_txt(r && (r.Description || r.description || r.ComboLabel || r.combolabel)),
+          descriptionNorm:_norm(r && (r.Description || r.description || r.ComboLabel || r.combolabel)),
+          categoryNorm:'POSTRE',
+          departmentNorm:'FOODSERVICE',
+          parentKey: parentKey || 'otros_postres',
+          parentLabel:_txt(r && (r.ComboLabel || r.combolabel)) || 'Otros postres',
+          parentShortLabel:_txt(r && (r.ComboShortLabel || r.comboshortlabel || r.ComboLabel || r.combolabel)) || _txt(r && (r.ComboLabel || r.combolabel)) || 'Otros postres',
+          parentColor:(Array.isArray(window.INNOVATION_POSTRES_ITEMS) ? ((window.INNOVATION_POSTRES_ITEMS.find(it => _txt(it && it.key) === parentKey) || {}).color || '#F58320') : '#F58320'),
+          isCombo:true,
+          comboKey:parentKey,
+          comboLabel:_txt(r && (r.ComboLabel || r.combolabel))
+        });
+      });
+
+      const dedup = new Map();
+      rows.concat(extra).forEach(r => {
+        const key = [_txt(r && r.store).toUpperCase(), _txt(r && r.periodKey), _txt(r && (r.descriptionNorm || r.description)), String(_num(r && r.qty)), String(_num(r && r.sales)), r && r.isCombo ? '1' : '0'].join('||');
+        if(!dedup.has(key)) dedup.set(key, r);
+      });
+      return Array.from(dedup.values()).filter(r => _txt(r && r.periodKey));
+    };
+    window.innovationResolvePostresRows.__forensicMergedCombos = true;
+  }
+
+  if(typeof window.innovationFsExecHistoryChartLabels === 'function' && !window.innovationFsExecHistoryChartLabels.__forensicMonthlyClean){
+    const _baseHistoryLabels = window.innovationFsExecHistoryChartLabels;
+    window.innovationFsExecHistoryChartLabels = function(periods, lyPeriod){
+      if(_isMonthly()) return (Array.isArray(periods) ? periods : []).map(period => periodChartLabel(period));
+      return _baseHistoryLabels.apply(this, arguments);
+    };
+    window.innovationFsExecHistoryChartLabels.__forensicMonthlyClean = true;
+  }
+
+  if(typeof window.innovationFsDelExecBuildModel === 'function' && !window.innovationFsDelExecBuildModel.__forensicMonthlyAuthoritative){
+    const _baseBuildModel = window.innovationFsDelExecBuildModel;
+    window.innovationFsDelExecBuildModel = function(storeList){
+      const model = _baseBuildModel.apply(this, arguments);
+      if(!model || !_isMonthly()) return model;
+      try{
+        const periods = (typeof innovationBuildContinuousMonthWindow === 'function' && typeof innovationMonthlyAnchorPeriod === 'function')
+          ? innovationBuildContinuousMonthWindow(innovationMonthlyAnchorPeriod(), 8)
+          : (Array.isArray(model && model.scenario && model.scenario.trendWeeks) ? model.scenario.trendWeeks.slice(-8) : []);
+        const monthRows = (typeof innovationChartSalesMonthRows === 'function') ? (innovationChartSalesMonthRows() || []) : [];
+        const stores = _selectedStores(model && model.scenario && model.scenario.stores);
+        const storeSet = new Set(stores);
+        const pIndex = new Map((periods || []).map((pk, idx) => [_txt(pk), idx]));
+        const historyByStore = new Map(stores.map(st => [st, (periods || []).map(() => 0)]));
+        const fsTotals = (periods || []).map(() => 0);
+        const deliveryTotals = (periods || []).map(() => 0);
+        const fsDeliveryTotals = (periods || []).map(() => 0);
+
+        (Array.isArray(monthRows) ? monthRows : []).forEach(r => {
+          const periodKey = _txt((typeof innovationNormalizePeriodKey === 'function') ? innovationNormalizePeriodKey(r && (r.CalMonth || r.calmonth || r.month || '')) : (r && (r.CalMonth || r.calmonth || r.month || '')));
+          const idx = pIndex.get(periodKey);
+          if(idx == null) return;
+          const store = _txt(r && (r.Store || r.store)).toUpperCase();
+          if(!store || (storeSet.size && !storeSet.has(store))) return;
+          if(!_rowMatchesDow(r)) return;
+          const deptNorm = _norm(r && (r.Department || r.department));
+          const sales = _num(r && (r.Sales || r.sales || r['Total Sales']));
+          const chRaw = _txt(r && (r.Delivery_Channel || r.delivery_channel)).toUpperCase();
+          const isDelivery = (String(r && r.Is_Delivery).toLowerCase() === 'true' || String(r && r.Is_Delivery) === '1' || !!chRaw);
+          if(deptNorm === 'FOODSERVICE') fsTotals[idx] += sales;
+          if(isDelivery) deliveryTotals[idx] += sales;
+          if(deptNorm === 'FOODSERVICE' && isDelivery){
+            fsDeliveryTotals[idx] += sales;
+            if(!historyByStore.has(store)) historyByStore.set(store, (periods || []).map(() => 0));
+            historyByStore.get(store)[idx] += sales;
+          }
+        });
+
+        model.scenario = Object.assign({}, model.scenario || {}, { trendWeeks:(periods || []).slice(), lyPeriod:'' });
+        model.historyStores = stores.map(st => {
+          const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(st) : { short:st, name:st, full:st };
+          return { store:st, label:meta.short || st, name:meta.name || st, full:meta.full || st, values: historyByStore.get(st) || (periods || []).map(() => 0) };
+        });
+        model.shareInFsTrend = (periods || []).map((pk, i) => ({ periodKey:pk, value: fsTotals[i] > 0 ? (fsDeliveryTotals[i] / fsTotals[i]) * 100 : 0 }));
+        model.shareInDeliveryTrend = (periods || []).map((pk, i) => ({ periodKey:pk, value: deliveryTotals[i] > 0 ? (fsDeliveryTotals[i] / deliveryTotals[i]) * 100 : 0 }));
+      }catch(err){
+        try{ console.warn('forensic monthly buildModel fix failed', err); }catch(_e){}
+      }
+      return model;
+    };
+    window.innovationFsDelExecBuildModel.__forensicMonthlyAuthoritative = true;
+  }
+
+  if(typeof window.renderInnovationCharts === 'function' && !window.renderInnovationCharts.__forensicCacheClear){
+    const _baseRenderInnovationCharts = window.renderInnovationCharts;
+    window.renderInnovationCharts = function(){
+      try{
+        state._innovationPostresAggKey = null;
+        state._innovationPostresAgg = null;
+        state._innovationPostresAggLast = null;
+      }catch(_e){}
+      return _baseRenderInnovationCharts.apply(this, arguments);
+    };
+    window.renderInnovationCharts.__forensicCacheClear = true;
+  }
+
+  if(typeof window.applyFilters === 'function' && !window.applyFilters.__forensicCacheClear){
+    const _baseApplyFilters = window.applyFilters;
+    window.applyFilters = function(){
+      try{
+        state._innovationPostresAggKey = null;
+        state._innovationPostresAgg = null;
+        state._innovationPostresAggLast = null;
+      }catch(_e){}
+      return _baseApplyFilters.apply(this, arguments);
+    };
+    window.applyFilters.__forensicCacheClear = true;
+  }
+})();
+</script>
+
+
+<script id="innovation-postres-authoritative-fix-v2">
+(function(){
+  if(window.__innovationPostresAuthoritativeFixV2) return;
+  window.__innovationPostresAuthoritativeFixV2 = true;
+
+  const OTHER = { key:'otros_postres', label:'Otros postres', shortLabel:'Otros postres', color:'#7A8899' };
+  const ITEMS = [
+    {
+      key:'budin', label:'Budín', shortLabel:'Budín', color:'#005EA7',
+      base:[
+        'Budin Porcion','Budín Porción','FSI Budin Porcion','FSI Budín Porción'
+      ],
+      combo:[
+        'Budín + Café AMPM gratis','Budin y Cafe AMPM gratis','Combo Budin'
+      ]
+    },
+    {
+      key:'cheesecake_caramelo', label:'Cheesecake Caramelo', shortLabel:'Cheesecake Caramelo', color:'#F58320',
+      base:[
+        'Cheesecake Caramelo Porcion','FSI Cheesecake Caramelo Porcio'
+      ],
+      combo:[
+        'Cheesecake Caramelo + Café AMP','Combo Cheesecake Caramelo'
+      ]
+    },
+    {
+      key:'cheesecake_fresa', label:'Cheesecake Fresa', shortLabel:'Cheesecake Fresa', color:'#A8A8A8',
+      base:[
+        'Cheesecake Fresa porcion','FSI Cheesecake Fresa Porcion'
+      ],
+      combo:[
+        'Cheesecake Fresa + Café AMPM G','Combo Cheesecake Fresa'
+      ]
+    },
+    {
+      key:'cheesecake_oreo', label:'Cheesecake Oreo', shortLabel:'Cheesecake Oreo', color:'#11284A',
+      base:[
+        'Cheesecake Oreo Porcion','FSI Cheesecake Oreo Porcion'
+      ],
+      combo:[
+        'Cheesecake Oreo + Café AMPM Gr','Combo Cheesecake Oreo'
+      ]
+    },
+    {
+      key:'tres_leches', label:'Tres Leches', shortLabel:'Tres Leches', color:'#FAA21E',
+      base:[
+        'Tres Leches Porcion','Tres Leches Porción','FSI Tres Leches Porcion','FSI Tres Leches Porción'
+      ],
+      combo:[
+        'Tres Leches + Café AMPM Gratis','Tres Leches y Cafe AMPM Gratis','Combo Tres Leches'
+      ]
+    }
+  ];
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function norm(v){
+    try{
+      return String(v == null ? '' : v)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .toUpperCase()
+        .replace(/[’'`´]/g,'')
+        .replace(/&/g,' Y ')
+        .replace(/\bAND\b/g,' Y ')
+        .replace(/[^A-Z0-9]+/g,'')
+        .trim();
+    }catch(_e){
+      return txt(v).toUpperCase().replace(/[^A-Z0-9]+/g,'').trim();
+    }
+  }
+  function isMonthly(){
+    try{ return typeof isMonthlyReport === 'function' ? !!isMonthlyReport() : false; }catch(_e){ return false; }
+  }
+  const BASE_LOOKUP = Object.create(null);
+  const COMBO_LOOKUP = Object.create(null);
+  ITEMS.forEach(item => {
+    (item.base || []).forEach(alias => { const k = norm(alias); if(k) BASE_LOOKUP[k] = item; });
+    (item.combo || []).forEach(alias => { const k = norm(alias); if(k) COMBO_LOOKUP[k] = item; });
+  });
+
+  function parentMetaForDesc(desc){
+    const k = norm(desc);
+    return BASE_LOOKUP[k] || COMBO_LOOKUP[k] || null;
+  }
+  function comboMetaForDesc(desc){
+    const k = norm(desc);
+    return COMBO_LOOKUP[k] || null;
+  }
+  function postreLikeRow(r){
+    const dept = norm(r && (r.Department || r.department));
+    const cat = norm(r && (r.Category || r.category));
+    const desc = txt(r && (r.Description || r.description));
+    if(dept && dept !== 'FOODSERVICE') return false;
+    if(cat === 'POSTRE') return true;
+    return !!parentMetaForDesc(desc);
+  }
+  function wbRows(sheetName){
+    try{
+      const wb = state && state.__hallWorkbook ? state.__hallWorkbook : null;
+      if(!wb || typeof innovationWorkbookSheetRows !== 'function' || typeof hasSheet !== 'function') return [];
+      if(!hasSheet(wb, sheetName)) return [];
+      const rows = innovationWorkbookSheetRows(wb, sheetName);
+      return Array.isArray(rows) ? rows : [];
+    }catch(_e){ return []; }
+  }
+  function selectedStores(list){
+    const base = Array.isArray(list) && list.length
+      ? list
+      : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((state && state.stores) ? state.stores : []));
+    return Array.from(new Set((base || []).map(v => txt(v).toUpperCase()).filter(Boolean)));
+  }
+  function matchesDow(r){
+    try{ return typeof rowMatchesGlobalDow === 'function' ? !!rowMatchesGlobalDow(r) : true; }catch(_e){ return true; }
+  }
+  function periodKeyFromRow(r){
+    try{
+      return txt(typeof innovationPeriodKeyFromRow === 'function'
+        ? innovationPeriodKeyFromRow(r, isMonthly())
+        : (isMonthly() ? (r && (r.CalMonth || r.calmonth || r.month || r.YearMonth || '')) : (r && (r.YearWeek || r.week || r.ym || ''))));
+    }catch(_e){
+      return txt(isMonthly() ? (r && (r.CalMonth || r.calmonth || r.month || r.YearMonth || '')) : (r && (r.YearWeek || r.week || r.ym || '')));
+    }
+  }
+  function storeFromRow(r){
+    return txt(r && (r.Store || r.store || r['Store Name'])).toUpperCase();
+  }
+  function qtyFromRow(r){
+    return num(r && (r['Qty Sold'] || r.qty || r.Qty || r.quantity));
+  }
+  function salesFromRow(r){
+    return num(r && (r.Sales || r.sales || r['Total Sales'] || r.totalSales));
+  }
+  function normalizedPostresRowsFromDataVenta(storeList){
+    const rows = wbRows('Data Venta');
+    if(!rows.length) return [];
+    const storeSet = new Set(selectedStores(storeList));
+    return rows.filter(r => {
+      const store = storeFromRow(r);
+      if(!store || (storeSet.size && !storeSet.has(store))) return false;
+      if(!matchesDow(r)) return false;
+      if(!postreLikeRow(r)) return false;
+      return qtyFromRow(r) > 0 || salesFromRow(r) > 0;
+    }).map(r => {
+      const description = txt(r && (r.Description || r.description));
+      const meta = parentMetaForDesc(description) || OTHER;
+      return {
+        store: storeFromRow(r),
+        periodKey: periodKeyFromRow(r),
+        qty: qtyFromRow(r),
+        sales: salesFromRow(r),
+        description,
+        descriptionNorm: norm(description),
+        categoryNorm: norm(r && (r.Category || r.category)),
+        departmentNorm: norm(r && (r.Department || r.department)),
+        parentKey: txt(meta.key || OTHER.key),
+        parentLabel: txt(meta.label || OTHER.label),
+        parentShortLabel: txt(meta.shortLabel || meta.label || OTHER.shortLabel),
+        parentColor: txt(meta.color || OTHER.color),
+        isCombo: !!comboMetaForDesc(description),
+        comboKey: txt((comboMetaForDesc(description) || {}).key || ''),
+        comboLabel: txt((comboMetaForDesc(description) || {}).label || '')
+      };
+    }).filter(r => r.periodKey && (r.qty > 0 || r.sales > 0));
+  }
+  function normalizedPostresRowsFromCompact(storeList){
+    const rows = wbRows('Cubo_Sales_DetailHallazgos');
+    if(!rows.length) return [];
+    const storeSet = new Set(selectedStores(storeList));
+    return rows.filter(r => {
+      const store = storeFromRow(r);
+      if(!store || (storeSet.size && !storeSet.has(store))) return false;
+      if(!matchesDow(r)) return false;
+      const dept = norm(r && (r.Department || r.department));
+      const cat = norm(r && (r.Category || r.category));
+      if(dept !== 'FOODSERVICE') return false;
+      return cat === 'POSTRE';
+    }).map(r => {
+      const description = txt(r && (r.Description || r.description));
+      const meta = parentMetaForDesc(description) || OTHER;
+      return {
+        store: storeFromRow(r),
+        periodKey: periodKeyFromRow(r),
+        qty: qtyFromRow(r),
+        sales: salesFromRow(r),
+        description,
+        descriptionNorm: norm(description),
+        categoryNorm: norm(r && (r.Category || r.category)),
+        departmentNorm: norm(r && (r.Department || r.department)),
+        parentKey: txt(meta.key || OTHER.key),
+        parentLabel: txt(meta.label || OTHER.label),
+        parentShortLabel: txt(meta.shortLabel || meta.label || OTHER.shortLabel),
+        parentColor: txt(meta.color || OTHER.color),
+        isCombo: !!comboMetaForDesc(description),
+        comboKey: txt((comboMetaForDesc(description) || {}).key || ''),
+        comboLabel: txt((comboMetaForDesc(description) || {}).label || '')
+      };
+    }).filter(r => r.periodKey && (r.qty > 0 || r.sales > 0));
+  }
+  function normalizedComboRowsFromDataVenta(storeList){
+    const rows = wbRows('Data Venta');
+    if(!rows.length) return [];
+    const storeSet = new Set(selectedStores(storeList));
+    return rows.filter(r => {
+      const store = storeFromRow(r);
+      if(!store || (storeSet.size && !storeSet.has(store))) return false;
+      if(!matchesDow(r)) return false;
+      const dept = norm(r && (r.Department || r.department));
+      if(dept && dept !== 'FOODSERVICE') return false;
+      const desc = txt(r && (r.Description || r.description));
+      if(!comboMetaForDesc(desc)) return false;
+      return qtyFromRow(r) > 0 || salesFromRow(r) > 0;
+    }).map(r => {
+      const description = txt(r && (r.Description || r.description));
+      const meta = comboMetaForDesc(description) || OTHER;
+      return {
+        store: storeFromRow(r),
+        periodKey: periodKeyFromRow(r),
+        qty: qtyFromRow(r),
+        sales: salesFromRow(r),
+        description,
+        comboKey: 'POSTRES__' + txt(meta.key || OTHER.key),
+        comboLabel: txt(meta.label || OTHER.label),
+        parentKey: txt(meta.key || OTHER.key),
+        parentLabel: txt(meta.label || OTHER.label),
+        parentShortLabel: txt(meta.shortLabel || meta.label || OTHER.shortLabel),
+        parentColor: txt(meta.color || OTHER.color)
+      };
+    }).filter(r => r.periodKey && (r.qty > 0 || r.sales > 0));
+  }
+  function normalizedComboRowsFromCompact(storeList){
+    const rows = wbRows('Innovation_Combos_Detail');
+    if(!rows.length) return [];
+    const storeSet = new Set(selectedStores(storeList));
+    return rows.filter(r => {
+      const store = storeFromRow(r);
+      if(!store || (storeSet.size && !storeSet.has(store))) return false;
+      if(!matchesDow(r)) return false;
+      const comboKey = txt(r && (r.ComboKey || r.combokey));
+      const description = txt(r && (r.Description || r.description || r.ComboLabel || r.combolabel));
+      if(!/^POSTRES__/i.test(comboKey) && !comboMetaForDesc(description)) return false;
+      return qtyFromRow(r) > 0 || salesFromRow(r) > 0;
+    }).map(r => {
+      const description = txt(r && (r.Description || r.description || r.ComboLabel || r.combolabel));
+      const rawKey = txt(r && (r.ComboKey || r.combokey));
+      const meta = comboMetaForDesc(description) || parentMetaForDesc(txt(r && (r.ComboLabel || r.combolabel))) || parentMetaForDesc(description) || OTHER;
+      const parentKey = txt(meta.key || rawKey.replace(/^POSTRES__/i, '') || OTHER.key);
+      return {
+        store: storeFromRow(r),
+        periodKey: periodKeyFromRow(r),
+        qty: qtyFromRow(r),
+        sales: salesFromRow(r),
+        description,
+        comboKey: rawKey || ('POSTRES__' + parentKey),
+        comboLabel: txt(r && (r.ComboLabel || r.combolabel)) || txt(meta.label || OTHER.label),
+        parentKey,
+        parentLabel: txt(meta.label || OTHER.label),
+        parentShortLabel: txt(meta.shortLabel || meta.label || OTHER.shortLabel),
+        parentColor: txt(meta.color || OTHER.color)
+      };
+    }).filter(r => r.periodKey && (r.qty > 0 || r.sales > 0));
+  }
+
+  window.innovationResolvePostresRows = function(storeList){
+    const rows = normalizedPostresRowsFromDataVenta(storeList);
+    return rows.length ? rows : normalizedPostresRowsFromCompact(storeList);
+  };
+  window.innovationResolvePostresRows.__authoritativePostres = true;
+
+  window.innovationResolvePostresComboRows = function(storeList){
+    const rows = normalizedComboRowsFromDataVenta(storeList);
+    return rows.length ? rows : normalizedComboRowsFromCompact(storeList);
+  };
+  window.innovationResolvePostresComboRows.__authoritativePostres = true;
+
+  function clearPostresCaches(){
+    try{
+      state._innovationPostresAggKey = null;
+      state._innovationPostresAgg = null;
+      state._innovationPostresAggLast = null;
+    }catch(_e){}
+  }
+  clearPostresCaches();
+
+  if(typeof window.renderInnovationCharts === 'function' && !window.renderInnovationCharts.__authoritativePostresFix){
+    const _base = window.renderInnovationCharts;
+    window.renderInnovationCharts = function(){
+      clearPostresCaches();
+      return _base.apply(this, arguments);
+    };
+    window.renderInnovationCharts.__authoritativePostresFix = true;
+  }
+  if(typeof window.applyFilters === 'function' && !window.applyFilters.__authoritativePostresFix){
+    const _base = window.applyFilters;
+    window.applyFilters = function(){
+      clearPostresCaches();
+      return _base.apply(this, arguments);
+    };
+    window.applyFilters.__authoritativePostresFix = true;
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _labelsForPeriods(periods){
+    return (Array.isArray(periods) ? periods : []).map(function(pk){
+      try{ return typeof periodChartLabel === 'function' ? periodChartLabel(pk) : _txt(pk); }catch(_e){ return _txt(pk); }
+    });
+  }
+  function _compactStoreLabel(storeName){
+    const raw = _txt(storeName);
+    const digits = raw.replace(/^AMPM/i, '').trim();
+    return digits ? ('A' + digits.padStart(2,'0')) : raw;
+  }
+  function _getSelectedParentFromAgg(agg){
+    const selectedKey = (typeof innovationGetPostresPieSelection === 'function') ? innovationGetPostresPieSelection() : '';
+    return Array.isArray(agg && agg.parentSeries) ? (agg.parentSeries.find(function(item){ return item && item.key === selectedKey; }) || null) : null;
+  }
+  function _postresPieLegendHtml(items, grandQty, grandSales, mode, lastLabel){
+    const selectedKey = (typeof innovationGetPostresPieSelection === 'function') ? innovationGetPostresPieSelection() : '';
+    return items.map(function(item){
+      const qty = _num(item.qty);
+      const sales = _num(item.sales);
+      const comboQty = _num(item.comboQty);
+      const comboSales = _num(item.comboSales);
+      const qtyShare = grandQty > 0 ? (qty / grandQty) * 100 : 0;
+      const salesShare = grandSales > 0 ? (sales / grandSales) * 100 : 0;
+      const isSelected = !!selectedKey && selectedKey === _txt(item.key);
+      return `
+        <div class="innovationComboPieLegendItem${isSelected ? ' is-selected' : ''}" data-postres-key="${esc(item.key || '')}" style="${isSelected ? `--innovation-active:${item.color || '#F58320'};` : ''}">
+          <span class="innovationComboPieLegendDot" style="background:${item.color || '#1f77b4'}"></span>
+          <div class="innovationComboPieLegendMain">
+            <span class="innovationComboPieLegendName">${esc(item.shortLabel || item.label || item.key || 'Postre')}</span>
+            <span class="innovationComboPieLegendMeta">${fmtInt(qty)} unid. · ${fmtMoney(sales)}</span>
+            <span class="innovationComboPieLegendMeta">% mix por cantidad: ${qtyShare.toFixed(1)}% · % mix por venta: ${salesShare.toFixed(1)}%</span>
+            <span class="innovationComboPieLegendMeta">Incluye combos: ${fmtInt(comboQty)} unid. · ${fmtMoney(comboSales)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  function _renderPostresPieLegend(items, grandQty, grandSales, mode, lastLabel){
+    const root = document.getElementById('innovationPostresPieLegend');
+    if(!root) return;
+    root.innerHTML = _postresPieLegendHtml(items, grandQty, grandSales, mode, lastLabel);
+    root.querySelectorAll('[data-postres-key]').forEach(function(elItem){
+      elItem.ondblclick = function(){
+        try{ innovationSetPostresPieSelection(elItem.getAttribute('data-postres-key') || ''); }catch(_e){}
+      };
+    });
+  }
+
+  window.renderInnovationPostresPieChart = function(agg){
+    const canvas = document.getElementById('chart_innovation_postres_parent');
+    if(!canvas || typeof Chart === 'undefined') return;
+    try{ if(typeof innovationEnsurePostresPieControls === 'function') innovationEnsurePostresPieControls(); }catch(_e){}
+    try{ if(typeof innovationClearNoData === 'function') innovationClearNoData('chart_innovation_postres_parent'); }catch(_e){}
+    try{ state.chartInnovationPostresParent && state.chartInnovationPostresParent.destroy && state.chartInnovationPostresParent.destroy(); }catch(_e){}
+
+    const mode = (typeof innovationGetPostresPieMode === 'function') ? innovationGetPostresPieMode() : 'latest';
+    const periods = Array.isArray(agg && agg.periods) ? agg.periods.slice() : [];
+    const lastIdx = periods.length ? (periods.length - 1) : -1;
+    const parentSeries = Array.isArray(agg && agg.parentSeries) ? agg.parentSeries.slice() : [];
+    const totals = parentSeries.map(function(item){
+      return {
+        key: _txt(item && item.key),
+        label: _txt(item && item.label),
+        shortLabel: _txt(item && (item.shortLabel || item.label || item.key)),
+        color: _txt(item && item.color) || '#7A8899',
+        qty: mode === 'latest' ? _num(item && item.qtyByPeriod && item.qtyByPeriod[lastIdx]) : _num(item && item.totalQty),
+        sales: mode === 'latest' ? _num(item && item.salesByPeriod && item.salesByPeriod[lastIdx]) : _num(item && item.totalSales),
+        comboQty: mode === 'latest' ? _num(item && item.comboQtyByPeriod && item.comboQtyByPeriod[lastIdx]) : _num(item && item.comboTotalQty),
+        comboSales: mode === 'latest' ? _num(item && item.comboSalesByPeriod && item.comboSalesByPeriod[lastIdx]) : _num(item && item.comboTotalSales)
+      };
+    }).filter(function(item){ return item.qty > 0 || item.sales > 0 || item.comboQty > 0 || item.comboSales > 0; });
+
+    if(!totals.length){
+      try{ innovationNoData('chart_innovation_postres_parent', 'No hay datos suficientes de postres por item padre para los filtros actuales.'); }catch(_e){}
+      const legendRoot = document.getElementById('innovationPostresPieLegend');
+      if(legendRoot) legendRoot.innerHTML = '';
+      try{ if(typeof innovationSetChartCardActive === 'function') innovationSetChartCardActive('chart_innovation_postres_parent', false); }catch(_e){}
+      const hint = document.getElementById('innovationPostresPieHint');
+      if(hint) hint.textContent = 'No hay datos suficientes de postres por item padre para los filtros actuales.';
+      return;
+    }
+
+    const grandQty = totals.reduce(function(sum, item){ return sum + _num(item.qty); }, 0);
+    const grandSales = totals.reduce(function(sum, item){ return sum + _num(item.sales); }, 0);
+    const grandComboQty = totals.reduce(function(sum, item){ return sum + _num(item.comboQty); }, 0);
+    const grandComboSales = totals.reduce(function(sum, item){ return sum + _num(item.comboSales); }, 0);
+    const selectedKey = (typeof innovationGetPostresPieSelection === 'function') ? innovationGetPostresPieSelection() : '';
+    const selectedItem = totals.find(function(item){ return item.key === selectedKey; }) || null;
+    const titleSuffix = mode === 'latest'
+      ? (periods[lastIdx] ? `Último período: ${typeof formatWeekMonthLabelForInnovation === 'function' ? formatWeekMonthLabelForInnovation(periods[lastIdx]) : _txt(periods[lastIdx])}` : 'Último período')
+      : ((typeof isMonthlyReport === 'function' && isMonthlyReport()) ? `Acumulado ${periods.length} meses` : `Acumulado ${periods.length} períodos`);
+
+    _renderPostresPieLegend(totals, grandQty, grandSales, mode, periods[lastIdx] || '');
+
+    const centerPlugin = {
+      id:'innovationPostresPieCenter_totalmix_v3',
+      afterDraw(chart){
+        const meta = chart.getDatasetMeta(0);
+        const arc = (meta && Array.isArray(meta.data) && (meta.data.find(function(a){ return !!a; }) || meta.data[0])) || null;
+        if(!arc) return;
+        const ctx = chart.ctx;
+        const cx = arc.x, cy = arc.y;
+        const centerQty = selectedItem ? _num(selectedItem.qty) : grandQty;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#11284A';
+        ctx.font = `800 ${Math.max(12, ((window.INNOVATION_UI && INNOVATION_UI.title) || 14) + 1)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillText(fmtInt(centerQty), cx, cy - 8);
+        ctx.fillStyle = '#5C6F86';
+        ctx.font = `700 ${Math.max(10, (window.INNOVATION_UI && INNOVATION_UI.axis) || 11)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillText('unid.', cx, cy + 10);
+        ctx.restore();
+      }
+    };
+
+    const percentPlugin = {
+      id:'innovationPostresPiePercentLabels_totalmix_v3',
+      afterDatasetsDraw(chart){
+        const meta = chart.getDatasetMeta(0);
+        const ds = chart.data && chart.data.datasets ? chart.data.datasets[0] : null;
+        const values = Array.isArray(ds && ds.data) ? ds.data : [];
+        const total = values.reduce(function(sum, v){ return sum + _num(v); }, 0);
+        if(!meta || !Array.isArray(meta.data) || !meta.data.length || !(total > 0)) return;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.font = `700 ${Math.max(8, (window.INNOVATION_UI && INNOVATION_UI.line) || 11)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        meta.data.forEach(function(arc, idx){
+          const value = _num(values[idx]);
+          if(!(value > 0)) return;
+          const pct = value / total;
+          if(pct < 0.06) return;
+          const angle = (arc.startAngle + arc.endAngle) / 2;
+          const r = arc.innerRadius + ((arc.outerRadius - arc.innerRadius) * 0.62);
+          const x = arc.x + Math.cos(angle) * r;
+          const y = arc.y + Math.sin(angle) * r;
+          const txt = `${Math.round(pct * 100)}%`;
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = 'rgba(17,40,74,.22)';
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeText(txt, x, y);
+          ctx.fillText(txt, x, y);
+        });
+        ctx.restore();
+      }
+    };
+
+    state.chartInnovationPostresParent = new Chart(canvas.getContext('2d'), {
+      type:'doughnut',
+      data:{
+        labels: totals.map(function(item){ return item.shortLabel || item.label || item.key; }),
+        datasets:[{
+          data: totals.map(function(item){ return _num(item.qty); }),
+          backgroundColor: totals.map(function(item){ return item.color || '#7A8899'; }),
+          borderColor: totals.map(function(item){ return (selectedKey && item.key === selectedKey) ? (item.color || '#F58320') : '#FFFFFF'; }),
+          borderWidth: totals.map(function(item){ return (selectedKey && item.key === selectedKey) ? 7 : 3; }),
+          hoverOffset:8,
+          cutout:'48%'
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        layout:{ padding:{ top:2, right:2, bottom:2, left:2 } },
+        plugins:{
+          legend:{ display:false },
+          title:{ display:true, text:[`Postres por item padre`, titleSuffix], color:'#000', font:{weight:'800', size:Math.max(12, ((window.INNOVATION_UI && INNOVATION_UI.title) || 14) - 3)}, padding:{top:4,bottom:4} },
+          tooltip:{
+            callbacks:{
+              label:function(ctx){
+                const src = totals[ctx.dataIndex] || {qty:0,sales:0,comboQty:0,comboSales:0};
+                const shareQty = grandQty > 0 ? src.qty / grandQty : 0;
+                const shareSales = grandSales > 0 ? src.sales / grandSales : 0;
+                return `${ctx.label}: ${fmtInt(src.qty)} unid. • ${fmtMoney(src.sales)} • Mix qty ${(shareQty * 100).toFixed(1)}% • Mix venta ${(shareSales * 100).toFixed(1)}%`;
+              },
+              footer:function(ctxs){
+                const src = totals[(ctxs && ctxs[0]) ? ctxs[0].dataIndex : -1] || null;
+                const lines = [];
+                if(src) lines.push(`Incluye combos: ${fmtInt(_num(src.comboQty))} unid. • ${fmtMoney(_num(src.comboSales))}`);
+                lines.push(`Total postres: ${fmtInt(grandQty)} unid. • ${fmtMoney(grandSales)}`);
+                lines.push(`Total combos: ${fmtInt(grandComboQty)} unid. • ${fmtMoney(grandComboSales)}`);
+                lines.push('Doble click para filtrar/quitar filtro');
+                return lines;
+              }
+            }
+          }
+        }
+      },
+      plugins:[centerPlugin, percentPlugin]
+    });
+
+    state.chartInnovationPostresParent.$onDblSelect = function(idx){
+      const item = totals[idx];
+      try{ innovationSetPostresPieSelection(item && item.key ? item.key : ''); }catch(_e){}
+    };
+    try{ if(typeof innovationBindPieDoubleClick === 'function') innovationBindPieDoubleClick(canvas, function(){ return state.chartInnovationPostresParent; }); }catch(_e){}
+    try{ if(typeof innovationSetChartCardActive === 'function') innovationSetChartCardActive('chart_innovation_postres_parent', !!selectedItem, (selectedItem && selectedItem.color) || '#F58320'); }catch(_e){}
+    const hint = document.getElementById('innovationPostresPieHint');
+    if(hint){
+      const baseText = mode === 'latest'
+        ? `Mix y ventas totales del último período seleccionado. Los combos se amarran al item padre.`
+        : `Mix y ventas totales acumuladas. Los combos se amarran al item padre.`;
+      hint.textContent = selectedItem ? `${baseText} Filtro activo: ${selectedItem.shortLabel || selectedItem.label}. Doble click para quitar.` : `${baseText} Doble click en un segmento para filtrar el gráfico izquierdo.`;
+    }
+  };
+
+  window.renderInnovationPostresShareChart = function(agg){
+    const canvas = document.getElementById('chart_innovation_postres_share');
+    if(!canvas || typeof Chart === 'undefined') return;
+    try{ innovationClearNoData('chart_innovation_postres_share'); }catch(_e){}
+    try{ state.chartInnovationPostresShare && state.chartInnovationPostresShare.destroy && state.chartInnovationPostresShare.destroy(); }catch(_e){}
+
+    const periods = Array.isArray(agg && agg.periods) ? agg.periods.slice() : [];
+    const selectedParent = _getSelectedParentFromAgg(agg);
+    let totalSales = selectedParent ? (Array.isArray(selectedParent.salesByPeriod) ? selectedParent.salesByPeriod.slice() : periods.map(function(){ return 0; })) : (Array.isArray(agg && agg.totalSales) ? agg.totalSales.slice() : periods.map(function(){ return 0; }));
+    const totalQty = selectedParent ? (Array.isArray(selectedParent.qtyByPeriod) ? selectedParent.qtyByPeriod.slice() : periods.map(function(){ return 0; })) : (Array.isArray(agg && agg.totalQty) ? agg.totalQty.slice() : periods.map(function(){ return 0; }));
+    const comboSales = selectedParent ? (Array.isArray(selectedParent.comboSalesByPeriod) ? selectedParent.comboSalesByPeriod.slice() : periods.map(function(){ return 0; })) : (Array.isArray(agg && agg.comboSales) ? agg.comboSales.slice() : periods.map(function(){ return 0; }));
+    const comboQty = selectedParent ? (Array.isArray(selectedParent.comboQtyByPeriod) ? selectedParent.comboQtyByPeriod.slice() : periods.map(function(){ return 0; })) : (Array.isArray(agg && agg.comboQty) ? agg.comboQty.slice() : periods.map(function(){ return 0; }));
+    const totalSalesByStore = selectedParent ? (selectedParent.salesByStore instanceof Map ? selectedParent.salesByStore : new Map()) : ((agg && agg.totalSalesByStore instanceof Map) ? agg.totalSalesByStore : new Map());
+    const comboSalesByStore = selectedParent ? (selectedParent.comboSalesByStore instanceof Map ? selectedParent.comboSalesByStore : new Map()) : ((agg && agg.comboSalesByStore instanceof Map) ? agg.comboSalesByStore : new Map());
+    const tooltipStores = Array.isArray(agg && agg.stores) ? agg.stores.slice() : [];
+
+    if(typeof isMonthlyReport === 'function' && isMonthlyReport() && !selectedParent){
+      try{
+        const postresNorm = (typeof innovationNormText === 'function') ? innovationNormText('Postre') : 'POSTRE';
+        const periodSet = new Set(periods.map(function(pk){ return _txt(pk); }).filter(Boolean));
+        const monthRows = (typeof innovationChartSalesMonthRows === 'function') ? innovationChartSalesMonthRows() : [];
+        const storeList = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []);
+        const storeSet = new Set(Array.from(new Set((Array.isArray(storeList) ? storeList : []).map(function(s){ return _txt(s).toUpperCase(); }).filter(Boolean))));
+        const overrideMap = new Map();
+        (Array.isArray(monthRows) ? monthRows : []).forEach(function(r){
+          const periodKey = _txt((typeof innovationNormalizePeriodKey === 'function') ? innovationNormalizePeriodKey(r && (r.CalMonth || r.calmonth || r.month || '')) : (r && (r.CalMonth || r.calmonth || r.month || '')));
+          if(!periodSet.has(periodKey)) return;
+          const store = _txt(r && (r.store || r.Store)).toUpperCase();
+          if(storeSet.size && !storeSet.has(store)) return;
+          const category = _txt(r && (r.category || r.Category));
+          const categoryNorm = (typeof innovationNormText === 'function') ? innovationNormText(category) : category.toUpperCase();
+          if(categoryNorm !== postresNorm) return;
+          overrideMap.set(periodKey, _num(overrideMap.get(periodKey)) + _num(r && (r.sales || r.Sales || r['Total Sales'])));
+        });
+        totalSales = periods.map(function(pk, idx){
+          const overrideVal = _num(overrideMap.get(pk));
+          return overrideVal > 0 ? overrideVal : _num(totalSales[idx]);
+        });
+      }catch(_e){}
+    }
+
+    const remainderSales = periods.map(function(_, idx){ return Math.max(0, _num(totalSales[idx]) - _num(comboSales[idx])); });
+    const remainderQty = periods.map(function(_, idx){ return Math.max(0, _num(totalQty[idx]) - _num(comboQty[idx])); });
+    const shareData = periods.map(function(_, idx){ const total = _num(totalSales[idx]); const combo = _num(comboSales[idx]); return total > 0 ? (combo / total) : null; });
+    if(!totalSales.some(function(v){ return _num(v) > 0; })){
+      try{ innovationNoData('chart_innovation_postres_share', 'No hay datos suficientes de postres para los filtros actuales.'); }catch(_e){}
+      try{ if(typeof innovationSetChartCardActive === 'function') innovationSetChartCardActive('chart_innovation_postres_share', false); }catch(_e){}
+      return;
+    }
+
+    const labels = _labelsForPeriods(periods);
+    const ySuggestedMax = (typeof innovationNiceAxisMax === 'function') ? innovationNiceAxisMax(Math.max.apply(null, totalSales.map(function(v){ return _num(v); }).concat([0])), 1.16) : undefined;
+    try{ if(typeof innovationSetChartCardActive === 'function') innovationSetChartCardActive('chart_innovation_postres_share', !!selectedParent, (selectedParent && selectedParent.color) || '#F58320'); }catch(_e){}
+
+    state.chartInnovationPostresShare = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{
+        labels:labels,
+        datasets:[
+          { type:'bar', label:'Resto Postres', data:remainderSales, _qtyByPeriod:remainderQty, stack:'postres_share', order:0, backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#005EA7', 'postres_share_resto_v3'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+          { type:'bar', label:'Vta Combos Postres', data:comboSales, _qtyByPeriod:comboQty, stack:'postres_share', order:1, backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#F58320', 'postres_share_combo_v3'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 }
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        layout:{ padding:(typeof innovationChartPadding === 'function') ? innovationChartPadding('mh') : {left:6,right:8,top:6,bottom:0} },
+        plugins:{
+          legend:{ position:'bottom', labels:{ color:'#11284A', boxWidth:12, boxHeight:8, padding:4, font:{weight:'700', size:(window.INNOVATION_UI && INNOVATION_UI.legend) || 11} } },
+          title:{ display:true, text: innovationTitleLines('Share Vta Combos Postres en Total Postres ' + (typeof getSasMamLabel === 'function' ? getSasMamLabel() : 'MaM') + (selectedParent ? (' · ' + _txt(selectedParent.shortLabel || selectedParent.label)) : '')), color:'#000', font:{weight:'800', size:(window.INNOVATION_UI && INNOVATION_UI.title) || 14}, padding:{top:10,bottom:10} },
+          tooltip:{ mode:'index', intersect:false, callbacks:{
+            label:function(ctx){
+              const idx = ctx.dataIndex;
+              const ds = ctx.dataset || {};
+              const units = _num(ds._qtyByPeriod && ds._qtyByPeriod[idx]);
+              return `${ctx.dataset.label}: ${fmtMoney(_num(ctx.raw))} • Qty: ${fmtInt(units)}`;
+            },
+            footer:function(items){
+              const idx = items && items[0] ? items[0].dataIndex : -1;
+              if(idx < 0) return '';
+              const share = shareData[idx];
+              const lines = [ `${selectedParent ? _txt(selectedParent.shortLabel || selectedParent.label) : 'Total Postres'}: ${fmtMoney(_num(totalSales[idx]))} • Qty: ${fmtInt(_num(totalQty[idx]))}`, `Share combos: ${share == null ? '—' : ((share * 100).toFixed(1) + '%')}` ];
+              const storeLines = tooltipStores.map(function(storeName){
+                const totalStoreArr = totalSalesByStore && totalSalesByStore.get ? totalSalesByStore.get(storeName) : null;
+                const comboStoreArr = comboSalesByStore && comboSalesByStore.get ? comboSalesByStore.get(storeName) : null;
+                const totalStore = _num(totalStoreArr && totalStoreArr[idx]);
+                const comboStore = _num(comboStoreArr && comboStoreArr[idx]);
+                if(!(totalStore > 0 || comboStore > 0)) return '';
+                const shareStore = totalStore > 0 ? (comboStore / totalStore) : null;
+                return `${_compactStoreLabel(storeName)} ${fmtMoney(totalStore)} · C ${fmtMoney(comboStore)} · ${shareStore == null ? '—' : ((shareStore * 100).toFixed(0) + '%')}`;
+              }).filter(Boolean);
+              if(storeLines.length) lines.push.apply(lines, storeLines);
+              return lines;
+            }
+          } }
+        },
+        scales:{
+          x:{ stacked:true, offset:true, bounds:'ticks', ticks:{ maxRotation:0, autoSkip:false, color:'#11284A', font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} }, grid:{ display:false } },
+          y:{ stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{ color:'#11284A', callback:function(v){ return fmtMoney(v); }, font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} } }
+        }
+      },
+      plugins:[
+        innovationCreateDatasetInnerLabelPlugin({ id:'innovationPostresRestoValueLabels_v3', datasetLabel:'Resto Postres', bgColor:'#A9C7E6', fontSize:(window.INNOVATION_UI && INNOVATION_UI.segment) || 10, secondaryFontSize:(window.INNOVATION_UI && INNOVATION_UI.innerSecondary) || 9, padX:4, padY:1, lineGap:1, radius:5, minBoxH:12, formatter:function(raw){ return [fmtMoney(_num(raw))]; }, offsetY:8 }),
+        innovationCreateDatasetInnerLabelPlugin({ id:'innovationPostresComboValueLabels_v3', datasetLabel:'Vta Combos Postres', bgColor:'#F7D3A2', fontSize:(window.INNOVATION_UI && INNOVATION_UI.segment) || 10, secondaryFontSize:(window.INNOVATION_UI && INNOVATION_UI.innerSecondary) || 9, padX:4, padY:1, lineGap:1, radius:5, minBoxH:12, formatter:function(raw){ return [fmtMoney(_num(raw))]; }, offsetY:10 }),
+        innovationCreateDatasetShareLabelPlugin({ id:'innovationPostresShareTopLabels_v3', datasetLabel:'Vta Combos Postres', shareData:shareData, bgColor:'#6B7280', topOffset:2, collisionPad:4, offsets:[[0,0],[0,-8],[0,-16],[0,8]], margin:{top:0,right:8,left:8,bottom:4}, fontSize:11, padX:5, boxH:18, formatter:function(share){ return `${Math.round(_num(share) * 100)}%`; } })
+      ]
+    });
+  };
+})();
+</script>
+
+
+<script id="ampm-hamburguesa-double-fix-v4">
+(function(){
+  function _txt(v){ return v == null ? '' : String(v).trim(); }
+  function _num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _norm(v){
+    return _txt(v)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toUpperCase().replace(/[^A-Z0-9]+/g,'');
+  }
+
+  if(typeof window.innovationProductKind === 'function'){
+    window.innovationProductKind = function(desc){
+      var norm = _norm(desc);
+      if(!norm) return '';
+      if(/HAMBURGUESA.*RES.*DOBLE|DOBLE.*HAMBURGUESA.*RES|RESDOBLE|DOBLECARNE|HAMBURGUESADERESDOBLE|FSIHAMBURGUESADERESDOBLE/.test(norm)) return 'double';
+      if(/HAMBURGUESA.*RES.*QUESO|QUESO.*HAMBURGUESA.*RES|HAMBURGUESADERESYQUESO|FSIHAMBURGUESADERESYQUESO/.test(norm)) return 'normal';
+      return '';
+    };
+    window.innovationProductKind.__ampmStrictBurgerFixV4 = true;
+  }
+
+  if(typeof window.renderInnovationMixChart === 'function'){
+    window.renderInnovationMixChart = function(rows, periods){
+      try{
+        const canvas = document.getElementById('chart_innovation_mix');
+        if(!canvas || typeof Chart === 'undefined') return;
+        if(typeof innovationClearNoData === 'function') innovationClearNoData('chart_innovation_mix');
+        try{ state.chartInnovationMix && state.chartInnovationMix.destroy && state.chartInnovationMix.destroy(); }catch(_e){}
+
+        const usePeriods = Array.isArray(periods) ? periods.slice() : [];
+        const dblMap = new Map(), nrmMap = new Map(), dblQtyMap = new Map(), nrmQtyMap = new Map();
+        (Array.isArray(rows) ? rows : []).forEach(r => {
+          const pk = _txt(r && r.periodKey);
+          if(!pk) return;
+          if(r && r.kind === 'double'){
+            dblMap.set(pk, _num(dblMap.get(pk)) + _num(r.sales));
+            dblQtyMap.set(pk, _num(dblQtyMap.get(pk)) + _num(r.qty));
+          }
+          if(r && r.kind === 'normal'){
+            nrmMap.set(pk, _num(nrmMap.get(pk)) + _num(r.sales));
+            nrmQtyMap.set(pk, _num(nrmQtyMap.get(pk)) + _num(r.qty));
+          }
+        });
+
+        const doubleData = usePeriods.map(pk => _num(dblMap.get(pk)));
+        const normalData = usePeriods.map(pk => _num(nrmMap.get(pk)));
+        const totalData = usePeriods.map((pk, idx) => _num(doubleData[idx]) + _num(normalData[idx]));
+        const hasData = totalData.some(v => _num(v) > 0);
+        if(!hasData){
+          if(typeof innovationNoData === 'function') innovationNoData('chart_innovation_mix', 'No hay datos suficientes para construir el mix de hamburguesas con los filtros actuales.');
+          return;
+        }
+        const shareData = usePeriods.map((pk, idx) => totalData[idx] > 0 ? (doubleData[idx] / totalData[idx]) : null);
+        const lyTotals = usePeriods.map(pk => {
+          let lyKey = '';
+          try{ lyKey = (typeof getLyPeriodKey === 'function') ? (getLyPeriodKey(pk) || '') : ''; }catch(_e){}
+          if(!lyKey){ try{ lyKey = (typeof shiftMonthKey === 'function') ? (shiftMonthKey(pk, -12) || '') : ''; }catch(_e){} }
+          return _num(dblMap.get(lyKey)) + _num(nrmMap.get(lyKey));
+        });
+        const deltaData = usePeriods.map((pk, idx) => {
+          const ly = _num(lyTotals[idx]);
+          const cur = _num(totalData[idx]);
+          if(!(ly > 0) || !(cur > 0)) return null;
+          const ratio = cur / ly;
+          return ratio > 0 ? ratio : null;
+        });
+        const maxDelta = Math.max.apply(null, deltaData.filter(v => v != null).map(Number).concat([1.2]));
+        const labels = usePeriods.map(pk => (typeof periodChartLabel === 'function' ? periodChartLabel(pk) : pk));
+        const ySuggestedMax = (typeof innovationStackSuggestedMax === 'function') ? innovationStackSuggestedMax([doubleData, normalData], 1.14) : undefined;
+
+        state.chartInnovationMix = new Chart(canvas.getContext('2d'), {
+          type:'bar',
+          data:{
+            labels,
+            datasets:[
+              { type:'line', label:'Delta vs LY', data:deltaData, order:0, borderColor:'#F7C600', backgroundColor:'#F7C600', pointBackgroundColor:'#ffffff', pointBorderColor:'#F7C600', pointBorderWidth:2, pointRadius:4, pointHoverRadius:5, spanGaps:false, tension:0.25, yAxisID:'y1' },
+              { type:'bar', label:'Vta Hamburguesa doble', data:doubleData, order:1, stack:'mix', backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#005EA7', 'double_v4_fix'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+              { type:'bar', label:'Vta Hamburguesa normal', data:normalData, order:1, stack:'mix', backgroundColor:function(ctx){ return __proGradientFromColor(ctx.chart, '#F58320', 'normal_v4_fix'); }, proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76 },
+              { type:'line', label:'Share doble', data:shareData, yAxisID:'y2', borderColor:'rgba(0,0,0,0)', backgroundColor:'rgba(0,0,0,0)', pointRadius:0, pointHoverRadius:0, borderWidth:0, tension:0 }
+            ]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            interaction:{ mode:'index', intersect:false },
+            layout:{ padding:(typeof innovationChartPadding === 'function') ? innovationChartPadding('mix') : {left:6,right:10,top:6,bottom:0} },
+            plugins:{
+              legend:{ position:'bottom', align:'center', labels:{ color:'#11284A', boxWidth:12, boxHeight:8, padding:10, font:{weight:'700', size:(window.INNOVATION_UI && INNOVATION_UI.legend) || 11}, filter:function(item){ return item.text !== 'Share doble'; }, sort:function(a,b){ const order = {'Delta vs LY':0,'Vta Hamburguesa doble':1,'Vta Hamburguesa normal':2}; return (order[a.text] || 99) - (order[b.text] || 99); } } },
+              title:{ display:true, text: innovationTitleLines('Share Venta ' + (window.INNOVATION_BURGER_DOUBLE || 'Hamburguesa de res doble') + ' ' + (typeof getSasMamLabel === 'function' ? getSasMamLabel() : 'MaM')), color:'#000', font:{weight:'800', size:(window.INNOVATION_UI && INNOVATION_UI.title) || 14}, padding:{top:10,bottom:10} },
+              tooltip:{ mode:'index', intersect:false, callbacks:{ label:function(ctx){ const raw = ctx.raw; const idx = ctx.dataIndex; if(ctx.dataset.label === 'Vta Hamburguesa doble') return 'Vta Hamburguesa doble: ' + fmtMoney(_num(raw)) + ' • Qty: ' + fmtInt(_num(dblQtyMap.get(usePeriods[idx]))); if(ctx.dataset.label === 'Vta Hamburguesa normal') return 'Vta Hamburguesa normal: ' + fmtMoney(_num(raw)) + ' • Qty: ' + fmtInt(_num(nrmQtyMap.get(usePeriods[idx]))); if(ctx.dataset.label === 'Delta vs LY') return 'Delta vs LY: ' + (raw == null ? '—' : Number(raw).toFixed(2)); return null; }, footer:function(items){ const idx = items && items[0] ? items[0].dataIndex : -1; if(idx < 0) return ''; const total = _num(totalData[idx]); const share = shareData[idx]; const qtyTotal = _num(dblQtyMap.get(usePeriods[idx])) + _num(nrmQtyMap.get(usePeriods[idx])); return ['Total ventas: ' + fmtMoney(total), 'Total qty: ' + fmtInt(qtyTotal), 'Share doble: ' + (share == null ? '—' : (share * 100).toFixed(1) + '%')]; } } }
+            },
+            scales:{
+              x:{ stacked:true, offset:true, bounds:'ticks', ticks:{ maxRotation:0, autoSkip:false, color:'#11284A', font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} }, grid:{ display:false } },
+              y:{ stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{ color:'#11284A', callback:function(v){ return fmtMoney(v); }, font:{size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700'} } },
+              y1:{ beginAtZero:true, position:'right', suggestedMax: Math.max(1.2, Math.ceil((maxDelta + 0.15) * 10) / 10), grid:{ drawOnChartArea:false }, title:{ display:true, text:'Delta vs LY', color:'#000', font:{ size:(window.INNOVATION_UI && INNOVATION_UI.axisTitle) || 12, weight:'800' } }, border:{ display:true, color:'#F7C600' }, ticks:{ color:'#000', font:{ size:(window.INNOVATION_UI && INNOVATION_UI.axis) || 11, weight:'700' } } },
+              y2:{ display:false, min:0, max:1 }
+            }
+          },
+          plugins:[ innovationCreateMixBarLabelPlugin(shareData), innovationCreateTotalLabelPlugin(fmtMoney, {fontSize:(window.INNOVATION_UI && INNOVATION_UI.total) || 11, padX:4, boxH:14, radius:6}), innovationCreateLineValueLabelPlugin() ]
+        });
+      }catch(err){
+        try{ console.warn('AMPM burger mix fix v4 failed', err); }catch(_e){}
+      }
+    };
+    window.renderInnovationMixChart.__ampmStrictBurgerFixV4 = true;
+  }
+})();
+</script>
+
+
+<style id="onepager-mini-charts-fix-v8">
+/* v8: igualar altura visual de las 2 primeras gráficas del One Pager con la 3ra */
+.onePagerMiniGrid{
+  align-items:stretch !important;
+}
+.onePagerMiniGrid > .opCard:nth-child(-n+2){
+  align-self:stretch !important;
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  padding-bottom:4px !important;
+}
+.onePagerMiniGrid > .opCard:nth-child(-n+2) .opCardHead{
+  margin-bottom:6px !important;
+}
+.onePagerMiniGrid > .opCard:nth-child(-n+2) .opCanvasWrap.mini{
+  flex:1 1 auto !important;
+  height:182px !important;
+  min-height:182px !important;
+  max-height:182px !important;
+  padding-bottom:0 !important;
+}
+.onePagerMiniGrid > .opCard:nth-child(-n+2) .opCanvasWrap.mini canvas{
+  width:100% !important;
+  height:100% !important;
+  display:block;
+}
+@media (max-width: 720px){
+  .onePagerMiniGrid > .opCard:nth-child(-n+2) .opCanvasWrap.mini{
+    height:220px !important;
+    min-height:220px !important;
+    max-height:220px !important;
+  }
+}
+</style>
+
 </body>
+
+
+<style id="innovation-fs-margin-card-fill-v72-overrides">
+/* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
+  align-items:start !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
+  align-self:start !important;
+  display:flex !important;
+  flex-direction:column !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+  flex:0 0 360px !important;
+  height:360px !important;
+  min-height:360px !important;
+  max-height:none !important;
+  padding:8px 10px 6px !important;
+}
+body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+}
+@media (max-width:1100px){
+  body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+    flex-basis:300px !important;
+    height:300px !important;
+    min-height:300px !important;
+  }
+}
+</style>
 
 </html>
