@@ -4458,10 +4458,12 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 
   function removeThinking(){
-    var msgs = getMessagesEl();
-    if(!msgs) return;
-    var thinking = msgs.querySelector('.ampm-ai-thinking');
-    if(thinking) thinking.remove();
+    try{
+      var msgs = getMessagesEl();
+      if(!msgs) return;
+      var thinkingEls = msgs.querySelectorAll('.ampm-ai-thinking');
+      thinkingEls.forEach(function(el){ try{ el.remove(); }catch(_e){} });
+    }catch(_e){}
   }
 
   function setSendDisabled(disabled){
@@ -4486,7 +4488,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     chatHistory.push({ role:'user', content: userText });
 
     setSendDisabled(true);
-    var thinkingEl = appendMessage('assistant', 'Analizando la data del reporte…', 'ampm-ai-thinking');
+    appendMessage('assistant', 'Analizando la data del reporte…', 'ampm-ai-thinking');
 
     // Construir mensajes para la API
     var dataContext = buildDataContext();
@@ -4512,7 +4514,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     })
     .then(function(res){ return res.json(); })
     .then(function(data){
-      removeThinking();
+      try{ removeThinking(); }catch(_e){}
       setSendDisabled(false);
       if(data.error){
         appendMessage('assistant', '❌ Error de OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error');
@@ -4524,9 +4526,14 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       appendMessage('assistant', reply);
     })
     .catch(function(err){
-      removeThinking();
+      try{ removeThinking(); }catch(_e){}
       setSendDisabled(false);
-      appendMessage('assistant', '❌ Error de conexión: ' + String(err), 'error');
+      var errMsg = String(err);
+      if(errMsg.indexOf('fetch') !== -1 || errMsg.indexOf('Failed') !== -1){
+        appendMessage('assistant', '❌ Error de conexión con OpenAI. Verificá tu API Key y que el sitio esté en HTTPS (GitHub Pages). Detalle: ' + errMsg, 'error');
+      } else {
+        appendMessage('assistant', '❌ Error: ' + errMsg, 'error');
+      }
     });
   };
 
@@ -4536,6 +4543,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     if(msgs) msgs.innerHTML = '';
     var welcome = getWelcomeEl();
     if(welcome) welcome.style.display = '';
+    setSendDisabled(false);
   };
 
   window.ampmAiSetPrompt = function(text){
