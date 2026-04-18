@@ -3645,7 +3645,29 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
         <span class="ampm-ai-nav-ico">🏪</span><span>Por tienda</span>
       </button>
     </div>
+    <!-- API Key config at bottom of nav -->
+    <div class="ampm-ai-key-section">
+      <div class="ampm-ai-key-status" id="ampmAiKeyStatus">
+        <span class="ampm-ai-key-dot" id="ampmAiKeyDot"></span>
+        <span id="ampmAiKeyStatusTxt">Sin API Key</span>
+      </div>
+      <button class="ampm-ai-key-btn" onclick="ampmAiOpenKeyModal()">⚙ Configurar Key</button>
+    </div>
   </nav>
+
+  <!-- Key Modal -->
+  <div class="ampm-ai-modal-backdrop" id="ampmAiKeyModal" style="display:none" onclick="ampmAiCloseKeyModal(event)">
+    <div class="ampm-ai-modal">
+      <div class="ampm-ai-modal-title">🔑 API Key de OpenAI</div>
+      <div class="ampm-ai-modal-sub">Se guarda en tu navegador. No se sube a ningún servidor.</div>
+      <input class="ampm-ai-modal-input" id="ampmAiKeyInput" type="password" placeholder="sk-proj-..." autocomplete="off" />
+      <div class="ampm-ai-modal-actions">
+        <button class="ampm-ai-modal-cancel" onclick="ampmAiCloseKeyModal()">Cancelar</button>
+        <button class="ampm-ai-modal-save" onclick="ampmAiSaveKey()">Guardar</button>
+      </div>
+      <div class="ampm-ai-modal-hint">Tu key se guarda en localStorage de este navegador y persiste aunque subas archivos nuevos a GitHub.</div>
+    </div>
+  </div>
 
   <!-- main content -->
   <div class="ampm-ai-main">
@@ -3702,6 +3724,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   flex-direction:row;
   min-height:480px;
   max-height:640px;
+  position:relative;
 }
 .ampm-ai-wrap[style*="display:none"]{display:none!important}
 body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
@@ -3941,6 +3964,89 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
   background:#fff;
   flex-shrink:0;
 }
+.ampm-ai-key-section{
+  padding:12px 10px;
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-top:auto;
+}
+.ampm-ai-key-status{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:10.5px;
+  color:rgba(255,255,255,.5);
+  font-weight:700;
+}
+.ampm-ai-key-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#ef4444;
+  flex:0 0 auto;
+}
+.ampm-ai-key-dot.ok{background:#22c55e;}
+.ampm-ai-key-btn{
+  padding:7px 10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.75);
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  text-align:left;
+  transition:background .15s;
+}
+.ampm-ai-key-btn:hover{background:rgba(255,255,255,.14);color:#fff;}
+.ampm-ai-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(11,26,46,.72);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  border-radius:16px;
+}
+.ampm-ai-modal{
+  background:#fff;
+  border-radius:14px;
+  padding:22px 24px;
+  width:min(380px,90%);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.ampm-ai-modal-title{font-size:16px;font-weight:900;color:#0b1a2e;}
+.ampm-ai-modal-sub{font-size:12px;color:#64748b;margin-top:-6px;}
+.ampm-ai-modal-input{
+  padding:10px 13px;
+  border:1px solid #c8d8ea;
+  border-radius:9px;
+  font-size:13px;
+  font-family:monospace;
+  color:#0f172a;
+  outline:none;
+  background:#f8fafd;
+  width:100%;
+  box-sizing:border-box;
+}
+.ampm-ai-modal-input:focus{border-color:#4fa3e8;background:#fff;box-shadow:0 0 0 3px rgba(79,163,232,.15);}
+.ampm-ai-modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.ampm-ai-modal-cancel{
+  padding:8px 16px;border-radius:8px;border:1px solid #d0daea;
+  background:#f1f5f9;color:#475569;font-size:13px;font-weight:800;cursor:pointer;
+}
+.ampm-ai-modal-save{
+  padding:8px 20px;border-radius:8px;border:none;
+  background:#0b1a2e;color:#fff;font-size:13px;font-weight:800;cursor:pointer;
+}
+.ampm-ai-modal-save:hover{opacity:.85;}
+.ampm-ai-modal-hint{font-size:10.5px;color:#94a3b8;line-height:1.5;}
 @media (max-width:700px){
   .ampm-ai-wrap{flex-direction:column;max-height:none;}
   .ampm-ai-nav{width:100%;min-width:0;flex-direction:row;overflow-x:auto;}
@@ -3952,13 +4058,49 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
 
 <script id="ampm-ai-panel-script">
 (function(){
-  // ============================================================
-  // ⚠️  COLOCA TU API KEY DE OPENAI AQUÍ:
-  // ============================================================
-  var OPENAI_API_KEY = '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';
-  // ============================================================
-
+  var LS_KEY = 'ampm_openai_key_v1';
   var OPENAI_MODEL = 'gpt-4o';
+
+  function getApiKey(){
+    try{ return localStorage.getItem(LS_KEY) || ''; }catch(_e){ return ''; }
+  }
+  function saveApiKey(k){
+    try{ localStorage.setItem(LS_KEY, k.trim()); }catch(_e){}
+  }
+  function updateKeyStatus(){
+    var k = getApiKey();
+    var dot = getEl('ampmAiKeyDot');
+    var txt = getEl('ampmAiKeyStatusTxt');
+    if(k && k.startsWith('sk-')){
+      if(dot){ dot.className='ampm-ai-key-dot ok'; }
+      if(txt){ txt.textContent='Key configurada ✓'; }
+    } else {
+      if(dot){ dot.className='ampm-ai-key-dot'; }
+      if(txt){ txt.textContent='Sin API Key'; }
+    }
+  }
+  window.ampmAiOpenKeyModal = function(){
+    var modal = getEl('ampmAiKeyModal');
+    var inp = getEl('ampmAiKeyInput');
+    if(inp){ inp.value = getApiKey(); }
+    if(modal){ modal.style.display='flex'; }
+    setTimeout(function(){ if(inp) inp.focus(); }, 60);
+  };
+  window.ampmAiCloseKeyModal = function(e){
+    if(e && e.target !== getEl('ampmAiKeyModal')) return;
+    var modal = getEl('ampmAiKeyModal');
+    if(modal) modal.style.display='none';
+  };
+  window.ampmAiSaveKey = function(){
+    var inp = getEl('ampmAiKeyInput');
+    var k = inp ? inp.value.trim() : '';
+    if(!k){ alert('Ingresá tu API Key de OpenAI'); return; }
+    if(!k.startsWith('sk-')){ alert('La API Key debe empezar con sk-'); return; }
+    saveApiKey(k);
+    updateKeyStatus();
+    var modal = getEl('ampmAiKeyModal');
+    if(modal) modal.style.display='none';
+  };
   var chatHistory = [];
 
   var TOPIC_META = {
@@ -4131,8 +4273,10 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
   };
 
   window.ampmAiSend = function(){
-    if(OPENAI_API_KEY === 'sk-COLOCA_TU_API_KEY_AQUI' || !OPENAI_API_KEY || !OPENAI_API_KEY.trim()){
-      appendMsg('assistant','⚠️ Configurá tu API Key de OpenAI en el HTML (variable OPENAI_API_KEY).','error');
+    var OPENAI_API_KEY = getApiKey();
+    if(!OPENAI_API_KEY || !OPENAI_API_KEY.startsWith('sk-')){
+      appendMsg('assistant','⚠️ Primero configurá tu API Key de OpenAI. Hacé clic en "⚙ Configurar Key" en el menú lateral.','error');
+      ampmAiOpenKeyModal();
       return;
     }
     var inputEl = getEl('ampmAiInput');
@@ -4214,6 +4358,7 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
   function init(){
     checkAdmin();
     bindEnter();
+    updateKeyStatus();
     setInterval(checkAdmin, 2000);
     document.addEventListener('click',function(e){
       var t = e.target;
