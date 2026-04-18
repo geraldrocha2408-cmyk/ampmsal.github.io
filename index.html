@@ -4054,6 +4054,41 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
   .ampm-ai-nav-sep{display:none;}
   .ampm-ai-nav-logo{padding:10px 12px;}
 }
+
+
+.ampm-ai-bubble{white-space:pre-wrap; line-height:1.5;}
+.ampm-ai-bubble.visual{padding:0 !important; background:transparent !important; box-shadow:none !important;}
+.ampm-ai-visual{display:flex; flex-direction:column; gap:12px; min-width:0;}
+.ampm-ai-v-summary{padding:12px 14px; border-radius:14px; background:linear-gradient(180deg,#f8fbff,#eef6ff); border:1px solid rgba(0,94,167,.14); color:#11284A; font-size:13px; font-weight:800; line-height:1.45;}
+.ampm-ai-v-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px;}
+.ampm-ai-v-card{padding:12px 12px 10px; border-radius:16px; border:1px solid rgba(15,23,42,.08); background:#fff; box-shadow:0 8px 18px rgba(15,23,42,.05);}
+.ampm-ai-v-card.good{background:linear-gradient(180deg,#f0fdf4,#ffffff); border-color:rgba(34,197,94,.22);}
+.ampm-ai-v-card.warn{background:linear-gradient(180deg,#fff7ed,#ffffff); border-color:rgba(245,158,11,.22);}
+.ampm-ai-v-card.bad{background:linear-gradient(180deg,#fff1f2,#ffffff); border-color:rgba(239,68,68,.20);}
+.ampm-ai-v-label{font-size:11px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:#64748b;}
+.ampm-ai-v-value{margin-top:5px; font-size:22px; line-height:1.05; font-weight:1000; color:#11284A;}
+.ampm-ai-v-delta{margin-top:6px; display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; background:#f8fafc; border:1px solid rgba(15,23,42,.08); color:#334155;}
+.ampm-ai-v-delta.good{background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.20); color:#166534;}
+.ampm-ai-v-delta.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.22); color:#9a3412;}
+.ampm-ai-v-delta.bad{background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.20); color:#b91c1c;}
+.ampm-ai-v-chart{padding:12px 14px; border-radius:16px; background:#fff; border:1px solid rgba(15,23,42,.08); box-shadow:0 8px 18px rgba(15,23,42,.05);}
+.ampm-ai-v-chart-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
+.ampm-ai-v-chart-title{font-size:13px; font-weight:1000; color:#11284A;}
+.ampm-ai-v-chart-sub{font-size:11px; color:#64748b; font-weight:800;}
+.ampm-ai-v-canvas{position:relative; height:240px;}
+.ampm-ai-v-actions{display:grid; grid-template-columns:1fr; gap:8px;}
+.ampm-ai-v-action{padding:10px 12px; border-radius:14px; background:#fff; border:1px solid rgba(15,23,42,.08); box-shadow:0 6px 14px rgba(15,23,42,.04);}
+.ampm-ai-v-action-title{font-size:12px; font-weight:1000; color:#11284A;}
+.ampm-ai-v-action-meta{margin-top:5px; display:flex; gap:6px; flex-wrap:wrap;}
+.ampm-ai-v-pill{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; background:#eef2ff; border:1px solid rgba(99,102,241,.14); color:#334155;}
+.ampm-ai-v-notes{display:grid; gap:6px;}
+.ampm-ai-v-note{padding:9px 11px; border-radius:12px; background:#f8fafc; border:1px dashed rgba(148,163,184,.28); color:#334155; font-size:12px; font-weight:700; line-height:1.4;}
+.ampm-ai-v-table-wrap{overflow:auto; border:1px solid rgba(15,23,42,.08); border-radius:16px; background:#fff;}
+.ampm-ai-v-table{width:100%; border-collapse:separate; border-spacing:0; min-width:560px;}
+.ampm-ai-v-table th,.ampm-ai-v-table td{padding:8px 10px; border-bottom:1px solid rgba(15,23,42,.08); text-align:left; font-size:12px;}
+.ampm-ai-v-table th{background:#0C4D8F; color:#fff; font-weight:900; position:sticky; top:0;}
+.ampm-ai-v-table tr:last-child td{border-bottom:none;}
+@media (max-width:760px){.ampm-ai-v-canvas{height:220px;}}
 </style>
 
 <script id="ampm-ai-panel-script">
@@ -4602,103 +4637,102 @@ Toda recomendación debe cumplir:
 Si una recomendación no cumple eso, no la dejes así. Reformúlala.
 
 ==================================================
-FORMATO DE RESPUESTA OBLIGATORIO
+FORMATO DE RESPUESTA ADAPTATIVO
 ==================================================
 
-Quiero respuestas cortas, ejecutivas y visuales.
-Evita párrafos largos.
+Tu formato NO es fijo.
+No repitas siempre la misma plantilla.
+Primero entiende qué tipo de pregunta te hicieron y luego responde con la estructura que mejor ayude a decidir.
+
+TIPOS DE RESPUESTA POSIBLES
+
+1. SI LA PREGUNTA ES PUNTUAL
+Responde directo.
+Usa este orden:
+- respuesta corta
+- impacto en el negocio
+- qué haría
+- KPI o señal a seguir
+
+2. SI LA PREGUNTA ES DE DIAGNÓSTICO
+Usa una versión compacta de:
+- hallazgo clave
+- por qué está pasando
+- impacto
+- acción recomendada
+- prioridad
+
+3. SI LA PREGUNTA ES DE CRECIMIENTO O RENTABILIDAD
 Prioriza:
-- semáforos
-- tablas ejecutivas
-- rankings
-- scorecards
-- matrices
-- roadmap 30-60-90
+- palanca
+- impacto esperado
+- riesgo
+- acción inmediata
+- KPI
+
+4. SI LA PREGUNTA ES DE CAMPAÑA, CONTENIDO O ACTIVACIÓN
+Prioriza:
+- insight
+- idea
+- mecánica
+- por qué puede mover negocio
+- canal ideal
+- KPI
+- versión MVP
+
+5. SI LA PREGUNTA ES DE MVP, PILOTO O INNOVACIÓN
+Prioriza:
+- hipótesis
+- prueba mínima viable
+- duración
+- costo relativo
+- KPI de éxito
+- criterio de descarte
+
+6. SI LA PREGUNTA ES DE PRIORIZACIÓN O COMPARACIÓN
+Usa ranking, tabla simple o matriz breve.
+No metas secciones innecesarias.
+
+7. SI EL USUARIO PIDE PROFUNDIDAD
+Solo entonces amplía el análisis y abre más bloques.
+
+==================================================
+REGLA DE RESPUESTA INTELIGENTE
+==================================================
+
+Cada respuesta debe sentirse pensada para la pregunta concreta.
+No uses la misma salida para todo.
+No fuerces semáforo, tabla, benchmark o campañas si no aportan valor real.
+
+SIEMPRE ENTREGA ESTO, AUNQUE SEA EN FORMATO BREVE:
+- la respuesta a la pregunta
+- el impacto en ventas, margen, tráfico, ticket, ejecución o experiencia
+- qué haría para mejorar
+- cómo medir si funcionó
+
+SI HAY DATA SUFICIENTE
+- concluye
+- prioriza
+- recomienda
+
+SI LA DATA NO ALCANZA
+- dilo explícitamente
+- no inventes
+- da la mejor hipótesis ejecutiva posible
+- di qué dato faltaría para tomar mejor decisión
+
+FORMAS VISUALES PERMITIDAS SEGÚN CONVENGA
+- bullets ejecutivos
+- mini tabla
+- ranking
 - checklist
-- mini infogramas
+- semáforo
+- matriz simple
+- roadmap breve
+- 3 decisiones clave
 
-Solo profundiza si yo escribo: PROFUNDIZA
-
-==================================================
-ESTRUCTURA FIJA DE RESPUESTA
-==================================================
-
-1. RESUMEN EJECUTIVO
-Máximo 5 bullets.
-
-2. SEMÁFORO GENERAL
-🟢 Lo que va bien
-🟠 Lo que vigilaría
-🔴 Lo que urge corregir
-
-3. VISIÓN MULTIAGENTE
-Usa este formato:
-
-| Agente | Lectura clave | Acción sugerida |
-|--------|---------------|-----------------|
-
-4. TOP HALLAZGOS
-Solo lo más relevante.
-
-5. PRIORIZACIÓN EJECUTIVA
-Clasifica en:
-- HACER YA
-- PILOTEAR YA
-- ESCALAR
-- DESCARTAR POR AHORA
-
-6. TABLA DE ACCIONES
-Usa este formato:
-
-| Acción | Impacto | Esfuerzo | Prioridad | Responsable | KPI |
-|--------|---------|----------|-----------|-------------|-----|
-
-7. CAMPAÑAS / MVPs
-Usa este formato:
-
-| Idea / Campaña | Objetivo | Insight | Canal | Esfuerzo | Impacto | KPI |
-|----------------|----------|---------|-------|----------|---------|-----|
-
-Luego agrega:
-
-TOP 3 IDEAS DE ENGAGEMENT
-- Idea:
-- Por qué puede funcionar:
-- Cómo se ejecuta simple:
-- KPI:
-- Versión MVP:
-
-TOP 3 IDEAS DE CONVERSIÓN
-- Idea:
-- Producto o combo:
-- Mensaje:
-- Canal:
-- KPI:
-- Horizonte:
-
-TOP 3 IDEAS DE COMUNIDAD / MARCA
-- Idea:
-- Qué construye:
-- Qué activa:
-- Formato sugerido:
-- KPI:
-
-8. BENCHMARK ATERRIZADO
-Responde así:
-- Qué hacen afuera
-- Por qué funciona
-- Qué sí aplica aquí
-- Qué no aplica
-- Versión local viable
-
-9. MATRIZ FINAL
-Usa una de estas:
-- impacto vs esfuerzo
-- roadmap 30-60-90
-- ranking de prioridades
-- scorecard por tienda
-- scorecard por canal
-- scorecard por categoría
+NO OBLIGUES UNA ESTRUCTURA FIJA.
+OBLIGA SOLO CLARIDAD, IMPACTO Y ACCIÓN.
 
 ==================================================
 REGLA FINAL
@@ -4796,6 +4830,208 @@ Cada vez que te comparta información, empieza de inmediato con:
     if(e) e.style.display = show ? '' : 'none';
   }
 
+  function escapeHtml(str){
+    return String(str==null?'':str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function tryParseAmpmVisualPayload(text){
+    if(!text) return null;
+    var raw = String(text).trim();
+    var match = raw.match(/<AMPM_VISUAL>([\s\S]*?)<\/AMPM_VISUAL>/i);
+    var jsonText = match ? match[1].trim() : '';
+    if(!jsonText && raw.charAt(0)==='{') jsonText = raw;
+    if(!jsonText) return null;
+    try{
+      var payload = JSON.parse(jsonText);
+      if(payload && typeof payload === 'object') return payload;
+    }catch(_e){}
+    return null;
+  }
+
+  function ampmFmtValue(val, format){
+    if(val==null || val==='') return '—';
+    if(typeof val === 'number'){
+      if(format === 'money') return '$'+val.toLocaleString('en-US',{maximumFractionDigits:0});
+      if(format === 'percent') return val.toLocaleString('en-US',{maximumFractionDigits:1})+'%';
+      return val.toLocaleString('en-US',{maximumFractionDigits:1});
+    }
+    return String(val);
+  }
+
+  function renderAmpmVisualPayload(payload){
+    var host = document.createElement('div');
+    host.className = 'ampm-ai-visual';
+
+    if(payload.summary){
+      var s = document.createElement('div');
+      s.className = 'ampm-ai-v-summary';
+      s.textContent = payload.summary;
+      host.appendChild(s);
+    }
+
+    if(Array.isArray(payload.cards) && payload.cards.length){
+      var cards = document.createElement('div');
+      cards.className = 'ampm-ai-v-cards';
+      payload.cards.slice(0,6).forEach(function(card){
+        var status = String(card.status||'').toLowerCase();
+        var c = document.createElement('div');
+        c.className = 'ampm-ai-v-card'+(status?(' '+status):'');
+        var label = document.createElement('div');
+        label.className = 'ampm-ai-v-label';
+        label.textContent = card.label || 'Indicador';
+        var value = document.createElement('div');
+        value.className = 'ampm-ai-v-value';
+        value.textContent = ampmFmtValue(card.value, card.format || payload.value_format);
+        c.appendChild(label); c.appendChild(value);
+        if(card.delta){
+          var delta = document.createElement('div');
+          delta.className = 'ampm-ai-v-delta'+(status?(' '+status):'');
+          delta.textContent = String(card.delta);
+          c.appendChild(delta);
+        }
+        cards.appendChild(c);
+      });
+      host.appendChild(cards);
+    }
+
+    if(payload.chart && Array.isArray(payload.chart.labels) && payload.chart.labels.length && Array.isArray(payload.chart.values) && payload.chart.values.length){
+      var chartWrap = document.createElement('div');
+      chartWrap.className = 'ampm-ai-v-chart';
+      var head = document.createElement('div');
+      head.className = 'ampm-ai-v-chart-head';
+      var headLeft = document.createElement('div');
+      var ttl = document.createElement('div');
+      ttl.className = 'ampm-ai-v-chart-title';
+      ttl.textContent = payload.chart.title || 'Visual de apoyo';
+      headLeft.appendChild(ttl);
+      if(payload.chart.subtitle){
+        var sub = document.createElement('div');
+        sub.className = 'ampm-ai-v-chart-sub';
+        sub.textContent = payload.chart.subtitle;
+        headLeft.appendChild(sub);
+      }
+      head.appendChild(headLeft);
+      chartWrap.appendChild(head);
+      var cvWrap = document.createElement('div');
+      cvWrap.className = 'ampm-ai-v-canvas';
+      var cv = document.createElement('canvas');
+      cvWrap.appendChild(cv);
+      chartWrap.appendChild(cvWrap);
+      host.appendChild(chartWrap);
+      setTimeout(function(){
+        try{
+          if(!window.Chart) return;
+          var t = String(payload.chart.type||'bar').toLowerCase();
+          var chartType = (t==='line'||t==='doughnut'||t==='pie') ? t : 'bar';
+          var values = payload.chart.values.map(function(v){ return Number(v)||0; });
+          new Chart(cv.getContext('2d'), {
+            type: chartType,
+            data: {
+              labels: payload.chart.labels.slice(0,12),
+              datasets: [{
+                label: payload.chart.series_label || 'Valor',
+                data: values.slice(0,12),
+                backgroundColor: chartType==='line' ? 'rgba(12,77,143,0.16)' : ['#0C4D8F','#F58320','#11284A','#5B6B82','#2E8B57','#E67425','#1D4ED8','#7C3AED','#B45309','#334155','#0EA5E9','#F59E0B'],
+                borderColor: '#0C4D8F',
+                borderWidth: 2,
+                tension: 0.28,
+                fill: chartType==='line'
+              }]
+            },
+            options: {
+              responsive:true,
+              maintainAspectRatio:false,
+              plugins:{
+                legend:{display:chartType==='doughnut'||chartType==='pie'},
+                tooltip:{callbacks:{label:function(ctx){var fmt = payload.chart.format || ''; return (ctx.dataset.label?ctx.dataset.label+': ':'') + ampmFmtValue(ctx.parsed.y!=null?ctx.parsed.y:ctx.parsed, fmt);}}}
+              },
+              scales: chartType==='bar'||chartType==='line' ? {
+                y:{ticks:{callback:function(v){ return ampmFmtValue(v, payload.chart.format||''); }}, beginAtZero:true},
+                x:{ticks:{autoSkip:false, maxRotation:0, minRotation:0}}
+              } : {}
+            }
+          });
+        }catch(_e){}
+      },0);
+    }
+
+    if(Array.isArray(payload.table) && payload.table.length){
+      var wrap = document.createElement('div');
+      wrap.className = 'ampm-ai-v-table-wrap';
+      var table = document.createElement('table');
+      table.className = 'ampm-ai-v-table';
+      var cols = Object.keys(payload.table[0] || {});
+      if(cols.length){
+        var thead = document.createElement('thead');
+        var trh = document.createElement('tr');
+        cols.forEach(function(col){ var th = document.createElement('th'); th.textContent = col; trh.appendChild(th); });
+        thead.appendChild(trh); table.appendChild(thead);
+        var tbody = document.createElement('tbody');
+        payload.table.slice(0,8).forEach(function(row){
+          var tr = document.createElement('tr');
+          cols.forEach(function(col){ var td = document.createElement('td'); td.textContent = row[col]==null?'—':String(row[col]); tr.appendChild(td); });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        host.appendChild(wrap);
+      }
+    }
+
+    if(Array.isArray(payload.actions) && payload.actions.length){
+      var actions = document.createElement('div');
+      actions.className = 'ampm-ai-v-actions';
+      payload.actions.slice(0,4).forEach(function(action){
+        var a = document.createElement('div');
+        a.className = 'ampm-ai-v-action';
+        var t = document.createElement('div');
+        t.className = 'ampm-ai-v-action-title';
+        t.textContent = action.title || action.action || 'Acción sugerida';
+        a.appendChild(t);
+        if(action.detail){
+          var d = document.createElement('div');
+          d.style.marginTop = '4px';
+          d.style.fontSize = '12px';
+          d.style.lineHeight = '1.45';
+          d.style.color = '#334155';
+          d.textContent = action.detail;
+          a.appendChild(d);
+        }
+        var meta = document.createElement('div');
+        meta.className = 'ampm-ai-v-action-meta';
+        [['Prioridad',action.priority],['Responsable',action.owner],['KPI',action.kpi]].forEach(function(pair){
+          if(!pair[1]) return;
+          var pill = document.createElement('span');
+          pill.className = 'ampm-ai-v-pill';
+          pill.textContent = pair[0]+': '+pair[1];
+          meta.appendChild(pill);
+        });
+        if(meta.childNodes.length) a.appendChild(meta);
+        actions.appendChild(a);
+      });
+      host.appendChild(actions);
+    }
+
+    if(Array.isArray(payload.notes) && payload.notes.length){
+      var notes = document.createElement('div');
+      notes.className = 'ampm-ai-v-notes';
+      payload.notes.slice(0,4).forEach(function(n){
+        var item = document.createElement('div');
+        item.className = 'ampm-ai-v-note';
+        item.textContent = n;
+        notes.appendChild(item);
+      });
+      host.appendChild(notes);
+    }
+
+    return host;
+  }
+
   function appendMsg(role, text, extraClass){
     showEmpty(false);
     var msgs = getMsgs();
@@ -4807,7 +5043,17 @@ Cada vez que te comparta información, empieza de inmediato con:
     lbl.textContent = role === 'user' ? 'Vos' : 'IA';
     var bubble = document.createElement('div');
     bubble.className = 'ampm-ai-bubble';
-    bubble.textContent = text;
+    if(role === 'assistant'){
+      var payload = tryParseAmpmVisualPayload(text);
+      if(payload){
+        bubble.classList.add('visual');
+        bubble.appendChild(renderAmpmVisualPayload(payload));
+      } else {
+        bubble.textContent = text;
+      }
+    } else {
+      bubble.textContent = text;
+    }
     wrap.appendChild(lbl);
     wrap.appendChild(bubble);
     msgs.appendChild(wrap);
@@ -4892,11 +5138,31 @@ REGLAS OPERATIVAS FINALES:
 - Basate primero en la data del reporte y en lo que el usuario comparta.
 - No inventés números, causas ni benchmarks.
 - Si falta data, decilo explícitamente y seguí con la mejor recomendación posible.
-- Priorizá claridad ejecutiva, formato visual y accionabilidad.
-- Mantené respuestas cortas, concretas y comerciales.
-- Usá KPIs, responsables, prioridad e impacto cuando propongás acciones.
+- Pensá la respuesta según la pregunta concreta; no repitas siempre la misma plantilla.
+- Abrí con una respuesta directa y luego baja a impacto y acción.
+- Priorizá claridad ejecutiva, lógica comercial, accionabilidad e impacto negocio.
+- Mantené respuestas cortas, concretas, útiles y comerciales.
+- Usá KPIs, responsables, prioridad e impacto cuando realmente aporte valor.
 - Si proponés benchmark global, aterrizalo al contexto real de AMPM.
-- Si el usuario no pide profundidad extra, no alargués la respuesta.`;
+- Si el usuario no pide profundidad extra, no alargués la respuesta.
+- Si la pregunta es puntual, respondé puntual; si es estratégica, respondé estratégico.
+- Mostrá qué movería ventas, margen, tráfico, ticket, ejecución o experiencia.
+- Si la consulta se beneficiaría visualmente y hay suficiente data numérica, podés responder en MODO VISUAL usando EXACTAMENTE este bloque y nada fuera del bloque:
+<AMPM_VISUAL>{
+  "summary":"respuesta ejecutiva corta",
+  "cards":[
+    {"label":"Impacto ventas","value":12000,"format":"money","delta":"+8% vs LY","status":"good"},
+    {"label":"Riesgo margen","value":1.8,"format":"percent","delta":"-0.6 pp","status":"bad"}
+  ],
+  "chart":{"type":"bar","title":"Dónde está el upside","subtitle":"máximo 6 barras","labels":["A","B"],"values":[10,20],"series_label":"Impacto","format":"money"},
+  "actions":[
+    {"title":"Acción puntual","detail":"qué hacer y por qué","priority":"Alta","owner":"Operaciones","kpi":"Ventas / margen"}
+  ],
+  "notes":["solo insights accionables"]
+}</AMPM_VISUAL>
+- Usá MODO VISUAL solo cuando sume claridad real; si no, respondé texto normal.
+- No inventés datos para llenar cards o gráficas.
+- No uses markdown complejo dentro de <AMPM_VISUAL>.`;
 
     var messages = [{role:'system', content:systemPrompt}];
     chatHistory.slice(-10).forEach(function(m){ messages.push(m); });
@@ -4904,7 +5170,7 @@ REGLAS OPERATIVAS FINALES:
     fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},
-      body:JSON.stringify({model:OPENAI_MODEL, messages:messages, max_tokens:1500, temperature:0.35})
+      body:JSON.stringify({model:OPENAI_MODEL, messages:messages, max_tokens:1500, temperature:0.7})
     })
     .then(function(res){ return res.json(); })
     .then(function(data){
