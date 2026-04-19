@@ -62952,1130 +62952,593 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </script>
 
 
-<style id="ampm-ai-qa-rebuild-v1-style">
-  #autoExecutive, #autoExecutivePanel, #autoKeyPanel, #radar, #radarExec{
-    display:none !important;
-  }
-  #ampmAiSection.ampm-ai-visible{
-    display:block !important;
-  }
+<style id="ampm-ai-qa-final-style-v2">
+  #autoExecutive,
+  #autoExecutivePanel,
+  #autoKeyPanel,
+  #radar,
+  #radarExec{display:none !important;}
+
+  #ampmAiSection.ampm-ai-visible{display:block !important;}
   #ampmAiSection{
-    min-height:0 !important;
-    background:#fff !important;
-    border:1px solid rgba(12,77,143,.12) !important;
-    box-shadow:0 16px 36px rgba(15,23,42,.08) !important;
+    margin:14px 16px 20px !important;
+    border:1px solid rgba(15,23,42,.10) !important;
+    border-radius:22px !important;
+    background:linear-gradient(180deg,#fbfcfe 0%,#f4f7fb 100%) !important;
+    box-shadow:0 16px 40px rgba(15,23,42,.08) !important;
+    overflow:hidden !important;
   }
-  .ampm-qa-shell{
-    padding:16px 18px 14px;
-  }
+  .ampm-qa-shell{padding:0 !important;}
   .ampm-qa-head{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
-    gap:12px;
-    margin-bottom:12px;
-    flex-wrap:wrap;
+    gap:14px;
+    padding:16px 18px 12px;
+    border-bottom:1px solid rgba(15,23,42,.08);
+    background:#fff;
   }
   .ampm-qa-title{
-    font-size:22px;
+    font-size:28px;
+    line-height:1.02;
     font-weight:1000;
     color:#11284A;
-    line-height:1.05;
+    letter-spacing:-.02em;
   }
   .ampm-qa-sub{
     margin-top:4px;
-    color:#5B6B82;
     font-size:13px;
-    font-weight:700;
-    line-height:1.35;
+    line-height:1.45;
+    color:#52657f;
+    font-weight:800;
+    max-width:760px;
   }
-  .ampm-qa-head-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .ampm-qa-chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,.26);
-    background:#F8FAFC;
-    color:#334155;
-    font-size:12px;
-    font-weight:900;
-  }
-  .ampm-qa-chip.ok{
-    background:rgba(22,163,74,.08);
-    border-color:rgba(22,163,74,.18);
-    color:#166534;
-  }
+  .ampm-qa-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .ampm-qa-chip,
   .ampm-qa-btn{
-    appearance:none;
-    border:1px solid rgba(15,23,42,.12);
-    background:#fff;
-    color:#24476c;
-    border-radius:12px;
-    padding:9px 12px;
-    font-weight:900;
-    font-size:12px;
-    cursor:pointer;
-    box-shadow:0 6px 14px rgba(15,23,42,.05);
-  }
-  .ampm-qa-btn.primary{
-    background:linear-gradient(135deg,#F58320,#FAA21E);
-    color:#fff;
-    border-color:#e98a28;
-  }
-  .ampm-qa-viz{
-    display:none;
-    margin-bottom:12px;
-    padding:12px 14px;
-    border-radius:18px;
-    border:1px solid rgba(12,77,143,.12);
-    background:linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,1));
-    box-shadow:0 10px 24px rgba(15,23,42,.05);
-  }
-  .ampm-qa-viz.show{ display:block; }
-  .ampm-qa-viz-head{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:8px;
-    flex-wrap:wrap;
-  }
-  .ampm-qa-viz-title{
-    font-size:16px;
-    font-weight:1000;
-    color:#11284A;
-    line-height:1.1;
-  }
-  .ampm-qa-viz-sub{
-    margin-top:3px;
-    color:#64748B;
-    font-size:12px;
-    font-weight:700;
-  }
-  .ampm-qa-viz-chips{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-bottom:8px;
-  }
-  .ampm-qa-viz-chip{
     display:inline-flex;
     align-items:center;
+    justify-content:center;
     gap:6px;
-    padding:6px 10px;
+    min-height:36px;
+    padding:8px 14px;
     border-radius:999px;
-    font-size:11px;
-    font-weight:900;
     border:1px solid rgba(15,23,42,.10);
     background:#fff;
-    color:#334155;
+    color:#1f3554;
+    font-size:12px;
+    font-weight:900;
+    box-shadow:0 6px 16px rgba(15,23,42,.05);
   }
-  .ampm-qa-viz-chip.green{ background:rgba(22,163,74,.08); border-color:rgba(22,163,74,.18); color:#166534; }
-  .ampm-qa-viz-chip.red{ background:rgba(220,38,38,.08); border-color:rgba(220,38,38,.18); color:#B91C1C; }
-  .ampm-qa-viz-chip.orange{ background:rgba(245,131,32,.10); border-color:rgba(245,131,32,.18); color:#B55F14; }
-  .ampm-qa-viz-chip.blue{ background:rgba(0,94,167,.08); border-color:rgba(0,94,167,.16); color:#0C4D8F; }
-  .ampm-qa-canvas{
-    position:relative;
-    height:330px;
+  .ampm-qa-chip.ok{color:#166534;border-color:rgba(22,163,74,.28);background:rgba(34,197,94,.08);}
+  .ampm-qa-btn{cursor:pointer;}
+  .ampm-qa-btn.primary{background:linear-gradient(135deg,#F58320,#E67425);color:#fff;border-color:#E67425;box-shadow:0 10px 22px rgba(245,131,32,.22);}
+  .ampm-qa-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.18fr) minmax(350px,.82fr);
+    gap:0;
+    align-items:stretch;
+    min-height:560px;
   }
-  .ampm-qa-history{
-    height:320px;
-    min-height:320px;
-    max-height:320px;
-    overflow:auto;
-    padding:12px 4px 6px 0;
+  .ampm-qa-left{
+    min-width:0;
     display:flex;
     flex-direction:column;
-    gap:12px;
-    scroll-behavior:smooth;
+    background:linear-gradient(180deg,#f8fafd 0%,#f3f6fb 100%);
+    border-right:1px solid rgba(15,23,42,.08);
+  }
+  .ampm-qa-history{
+    flex:1 1 auto;
+    min-height:420px;
+    max-height:620px;
+    overflow:auto;
+    padding:18px 18px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
   }
   .ampm-qa-empty{
-    border:1px dashed rgba(148,163,184,.35);
-    border-radius:16px;
-    background:#F8FAFC;
-    padding:18px 16px;
-    color:#64748B;
-    font-weight:700;
-    line-height:1.45;
-  }
-  .ampm-qa-empty strong{ color:#11284A; }
-  .ampm-qa-msg{
-    border:1px solid rgba(15,23,42,.08);
+    margin:auto 0;
+    padding:18px 18px;
+    border:1px dashed rgba(148,163,184,.34);
     border-radius:18px;
-    padding:12px 14px;
     background:#fff;
-    box-shadow:0 8px 18px rgba(15,23,42,.04);
+    color:#5b6d85;
+    font-size:14px;
+    line-height:1.55;
+    font-weight:800;
+  }
+  .ampm-qa-empty strong{display:block;color:#11284A;font-size:15px;margin-bottom:6px;}
+  .ampm-qa-msg{
+    max-width:92%;
+    border-radius:20px;
+    padding:14px 16px;
+    box-shadow:0 8px 20px rgba(15,23,42,.07);
+    border:1px solid rgba(15,23,42,.08);
+    background:#fff;
   }
   .ampm-qa-msg.user{
-    background:linear-gradient(135deg,#005EA7,#0C4D8F);
-    color:#fff;
-    border-color:rgba(0,94,167,.26);
     margin-left:auto;
-    max-width:min(900px,95%);
+    background:linear-gradient(135deg,#0C4D8F,#005EA7);
+    border-color:rgba(0,94,167,.24);
+    color:#fff;
   }
-  .ampm-qa-msg.assistant{
-    background:linear-gradient(180deg,#ffffff,#f8fbff);
-    color:#334155;
-    max-width:min(980px,100%);
+  .ampm-qa-msg.assistant{margin-right:auto;background:#fff;color:#24364f;}
+  .ampm-qa-msg.error{background:#fff7f5;border-color:rgba(185,28,28,.18);}
+  .ampm-qa-msg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .ampm-qa-msg-role{font-size:12px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;}
+  .ampm-qa-msg.user .ampm-qa-msg-role{color:rgba(255,255,255,.92);} 
+  .ampm-qa-msg.assistant .ampm-qa-msg-role{color:#6b7f98;}
+  .ampm-qa-msg-meta{font-size:11px;font-weight:900;color:#8aa1bf;}
+  .ampm-qa-msg.user .ampm-qa-msg-meta{color:rgba(255,255,255,.78);} 
+  .ampm-qa-msg-body{font-size:15px;line-height:1.58;color:inherit;}
+  .ampm-qa-msg-body p{margin:0 0 8px;}
+  .ampm-qa-msg-body p:last-child{margin-bottom:0;}
+  .ampm-qa-msg-body strong{color:#11284A;}
+  .ampm-qa-msg.user .ampm-qa-msg-body strong{color:#fff;}
+  .ampm-qa-mail{display:flex;flex-direction:column;gap:12px;}
+  .ampm-qa-mail-subject{
+    padding:10px 12px;
+    border-radius:14px;
+    background:linear-gradient(135deg,rgba(0,94,167,.08),rgba(12,77,143,.03));
+    border:1px solid rgba(0,94,167,.14);
+    color:#11284A;
+    font-size:14px;
+    line-height:1.45;
   }
-  .ampm-qa-msg.error{
-    border-color:rgba(220,38,38,.18);
-    background:#fff7f7;
-  }
-  .ampm-qa-msg-top{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:6px;
-  }
-  .ampm-qa-msg-role{
-    font-size:12px;
-    font-weight:1000;
-    text-transform:uppercase;
-    letter-spacing:.04em;
-  }
-  .ampm-qa-msg.user .ampm-qa-msg-role,
-  .ampm-qa-msg.user .ampm-qa-msg-meta{ color:rgba(255,255,255,.92); }
-  .ampm-qa-msg.assistant .ampm-qa-msg-role{ color:#64748B; }
-  .ampm-qa-msg-meta{
+  .ampm-qa-section-title{
     font-size:11px;
-    font-weight:900;
-    color:#94A3B8;
-    white-space:nowrap;
+    font-weight:1000;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#6b7f98;
+    margin-bottom:5px;
   }
-  .ampm-qa-msg-body{
-    white-space:pre-wrap;
-    line-height:1.55;
-    font-size:13px;
-  }
-  .ampm-qa-input-row{
-    display:flex;
-    gap:10px;
-    align-items:flex-end;
-    margin-top:10px;
-  }
-  .ampm-qa-textarea{
-    flex:1 1 auto;
-    min-height:74px;
-    max-height:150px;
-    resize:vertical;
-    border-radius:16px;
-    border:1px solid #d7e2ee;
+  .ampm-qa-section ul{margin:0;padding-left:18px;display:grid;gap:6px;}
+  .ampm-qa-section li{margin:0;color:#31455f;font-size:14px;line-height:1.5;font-weight:700;}
+  .ampm-qa-section p{color:#31455f;font-size:14px;line-height:1.58;font-weight:700;}
+  .ampm-qa-section.kpi p{font-weight:900;color:#0C4D8F;}
+  .ampm-qa-input-wrap{
+    padding:12px 18px 16px;
+    border-top:1px solid rgba(15,23,42,.08);
     background:#fff;
-    padding:13px 14px;
-    font:inherit;
-    color:#0f172a;
+  }
+  .ampm-qa-input-row{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:10px;align-items:end;}
+  .ampm-qa-textarea{
+    width:100%;
+    min-height:82px;
+    max-height:180px;
+    resize:vertical;
+    border:1px solid rgba(15,23,42,.12);
+    border-radius:18px;
+    background:#fff;
+    color:#11284A;
+    padding:14px 16px;
+    font-size:15px;
+    line-height:1.45;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
     outline:none;
   }
-  .ampm-qa-textarea:focus{
-    border-color:rgba(0,94,167,.45);
-    box-shadow:0 0 0 4px rgba(0,94,167,.12);
-  }
+  .ampm-qa-textarea:focus{border-color:rgba(0,94,167,.34);box-shadow:0 0 0 4px rgba(0,94,167,.10);}  
   .ampm-qa-send{
-    width:74px;
-    min-width:74px;
-    height:74px;
-    border-radius:18px;
+    width:64px;
+    height:64px;
     border:0;
-    background:linear-gradient(135deg,#F58320,#FAA21E);
+    border-radius:20px;
+    background:linear-gradient(135deg,#F58320,#E67425);
     color:#fff;
     font-size:24px;
     font-weight:1000;
     cursor:pointer;
     box-shadow:0 14px 30px rgba(245,131,32,.26);
   }
-  .ampm-qa-footer{
-    margin-top:10px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    color:#64748B;
-    font-size:12px;
-    font-weight:800;
-  }
-  @media (max-width: 760px){
-    .ampm-qa-head{ flex-direction:column; }
-    .ampm-qa-history{ height:340px; max-height:340px; }
-    .ampm-qa-input-row{ align-items:stretch; }
-    .ampm-qa-send{ height:auto; }
-    .ampm-qa-canvas{ height:280px; }
-  }
+  .ampm-qa-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#64748B;font-size:12px;font-weight:900;}
+
+  .ampm-qa-right{min-width:0;background:linear-gradient(180deg,#ffffff 0%,#f7f9fc 100%);display:flex;flex-direction:column;}
+  .ampm-qa-viz-shell{position:sticky;top:68px;padding:16px 16px 18px;display:flex;flex-direction:column;gap:12px;min-height:100%;}
+  .ampm-qa-viz-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .ampm-qa-viz-title{font-size:22px;font-weight:1000;color:#11284A;line-height:1.05;}
+  .ampm-qa-viz-sub{margin-top:4px;color:#60758f;font-size:12px;font-weight:800;line-height:1.45;}
+  .ampm-qa-viz-box{border:1px solid rgba(15,23,42,.08);border-radius:20px;background:#fff;box-shadow:0 12px 24px rgba(15,23,42,.06);overflow:hidden;}
+  .ampm-qa-viz-placeholder{min-height:300px;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;color:#61748e;font-size:14px;line-height:1.55;font-weight:800;background:linear-gradient(180deg,#fbfdff,#f6f9fc);border:1px solid rgba(15,23,42,.08);border-radius:20px;}
+  .ampm-qa-viz-placeholder strong{display:block;color:#11284A;font-size:15px;margin-bottom:6px;}
+  .ampm-qa-viz-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 2px;}
+  .ampm-qa-viz-chip{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(15,23,42,.10);background:#fff;color:#334155;font-size:11px;font-weight:1000;}
+  .ampm-qa-viz-chip.blue{background:rgba(0,94,167,.08);border-color:rgba(0,94,167,.16);color:#0C4D8F;}
+  .ampm-qa-viz-chip.orange{background:rgba(245,131,32,.10);border-color:rgba(245,131,32,.22);color:#B55F14;}
+  .ampm-qa-viz-chip.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.20);color:#166534;}
+  .ampm-qa-viz-chip.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.18);color:#B91C1C;}
+  .ampm-qa-canvas-wrap{height:340px;padding:14px 14px 8px;}
+  .ampm-qa-canvas{position:relative;height:100%;}
+  .ampm-qa-vcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .ampm-qa-vcard{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:16px;padding:12px 12px;box-shadow:0 8px 18px rgba(15,23,42,.05);}
+  .ampm-qa-vcard-label{font-size:11px;font-weight:1000;color:#6b7f98;letter-spacing:.05em;text-transform:uppercase;}
+  .ampm-qa-vcard-value{margin-top:4px;font-size:22px;font-weight:1000;color:#11284A;line-height:1.05;}
+  .ampm-qa-vcard-sub{margin-top:5px;font-size:12px;line-height:1.45;color:#60758f;font-weight:800;}
+  .ampm-qa-vlist{display:flex;flex-direction:column;gap:8px;}
+  .ampm-qa-vlist-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid rgba(15,23,42,.08);border-radius:16px;background:#fff;}
+  .ampm-qa-vlist-title{font-size:13px;font-weight:1000;color:#11284A;line-height:1.25;}
+  .ampm-qa-vlist-meta{margin-top:4px;font-size:12px;color:#60758f;font-weight:800;line-height:1.35;}
+  .ampm-qa-vlist-pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:rgba(0,94,167,.08);border:1px solid rgba(0,94,167,.16);color:#0C4D8F;font-size:11px;font-weight:1000;white-space:nowrap;}
+  .ampm-qa-vlist-pill.red{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.16);color:#B91C1C;}
+  .ampm-qa-vlist-pill.green{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.18);color:#166534;}
+  @media (max-width: 1180px){ .ampm-qa-grid{grid-template-columns:1fr;} .ampm-qa-left{border-right:0;border-bottom:1px solid rgba(15,23,42,.08);} .ampm-qa-viz-shell{position:relative;top:0;} }
+  @media (max-width: 760px){ #ampmAiSection{margin:10px 10px 16px !important;} .ampm-qa-head{padding:14px 14px 10px;flex-direction:column;} .ampm-qa-title{font-size:24px;} .ampm-qa-history{padding:14px 14px 8px;min-height:300px;max-height:420px;} .ampm-qa-input-wrap{padding:10px 14px 14px;} .ampm-qa-input-row{grid-template-columns:1fr;} .ampm-qa-send{width:100%;height:54px;border-radius:16px;} .ampm-qa-vcards{grid-template-columns:1fr;} .ampm-qa-msg{max-width:100%;} }
 </style>
 
-<script id="ampm-ai-qa-rebuild-v1">
+<script id="ampm-ai-qa-final-v2">
 (function(){
-  if(window.__AMPM_AI_QA_REBUILD_V1__) return;
-  window.__AMPM_AI_QA_REBUILD_V1__ = true;
+  if(window.__AMPM_AI_QA_FINAL_V2__) return;
+  window.__AMPM_AI_QA_FINAL_V2__ = true;
 
   var LS_KEY = 'ampm_openai_key_v1';
   var MODEL = 'gpt-5.4-mini';
   var MAX_TOKENS = 520;
-  var qaState = { chart:null, lastResponseId:'', usage:'' };
+  var qaState = { chart:null, lastResponseId:'', usage:'', visualModel:null };
 
   function byId(id){ return document.getElementById(id); }
   function txt(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
-  function htmlEscape(v){
-    return String(v == null ? '' : v)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-  function norm(v){
-    return String(v == null ? '' : v)
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g,'');
-  }
-  function num(v){
-    if(v == null || v === '') return 0;
-    if(typeof v === 'number') return isFinite(v) ? v : 0;
-    var s = txt(v).replace(/[,$€£¥₡]/g,'').replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-');
-    var n = Number(s);
-    if(isFinite(n)) return n;
-    var m = s.match(/-?\d+(?:\.\d+)?/);
-    return m ? Number(m[0]) : 0;
-  }
+  function htmlEscape(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function norm(v){ return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,''); }
+  function num(v){ if(v == null || v === '') return 0; if(typeof v === 'number') return isFinite(v) ? v : 0; var s = txt(v).replace(/[,$€£¥₡]/g,'').replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-'); var n = Number(s); if(isFinite(n)) return n; var m = s.match(/-?\d+(?:\.\d+)?/); return m ? Number(m[0]) : 0; }
   function pad2(n){ return String(n).padStart(2,'0'); }
-  function fmtMoney(v){
-    if(!isFinite(v)) return '—';
-    return '$' + Number(v).toLocaleString('es-SV', {minimumFractionDigits:0, maximumFractionDigits:0});
-  }
-  function fmtPct(v, digits){
-    if(!isFinite(v)) return 's/d';
-    return Number(v).toLocaleString('es-SV', {minimumFractionDigits:digits == null ? 1 : digits, maximumFractionDigits:digits == null ? 1 : digits}) + '%';
-  }
-  function fmtDeltaPct(v){
-    if(!isFinite(v)) return 's/d';
-    var n = Number(v);
-    return (n >= 0 ? '+' : '') + fmtPct(n, 1);
-  }
-  function avg(arr){
-    arr = (arr || []).filter(function(v){ return isFinite(v); });
-    if(!arr.length) return NaN;
-    return arr.reduce(function(a,b){ return a + Number(b); }, 0) / arr.length;
-  }
-  function stddev(arr){
-    arr = (arr || []).filter(function(v){ return isFinite(v); });
-    if(arr.length < 2) return 0;
-    var m = avg(arr);
-    var v = arr.reduce(function(acc, x){ var d = Number(x) - m; return acc + d*d; }, 0) / arr.length;
-    return Math.sqrt(v);
-  }
-  function nowStamp(){
-    try{
-      return new Date().toLocaleTimeString('es-SV', {hour:'2-digit', minute:'2-digit'});
-    }catch(_e){ return ''; }
-  }
-  function getApiKey(){
-    try{ return txt(localStorage.getItem(LS_KEY)); }catch(_e){ return ''; }
-  }
-  function setUsage(text){
-    qaState.usage = txt(text);
-    var el = byId('ampmQaUsage');
-    if(el) el.textContent = qaState.usage;
-  }
-  function updateKeyChip(){
-    var chip = byId('ampmQaKeyStatus');
-    if(!chip) return;
-    var hasKey = /^sk-/.test(getApiKey());
-    chip.textContent = hasKey ? 'API Key lista' : 'Sin API Key';
-    chip.className = 'ampm-qa-chip' + (hasKey ? ' ok' : '');
-  }
-  function getWorkbook(){
-    try{ return (window.state && state.__hallWorkbook) ? state.__hallWorkbook : null; }catch(_e){ return null; }
-  }
+  function fmtMoney(v){ return isFinite(v) ? ('$' + Number(v).toLocaleString('es-SV', {minimumFractionDigits:0, maximumFractionDigits:0})) : '—'; }
+  function fmtPct(v,d){ return isFinite(v) ? (Number(v).toLocaleString('es-SV',{minimumFractionDigits:d==null?1:d, maximumFractionDigits:d==null?1:d}) + '%') : 's/d'; }
+  function fmtDeltaPct(v){ if(!isFinite(v)) return 's/d'; var n=Number(v); return (n>=0?'+':'') + fmtPct(n,1); }
+  function avg(arr){ arr=(arr||[]).filter(function(v){ return isFinite(v); }); return arr.length ? arr.reduce(function(a,b){ return a + Number(b); },0) / arr.length : NaN; }
+  function stddev(arr){ arr=(arr||[]).filter(function(v){ return isFinite(v); }); if(arr.length<2) return 0; var m=avg(arr); var vv=arr.reduce(function(a,x){ var d=Number(x)-m; return a+d*d; },0)/arr.length; return Math.sqrt(vv); }
+  function nowStamp(){ try{ return new Date().toLocaleTimeString('es-SV',{hour:'2-digit', minute:'2-digit'}); }catch(_e){ return ''; } }
+
+  function getApiKey(){ try{ return txt(localStorage.getItem(LS_KEY)); }catch(_e){ return ''; } }
+  function setUsage(text){ qaState.usage = txt(text); var el = byId('ampmQaUsage'); if(el) el.textContent = qaState.usage; }
+  function updateKeyChip(){ var chip=byId('ampmQaKeyStatus'); if(!chip) return; var has=/^sk-/.test(getApiKey()); chip.textContent = has ? 'API Key lista' : 'Sin API Key'; chip.className = 'ampm-qa-chip' + (has ? ' ok' : ''); }
+
+  function getWorkbook(){ try{ return (window.state && state.__hallWorkbook) ? state.__hallWorkbook : null; }catch(_e){ return null; } }
   function readSheetRows(sheetName){
+    try{ if(typeof getRawRows === 'function' && sheetName === 'Cubo_Sales_DetailHallazgos'){ var rawRows = getRawRows(); if(Array.isArray(rawRows) && rawRows.length) return rawRows; } }catch(_e){}
     try{
-      if(typeof getRawRows === 'function' && sheetName === 'Cubo_Sales_DetailHallazgos'){
-        var rawRows = getRawRows();
-        if(Array.isArray(rawRows) && rawRows.length) return rawRows;
-      }
-    }catch(_e){}
-    try{
-      var wb = getWorkbook();
-      if(!wb || !sheetName) return [];
-      if(typeof sheetRows === 'function'){
-        var rows = sheetRows(wb, sheetName, {defval:null, raw:false});
-        if(Array.isArray(rows) && rows.length) return rows;
-      }
+      var wb=getWorkbook(); if(!wb || !sheetName) return [];
+      if(typeof sheetRows === 'function'){ var rows = sheetRows(wb, sheetName, {defval:null, raw:false}); if(Array.isArray(rows) && rows.length) return rows; }
       if(wb.Sheets && wb.Sheets[sheetName] && window.XLSX && XLSX.utils && typeof XLSX.utils.sheet_to_json === 'function'){
-        var rows2 = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null, raw:false});
-        if(Array.isArray(rows2)) return rows2;
+        var rows2 = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null, raw:false}); if(Array.isArray(rows2)) return rows2;
       }
     }catch(err){ console.warn('AI QA readSheetRows failed', sheetName, err); }
     return [];
   }
-  function normalizeWeek(raw){
-    if(typeof aiNormalizeWeek === 'function'){
-      var wk = aiNormalizeWeek(raw);
-      if(wk) return wk;
-    }
-    var s = txt(raw);
-    var m = s.match(/(\d{4})\s*[-/]?\s*W?(\d{1,2})$/i);
-    return m ? (m[1] + '-W' + pad2(m[2])) : '';
-  }
-  function normalizeMonth(raw){
-    if(typeof aiNormalizeMonth === 'function'){
-      var mk = aiNormalizeMonth(raw);
-      if(mk) return mk;
-    }
-    var s = txt(raw);
-    var m = s.match(/(\d{4})[-/](\d{1,2})/);
-    if(m) return m[1] + '-' + pad2(m[2]);
-    var wk = normalizeWeek(s);
-    return wk ? weekToMonthKey(wk) : '';
-  }
-  function isoWeekToDate(key){
-    var m = String(key || '').match(/^(\d{4})-W(\d{2})$/);
-    if(!m) return null;
-    var year = Number(m[1]), week = Number(m[2]);
-    var jan4 = new Date(Date.UTC(year, 0, 4));
-    var day = jan4.getUTCDay() || 7;
-    var monday = new Date(jan4);
-    monday.setUTCDate(jan4.getUTCDate() - day + 1 + (week - 1) * 7);
-    return monday;
-  }
-  function dateToIsoWeekKey(date){
-    if(!date) return '';
-    var d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-    var day = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - day);
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    var week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return d.getUTCFullYear() + '-W' + pad2(week);
-  }
-  function shiftIsoWeekKey(key, delta){
-    var dt = isoWeekToDate(key);
-    if(!dt) return '';
-    dt.setUTCDate(dt.getUTCDate() + (Number(delta) || 0) * 7);
-    return dateToIsoWeekKey(dt);
-  }
-  function shiftMonthKey(key, delta){
-    var m = String(key || '').match(/^(\d{4})-(\d{2})$/);
-    if(!m) return '';
-    var dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, 1));
-    dt.setUTCMonth(dt.getUTCMonth() + (Number(delta) || 0));
-    return dt.getUTCFullYear() + '-' + pad2(dt.getUTCMonth() + 1);
-  }
-  function weekToMonthKey(key){
-    var dt = isoWeekToDate(key);
-    return dt ? (dt.getUTCFullYear() + '-' + pad2(dt.getUTCMonth() + 1)) : '';
-  }
-  function comparePeriod(a, b, unit){
-    function isoIdx(k){ var m = String(k || '').match(/^(\d{4})-W(\d{2})$/); return m ? (Number(m[1]) * 100 + Number(m[2])) : -1; }
-    function monIdx(k){ var m = String(k || '').match(/^(\d{4})-(\d{2})$/); return m ? (Number(m[1]) * 12 + Number(m[2])) : -1; }
-    return unit === 'month' ? (monIdx(a) - monIdx(b)) : (isoIdx(a) - isoIdx(b));
-  }
-  function prettyPeriod(key, unit){
-    if(unit === 'month'){
-      var m = String(key || '').match(/^(\d{4})-(\d{2})$/);
-      if(!m) return String(key || '');
-      var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      return names[Number(m[2]) - 1] + ' ' + m[1];
-    }
-    return String(key || '');
-  }
-  function getAiRows(){
-    var cache = window.__ampmQaRowsCache || (window.__ampmQaRowsCache = {});
-    var stamp = '';
-    try{ stamp = txt((window.state && state.__hallWorkbookStamp) || 'nostamp'); }catch(_e){ stamp = 'nostamp'; }
-    if(cache.stamp === stamp && Array.isArray(cache.rows)) return cache.rows;
+  function normalizeWeek(raw){ try{ if(typeof aiNormalizeWeek === 'function'){ var wk = aiNormalizeWeek(raw); if(wk) return wk; } }catch(_e){} var s=txt(raw); var m=s.match(/(\d{4})\s*[-/]?\s*W?(\d{1,2})$/i); return m ? (m[1] + '-W' + pad2(m[2])) : ''; }
+  function normalizeMonth(raw){ try{ if(typeof aiNormalizeMonth === 'function'){ var mk=aiNormalizeMonth(raw); if(mk) return mk; } }catch(_e){} var s=txt(raw); var m=s.match(/(\d{4})[-/](\d{1,2})/); if(m) return m[1] + '-' + pad2(m[2]); var wk=normalizeWeek(s); return wk ? weekToMonthKey(wk) : ''; }
+  function isoWeekToDate(key){ var m=String(key||'').match(/^(\d{4})-W(\d{2})$/); if(!m) return null; var year=Number(m[1]), week=Number(m[2]); var jan4=new Date(Date.UTC(year,0,4)); var day=jan4.getUTCDay()||7; var monday=new Date(jan4); monday.setUTCDate(jan4.getUTCDate()-day+1+(week-1)*7); return monday; }
+  function dateToIsoWeekKey(date){ if(!date) return ''; var d=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate())); var day=d.getUTCDay()||7; d.setUTCDate(d.getUTCDate()+4-day); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); var week=Math.ceil((((d-yearStart)/86400000)+1)/7); return d.getUTCFullYear() + '-W' + pad2(week); }
+  function shiftIsoWeekKey(key,delta){ var dt=isoWeekToDate(key); if(!dt) return ''; dt.setUTCDate(dt.getUTCDate() + (Number(delta)||0)*7); return dateToIsoWeekKey(dt); }
+  function shiftMonthKey(key,delta){ var m=String(key||'').match(/^(\d{4})-(\d{2})$/); if(!m) return ''; var dt=new Date(Date.UTC(Number(m[1]), Number(m[2])-1, 1)); dt.setUTCMonth(dt.getUTCMonth() + (Number(delta)||0)); return dt.getUTCFullYear() + '-' + pad2(dt.getUTCMonth()+1); }
+  function weekToMonthKey(key){ var dt=isoWeekToDate(key); return dt ? (dt.getUTCFullYear() + '-' + pad2(dt.getUTCMonth()+1)) : ''; }
+  function comparePeriod(a,b,unit){ function isoIdx(k){ var m=String(k||'').match(/^(\d{4})-W(\d{2})$/); return m ? (Number(m[1])*100 + Number(m[2])) : -1; } function monIdx(k){ var m=String(k||'').match(/^(\d{4})-(\d{2})$/); return m ? (Number(m[1])*12 + Number(m[2])) : -1; } return unit==='month' ? (monIdx(a)-monIdx(b)) : (isoIdx(a)-isoIdx(b)); }
+  function prettyPeriod(key,unit){ if(unit==='month'){ var m=String(key||'').match(/^(\d{4})-(\d{2})$/); if(!m) return String(key||''); var names=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return names[Number(m[2])-1] + ' ' + m[1]; } return String(key||''); }
 
+  function getAiRows(){
+    var cache = window.__ampmQaRowsCacheFinal || (window.__ampmQaRowsCacheFinal = {});
+    var stamp='';
+    try{ stamp = txt((window.state && state.__hallWorkbookStamp) || 'nostamp'); }catch(_e){ stamp='nostamp'; }
+    if(cache.stamp === stamp && Array.isArray(cache.rows)) return cache.rows;
     var raw = readSheetRows('Cubo_Sales_DetailHallazgos');
-    var rows = (raw || []).map(function(r){
+    var rows = (raw||[]).map(function(r){
       if(r && r.week && r.store && typeof r.isDelivery !== 'undefined'){
-        return {
-          week: txt(r.week),
-          month: txt(r.month || weekToMonthKey(r.week)),
-          store: txt(r.store).toUpperCase(),
-          department: txt(r.department),
-          category: txt(r.category),
-          supplier: txt(r.supplier),
-          brand: txt(r.brand),
-          description: txt(r.description),
-          daypart: txt(r.daypart),
-          dow: txt(r.dow),
-          isDelivery: !!r.isDelivery,
-          deliveryChannel: txt(r.deliveryChannel),
-          qty: num(r.qty),
-          sales: num(r.sales)
-        };
+        return { week:txt(r.week), month:txt(r.month || weekToMonthKey(r.week)), store:txt(r.store).toUpperCase(), department:txt(r.department), category:txt(r.category), supplier:txt(r.supplier), brand:txt(r.brand), description:txt(r.description), daypart:txt(r.daypart), dow:txt(r.dow), isDelivery:!!r.isDelivery, deliveryChannel:txt(r.deliveryChannel), qty:num(r.qty), sales:num(r.sales) };
       }
       var week = normalizeWeek(r['YearWeek'] || r['Week'] || r['Semana']);
       var month = normalizeMonth(r['CalMonth'] || r['Month'] || r['Mes'] || week || r['Date Sold']);
       var rawDel = r['Is_Delivery'];
       var channel = txt(r['Delivery_Channel'] || r['Delivery Channel'] || r['Channel']);
       var isDelivery = rawDel === true || rawDel === 1 || /^(1|true|si|sí|yes|y)$/i.test(txt(rawDel)) || !!channel;
-      return {
-        week: week,
-        month: month,
-        store: txt(r['Store'] || r['Tienda']).toUpperCase(),
-        department: txt(r['Department'] || r['Departamento']),
-        category: txt(r['Category'] || r['Categoria'] || r['Categoría']),
-        supplier: txt(r['Supplier'] || r['Proveedor']),
-        brand: txt(r['Brand'] || r['Marca']),
-        description: txt(r['Description'] || r['Producto'] || r['SKU']),
-        daypart: txt(r['Daypart'] || r['Horario']),
-        dow: txt(r['DOW_Name'] || r['DOW'] || r['Dia Semana'] || r['Día Semana']),
-        isDelivery: isDelivery,
-        deliveryChannel: channel,
-        qty: num(r['Qty Sold'] || r['Qty'] || r['Cantidad']),
-        sales: num(r['Sales'] || r['Ventas'])
-      };
+      return { week:week, month:month, store:txt(r['Store'] || r['Tienda']).toUpperCase(), department:txt(r['Department'] || r['Departamento']), category:txt(r['Category'] || r['Categoria'] || r['Categoría']), supplier:txt(r['Supplier'] || r['Proveedor']), brand:txt(r['Brand'] || r['Marca']), description:txt(r['Description'] || r['Producto'] || r['SKU']), daypart:txt(r['Daypart'] || r['Horario']), dow:txt(r['DOW_Name'] || r['DOW'] || r['Dia Semana'] || r['Día Semana']), isDelivery:isDelivery, deliveryChannel:channel, qty:num(r['Qty Sold'] || r['Qty'] || r['Cantidad']), sales:num(r['Sales'] || r['Ventas']) };
     }).filter(function(r){ return r.store && (r.week || r.month) && isFinite(r.sales); });
-
-    cache.stamp = stamp;
-    cache.rows = rows;
-    cache.entityIndex = null;
-    cache.entityStamp = '';
+    cache.stamp = stamp; cache.rows = rows; cache.entityIndex = null; cache.entityStamp='';
     return rows;
   }
-  function getSelectedStores(){
-    try{
-      if(typeof getSelectedStoresOrAll === 'function'){
-        var xs = getSelectedStoresOrAll() || [];
-        if(Array.isArray(xs) && xs.length) return xs.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean);
-      }
-    }catch(_e){}
-    try{
-      if(typeof getSelectedStores === 'function'){
-        var ys = getSelectedStores() || [];
-        if(Array.isArray(ys) && ys.length) return ys.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean);
-      }
-    }catch(_e2){}
+  function getSelectedStoresSmart(){
+    try{ if(typeof getSelectedStoresOrAll === 'function'){ var xs = getSelectedStoresOrAll() || []; if(Array.isArray(xs) && xs.length) return xs.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean); } }catch(_e){}
+    try{ if(typeof getSelectedStores === 'function'){ var ys = getSelectedStores() || []; if(Array.isArray(ys) && ys.length) return ys.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean); } }catch(_e2){}
     return Array.from(new Set(getAiRows().map(function(r){ return txt(r.store).toUpperCase(); }).filter(Boolean)));
   }
-  function rowPassesScope(row, storeSet){
-    var store = txt(row && row.store).toUpperCase();
-    if(storeSet && storeSet.size && !storeSet.has(store)) return false;
-    try{
-      if(typeof rowMatchesGlobalDow === 'function' && !rowMatchesGlobalDow(row)) return false;
-    }catch(_e){}
-    return true;
-  }
+  function rowPassesScope(row, storeSet){ var store=txt(row && row.store).toUpperCase(); if(storeSet && storeSet.size && !storeSet.has(store)) return false; try{ if(typeof rowMatchesGlobalDow === 'function' && !rowMatchesGlobalDow(row)) return false; }catch(_e){} return true; }
   function buildEntityIndex(){
-    var cache = window.__ampmQaRowsCache || (window.__ampmQaRowsCache = {});
+    var cache = window.__ampmQaRowsCacheFinal || (window.__ampmQaRowsCacheFinal = {});
     var stamp = cache.stamp || 'nostamp';
     if(cache.entityStamp === stamp && cache.entityIndex) return cache.entityIndex;
-    var dims = ['category','brand','department','supplier','description'];
-    var idx = {};
+    var dims=['category','brand','department','supplier','description'];
+    var idx={};
     dims.forEach(function(dim){
-      var map = {};
-      getAiRows().forEach(function(r){
-        var value = txt(r[dim]);
-        var key = norm(value);
-        if(!value || !key || key.length < 3) return;
-        if(!map[key]) map[key] = {dimension: dim, display: value, norm: key};
-      });
-      idx[dim] = Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){ return b.norm.length - a.norm.length; });
+      var map={};
+      getAiRows().forEach(function(r){ var value=txt(r[dim]); var key=norm(value); if(!value || !key || key.length<3) return; if(!map[key]) map[key]={dimension:dim, display:value, norm:key}; });
+      idx[dim]=Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){ return b.norm.length - a.norm.length; });
     });
-    cache.entityStamp = stamp;
-    cache.entityIndex = idx;
-    return idx;
+    cache.entityStamp=stamp; cache.entityIndex=idx; return idx;
+  }
+  function explicitEntityFromQuestion(question){
+    var q = norm(question);
+    if(/CATEGORIAS?DE?LICORES/.test(q) || /CATEGORIAS?LICORES/.test(q)) return {dimension:'department', display:'Licores', norm:'LICORES', forcedBreakdown:'category'};
+    if(/VAPES/.test(q)) return {dimension:'category', display:'Vapes', norm:'VAPES'};
+    return null;
   }
   function detectEntity(question){
-    var raw = txt(question);
-    var qNorm = norm(raw);
-    if(!qNorm) return null;
-
-    var dims = [];
+    var forced = explicitEntityFromQuestion(question);
+    if(forced) return forced;
+    var raw=txt(question), qNorm=norm(raw); if(!qNorm) return null;
+    var dims=[];
     if(/categor/i.test(raw)) dims.push('category');
     if(/marca/i.test(raw)) dims.push('brand');
     if(/depart/i.test(raw)) dims.push('department');
     if(/proveed/i.test(raw)) dims.push('supplier');
     if(/producto|sku|descrip/i.test(raw)) dims.push('description');
-    if(!dims.length) dims = ['category','brand','department','supplier','description'];
-
-    var idx = buildEntityIndex();
-    var best = null;
-    dims.forEach(function(dim){
-      (idx[dim] || []).forEach(function(item){
-        if(qNorm.indexOf(item.norm) < 0) return;
-        var score = item.norm.length + (dim === dims[0] ? 6 : 0);
-        if(!best || score > best.score) best = {dimension: dim, display: item.display, norm: item.norm, score: score};
-      });
-    });
+    if(!dims.length) dims=['category','brand','department','supplier','description'];
+    var idx=buildEntityIndex(); var best=null;
+    dims.forEach(function(dim){ (idx[dim]||[]).forEach(function(item){ if(qNorm.indexOf(item.norm) < 0) return; var bonus=(dim===dims[0]?6:0); if(/categor/i.test(raw) && dim==='department') bonus += 5; var score=item.norm.length + bonus; if(!best || score>best.score) best={dimension:dim, display:item.display, norm:item.norm, score:score}; }); });
     return best;
   }
   function inferSpec(question){
-    var q = txt(question), ql = q.toLowerCase();
-    var unit = /mes|month|mam/.test(ql) ? 'month' : 'week';
-    var countMatch = ql.match(/(?:ultim(?:as|os)?|últim(?:as|os)?)\s+(\d{1,2})\s*(semanas?|weeks?|meses?|months?)/) || ql.match(/(\d{1,2})\s*(semanas?|weeks?|meses?|months?)/);
-    var count = countMatch ? Number(countMatch[1]) : (unit === 'month' ? 6 : 6);
-    count = Math.max(2, Math.min(count, 12));
-    return {
-      question: q,
-      unit: unit,
-      count: count,
-      wantsChart: /gr[aá]f|chart|plot|visual|tendenc|evoluci[oó]n|hist[oó]ric/i.test(ql),
-      wantsShareDelivery: /share.*delivery|delivery.*share|%.*delivery|participaci[oó]n.*delivery|venta\s+delivery|share\s+de\s+la\s+venta\s+delivery/i.test(ql),
-      wantsDeltaLy: /delta.*ly|vs\s*ly|a[nñ]o\s+pasado|versus\s+ly/i.test(ql),
-      deltaBasis: /delta.*delivery.*ly|delivery.*delta.*ly/i.test(ql) ? 'delivery' : 'sales',
-      entity: detectEntity(q)
-    };
+    var raw=txt(question), q=raw.toLowerCase();
+    var wantsChart = /graf|gráf|chart|visual|infograf|card|scorecard|pastel|pie|dona|donut/i.test(raw);
+    var wantsPie = /pastel|pie|dona|donut/i.test(raw);
+    var wantsShareDelivery = /share\s*delivery|share\s*de\s*delivery|%\s*delivery|delivery\s*share|participaci[oó]n\s*delivery/i.test(raw);
+    var wantsDeltaLy = /vs\s*ly|delta\s*vs\s*ly|contra\s*ly|ly\b/i.test(raw);
+    var deltaBasis = /delta\s*delivery/i.test(q) ? 'delivery' : 'sales';
+    var wantsSeries = /ultim|últim|seman|mes|hist[oó]ric|tendenc|evoluci[oó]n/i.test(raw);
+    var countMatch = raw.match(/(\d{1,2})\s*(semanas?|meses?)/i);
+    var count = countMatch ? Math.max(1, Number(countMatch[1])) : (/6\s*seman/i.test(raw) ? 6 : (/3\s*mes/i.test(raw) ? 3 : 6));
+    var unit = countMatch ? (/mes/i.test(countMatch[2]) ? 'month' : 'week') : ((byId('reportMode') && /mensual/i.test(txt(byId('reportMode').value))) ? 'month' : 'week');
+    var breakdown = '';
+    if(/categor/i.test(raw)) breakdown='category'; else if(/marca/i.test(raw)) breakdown='brand'; else if(/tienda/i.test(raw)) breakdown='store';
+    var entity = detectEntity(raw);
+    if(entity && entity.forcedBreakdown && !breakdown) breakdown = entity.forcedBreakdown;
+    if(wantsPie && !breakdown) breakdown = entity && entity.dimension === 'department' ? 'category' : 'store';
+    return { wantsChart:wantsChart, wantsPie:wantsPie, wantsSeries:wantsSeries, wantsShareDelivery:wantsShareDelivery, wantsDeltaLy:wantsDeltaLy, deltaBasis:deltaBasis, count:count, unit:unit, breakdown:breakdown, entity:entity };
   }
+  function matchEntity(row, entity){ return !!(row && entity && norm(row[entity.dimension]) === entity.norm); }
   function resolveAnchorPeriod(unit, rows){
     var currentRaw = txt(byId('currentMonth') && byId('currentMonth').value);
-    var values = Array.from(new Set((rows || []).map(function(r){ return txt(unit === 'month' ? r.month : r.week); }).filter(Boolean))).sort(function(a,b){ return comparePeriod(a,b,unit); });
+    var values = Array.from(new Set((rows||[]).map(function(r){ return txt(unit==='month' ? r.month : r.week); }).filter(Boolean))).sort(function(a,b){ return comparePeriod(a,b,unit); });
     if(!values.length) return '';
-    if(unit === 'month'){
-      var curMonth = normalizeMonth(currentRaw) || (normalizeWeek(currentRaw) ? weekToMonthKey(normalizeWeek(currentRaw)) : '');
-      if(curMonth && values.indexOf(curMonth) >= 0) return curMonth;
-      return values[values.length - 1];
-    }
-    var curWeek = normalizeWeek(currentRaw);
-    if(curWeek && values.indexOf(curWeek) >= 0) return curWeek;
-    var curMonth2 = normalizeMonth(currentRaw);
-    if(curMonth2){
-      var inMonth = values.filter(function(v){ return weekToMonthKey(v) === curMonth2; });
-      if(inMonth.length) return inMonth[inMonth.length - 1];
-    }
-    return values[values.length - 1];
+    if(unit==='month'){ var curMonth = normalizeMonth(currentRaw) || (normalizeWeek(currentRaw) ? weekToMonthKey(normalizeWeek(currentRaw)) : ''); if(curMonth && values.indexOf(curMonth)>=0) return curMonth; return values[values.length-1]; }
+    var curWeek = normalizeWeek(currentRaw); if(curWeek && values.indexOf(curWeek)>=0) return curWeek; var curMonth2 = normalizeMonth(currentRaw); if(curMonth2){ var inMonth = values.filter(function(v){ return weekToMonthKey(v) === curMonth2; }); if(inMonth.length) return inMonth[inMonth.length-1]; } return values[values.length-1];
   }
-  function buildPeriods(anchor, count, unit){
-    var out = [];
-    if(!anchor) return out;
-    for(var i = count - 1; i >= 0; i--){
-      out.push(unit === 'month' ? shiftMonthKey(anchor, -i) : shiftIsoWeekKey(anchor, -i));
-    }
-    return out.filter(Boolean);
-  }
-  function matchEntity(row, entity){
-    return !!(row && entity && norm(row[entity.dimension]) === entity.norm);
-  }
+  function buildPeriods(anchor,count,unit){ var out=[]; if(!anchor) return out; for(var i=count-1;i>=0;i--){ out.push(unit==='month' ? shiftMonthKey(anchor,-i) : shiftIsoWeekKey(anchor,-i)); } return out.filter(Boolean); }
+  function chooseBreakdownField(spec){ return spec.breakdown || (spec.entity && spec.entity.dimension === 'department' ? 'category' : 'store'); }
+
   function buildSeriesAnalysis(spec){
-    if(!spec || !spec.entity) return { error:'No logré identificar la categoría, marca, proveedor, departamento o producto dentro de tu pregunta.' };
-    var rows = getAiRows();
-    if(!rows.length) return { error:'No encontré la data del cubo cargado para construir la serie.' };
-
-    var storeSet = new Set(getSelectedStores());
-    var scopedRows = rows.filter(function(r){ return rowPassesScope(r, storeSet); });
-    var entityAll = rows.filter(function(r){ return matchEntity(r, spec.entity); });
-    var entityScoped = scopedRows.filter(function(r){ return matchEntity(r, spec.entity); });
-
-    if(!entityScoped.length){
-      if(entityAll.length) return { error:'Sí encontré "' + spec.entity.display + '" en el cubo, pero no con los filtros actuales de tienda o día.' };
-      return { error:'No encontré "' + spec.entity.display + '" en la data cargada.' };
-    }
-
-    var anchor = resolveAnchorPeriod(spec.unit, entityScoped);
-    var periods = buildPeriods(anchor, spec.count || 6, spec.unit);
-    if(!periods.length) return { error:'No pude resolver el periodo actual para construir la serie.' };
-
-    var lyPeriods = periods.map(function(p){ return spec.unit === 'month' ? shiftMonthKey(p, -12) : shiftIsoWeekKey(p, -52); });
-    var periodSet = new Set(periods);
-    var lyLookup = {};
-    periods.forEach(function(p, idx){ lyLookup[lyPeriods[idx]] = p; });
-
-    var curMap = {}, chainMap = {}, lyMap = {};
-    periods.forEach(function(p){
-      curMap[p] = { sales:0, delivery:0, qty:0 };
-      chainMap[p] = { sales:0, delivery:0 };
-      lyMap[p] = { sales:0, delivery:0 };
-    });
-
-    scopedRows.forEach(function(r){
-      var p = spec.unit === 'month' ? txt(r.month) : txt(r.week);
-      if(periodSet.has(p)){
-        chainMap[p].sales += num(r.sales);
-        if(r.isDelivery) chainMap[p].delivery += num(r.sales);
-        if(matchEntity(r, spec.entity)){
-          curMap[p].sales += num(r.sales);
-          curMap[p].qty += num(r.qty);
-          if(r.isDelivery) curMap[p].delivery += num(r.sales);
-        }
-      }
-      if(lyLookup[p] && matchEntity(r, spec.entity)){
-        lyMap[lyLookup[p]].sales += num(r.sales);
-        if(r.isDelivery) lyMap[lyLookup[p]].delivery += num(r.sales);
-      }
-    });
-
-    var data = periods.map(function(period){
-      var cur = curMap[period] || { sales:0, delivery:0, qty:0 };
-      var ly = lyMap[period] || { sales:0, delivery:0 };
-      var chain = chainMap[period] || { sales:0, delivery:0 };
-      var share = cur.sales > 0 ? (cur.delivery / cur.sales) : NaN;
-      var chainShare = chain.sales > 0 ? (chain.delivery / chain.sales) : NaN;
-      var deltaSales = ly.sales > 0 ? ((cur.sales / ly.sales) - 1) : NaN;
-      var deltaDelivery = ly.delivery > 0 ? ((cur.delivery / ly.delivery) - 1) : NaN;
-      return {
-        period: period,
-        periodLabel: prettyPeriod(period, spec.unit),
-        sales: cur.sales,
-        delivery: cur.delivery,
-        qty: cur.qty,
-        share: share,
-        chainShare: chainShare,
-        lySales: ly.sales,
-        lyDelivery: ly.delivery,
-        deltaSales: deltaSales,
-        deltaDelivery: deltaDelivery
-      };
-    });
-
-    var nonZero = data.filter(function(d){ return d.sales > 0; });
-    if(!nonZero.length) return { error:'Sí encontré ' + spec.entity.display + ', pero no tiene venta en los ' + periods.length + ' periodos tomados con los filtros actuales.' };
-
-    var deltaField = spec.deltaBasis === 'delivery' ? 'deltaDelivery' : 'deltaSales';
-    var current = data[data.length - 1];
-    var best = nonZero.slice().sort(function(a,b){ return b.sales - a.sales; })[0];
-    var worst = nonZero.slice().sort(function(a,b){ return a.sales - b.sales; })[0];
-    var avgShare = avg(data.map(function(d){ return d.share; }));
-    var avgChainShare = avg(data.map(function(d){ return d.chainShare; }));
-    var avgDelta = avg(data.map(function(d){ return d[deltaField]; }));
-    var volatility = stddev(data.map(function(d){ return d.sales; })) / Math.max(avg(data.map(function(d){ return d.sales; })), 1);
-
-    return {
-      ok:true,
-      spec: spec,
-      entity: spec.entity,
-      stores: Array.from(storeSet),
-      periods: periods,
-      data: data,
-      current: current,
-      best: best,
-      worst: worst,
-      avgShare: avgShare,
-      avgChainShare: avgChainShare,
-      avgDelta: avgDelta,
-      volatility: volatility,
-      deltaField: deltaField,
-      chart: {
-        title: spec.entity.display + ' · últimas ' + periods.length + ' ' + (spec.unit === 'month' ? 'lecturas mensuales' : 'semanas'),
-        subtitle: 'Barras = venta total · línea naranja = share delivery · línea navy = delta vs LY',
-        labels: data.map(function(d){ return d.periodLabel; }),
-        sales: data.map(function(d){ return Number((d.sales || 0).toFixed(2)); }),
-        sharePct: data.map(function(d){ return isFinite(d.share) ? Number((d.share * 100).toFixed(2)) : null; }),
-        deltaPct: data.map(function(d){ return isFinite(d[deltaField]) ? Number((d[deltaField] * 100).toFixed(2)) : null; }),
-        chips: [
-          { tone:'blue', text:'Scope: ' + (Array.from(storeSet).join(' | ') || 'ALL') },
-          { tone:'orange', text:'Último share delivery: ' + (isFinite(current.share) ? fmtPct(current.share * 100, 1) : 's/d') },
-          { tone:(isFinite(current[deltaField]) && current[deltaField] >= 0 ? 'green' : 'red'), text:'Último delta vs LY: ' + fmtDeltaPct((current[deltaField] || 0) * 100) },
-          { tone:'blue', text:'Venta última lectura: ' + fmtMoney(current.sales) }
-        ]
-      }
+    var entity=spec && spec.entity; if(!entity) return { error:'No logré identificar la categoría, marca o departamento dentro de la pregunta.' };
+    var rows=getAiRows(); if(!rows.length) return { error:'No encontré la data del cubo cargado para construir la serie.' };
+    var storeSet=new Set(getSelectedStoresSmart());
+    var scopedRows=rows.filter(function(r){ return rowPassesScope(r, storeSet); });
+    var entityAll=rows.filter(function(r){ return matchEntity(r, entity); });
+    var entityScoped=scopedRows.filter(function(r){ return matchEntity(r, entity); });
+    if(!entityScoped.length){ return entityAll.length ? { error:'Sí encontré "' + entity.display + '", pero no con los filtros actuales de tienda o día. Probá ALL tiendas o revisá el filtro de día.' } : { error:'No encontré "' + entity.display + '" dentro del cubo cargado.' }; }
+    var unit=spec.unit || 'week'; var anchor=resolveAnchorPeriod(unit, entityScoped); var periods=buildPeriods(anchor, spec.count || 6, unit); if(!periods.length) return { error:'No pude resolver el periodo actual para construir la serie.' };
+    var periodSet=new Set(periods); var lyPeriods=periods.map(function(p){ return unit==='month' ? shiftMonthKey(p,-12) : shiftIsoWeekKey(p,-52); }); var lySet=new Set(lyPeriods);
+    var curMap={}, chainMap={}, lyMap={}; periods.forEach(function(p){ curMap[p]={sales:0, delivery:0, qty:0}; chainMap[p]={sales:0, delivery:0}; }); lyPeriods.forEach(function(p){ lyMap[p]={sales:0, delivery:0}; });
+    scopedRows.forEach(function(r){ var p=unit==='month' ? txt(r.month) : txt(r.week); if(periodSet.has(p)){ chainMap[p].sales += num(r.sales); if(r.isDelivery) chainMap[p].delivery += num(r.sales); if(matchEntity(r, entity)){ curMap[p].sales += num(r.sales); curMap[p].qty += num(r.qty); if(r.isDelivery) curMap[p].delivery += num(r.sales); } } else if(lySet.has(p) && matchEntity(r, entity)){ lyMap[p].sales += num(r.sales); if(r.isDelivery) lyMap[p].delivery += num(r.sales); } });
+    var data = periods.map(function(period,idx){ var lyPeriod=lyPeriods[idx]; var cur=curMap[period]||{sales:0,delivery:0,qty:0}; var ly=lyMap[lyPeriod]||{sales:0,delivery:0}; var chain=chainMap[period]||{sales:0,delivery:0}; var share=cur.sales>0 ? (cur.delivery/cur.sales) : NaN; var chainShare=chain.sales>0 ? (chain.delivery/chain.sales) : NaN; var deltaSales=ly.sales>0 ? ((cur.sales/ly.sales)-1) : NaN; var deltaDelivery=ly.delivery>0 ? ((cur.delivery/ly.delivery)-1) : NaN; return {period:period, periodLabel:prettyPeriod(period,unit), lyPeriod:lyPeriod, sales:cur.sales, delivery:cur.delivery, qty:cur.qty, share:share, chainShare:chainShare, deltaSales:deltaSales, deltaDelivery:deltaDelivery}; });
+    var nonZero=data.filter(function(d){ return d.sales>0; }); if(!nonZero.length) return { error:'El cubo sí contiene la entidad, pero en los periodos tomados no tiene venta con los filtros actuales.' };
+    var deltaField=spec.deltaBasis==='delivery' ? 'deltaDelivery' : 'deltaSales'; var current=data[data.length-1]; var best=nonZero.slice().sort(function(a,b){ return b.sales-a.sales; })[0]; var worst=nonZero.slice().sort(function(a,b){ return a.sales-b.sales; })[0]; var avgShare=avg(data.map(function(d){ return d.share; })); var avgChainShare=avg(data.map(function(d){ return d.chainShare; })); var avgDelta=avg(data.map(function(d){ return d[deltaField]; })); var vol = stddev(data.map(function(d){ return d.sales; })) / Math.max(avg(data.map(function(d){ return d.sales; })),1);
+    return { ok:true, type:'series', spec:spec, entity:entity, periods:periods, data:data, current:current, best:best, worst:worst, avgShare:avgShare, avgChainShare:avgChainShare, avgDelta:avgDelta, volatility:vol, deltaField:deltaField,
+      chart:{ type:'combo', title:entity.display + ' · últimas ' + periods.length + ' ' + (unit==='month' ? 'lecturas mensuales' : 'semanas'), subtitle:'Venta total + share delivery + delta vs LY', labels:data.map(function(d){ return d.periodLabel; }), sales:data.map(function(d){ return Number(d.sales || 0); }), sharePct:data.map(function(d){ return isFinite(d.share) ? Number((d.share*100).toFixed(2)) : null; }), deltaPct:data.map(function(d){ return isFinite(d[deltaField]) ? Number((d[deltaField]*100).toFixed(2)) : null; }), chips:[ {tone:'blue', text:'Scope: ' + (Array.from(storeSet).join(' | ') || 'ALL')}, {tone:'green', text:'Último share: ' + (isFinite(current.share) ? fmtPct(current.share*100,1) : 's/d')}, {tone:(isFinite(current[deltaField]) && current[deltaField] >= 0 ? 'green' : 'red'), text:'Último delta vs LY: ' + fmtDeltaPct((current[deltaField] || 0) * 100)}, {tone:'orange', text:'Venta última lectura: ' + fmtMoney(current.sales)} ], cards:[ {label:'Venta actual', value:fmtMoney(current.sales), sub:'Último periodo analizado'}, {label:'Share delivery', value:isFinite(current.share) ? fmtPct(current.share*100,1) : 's/d', sub:'Peso de delivery en el último periodo'}, {label:'Delta vs LY', value:isFinite(current[deltaField]) ? fmtDeltaPct(current[deltaField]*100) : 's/d', sub:'Comparativo vs LY'}, {label:'Volatilidad', value:fmtPct(vol*100,0), sub:'Variación relativa de la serie'} ], list:[ {title:'Pico de venta', meta:best.periodLabel + ' · ' + fmtMoney(best.sales), tone:'green'}, {title:'Piso de venta', meta:worst.periodLabel + ' · ' + fmtMoney(worst.sales), tone:'red'}, {title:'Share promedio', meta:(isFinite(avgShare) ? fmtPct(avgShare*100,1) : 's/d') + ' vs negocio ' + (isFinite(avgChainShare) ? fmtPct(avgChainShare*100,1) : 's/d'), tone:'blue'} ] }
     };
   }
-  function buildLocalNarrative(model){
-    var current = model.current || {};
-    var deltaField = model.deltaField === 'deltaDelivery' ? 'deltaDelivery' : 'deltaSales';
-    var deltaLabel = model.deltaField === 'deltaDelivery' ? 'delta delivery vs LY' : 'delta vs LY';
-    var shareGap = (model.avgShare - model.avgChainShare) * 100;
-    var priority = 'Media';
-    if(isFinite(model.avgDelta) && model.avgDelta < 0) priority = 'Alta';
-    else if(model.volatility > 0.25) priority = 'Media-Alta';
 
-    var lines = [];
-    lines.push('Sí encontré la serie de ' + model.entity.display + ' y ya la construí directo desde el cubo.');
-    lines.push('');
-    lines.push('Respuesta directa');
-    lines.push('• Último periodo: venta ' + fmtMoney(current.sales) + ' | share delivery ' + (isFinite(current.share) ? fmtPct(current.share * 100, 1) : 's/d') + ' | ' + deltaLabel + ' ' + fmtDeltaPct((current[deltaField] || 0) * 100) + '.');
-    lines.push('• Mejor lectura: ' + model.best.periodLabel + ' con ' + fmtMoney(model.best.sales) + '. Peor lectura: ' + model.worst.periodLabel + ' con ' + fmtMoney(model.worst.sales) + '.');
-    lines.push('');
-    lines.push('Qué significa');
-    if(isFinite(model.avgDelta) && model.avgDelta < 0){
-      lines.push('• El frente viene por debajo de LY en promedio. Aquí el problema no es solo canal; primero hay que defender base de venta y disponibilidad.');
-    }else{
-      lines.push('• El frente viene creciendo vs LY en promedio. El foco es sostener el crecimiento sin dañar margen ni ejecución.');
+  function buildPieAnalysis(spec){
+    var entity=spec && spec.entity; if(!entity) return { error:'Necesito identificar el frente a desglosar para construir ese pastel.' };
+    var rows=getAiRows(); if(!rows.length) return { error:'No encontré la data del cubo cargado para construir la visual.' };
+    var storeSet=new Set(getSelectedStoresSmart()); var scopedRows=rows.filter(function(r){ return rowPassesScope(r, storeSet); });
+    var unit=(byId('reportMode') && /mensual/i.test(txt(byId('reportMode').value))) ? 'month' : 'week'; var entityScoped=scopedRows.filter(function(r){ return matchEntity(r, entity); }); if(!entityScoped.length) return { error:'No encontré data del frente solicitado con los filtros actuales.' };
+    var anchor=resolveAnchorPeriod(unit, entityScoped); if(!anchor) return { error:'No pude resolver el periodo actual para construir el gráfico.' };
+    var lyPeriod=unit==='month' ? shiftMonthKey(anchor,-12) : shiftIsoWeekKey(anchor,-52); var breakdown=chooseBreakdownField(spec);
+    var curMap={}, lyMap={}; var curTotal=0, lyTotal=0, curDelivery=0;
+    scopedRows.forEach(function(r){ var p=unit==='month' ? txt(r.month) : txt(r.week); if(!matchEntity(r, entity)) return; var key = txt(r[breakdown] || 'Sin clasificar'); if(p===anchor){ curMap[key] = curMap[key] || { sales:0, delivery:0 }; curMap[key].sales += num(r.sales); if(r.isDelivery){ curMap[key].delivery += num(r.sales); curDelivery += num(r.sales); } curTotal += num(r.sales); } else if(p===lyPeriod){ lyMap[key] = lyMap[key] || { sales:0 }; lyMap[key].sales += num(r.sales); lyTotal += num(r.sales); } });
+    var items = Object.keys(curMap).map(function(key){ var cur=curMap[key] || {sales:0,delivery:0}; var ly=lyMap[key] || {sales:0}; var share=curTotal>0 ? cur.sales/curTotal : NaN; var delta=ly.sales>0 ? ((cur.sales/ly.sales)-1) : NaN; return { key:key, sales:cur.sales, delivery:cur.delivery, share:share, delta:delta }; }).filter(function(it){ return it.sales>0; }).sort(function(a,b){ return b.sales-a.sales; });
+    if(!items.length) return { error:'No encontré datos suficientes para dibujar el pastel del periodo actual.' };
+    var topItems = items.slice(0,8); var totalTop = topItems.reduce(function(a,b){ return a + b.sales; },0); if(items.length > topItems.length){ topItems.push({ key:'Otros', sales:Math.max(curTotal-totalTop,0), delivery:0, share:curTotal>0 ? Math.max(curTotal-totalTop,0)/curTotal : NaN, delta:NaN }); }
+    var totalDelta = lyTotal>0 ? ((curTotal/lyTotal)-1) : NaN; var avgShareDelivery = curTotal>0 ? (curDelivery/curTotal) : NaN; var top = items[0];
+    return { ok:true, type:'pie', spec:spec, entity:entity, anchor:anchor, lyPeriod:lyPeriod, unit:unit, total:curTotal, lyTotal:lyTotal, totalDelta:totalDelta, deliveryShare:avgShareDelivery, items:items,
+      chart:{ type:'doughnut', title:entity.display + ' · mix actual por ' + (breakdown==='category' ? 'categoría' : breakdown==='brand' ? 'marca' : breakdown==='store' ? 'tienda' : breakdown), subtitle:'Periodo: ' + prettyPeriod(anchor, unit) + (isFinite(totalDelta) ? ' · delta total vs LY ' + fmtDeltaPct(totalDelta*100) : ''), labels:topItems.map(function(it){ return it.key; }), values:topItems.map(function(it){ return Number((it.sales || 0).toFixed(2)); }), chips:[ {tone:'orange', text:'Venta actual: ' + fmtMoney(curTotal)}, {tone:isFinite(totalDelta) && totalDelta>=0 ? 'green' : 'red', text:'Delta vs LY: ' + (isFinite(totalDelta) ? fmtDeltaPct(totalDelta*100) : 's/d')}, {tone:'blue', text:'Share delivery: ' + (isFinite(avgShareDelivery) ? fmtPct(avgShareDelivery*100,1) : 's/d')}, {tone:'blue', text:'Scope: ' + (Array.from(storeSet).join(' | ') || 'ALL')} ], cards:[ {label:'Venta actual', value:fmtMoney(curTotal), sub:'Periodo visible'}, {label:'Venta LY', value:fmtMoney(lyTotal), sub:'Mismo periodo LY'}, {label:'Delta total vs LY', value:isFinite(totalDelta) ? fmtDeltaPct(totalDelta*100) : 's/d', sub:'Comparativo del frente completo'}, {label:'Share delivery', value:isFinite(avgShareDelivery) ? fmtPct(avgShareDelivery*100,1) : 's/d', sub:'Participación delivery del frente'} ], list:items.slice(0,6).map(function(it){ return { title:it.key, meta:fmtMoney(it.sales) + ' · share ' + (isFinite(it.share) ? fmtPct(it.share*100,1) : 's/d') + ' · Δ LY ' + (isFinite(it.delta) ? fmtDeltaPct(it.delta*100) : 's/d'), tone:isFinite(it.delta) ? (it.delta>=0 ? 'green':'red') : 'blue' }; }) }
+    };
+  }
+
+  function buildLocalNarrative(model){
+    if(model.type === 'pie'){
+      var top=model.items[0];
+      return [
+        'Asunto: Mix actual de ' + model.entity.display + ' y comparación vs LY',
+        'Resumen ejecutivo:',
+        '• Ya dejé a la derecha el visual del mix actual por ' + chooseBreakdownField(model.spec) + ' para ' + prettyPeriod(model.anchor, model.unit) + '.',
+        '• Venta actual ' + fmtMoney(model.total) + ' vs LY ' + fmtMoney(model.lyTotal) + ' = ' + (isFinite(model.totalDelta) ? fmtDeltaPct(model.totalDelta*100) : 's/d') + '.',
+        '• La categoría líder es ' + top.key + ' con ' + fmtMoney(top.sales) + ' y share ' + (isFinite(top.share) ? fmtPct(top.share*100,1) : 's/d') + '.',
+        'Qué significa:',
+        isFinite(model.totalDelta) && model.totalDelta >= 0 ? '• El frente viene arriba vs LY; conviene defender el mix ganador sin castigar margen.' : '• El frente viene por debajo de LY; hay que revisar qué subcategorías están drenando la venta.',
+        'Acción inmediata:',
+        '• Usa este visual para correo ejecutivo y en paralelo ataca disponibilidad, precio y exposición de las 2 subcategorías con mayor peso.',
+        'Qué más haría:',
+        '• Abre la subcategoría líder y la subcategoría con peor delta para ver si el problema es surtido, promo o ejecución por tienda.',
+        'Prioridad:',
+        '• ' + (isFinite(model.totalDelta) && model.totalDelta >= 0 ? 'Media' : 'Alta'),
+        'KPI sugerido:',
+        '• Venta total ' + model.entity.display + ' | Delta vs LY | share por subcategoría | margen %'
+      ].join('\n');
     }
-    if(isFinite(shareGap)){
-      if(shareGap >= 5){
-        lines.push('• ' + model.entity.display + ' pesa más en delivery que el promedio del negocio por ' + fmtPct(shareGap, 1) + ' pp. Conviene proteger ese canal.');
-      }else if(shareGap <= -5){
-        lines.push('• ' + model.entity.display + ' está por debajo del mix delivery del negocio por ' + fmtPct(Math.abs(shareGap), 1) + ' pp. Hay espacio para capturar venta digital.');
-      }else{
-        lines.push('• El peso de delivery está bastante alineado al mix general; la mejora depende más de ejecución comercial que de canal puro.');
+    var current=model.current || {}; var deltaField=model.deltaField === 'deltaDelivery' ? 'deltaDelivery' : 'deltaSales'; var deltaLabel=model.deltaField === 'deltaDelivery' ? 'delta delivery vs LY' : 'delta vs LY'; var shareGap=(model.avgShare - model.avgChainShare)*100;
+    return [
+      'Asunto: Serie de ' + model.entity.display + ' con share delivery y comparación vs LY',
+      'Resumen ejecutivo:',
+      '• Ya dejé la gráfica a la derecha con la serie real del cubo para las últimas ' + model.periods.length + ' ' + (model.spec.unit==='month' ? 'lecturas mensuales' : 'semanas') + '.',
+      '• Último periodo: venta ' + fmtMoney(current.sales) + ' | share delivery ' + (isFinite(current.share) ? fmtPct(current.share*100,1) : 's/d') + ' | ' + deltaLabel + ' ' + fmtDeltaPct((current[deltaField] || 0) * 100) + '.',
+      '• Mejor lectura: ' + model.best.periodLabel + ' con ' + fmtMoney(model.best.sales) + '. Piso: ' + model.worst.periodLabel + ' con ' + fmtMoney(model.worst.sales) + '.',
+      'Qué significa:',
+      isFinite(model.avgDelta) && model.avgDelta < 0 ? '• En promedio el frente viene abajo vs LY. El problema no es solo canal: primero hay que recuperar base de venta.' : '• En promedio el frente viene arriba vs LY. La tarea es defender crecimiento y evitar perder margen o disponibilidad.',
+      isFinite(shareGap) ? (shareGap >= 5 ? '• El frente sobre-indexa en delivery vs el negocio; delivery ya es relevante en el resultado.' : shareGap <= -5 ? '• El frente está por debajo del mix delivery del negocio; hay espacio para capturar más venta digital.' : '• El peso de delivery está alineado al mix del negocio; la mejora depende más de ejecución comercial.') : '• El share delivery no presenta una señal concluyente con los filtros actuales.',
+      'Acción inmediata:',
+      isFinite(model.avgDelta) && model.avgDelta < 0 ? '• Revisar quiebres, precio y visibilidad de los SKUs líderes del frente en las tiendas filtradas.' : '• Defender disponibilidad y ejecución de los SKUs top, especialmente donde delivery ya pesa más.',
+      'Qué más haría:',
+      '• Cruce con inventario y PRD en cero para evitar venta perdida y revisar tienda por tienda dónde el mix delivery está más alto o más bajo.',
+      'Prioridad:',
+      '• ' + ((isFinite(model.avgDelta) && model.avgDelta < 0) ? 'Alta' : 'Media'),
+      'KPI sugerido:',
+      '• Venta ' + model.entity.display + ' | % Delivery / Venta | ' + deltaLabel + ' | disponibilidad top SKU'
+    ].join('\n');
+  }
+
+  function formatExecutiveHtml(text){
+    var clean = String(text || '').replace(/```mermaid[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/g,'').replace(/\*\*/g,'').trim();
+    if(!clean) return '<p>No recibí una respuesta utilizable.</p>';
+    var lines = clean.split(/\n+/).map(function(x){ return txt(x); }).filter(Boolean);
+    var sections=[]; var current={title:'', items:[]};
+    lines.forEach(function(line){
+      var m=line.match(/^(Asunto|Resumen ejecutivo|Qué significa|Acción inmediata|Qué haría ya|Qué más haría|Siguiente paso|Prioridad|KPI sugerido)\s*:\s*(.*)$/i);
+      if(m){ if(current.title || current.items.length) sections.push(current); current={title:m[1], items:[]}; if(txt(m[2])) current.items.push(txt(m[2])); return; }
+      if(/^(Asunto|Resumen ejecutivo|Qué significa|Acción inmediata|Qué haría ya|Qué más haría|Siguiente paso|Prioridad|KPI sugerido)$/i.test(line)){ if(current.title || current.items.length) sections.push(current); current={title:line.replace(/:$/,''), items:[]}; return; }
+      current.items.push(line);
+    });
+    if(current.title || current.items.length) sections.push(current);
+    if(!sections.length) sections=[{title:'Resumen ejecutivo', items:lines}];
+    var html = '<div class="ampm-qa-mail">';
+    sections.forEach(function(sec){
+      var title = txt(sec.title);
+      if(/^asunto$/i.test(title)){
+        html += '<div class="ampm-qa-mail-subject"><strong>Asunto:</strong> ' + htmlEscape((sec.items[0] || '').replace(/^Asunto\s*:\s*/i,'')) + '</div>';
+        return;
       }
-    }
-    lines.push('');
-    lines.push('Qué haría ya');
-    if(isFinite(model.avgDelta) && model.avgDelta < 0){
-      lines.push('• Revisar quiebres, precio y visibilidad de los SKUs ganadores de ' + model.entity.display + ' en las tiendas filtradas.');
-    }else{
-      lines.push('• Defender disponibilidad y exhibición de los SKUs top de ' + model.entity.display + ', sobre todo en delivery.');
-    }
-    if(isFinite(shareGap) && shareGap >= 5){
-      lines.push('• Priorizar fotos, naming, surtido y promo digital del frente porque delivery ya explica una parte material de la venta.');
-    }else{
-      lines.push('• Probar una acción comercial puntual en delivery para capturar más share sin perder piso en venta física.');
-    }
-    lines.push('');
-    lines.push('Qué más haría');
-    lines.push('• Cruzarlo con inventario y PRD en cero para evitar que una buena demanda se convierta en venta perdida.');
-    lines.push('• Abrir la vista por tienda para detectar dónde el mix delivery está más alto o más bajo que el promedio y replicar la mejor ejecución.');
-    lines.push('');
-    lines.push('Prioridad');
-    lines.push('• ' + priority);
-    lines.push('');
-    lines.push('KPI sugerido');
-    lines.push('• Venta ' + model.entity.display + ' | % Delivery / Venta | ' + deltaLabel + ' | disponibilidad top SKU');
-    return lines.join('\n');
+      html += '<div class="ampm-qa-section ' + (norm(title)==='KPISUGERIDO' ? 'kpi' : '') + '"><div class="ampm-qa-section-title">' + htmlEscape(title || 'Resumen ejecutivo') + '</div>';
+      var bullets = sec.items.filter(function(it){ return /^[•\-]/.test(it); });
+      var normals = sec.items.filter(function(it){ return !/^[•\-]/.test(it); });
+      normals.forEach(function(it){ html += '<p>' + htmlEscape(it.replace(/^[•\-]\s*/,'')) + '</p>'; });
+      if(bullets.length) html += '<ul>' + bullets.map(function(it){ return '<li>' + htmlEscape(it.replace(/^[•\-]\s*/,'')) + '</li>'; }).join('') + '</ul>';
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function renderPlaceholder(){
+    var ph = byId('ampmQaVizPlaceholder'); if(ph) ph.style.display='flex';
+    var box = byId('ampmQaVizBox'); if(box) box.style.display='none';
+    var cards = byId('ampmQaVizCards'); if(cards) cards.innerHTML='';
+    var list = byId('ampmQaVizList'); if(list) list.innerHTML='';
+    try{ if(qaState.chart && typeof qaState.chart.destroy === 'function') qaState.chart.destroy(); }catch(_e){}
+    qaState.chart = null; qaState.visualModel = null;
+    var title=byId('ampmQaVizTitle'); if(title) title.textContent='Espacio visual';
+    var sub=byId('ampmQaVizSub'); if(sub) sub.textContent='Gráficas, tarjetas e infografías bajo demanda';
+    var chips=byId('ampmQaVizChips'); if(chips) chips.innerHTML='';
+  }
+  function renderVisualCards(chartModel){
+    var cardsEl = byId('ampmQaVizCards'); var listEl = byId('ampmQaVizList'); if(cardsEl) cardsEl.innerHTML=''; if(listEl) listEl.innerHTML='';
+    (chartModel.cards || []).forEach(function(card){ if(!cardsEl) return; var div=document.createElement('div'); div.className='ampm-qa-vcard'; div.innerHTML='<div class="ampm-qa-vcard-label">' + htmlEscape(card.label || '') + '</div><div class="ampm-qa-vcard-value">' + htmlEscape(card.value || '') + '</div><div class="ampm-qa-vcard-sub">' + htmlEscape(card.sub || '') + '</div>'; cardsEl.appendChild(div); });
+    (chartModel.list || []).forEach(function(item){ if(!listEl) return; var div=document.createElement('div'); div.className='ampm-qa-vlist-item'; div.innerHTML='<div><div class="ampm-qa-vlist-title">' + htmlEscape(item.title || '') + '</div><div class="ampm-qa-vlist-meta">' + htmlEscape(item.meta || '') + '</div></div><span class="ampm-qa-vlist-pill ' + htmlEscape(item.tone || 'blue') + '">' + htmlEscape((item.tone || 'info').toUpperCase()) + '</span>'; listEl.appendChild(div); });
   }
   function renderViz(chartModel){
-    var host = byId('ampmQaViz');
-    var title = byId('ampmQaVizTitle');
-    var sub = byId('ampmQaVizSub');
-    var chips = byId('ampmQaVizChips');
-    var canvas = byId('ampmQaVizCanvas');
-    if(!host || !canvas || !window.Chart) return;
-    if(title) title.textContent = txt(chartModel && chartModel.title) || 'Serie';
+    var title=byId('ampmQaVizTitle'), sub=byId('ampmQaVizSub'), chips=byId('ampmQaVizChips'), box=byId('ampmQaVizBox'), ph=byId('ampmQaVizPlaceholder'), canvas=byId('ampmQaVizCanvas');
+    if(!canvas || !window.Chart) return;
+    if(title) title.textContent = txt(chartModel && chartModel.title) || 'Visual';
     if(sub) sub.textContent = txt(chartModel && chartModel.subtitle) || '';
-    if(chips){
-      chips.innerHTML = (chartModel && chartModel.chips || []).map(function(item){
-        return '<span class="ampm-qa-viz-chip ' + htmlEscape(item.tone || 'blue') + '">' + htmlEscape(item.text || '') + '</span>';
-      }).join('');
+    if(chips) chips.innerHTML = (chartModel && chartModel.chips || []).map(function(item){ return '<span class="ampm-qa-viz-chip ' + htmlEscape(item.tone || 'blue') + '">' + htmlEscape(item.text || '') + '</span>'; }).join('');
+    if(ph) ph.style.display='none'; if(box) box.style.display='block';
+    renderVisualCards(chartModel);
+    try{ if(qaState.chart && typeof qaState.chart.destroy === 'function') qaState.chart.destroy(); }catch(_e){}
+    qaState.chart = null; qaState.visualModel = chartModel;
+    var colors=['#0C4D8F','#F58320','#11284A','#1D4ED8','#EA580C','#334155','#16A34A','#7C3AED','#E11D48'];
+    if(chartModel.type === 'doughnut'){
+      qaState.chart = new Chart(canvas.getContext('2d'), {
+        type:'doughnut',
+        data:{ labels:chartModel.labels || [], datasets:[{ data:chartModel.values || [], backgroundColor:(chartModel.labels || []).map(function(_x,i){ return colors[i % colors.length]; }), borderColor:'#ffffff', borderWidth:2, hoverOffset:8 }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'58%', animation:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#334155', boxWidth:12, font:{weight:'800'} } }, tooltip:{ callbacks:{ label:function(ctx){ var total=(chartModel.values || []).reduce(function(a,b){ return a + Number(b || 0); },0); var value=Number(ctx.raw || 0); var pct=total>0 ? (value/total*100) : 0; return ' ' + ctx.label + ': ' + fmtMoney(value) + ' · ' + fmtPct(pct,1); } } } } }
+      });
+      return;
     }
-    try{ if(qaState.chart && typeof qaState.chart.destroy === 'function') qaState.chart.destroy(); }catch(_e){}
-    qaState.chart = null;
-
     qaState.chart = new Chart(canvas.getContext('2d'), {
-      data: {
-        labels: chartModel.labels || [],
-        datasets: [
-          {
-            type:'bar',
-            label:'Venta total',
-            data: chartModel.sales || [],
-            yAxisID:'yMoney',
-            backgroundColor:'rgba(0,94,167,.78)',
-            borderColor:'rgba(0,94,167,1)',
-            borderWidth:1,
-            borderRadius:8,
-            maxBarThickness:28
-          },
-          {
-            type:'line',
-            label:'% Delivery / Venta',
-            data: chartModel.sharePct || [],
-            yAxisID:'yPct',
-            borderColor:'#F58320',
-            backgroundColor:'#F58320',
-            pointBackgroundColor:'#F58320',
-            pointRadius:3,
-            borderWidth:2.5,
-            tension:0.22
-          },
-          {
-            type:'line',
-            label:'Delta vs LY',
-            data: chartModel.deltaPct || [],
-            yAxisID:'yPct',
-            borderColor:'#11284A',
-            backgroundColor:'#11284A',
-            pointBackgroundColor:'#11284A',
-            pointRadius:3,
-            borderWidth:2.5,
-            tension:0.22
-          }
-        ]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        animation:false,
-        interaction:{mode:'index', intersect:false},
-        plugins:{
-          legend:{
-            position:'bottom',
-            labels:{ color:'#334155', boxWidth:14, font:{weight:'700'} }
-          },
-          tooltip:{
-            callbacks:{
-              label:function(ctx){
-                var raw = ctx.raw;
-                if(raw == null || raw === '') return '';
-                if(ctx.dataset && ctx.dataset.yAxisID === 'yMoney') return ' ' + ctx.dataset.label + ': ' + fmtMoney(raw);
-                return ' ' + ctx.dataset.label + ': ' + fmtPct(raw, 1);
-              }
-            }
-          }
-        },
-        scales:{
-          x:{ grid:{display:false}, ticks:{color:'#334155', font:{weight:'800'}} },
-          yMoney:{
-            type:'linear',
-            position:'left',
-            grid:{ color:'rgba(148,163,184,.16)' },
-            ticks:{ color:'#334155', font:{weight:'800'}, callback:function(v){ return fmtMoney(v); } }
-          },
-          yPct:{
-            type:'linear',
-            position:'right',
-            grid:{ drawOnChartArea:false },
-            ticks:{ color:'#475569', font:{weight:'800'}, callback:function(v){ return fmtPct(v, 0); } }
-          }
-        }
-      }
+      data:{ labels:chartModel.labels || [], datasets:[{ type:'bar', label:'Venta total', data:chartModel.sales || [], yAxisID:'yMoney', backgroundColor:'rgba(0,94,167,.80)', borderColor:'rgba(0,94,167,1)', borderWidth:1, borderRadius:8, maxBarThickness:28 }, { type:'line', label:'% Delivery / Venta', data:chartModel.sharePct || [], yAxisID:'yPct', borderColor:'#F58320', backgroundColor:'#F58320', pointBackgroundColor:'#F58320', pointRadius:3, borderWidth:2.5, tension:0.22 }, { type:'line', label:'Delta vs LY', data:chartModel.deltaPct || [], yAxisID:'yPct', borderColor:'#11284A', backgroundColor:'#11284A', pointBackgroundColor:'#11284A', pointRadius:3, borderWidth:2.5, tension:0.22 }] },
+      options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{mode:'index', intersect:false}, plugins:{ legend:{ position:'bottom', labels:{ color:'#334155', boxWidth:14, font:{weight:'800'} } }, tooltip:{ callbacks:{ label:function(ctx){ var raw=ctx.raw; if(raw == null || raw === '') return ''; if(ctx.dataset && ctx.dataset.yAxisID === 'yMoney') return ' ' + ctx.dataset.label + ': ' + fmtMoney(raw); return ' ' + ctx.dataset.label + ': ' + fmtPct(raw,1); } } } }, scales:{ x:{ grid:{display:false}, ticks:{color:'#334155', font:{weight:'800'}} }, yMoney:{ type:'linear', position:'left', grid:{ color:'rgba(148,163,184,.16)' }, ticks:{ color:'#334155', font:{weight:'800'}, callback:function(v){ return fmtMoney(v); } } }, yPct:{ type:'linear', position:'right', grid:{ drawOnChartArea:false }, ticks:{ color:'#475569', font:{weight:'800'}, callback:function(v){ return fmtPct(v,0); } } } } }
     });
-    host.classList.add('show');
-  }
-  function hideViz(){
-    var host = byId('ampmQaViz');
-    if(host) host.classList.remove('show');
-    try{ if(qaState.chart && typeof qaState.chart.destroy === 'function') qaState.chart.destroy(); }catch(_e){}
-    qaState.chart = null;
   }
   function appendMsg(role, body, kind, meta){
-    var wrap = byId('ampmQaMessages');
-    var empty = byId('ampmQaEmpty');
-    if(!wrap) return;
-    if(empty) empty.style.display = 'none';
-    var node = document.createElement('div');
-    node.className = 'ampm-qa-msg ' + (role === 'user' ? 'user' : 'assistant') + (kind === 'error' ? ' error' : '');
-    node.innerHTML = ''
-      + '<div class="ampm-qa-msg-top">'
-      +   '<div class="ampm-qa-msg-role">' + (role === 'user' ? 'Usuario' : 'IA ejecutiva') + '</div>'
-      +   '<div class="ampm-qa-msg-meta">' + htmlEscape(meta || '') + '</div>'
-      + '</div>'
-      + '<div class="ampm-qa-msg-body"></div>';
-    node.querySelector('.ampm-qa-msg-body').textContent = body || '';
-    wrap.appendChild(node);
-    wrap.scrollTop = wrap.scrollHeight + 400;
+    var wrap=byId('ampmQaMessages'), empty=byId('ampmQaEmpty'); if(!wrap) return; if(empty) empty.style.display='none';
+    var node=document.createElement('div'); node.className='ampm-qa-msg ' + (role==='user' ? 'user' : 'assistant') + (kind==='error' ? ' error' : '');
+    node.innerHTML = '<div class="ampm-qa-msg-top"><div class="ampm-qa-msg-role">' + (role==='user' ? 'Usuario' : 'IA ejecutiva') + '</div><div class="ampm-qa-msg-meta">' + htmlEscape(meta || '') + '</div></div><div class="ampm-qa-msg-body"></div>';
+    var bodyEl=node.querySelector('.ampm-qa-msg-body');
+    if(role==='assistant') bodyEl.innerHTML = formatExecutiveHtml(body || ''); else bodyEl.innerHTML = '<p>' + htmlEscape(body || '') + '</p>';
+    wrap.appendChild(node); wrap.scrollTop = wrap.scrollHeight + 400;
   }
-  function setThinking(){
-    var wrap = byId('ampmQaMessages');
-    var empty = byId('ampmQaEmpty');
-    if(!wrap) return;
-    if(empty) empty.style.display = 'none';
-    var node = document.createElement('div');
-    node.className = 'ampm-qa-msg assistant';
-    node.id = 'ampmQaThinking';
-    node.innerHTML = '<div class="ampm-qa-msg-top"><div class="ampm-qa-msg-role">IA ejecutiva</div><div class="ampm-qa-msg-meta">analizando</div></div><div class="ampm-qa-msg-body">Procesando la consulta…</div>';
-    wrap.appendChild(node);
-    wrap.scrollTop = wrap.scrollHeight + 400;
-  }
-  function clearThinking(){
-    var node = byId('ampmQaThinking');
-    if(node && node.parentNode) node.parentNode.removeChild(node);
-  }
-  function clearConversation(){
-    var wrap = byId('ampmQaMessages');
-    var empty = byId('ampmQaEmpty');
-    if(wrap) wrap.innerHTML = '';
-    if(empty) empty.style.display = '';
-    hideViz();
-    qaState.lastResponseId = '';
-    setUsage('');
-  }
-  function collectKpis(){
-    return Array.prototype.slice.call(document.querySelectorAll('#kpiBoard .kpiCard[data-kpi]')).map(function(card){
-      return {
-        key: txt(card.getAttribute('data-kpi')),
-        title: txt(card.querySelector('.kpiTitle') && card.querySelector('.kpiTitle').textContent),
-        value: txt(card.querySelector('.kpiValue') && card.querySelector('.kpiValue').textContent),
-        notes: Array.prototype.slice.call(card.querySelectorAll('.kpiSub')).map(function(n){ return txt(n.textContent); }).filter(Boolean).slice(0,2)
-      };
-    }).filter(function(item){ return item.title || item.value; }).slice(0,12);
-  }
-  function buildPromptContext(question, localAnalysis){
-    return JSON.stringify({
-      question: txt(question),
-      filters: {
-        reportMode: txt(byId('reportMode') && byId('reportMode').value),
-        current: txt(byId('currentMonth') && byId('currentMonth').value),
-        stores: getSelectedStores().slice(0,10)
-      },
-      kpis: collectKpis(),
-      local_series: localAnalysis && localAnalysis.ok ? {
-        entity: localAnalysis.entity.display,
-        dimension: localAnalysis.entity.dimension,
-        periods: localAnalysis.data.map(function(d){
-          return {
-            period: d.period,
-            sales: Number((d.sales || 0).toFixed(2)),
-            delivery_sales: Number((d.delivery || 0).toFixed(2)),
-            share_delivery_pct: isFinite(d.share) ? Number((d.share * 100).toFixed(2)) : null,
-            delta_sales_vs_ly_pct: isFinite(d.deltaSales) ? Number((d.deltaSales * 100).toFixed(2)) : null,
-            delta_delivery_vs_ly_pct: isFinite(d.deltaDelivery) ? Number((d.deltaDelivery * 100).toFixed(2)) : null
-          };
-        })
-      } : null
-    });
-  }
-  function extractResponseText(data){
-    try{
-      if(data && typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
-      var output = data && Array.isArray(data.output) ? data.output : [];
-      var parts = [];
-      output.forEach(function(item){
-        if(item && item.type === 'message' && Array.isArray(item.content)){
-          item.content.forEach(function(part){
-            if(part && typeof part.text === 'string' && txt(part.text)) parts.push(txt(part.text));
-          });
-        }
-      });
-      return parts.join('\n\n').trim();
-    }catch(_e){ return ''; }
-  }
+  function setThinking(){ var wrap=byId('ampmQaMessages'), empty=byId('ampmQaEmpty'); if(!wrap) return; if(empty) empty.style.display='none'; var node=document.createElement('div'); node.className='ampm-qa-msg assistant'; node.id='ampmQaThinking'; node.innerHTML='<div class="ampm-qa-msg-top"><div class="ampm-qa-msg-role">IA ejecutiva</div><div class="ampm-qa-msg-meta">analizando</div></div><div class="ampm-qa-msg-body"><p>Procesando la consulta y preparando la salida ejecutiva…</p></div>'; wrap.appendChild(node); wrap.scrollTop = wrap.scrollHeight + 400; }
+  function clearThinking(){ var node=byId('ampmQaThinking'); if(node && node.parentNode) node.parentNode.removeChild(node); }
+  function clearConversation(){ var wrap=byId('ampmQaMessages'), empty=byId('ampmQaEmpty'); if(wrap) wrap.innerHTML=''; if(empty) empty.style.display=''; renderPlaceholder(); qaState.lastResponseId=''; setUsage(''); }
+  function collectKpis(){ return Array.prototype.slice.call(document.querySelectorAll('#kpiBoard .kpiCard[data-kpi]')).map(function(card){ return { key:txt(card.getAttribute('data-kpi')), title:txt(card.querySelector('.kpiTitle') && card.querySelector('.kpiTitle').textContent), value:txt(card.querySelector('.kpiValue') && card.querySelector('.kpiValue').textContent), notes:Array.prototype.slice.call(card.querySelectorAll('.kpiSub')).map(function(n){ return txt(n.textContent); }).filter(Boolean).slice(0,2) }; }).filter(function(item){ return item.title || item.value; }).slice(0,12); }
+  function buildPromptContext(question, localAnalysis){ return JSON.stringify({ question:txt(question), filters:{ reportMode:txt(byId('reportMode') && byId('reportMode').value), current:txt(byId('currentMonth') && byId('currentMonth').value), stores:getSelectedStoresSmart().slice(0,10) }, kpis:collectKpis(), local_series:localAnalysis && localAnalysis.ok ? { entity:localAnalysis.entity.display, type:localAnalysis.type, periods:(localAnalysis.data || []).map(function(d){ return { period:d.period, sales:Number((d.sales||0).toFixed(2)), delivery_sales:Number((d.delivery||0).toFixed(2)), share_delivery_pct:isFinite(d.share)? Number((d.share*100).toFixed(2)):null, delta_sales_vs_ly_pct:isFinite(d.deltaSales)? Number((d.deltaSales*100).toFixed(2)):null, delta_delivery_vs_ly_pct:isFinite(d.deltaDelivery)? Number((d.deltaDelivery*100).toFixed(2)):null }; }), items:(localAnalysis.items || []).slice(0,8).map(function(it){ return { label:it.key, sales:Number((it.sales||0).toFixed(2)), share_pct:isFinite(it.share)? Number((it.share*100).toFixed(2)):null, delta_vs_ly_pct:isFinite(it.delta)? Number((it.delta*100).toFixed(2)):null }; }) } : null }); }
+  function extractResponseText(data){ try{ if(data && typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text.trim(); var output=data && Array.isArray(data.output) ? data.output : []; var parts=[]; output.forEach(function(item){ if(item && item.type === 'message' && Array.isArray(item.content)){ item.content.forEach(function(part){ if(part && typeof part.text === 'string' && txt(part.text)) parts.push(txt(part.text)); }); } }); return parts.join('\n\n').trim(); }catch(_e){ return ''; } }
+  function sanitizeReply(text){ return String(text || '').replace(/```mermaid[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/g,'').trim(); }
   function askOpenAI(question, localAnalysis){
-    var apiKey = getApiKey();
-    if(!/^sk-/.test(apiKey)){
-      appendMsg('assistant', 'Para preguntas abiertas todavía necesito la API Key. Para series y gráficas estructuradas ya te respondo sin key con la data local del cubo.', 'error', '');
-      return;
-    }
+    var apiKey=getApiKey(); if(!/^sk-/.test(apiKey)){ appendMsg('assistant','Asunto: Falta API Key\nResumen ejecutivo:\n• Para preguntas abiertas necesito la API Key.\nAcción inmediata:\n• Para series, gráficos y cruces estructurados ya te respondo localmente con la data del cubo.\nPrioridad:\n• Media\nKPI sugerido:\n• Continuar con consultas estructuradas o configurar la key.', 'error', ''); return; }
     setThinking();
-    var body = {
-      model: MODEL,
-      store: true,
-      reasoning: { effort:'none' },
-      text: { verbosity:'low' },
-      max_output_tokens: MAX_TOKENS,
-      input: [
-        { role:'system', content:[{ type:'input_text', text:[
-          'Sos un copiloto ejecutivo para AMPM El Salvador.',
-          'Respondé en español, corto, directo y aterrizado a negocio.',
-          'Usá solo el contexto entregado. No inventés data ni series.',
-          'Siempre cerrá con: qué significa, qué haría ya, qué más haría, prioridad y KPI sugerido.',
-          'Si hay serie local úsala como fuente principal.',
-          'Ratio > 1 = crecimiento. Ratio < 1 = caída.'
-        ].join('\n') }]},
-        { role:'user', content:[{ type:'input_text', text:'Pregunta: ' + txt(question) + '\nContexto JSON: ' + buildPromptContext(question, localAnalysis) }]}
-      ]
-    };
+    var body={ model:MODEL, store:true, reasoning:{effort:'none'}, text:{verbosity:'low'}, max_output_tokens:MAX_TOKENS, input:[ { role:'system', content:[{ type:'input_text', text:[ 'Sos un copiloto ejecutivo para AMPM El Salvador.', 'Respondé en español.', 'Usá solo el contexto entregado. No inventés data ni series.', 'No devolvás mermaid, markdown complejo, tablas extensas ni JSON.', 'Respondé listo para pegar en correo usando exactamente estas secciones: Asunto:, Resumen ejecutivo:, Acción inmediata:, Qué más haría:, Prioridad:, KPI sugerido:.', 'Máximo 140 palabras y tono ejecutivo.' ].join('\n') }] }, { role:'user', content:[{ type:'input_text', text:'Pregunta: ' + txt(question) + '\nContexto JSON: ' + buildPromptContext(question, localAnalysis) }] } ] };
     if(qaState.lastResponseId) body.previous_response_id = qaState.lastResponseId;
-
-    fetch('https://api.openai.com/v1/responses', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
-      body: JSON.stringify(body)
-    })
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      clearThinking();
-      if(data && data.error){
-        appendMsg('assistant', 'Error OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error', '');
-        return;
-      }
-      qaState.lastResponseId = txt(data && data.id);
-      var usage = '';
-      try{
-        var inp = Number(data && data.usage && data.usage.input_tokens || 0);
-        var out = Number(data && data.usage && data.usage.output_tokens || 0);
-        usage = (inp || out) ? ('Uso tokens · in ' + inp.toLocaleString('es-SV') + ' · out ' + out.toLocaleString('es-SV') + ' · total ' + (inp + out).toLocaleString('es-SV')) : '';
-      }catch(_e){ usage = ''; }
-      setUsage(usage || 'Contexto compacto enviado');
-      var reply = extractResponseText(data) || 'No recibí una respuesta utilizable.';
-      appendMsg('assistant', reply, '', nowStamp());
-    })
-    .catch(function(err){
-      clearThinking();
-      appendMsg('assistant', 'No pude procesar la consulta: ' + (err && err.message ? err.message : err), 'error', '');
-    });
+    fetch('https://api.openai.com/v1/responses', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey }, body:JSON.stringify(body) })
+      .then(function(res){ return res.json(); })
+      .then(function(data){ clearThinking(); if(data && data.error){ appendMsg('assistant','Asunto: Error en consulta abierta\nResumen ejecutivo:\n• OpenAI devolvió un error: ' + (data.error.message || JSON.stringify(data.error)) + '.\nAcción inmediata:\n• Reintenta la consulta o usa una pregunta más específica ligada a la data.', 'error', ''); return; } qaState.lastResponseId = txt(data && data.id); var usage=''; try{ var inp=Number(data && data.usage && data.usage.input_tokens || 0); var out=Number(data && data.usage && data.usage.output_tokens || 0); usage=(inp || out) ? ('Uso tokens · in ' + inp.toLocaleString('es-SV') + ' · out ' + out.toLocaleString('es-SV') + ' · total ' + (inp+out).toLocaleString('es-SV')) : ''; }catch(_e){ usage=''; } setUsage(usage || 'Contexto compacto enviado'); var reply=sanitizeReply(extractResponseText(data)) || 'Asunto: Sin respuesta utilizable\nResumen ejecutivo:\n• No recibí una salida utilizable para esa consulta.'; appendMsg('assistant', reply, '', nowStamp()); })
+      .catch(function(err){ clearThinking(); appendMsg('assistant','Asunto: Error al procesar la consulta\nResumen ejecutivo:\n• No pude procesar la solicitud: ' + (err && err.message ? err.message : err) + '.\nAcción inmediata:\n• Reintenta o formula la consulta de forma más específica.', 'error', ''); });
   }
-  function isStructuredQuestion(spec, question){
-    var q = txt(question).toLowerCase();
-    return !!(spec && spec.entity && (spec.wantsChart || spec.wantsShareDelivery || spec.wantsDeltaLy || /ultim|seman|mes|hist[oó]ric|tendenc|evoluci[oó]n|delivery|share|vs\s*ly|gr[aá]f/i.test(q)));
-  }
+  function isStructuredQuestion(spec, question){ var q=txt(question).toLowerCase(); return !!(spec && spec.entity && (spec.wantsChart || spec.wantsPie || spec.wantsShareDelivery || spec.wantsDeltaLy || spec.wantsSeries || /delivery|share|vs\s*ly|pastel|pie|dona|graf|gr[aá]f|seman|mes/i.test(q))); }
   function handleQuestion(rawQuestion){
-    var question = txt(rawQuestion);
-    if(!question) return;
-    appendMsg('user', question, '', nowStamp());
-    var input = byId('ampmQaInput');
-    if(input) input.value = '';
-
-    var spec = inferSpec(question);
+    var question=txt(rawQuestion); if(!question) return; appendMsg('user', question, '', nowStamp()); var input=byId('ampmQaInput'); if(input) input.value='';
+    var spec=inferSpec(question);
     if(isStructuredQuestion(spec, question)){
-      var analysis = buildSeriesAnalysis(spec);
-      if(analysis && analysis.ok){
-        if(spec.wantsChart) renderViz(analysis.chart); else hideViz();
-        appendMsg('assistant', buildLocalNarrative(analysis), '', spec.entity.dimension);
-        setUsage('Respuesta local · serie construida desde el cubo · sin consumo adicional de tokens');
-        return;
-      }
-      hideViz();
-      appendMsg('assistant', analysis && analysis.error ? analysis.error : 'No pude construir la serie con los filtros actuales.', 'error', '');
-      setUsage('Respuesta local · sin consumo adicional de tokens');
-      return;
+      var analysis = spec.wantsPie ? buildPieAnalysis(spec) : buildSeriesAnalysis(spec);
+      if(analysis && analysis.ok){ if(spec.wantsChart || spec.wantsPie) renderViz(analysis.chart); else renderPlaceholder(); appendMsg('assistant', buildLocalNarrative(analysis), '', spec.entity.dimension); setUsage('Respuesta local · visual construida desde el cubo · sin consumo adicional de tokens'); return; }
+      renderPlaceholder(); appendMsg('assistant', 'Asunto: No pude construir la visual solicitada\nResumen ejecutivo:\n• ' + (analysis && analysis.error ? analysis.error : 'No pude construir la serie con los filtros actuales.') + '\nAcción inmediata:\n• Prueba ALL tiendas o ajusta periodo y filtro de día.\nPrioridad:\n• Media\nKPI sugerido:\n• Validar entidad, periodo y filtros.', 'error', ''); setUsage('Respuesta local · sin consumo adicional de tokens'); return;
     }
-
-    hideViz();
-    askOpenAI(question, null);
+    renderPlaceholder(); askOpenAI(question, null);
   }
-  function promptForKey(){
-    var current = getApiKey();
-    var next = window.prompt('Pega tu API Key de OpenAI aquí', current || '');
-    if(next === null) return;
-    next = txt(next);
-    try{
-      if(next) localStorage.setItem(LS_KEY, next);
-      else localStorage.removeItem(LS_KEY);
-    }catch(_e){}
-    updateKeyChip();
-  }
+  function promptForKey(){ var current=getApiKey(); var next=window.prompt('Pega tu API Key de OpenAI aquí', current || ''); if(next === null) return; next=txt(next); try{ if(next) localStorage.setItem(LS_KEY,next); else localStorage.removeItem(LS_KEY); }catch(_e){} updateKeyChip(); }
   function rebuildPanel(){
-    var panel = byId('ampmAiSection');
-    if(!panel || panel.dataset.qaRebuilt === '1') return;
-    panel.dataset.qaRebuilt = '1';
+    var panel=byId('ampmAiSection'); if(!panel) return;
+    panel.dataset.qaRebuilt='2';
     panel.innerHTML = ''
       + '<div class="ampm-qa-shell">'
       +   '<div class="ampm-qa-head">'
-      +     '<div><div class="ampm-qa-title">Asistente de datos</div><div class="ampm-qa-sub">Preguntá sobre la data real del cubo. Si pedís una serie o una gráfica, la construyo directo desde la data cargada y te digo qué haría.</div></div>'
+      +     '<div><div class="ampm-qa-title">Asistente de datos</div><div class="ampm-qa-sub">Preguntá sobre la data y te respondo listo para correo. A la derecha te dejo gráficas, tarjetas o visuales cuando los necesités.</div></div>'
       +     '<div class="ampm-qa-head-actions">'
       +       '<span class="ampm-qa-chip" id="ampmQaKeyStatus">Sin API Key</span>'
       +       '<button class="ampm-qa-btn" id="ampmQaKeyBtn" type="button">Configurar Key</button>'
       +       '<button class="ampm-qa-btn" id="ampmQaClearBtn" type="button">Limpiar</button>'
       +     '</div>'
       +   '</div>'
-      +   '<div class="ampm-qa-viz" id="ampmQaViz">'
-      +     '<div class="ampm-qa-viz-head">'
-      +       '<div><div class="ampm-qa-viz-title" id="ampmQaVizTitle">Serie local</div><div class="ampm-qa-viz-sub" id="ampmQaVizSub">Gráfica bajo demanda</div></div>'
-      +       '<button class="ampm-qa-btn" id="ampmQaHideViz" type="button">Ocultar gráfica</button>'
+      +   '<div class="ampm-qa-grid">'
+      +     '<div class="ampm-qa-left">'
+      +       '<div class="ampm-qa-history" id="ampmQaMessages">'
+      +         '<div class="ampm-qa-empty" id="ampmQaEmpty"><strong>Listo para responder.</strong>Ejemplos:<br>• gráficame las últimas 6 semanas de Vapes con share delivery y delta vs LY<br>• hazme un gráfico de pastel de Licores con delta vs LY y etiquetas de datos<br>• decime qué priorizaría esta semana para mover venta y margen</div>'
+      +       '</div>'
+      +       '<div class="ampm-qa-input-wrap">'
+      +         '<div class="ampm-qa-input-row">'
+      +           '<textarea class="ampm-qa-textarea" id="ampmQaInput" placeholder="Escribe tu pregunta sobre la data..." rows="3"></textarea>'
+      +           '<button class="ampm-qa-send" id="ampmQaSend" type="button">▶</button>'
+      +         '</div>'
+      +         '<div class="ampm-qa-footer"><span>Solo Resumen · solo admin · historial con scroll</span><span id="ampmQaUsage"></span></div>'
+      +       '</div>'
       +     '</div>'
-      +     '<div class="ampm-qa-viz-chips" id="ampmQaVizChips"></div>'
-      +     '<div class="ampm-qa-canvas"><canvas id="ampmQaVizCanvas"></canvas></div>'
+      +     '<aside class="ampm-qa-right">'
+      +       '<div class="ampm-qa-viz-shell">'
+      +         '<div class="ampm-qa-viz-head"><div><div class="ampm-qa-viz-title" id="ampmQaVizTitle">Espacio visual</div><div class="ampm-qa-viz-sub" id="ampmQaVizSub">Gráficas, tarjetas e infografías bajo demanda</div></div><button class="ampm-qa-btn primary" id="ampmQaHideViz" type="button">Limpiar visual</button></div>'
+      +         '<div class="ampm-qa-viz-chips" id="ampmQaVizChips"></div>'
+      +         '<div class="ampm-qa-viz-box" id="ampmQaVizBox" style="display:none;"><div class="ampm-qa-canvas-wrap"><div class="ampm-qa-canvas"><canvas id="ampmQaVizCanvas"></canvas></div></div></div>'
+      +         '<div class="ampm-qa-viz-placeholder" id="ampmQaVizPlaceholder"><div><strong>Espacio reservado para visuales</strong>Cuando pidas una gráfica, infografía, scorecard o comparación visual, aparecerá aquí con la data real del cubo.</div></div>'
+      +         '<div class="ampm-qa-vcards" id="ampmQaVizCards"></div>'
+      +         '<div class="ampm-qa-vlist" id="ampmQaVizList"></div>'
+      +       '</div>'
+      +     '</aside>'
       +   '</div>'
-      +   '<div class="ampm-qa-history" id="ampmQaMessages">'
-      +     '<div class="ampm-qa-empty" id="ampmQaEmpty"><strong>Listo para responder.</strong><br>Ejemplo: gráficame las últimas 6 semanas de Vapes con share delivery y delta vs LY.<br><br>También puedes pedir: dónde está el mayor impacto económico, qué haría esta semana o qué está frenando margen.</div>'
-      +   '</div>'
-      +   '<div class="ampm-qa-input-row">'
-      +     '<textarea class="ampm-qa-textarea" id="ampmQaInput" placeholder="Escribe tu pregunta sobre la data..." rows="2"></textarea>'
-      +     '<button class="ampm-qa-send" id="ampmQaSend" type="button">▶</button>'
-      +   '</div>'
-      +   '<div class="ampm-qa-footer"><span>Solo Resumen · solo admin · historial con scroll · gráficas bajo demanda</span><span id="ampmQaUsage"></span></div>'
       + '</div>';
-
     byId('ampmQaSend').addEventListener('click', function(){ handleQuestion(byId('ampmQaInput') && byId('ampmQaInput').value); });
-    byId('ampmQaInput').addEventListener('keydown', function(ev){
-      if(ev.key === 'Enter' && !ev.shiftKey){
-        ev.preventDefault();
-        handleQuestion(byId('ampmQaInput') && byId('ampmQaInput').value);
-      }
-    });
+    byId('ampmQaInput').addEventListener('keydown', function(ev){ if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); handleQuestion(byId('ampmQaInput') && byId('ampmQaInput').value); } });
     byId('ampmQaClearBtn').addEventListener('click', function(){ clearConversation(); });
     byId('ampmQaKeyBtn').addEventListener('click', function(){ promptForKey(); });
-    byId('ampmQaHideViz').addEventListener('click', function(){ hideViz(); });
-    updateKeyChip();
-    setUsage('');
+    byId('ampmQaHideViz').addEventListener('click', function(){ renderPlaceholder(); });
+    updateKeyChip(); setUsage(''); renderPlaceholder();
   }
-  function apply(){
-    try{
-      var auto = byId('autoExecutive'); if(auto) auto.style.display = 'none';
-      var autoP = byId('autoExecutivePanel'); if(autoP) autoP.style.display = 'none';
-      var autoK = byId('autoKeyPanel'); if(autoK) autoK.style.display = 'none';
-      var radar = byId('radar'); if(radar) radar.style.display = 'none';
-      var radarExec = byId('radarExec'); if(radarExec) radarExec.style.display = 'none';
-    }catch(_e){}
-    rebuildPanel();
-    updateKeyChip();
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 80); setTimeout(apply, 300); });
-  }else{
-    setTimeout(apply, 80); setTimeout(apply, 300);
-  }
-  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
-    window.addEventListener(evt, function(){ setTimeout(apply, 50); setTimeout(apply, 250); });
-  });
+  function apply(){ ['autoExecutive','autoExecutivePanel','autoKeyPanel','radar','radarExec'].forEach(function(id){ var el=byId(id); if(el) el.style.display='none'; }); rebuildPanel(); updateKeyChip(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply,80); setTimeout(apply,300); setTimeout(apply,800); }); else { setTimeout(apply,80); setTimeout(apply,300); setTimeout(apply,800); }
+  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){ window.addEventListener(evt, function(){ setTimeout(apply,50); setTimeout(apply,250); setTimeout(apply,650); }); });
 })();
 </script>
 
