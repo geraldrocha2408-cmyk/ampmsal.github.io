@@ -3597,7 +3597,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
 <!-- ========== PANEL IA ADMIN v3 ========== -->
 <div class="ampm-ai-wrap" data-tabpage="resumen" id="ampmAiSection" hidden aria-hidden="true">
-  <aside class="ampm-ai-nav" aria-label="Temas IA">
+  <aside class="ampm-ai-nav" aria-label="Temas IA" style="display:none !important" hidden aria-hidden="true">
     <div class="ampm-ai-nav-logo">
       <span class="ampm-ai-nav-icon">✦</span>
       <div class="ampm-ai-nav-brand">
@@ -3667,16 +3667,16 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   <section class="ampm-ai-main">
     <div class="ampm-ai-header">
       <div class="ampm-ai-header-left">
-        <div class="ampm-ai-header-title" id="ampmAiHeaderTitle">Chat libre</div>
-        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con contexto compacto y foco en negocio.</div>
+        <div class="ampm-ai-header-title" id="ampmAiHeaderTitle">Asistente de datos</div>
+        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Preguntá sobre la data y te respondo con hallazgos, acciones y, si aplica, gráfica bajo demanda.</div>
       </div>
       <div class="ampm-ai-header-right">
-        <span class="ampm-ai-badge" id="ampmAiScopeBadge">Contexto: ejecutivo</span>
+        <span class="ampm-ai-badge" id="ampmAiScopeBadge">Solo data del dashboard</span>
         <button class="ampm-ai-btn-icon" id="ampmAiClearBtn" type="button">↺ Limpiar</button>
       </div>
     </div>
 
-    <div class="ampm-ai-visual-shell" id="ampmAiVisualShell">
+    <div class="ampm-ai-visual-shell" id="ampmAiVisualShell" style="display:none !important" hidden aria-hidden="true">
       <div class="ampm-ai-visual-top">
         <div class="ampm-ai-section-title">Lectura rápida</div>
         <div class="ampm-ai-source-chips" id="ampmAiSourceChips"></div>
@@ -3712,19 +3712,19 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       </div>
     </div>
 
-    <div class="ampm-ai-prompts" id="ampmAiPrompts"></div>
+    <div class="ampm-ai-prompts" id="ampmAiPrompts" style="display:none !important" hidden aria-hidden="true"></div>
 
-    <div class="ampm-ai-chat" id="ampmAiChat">
+    <div class="ampm-ai-chat" id="ampmAiChat" style="height:320px !important;min-height:320px !important;max-height:320px !important;overflow:auto !important;padding:12px 14px !important;background:linear-gradient(180deg,#fbfdff 0%, #f8fafc 100%) !important;">
       <div class="ampm-ai-empty" id="ampmAiEmpty">
         <div class="ampm-ai-empty-icon">✦</div>
-        <div class="ampm-ai-empty-title">Copiloto ejecutivo listo</div>
-        <div class="ampm-ai-empty-text">Selecciona un frente o escribe una consulta. La respuesta se alimenta con la data del dashboard y un contexto reducido al tema relevante.</div>
+        <div class="ampm-ai-empty-title">Listo para responder</div>
+        <div class="ampm-ai-empty-text">Preguntá por ventas, ticket, TX, margen, delivery, SBF, merma, inventario o productos en cero.</div>
       </div>
       <div class="ampm-ai-messages" id="ampmAiMessages"></div>
     </div>
 
     <div class="ampm-ai-input-row">
-      <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Ejemplo: ¿Qué está frenando SBF y qué harías esta semana?" rows="2"></textarea>
+      <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Ejemplo: gráficame las últimas 6 semanas de Vapes con share delivery y delta vs LY" rows="1"></textarea>
       <button class="ampm-ai-send-btn" id="ampmAiSendBtn" type="button">
         <span id="ampmAiSendLabel">▶</span>
       </button>
@@ -30801,6 +30801,53 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 })();
 </script>
 
+
+<script id="ampm-ai-hard-hide-lectura-v2">
+(function(){
+  if(window.__AMPM_AI_HARD_HIDE_LECTURA_V2__) return;
+  window.__AMPM_AI_HARD_HIDE_LECTURA_V2__ = true;
+  function apply(){
+    var panel = document.getElementById('ampmAiSection');
+    if(!panel) return;
+    var nav = panel.querySelector('.ampm-ai-nav');
+    var visual = document.getElementById('ampmAiVisualShell');
+    var prompts = document.getElementById('ampmAiPrompts');
+    var chat = document.getElementById('ampmAiChat');
+    var msgs = document.getElementById('ampmAiMessages');
+    var title = document.getElementById('ampmAiHeaderTitle');
+    var sub = document.getElementById('ampmAiHeaderSub');
+    var badge = document.getElementById('ampmAiScopeBadge');
+    var footer = document.getElementById('ampmAiFooterHint');
+    if(nav){ nav.hidden = true; nav.setAttribute('aria-hidden','true'); nav.style.display='none'; }
+    if(visual){ visual.hidden = true; visual.setAttribute('aria-hidden','true'); visual.style.display='none'; }
+    if(prompts){ prompts.hidden = true; prompts.setAttribute('aria-hidden','true'); prompts.style.display='none'; }
+    if(chat){
+      chat.style.height = '320px';
+      chat.style.minHeight = '320px';
+      chat.style.maxHeight = '320px';
+      chat.style.overflow = 'auto';
+      chat.style.padding = '12px 14px';
+    }
+    if(msgs){
+      msgs.style.overflow = 'visible';
+      msgs.style.paddingRight = '2px';
+    }
+    if(title) title.textContent = 'Asistente de datos';
+    if(sub) sub.textContent = 'Preguntá sobre la data y te respondo con hallazgos, acciones y, si aplica, gráfica bajo demanda.';
+    if(badge) badge.textContent = 'Solo data del dashboard';
+    if(footer) footer.textContent = 'Historial con scroll · foco en respuestas útiles y acciones concretas.';
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 50); setTimeout(apply, 250); });
+  } else {
+    setTimeout(apply, 50); setTimeout(apply, 250);
+  }
+  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
+    window.addEventListener(evt, function(){ setTimeout(apply, 30); setTimeout(apply, 180); });
+  });
+})();
+</script>
+
 </html>`;
 
           const baseName = `Reporte_${slugifyExportName(activeExport.label)}_graficas_${ym || 'NA'}`;
@@ -31165,6 +31212,53 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
   ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
     window.addEventListener(evt, function(){ setTimeout(runCompactAi, 80); });
+  });
+})();
+</script>
+
+
+<script id="ampm-ai-hard-hide-lectura-v2">
+(function(){
+  if(window.__AMPM_AI_HARD_HIDE_LECTURA_V2__) return;
+  window.__AMPM_AI_HARD_HIDE_LECTURA_V2__ = true;
+  function apply(){
+    var panel = document.getElementById('ampmAiSection');
+    if(!panel) return;
+    var nav = panel.querySelector('.ampm-ai-nav');
+    var visual = document.getElementById('ampmAiVisualShell');
+    var prompts = document.getElementById('ampmAiPrompts');
+    var chat = document.getElementById('ampmAiChat');
+    var msgs = document.getElementById('ampmAiMessages');
+    var title = document.getElementById('ampmAiHeaderTitle');
+    var sub = document.getElementById('ampmAiHeaderSub');
+    var badge = document.getElementById('ampmAiScopeBadge');
+    var footer = document.getElementById('ampmAiFooterHint');
+    if(nav){ nav.hidden = true; nav.setAttribute('aria-hidden','true'); nav.style.display='none'; }
+    if(visual){ visual.hidden = true; visual.setAttribute('aria-hidden','true'); visual.style.display='none'; }
+    if(prompts){ prompts.hidden = true; prompts.setAttribute('aria-hidden','true'); prompts.style.display='none'; }
+    if(chat){
+      chat.style.height = '320px';
+      chat.style.minHeight = '320px';
+      chat.style.maxHeight = '320px';
+      chat.style.overflow = 'auto';
+      chat.style.padding = '12px 14px';
+    }
+    if(msgs){
+      msgs.style.overflow = 'visible';
+      msgs.style.paddingRight = '2px';
+    }
+    if(title) title.textContent = 'Asistente de datos';
+    if(sub) sub.textContent = 'Preguntá sobre la data y te respondo con hallazgos, acciones y, si aplica, gráfica bajo demanda.';
+    if(badge) badge.textContent = 'Solo data del dashboard';
+    if(footer) footer.textContent = 'Historial con scroll · foco en respuestas útiles y acciones concretas.';
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 50); setTimeout(apply, 250); });
+  } else {
+    setTimeout(apply, 50); setTimeout(apply, 250);
+  }
+  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
+    window.addEventListener(evt, function(){ setTimeout(apply, 30); setTimeout(apply, 180); });
   });
 })();
 </script>
@@ -60550,6 +60644,53 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
   ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
     window.addEventListener(evt, function(){ setTimeout(runCompactAi, 80); });
+  });
+})();
+</script>
+
+
+<script id="ampm-ai-hard-hide-lectura-v2">
+(function(){
+  if(window.__AMPM_AI_HARD_HIDE_LECTURA_V2__) return;
+  window.__AMPM_AI_HARD_HIDE_LECTURA_V2__ = true;
+  function apply(){
+    var panel = document.getElementById('ampmAiSection');
+    if(!panel) return;
+    var nav = panel.querySelector('.ampm-ai-nav');
+    var visual = document.getElementById('ampmAiVisualShell');
+    var prompts = document.getElementById('ampmAiPrompts');
+    var chat = document.getElementById('ampmAiChat');
+    var msgs = document.getElementById('ampmAiMessages');
+    var title = document.getElementById('ampmAiHeaderTitle');
+    var sub = document.getElementById('ampmAiHeaderSub');
+    var badge = document.getElementById('ampmAiScopeBadge');
+    var footer = document.getElementById('ampmAiFooterHint');
+    if(nav){ nav.hidden = true; nav.setAttribute('aria-hidden','true'); nav.style.display='none'; }
+    if(visual){ visual.hidden = true; visual.setAttribute('aria-hidden','true'); visual.style.display='none'; }
+    if(prompts){ prompts.hidden = true; prompts.setAttribute('aria-hidden','true'); prompts.style.display='none'; }
+    if(chat){
+      chat.style.height = '320px';
+      chat.style.minHeight = '320px';
+      chat.style.maxHeight = '320px';
+      chat.style.overflow = 'auto';
+      chat.style.padding = '12px 14px';
+    }
+    if(msgs){
+      msgs.style.overflow = 'visible';
+      msgs.style.paddingRight = '2px';
+    }
+    if(title) title.textContent = 'Asistente de datos';
+    if(sub) sub.textContent = 'Preguntá sobre la data y te respondo con hallazgos, acciones y, si aplica, gráfica bajo demanda.';
+    if(badge) badge.textContent = 'Solo data del dashboard';
+    if(footer) footer.textContent = 'Historial con scroll · foco en respuestas útiles y acciones concretas.';
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 50); setTimeout(apply, 250); });
+  } else {
+    setTimeout(apply, 50); setTimeout(apply, 250);
+  }
+  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
+    window.addEventListener(evt, function(){ setTimeout(apply, 30); setTimeout(apply, 180); });
   });
 })();
 </script>
