@@ -56641,16 +56641,1117 @@ function innovationOnePagerCreateBrandedShell(){
 
 
 
-<!-- AMPM Copilot v2 styles are injected by ampm_copilot_engine.js -->
-<script>
-window.AMPM_COPILOT_CONFIG = Object.assign({
-  apiUrl: "",
-  adminUsers: ["admin"],
-  llmTimeoutMs: 14000,
-  enableLlmForOpenQuestions: true
-}, window.AMPM_COPILOT_CONFIG || {});
+<style id="ampm-copilot-style-v1">
+.ampm-copilot-shell{
+  display:none;
+  margin:0 0 18px;
+  padding:14px;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:22px;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  box-shadow:0 18px 40px rgba(15,23,42,.08);
+}
+.ampm-copilot-shell.is-visible{display:block;}
+.ampm-copilot-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
+.ampm-copilot-title{font-size:20px;font-weight:1000;color:#11284A;line-height:1.05;margin:0;}
+.ampm-copilot-sub{margin-top:4px;color:#52657f;font-size:12.5px;font-weight:700;line-height:1.4;}
+.ampm-copilot-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ampm-copilot-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid rgba(15,23,42,.10);background:#fff;color:#334155;font-size:11px;font-weight:900;white-space:nowrap;}
+.ampm-copilot-pill.blue{background:rgba(0,94,167,.08);border-color:rgba(0,94,167,.18);color:#0C4D8F;}
+.ampm-copilot-pill.orange{background:rgba(245,131,32,.10);border-color:rgba(245,131,32,.20);color:#9A4A0D;}
+.ampm-copilot-btn{appearance:none;border:1px solid rgba(15,23,42,.12);background:#fff;color:#24476c;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;}
+.ampm-copilot-btn.primary{background:linear-gradient(135deg,#F58320,#E67425);border-color:#E67425;color:#fff;box-shadow:0 12px 24px rgba(245,131,32,.20);}
+.ampm-copilot-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:14px;align-items:start;}
+.ampm-copilot-pane{min-width:0;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;box-shadow:0 10px 24px rgba(15,23,42,.05);overflow:hidden;}
+.ampm-copilot-pane.left{display:flex;flex-direction:column;min-height:640px;}
+.ampm-copilot-pane.right{position:sticky;top:88px;display:flex;flex-direction:column;min-height:640px;}
+.ampm-copilot-pane-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 16px 12px;border-bottom:1px solid rgba(15,23,42,.08);background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);}
+.ampm-copilot-pane-title{font-size:15px;font-weight:1000;color:#11284A;line-height:1.1;}
+.ampm-copilot-pane-sub{margin-top:4px;color:#64748b;font-size:11.5px;font-weight:800;line-height:1.35;}
+.ampm-copilot-history{padding:14px 16px 10px;display:flex;flex-direction:column;gap:12px;min-height:0;max-height:520px;overflow:auto;scrollbar-width:thin;}
+.ampm-copilot-empty{padding:16px 18px;border:1px dashed rgba(148,163,184,.35);border-radius:16px;background:#f8fafc;color:#52657f;font-size:12.5px;font-weight:700;line-height:1.6;}
+.ampm-copilot-msg{max-width:100%;border-radius:16px;padding:12px 14px;border:1px solid rgba(15,23,42,.08);box-shadow:0 8px 18px rgba(15,23,42,.04);}
+.ampm-copilot-msg.user{align-self:flex-end;background:linear-gradient(135deg,rgba(0,94,167,.10),rgba(12,77,143,.08));border-color:rgba(0,94,167,.18);}
+.ampm-copilot-msg.assistant{align-self:stretch;background:#fff;}
+.ampm-copilot-msg-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.ampm-copilot-msg-role{font-size:11px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;color:#0C4D8F;}
+.ampm-copilot-msg.user .ampm-copilot-msg-role{color:#11284A;}
+.ampm-copilot-msg-meta{font-size:11px;font-weight:800;color:#64748b;}
+.ampm-copilot-msg-body{display:flex;flex-direction:column;gap:10px;color:#334155;}
+.ampm-copilot-msg-body p{margin:0;font-size:13px;line-height:1.5;}
+.ampm-copilot-block{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:#f8fafc;border:1px solid rgba(15,23,42,.06);}
+.ampm-copilot-block-title{font-size:11px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;color:#0C4D8F;}
+.ampm-copilot-block-text{font-size:13px;line-height:1.5;color:#1f2937;}
+.ampm-copilot-block-text ul{margin:0;padding-left:18px;display:grid;gap:4px;}
+.ampm-copilot-block-text li{margin:0;}
+.ampm-copilot-input-wrap{margin-top:auto;padding:12px 16px 14px;border-top:1px solid rgba(15,23,42,.08);background:#fff;}
+.ampm-copilot-input-row{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:10px;align-items:end;}
+.ampm-copilot-textarea{width:100%;min-height:112px;resize:vertical;border:1px solid rgba(15,23,42,.12);border-radius:16px;padding:14px 14px;font:inherit;color:#0f172a;background:#fff;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.70);}
+.ampm-copilot-textarea:focus{border-color:rgba(0,94,167,.42);box-shadow:0 0 0 4px rgba(0,94,167,.10);}
+.ampm-copilot-send{appearance:none;border:0;border-radius:16px;height:56px;background:linear-gradient(135deg,#F58320,#E67425);color:#fff;font-size:18px;font-weight:1000;cursor:pointer;box-shadow:0 12px 24px rgba(245,131,32,.22);}
+.ampm-copilot-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#64748b;font-size:11px;font-weight:800;}
+.ampm-copilot-viz-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 16px 12px;border-bottom:1px solid rgba(15,23,42,.08);}
+.ampm-copilot-viz-title{font-size:15px;font-weight:1000;color:#11284A;}
+.ampm-copilot-viz-sub{margin-top:4px;font-size:11.5px;font-weight:800;color:#64748b;line-height:1.35;}
+.ampm-copilot-viz-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px;}
+.ampm-copilot-viz-placeholder{display:flex;align-items:center;justify-content:center;min-height:180px;margin:0 16px 14px;border-radius:16px;border:1px dashed rgba(148,163,184,.35);background:#f8fafc;color:#52657f;font-size:12.5px;font-weight:700;line-height:1.6;text-align:center;padding:18px;}
+.ampm-copilot-viz-box{padding:0 16px 14px;}
+.ampm-copilot-canvas-wrap{border:1px solid rgba(15,23,42,.08);border-radius:16px;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.04);padding:10px 10px 2px;}
+.ampm-copilot-canvas{position:relative;height:300px;}
+.ampm-copilot-vcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 16px 14px;}
+.ampm-copilot-score{border:1px solid rgba(15,23,42,.08);border-radius:16px;background:linear-gradient(180deg,#ffffff,#f8fafc);padding:12px 14px;box-shadow:0 8px 18px rgba(15,23,42,.04);}
+.ampm-copilot-score-k{font-size:11px;font-weight:1000;letter-spacing:.05em;text-transform:uppercase;color:#64748b;}
+.ampm-copilot-score-v{margin-top:6px;font-size:24px;line-height:1;font-weight:1000;color:#11284A;}
+.ampm-copilot-score-s{margin-top:6px;font-size:12px;font-weight:800;color:#52657f;line-height:1.35;}
+.ampm-copilot-vlist{display:flex;flex-direction:column;gap:8px;padding:0 16px 14px;}
+.ampm-copilot-rank{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border:1px solid rgba(15,23,42,.08);border-radius:14px;background:#fff;padding:10px 12px;}
+.ampm-copilot-rank-left{min-width:0;}
+.ampm-copilot-rank-name{font-size:13px;font-weight:1000;color:#11284A;line-height:1.25;}
+.ampm-copilot-rank-sub{margin-top:3px;color:#64748b;font-size:11.5px;font-weight:800;line-height:1.35;}
+.ampm-copilot-rank-val{font-size:12px;font-weight:1000;color:#0f172a;white-space:nowrap;}
+.ampm-copilot-table-wrap{padding:0 16px 16px;overflow:auto;}
+.ampm-copilot-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(15,23,42,.08);border-radius:16px;overflow:hidden;background:#fff;}
+.ampm-copilot-table th{background:#0C4D8F;color:#fff;font-size:11px;font-weight:1000;padding:9px 10px;text-align:left;white-space:nowrap;}
+.ampm-copilot-table td{padding:9px 10px;border-top:1px solid rgba(15,23,42,.08);font-size:12px;color:#334155;white-space:nowrap;}
+.ampm-copilot-table td.num{text-align:right;font-variant-numeric:tabular-nums;}
+.ampm-copilot-bad{color:#B42318 !important;}
+.ampm-copilot-good{color:#067647 !important;}
+.ampm-copilot-warn{color:#B55F14 !important;}
+@media (max-width: 1160px){ .ampm-copilot-grid{grid-template-columns:1fr;} .ampm-copilot-pane.right{position:relative;top:auto;min-height:unset;} }
+@media (max-width: 760px){
+  .ampm-copilot-shell{padding:10px;}
+  .ampm-copilot-pane.left,.ampm-copilot-pane.right{min-height:unset;}
+  .ampm-copilot-history{max-height:420px;padding:12px 12px 8px;}
+  .ampm-copilot-input-wrap,.ampm-copilot-viz-head,.ampm-copilot-pane-head{padding-left:12px;padding-right:12px;}
+  .ampm-copilot-input-row{grid-template-columns:1fr;}
+  .ampm-copilot-send{width:100%;}
+  .ampm-copilot-vcards{grid-template-columns:1fr;}
+}
+</style>
+
+<script id="ampm-copilot-script-v1">
+(function(){
+  if(window.__AMPM_COPILOT_EXEC_V1__) return;
+  window.__AMPM_COPILOT_EXEC_V1__ = true;
+  var host = null;
+  var vizChart = null;
+  var pluginRegistered = false;
+  var CACHE = window.__ampmCopilotExecCache || (window.__ampmCopilotExecCache = {});
+
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function htmlEscape(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function norm(v){ return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,''); }
+  function num(v){ if(v == null || v === '' || v === false) return 0; var n = Number(v); return isFinite(n) ? n : 0; }
+  function pct(n,d){ return d ? (n/d)*100 : 0; }
+  function fmtMoney(v){ var n=num(v); return '$' + n.toLocaleString('en-US',{maximumFractionDigits:0}); }
+  function fmtMoney1(v){ var n=num(v); return '$' + n.toLocaleString('en-US',{minimumFractionDigits:1, maximumFractionDigits:1}); }
+  function fmtPct(v){ var n=num(v); return n.toLocaleString('en-US',{minimumFractionDigits:1, maximumFractionDigits:1}) + '%'; }
+  function fmtPct0(v){ var n=num(v); return n.toLocaleString('en-US',{maximumFractionDigits:0}) + '%'; }
+  function fmtNum(v){ var n=num(v); return n.toLocaleString('en-US',{maximumFractionDigits:0}); }
+  function fmtDelta(v){ var n=num(v); return (n > 0 ? '+' : '') + fmtPct(n); }
+  function clsDelta(v){ var n=num(v); return n > 0 ? 'ampm-copilot-good' : (n < 0 ? 'ampm-copilot-bad' : ''); }
+
+  function getWorkbook(){ try{ return (window.state && state.__hallWorkbook) ? state.__hallWorkbook : null; }catch(_e){ return null; } }
+  function getWorkbookStamp(){ try{ return String((window.state && state.__hallWorkbookStamp) || 'nostamp'); }catch(_e){ return 'nostamp'; } }
+  function getSheetRows(name){
+    var wb = getWorkbook();
+    if(!wb || typeof sheetRows !== 'function') return [];
+    try{ return sheetRows(wb, name, { raw:false }) || []; }catch(_e){ return []; }
+  }
+  function getSelectedValues(id){
+    var el = byId(id); if(!el) return [];
+    if(el.multiple) return Array.from(el.options).filter(function(o){ return o.selected && txt(o.value); }).map(function(o){ return txt(o.value); });
+    return txt(el.value) ? [txt(el.value)] : [];
+  }
+  function getStores(){
+    try{ if(typeof getSelectedStoresOrAll === 'function'){ return (getSelectedStoresOrAll() || []).map(txt).filter(Boolean); } }catch(_e){}
+    return getSelectedValues('stores');
+  }
+  function getMode(){
+    try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'mensual'; }catch(_e){}
+    try{ if(typeof isWeeklyReport === 'function' && isWeeklyReport()) return 'semanal'; }catch(_e){}
+    try{ if(typeof isDailyReport === 'function' && isDailyReport()) return 'diario'; }catch(_e){}
+    var v = txt(byId('reportMode') && byId('reportMode').value).toLowerCase();
+    return v || 'semanal';
+  }
+  function getCurrentPeriod(){ return txt(byId('currentMonth') && byId('currentMonth').value); }
+  function getPrevPeriods(){ return getSelectedValues('prevMonths'); }
+  function getDowTokens(){ return getSelectedValues('dowFilter'); }
+  function passesStore(row, stores){ return !stores.length || stores.indexOf(txt(row.Store)) !== -1; }
+  function passesDow(row, dows){
+    if(!dows.length || dows.indexOf('__ALL__') !== -1) return true;
+    if(typeof rowMatchesGlobalDow === 'function'){
+      try{ return dows.some(function(t){ return rowMatchesGlobalDow(row, t); }); }catch(_e){}
+    }
+    var rName = norm(row.DOW_Name || row.DOW || '');
+    return dows.some(function(t){ return norm(t) === rName; });
+  }
+  function shiftLy(periodKey){
+    var s = txt(periodKey);
+    var m1 = s.match(/^(\d{4})-W(\d{2})$/);
+    if(m1) return String(Number(m1[1]) - 1) + '-W' + m1[2];
+    var m2 = s.match(/^(\d{4})-(\d{2})$/);
+    if(m2) return String(Number(m2[1]) - 1) + '-' + m2[2];
+    return '';
+  }
+  function listPeriods(field){
+    var stamp = getWorkbookStamp() + '::' + field;
+    if(CACHE[stamp]) return CACHE[stamp];
+    var rows = getSheetRows('Cubo_Sales_DetailHallazgos');
+    var map = Object.create(null);
+    rows.forEach(function(r){ var k = txt(r[field]); if(k) map[k] = 1; });
+    var arr = Object.keys(map).sort();
+    CACHE[stamp] = arr;
+    return arr;
+  }
+  function takeLastPeriods(field, current, n){
+    var arr = listPeriods(field);
+    if(!arr.length) return [];
+    var idx = arr.indexOf(current);
+    if(idx === -1) idx = arr.length - 1;
+    var start = Math.max(0, idx - (n - 1));
+    return arr.slice(start, idx + 1);
+  }
+  function getDims(){
+    var key = 'dims::' + getWorkbookStamp();
+    if(CACHE[key]) return CACHE[key];
+    var rows = getSheetRows('Cubo_Sales_DetailHallazgos');
+    var dept = Object.create(null), cat = Object.create(null), brand = Object.create(null);
+    rows.forEach(function(r){
+      var d = txt(r.Department), c = txt(r.Category), b = txt(r.Brand);
+      if(d) dept[d] = 1;
+      if(c) cat[c] = 1;
+      if(b) brand[b] = 1;
+    });
+    var out = {
+      departments: Object.keys(dept).sort(function(a,b){ return b.length - a.length; }),
+      categories: Object.keys(cat).sort(function(a,b){ return b.length - a.length; }),
+      brands: Object.keys(brand).sort(function(a,b){ return b.length - a.length; })
+    };
+    CACHE[key] = out;
+    return out;
+  }
+  function detectEntity(question){
+    var qn = norm(question);
+    var alias = [
+      { type:'InnovationItem', value:'Hot Dog', source:'hotdog', keys:['HOTDOG','HOT DOG','PERRO CALIENTE','HOTDOGS','HOT DOGS'] },
+      { type:'Category', value:'Vapes', keys:['VAPES'] },
+      { type:'Department', value:'Licores', keys:['LICORES'] },
+      { type:'Department', value:'Cervezas y RTD', keys:['CERVEZAS','RTD'] }
+    ];
+    for(var i=0;i<alias.length;i++){
+      if(alias[i].keys.some(function(k){ return qn.indexOf(norm(k)) !== -1; })) return alias[i];
+    }
+    var dims = getDims();
+    for(var j=0;j<dims.categories.length;j++) if(qn.indexOf(norm(dims.categories[j])) !== -1) return { type:'Category', value:dims.categories[j] };
+    for(var k=0;k<dims.departments.length;k++) if(qn.indexOf(norm(dims.departments[k])) !== -1) return { type:'Department', value:dims.departments[k] };
+    for(var h=0;h<dims.brands.length;h++) if(qn.indexOf(norm(dims.brands[h])) !== -1) return { type:'Brand', value:dims.brands[h] };
+    return null;
+  }
+  function entityField(spec){ return spec && spec.type === 'Department' ? 'Department' : (spec && spec.type === 'Brand' ? 'Brand' : 'Category'); }
+  function rowMatchesEntity(row, spec){
+    if(!spec) return true;
+    if(spec && spec.type === 'InnovationItem') return true;
+    var field = entityField(spec);
+    return norm(row[field]) === norm(spec.value);
+  }
+  function inferCount(question, fallback){
+    var q = txt(question).toLowerCase();
+    var m = q.match(/(?:ultim[ao]s?|last)\s*(\d{1,2})/i);
+    if(m) return Math.max(1, Number(m[1] || fallback || 1));
+    return fallback;
+  }
+  function getFilterContext(){
+    return {
+      mode: getMode(),
+      current: getCurrentPeriod(),
+      prev: getPrevPeriods(),
+      stores: getStores(),
+      dows: getDowTokens()
+    };
+  }
+  function aggregateSales(periodField, periods, spec, sliceField){
+    var rows = getSheetRows('Cubo_Sales_DetailHallazgos');
+    var ctx = getFilterContext();
+    var out = Object.create(null);
+    periods.forEach(function(p){ out[p] = { sales:0, delivery:0, margin:0, qty:0, slices:Object.create(null) }; });
+    rows.forEach(function(r){
+      var p = txt(r[periodField]);
+      if(!out[p]) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      if(!rowMatchesEntity(r, spec)) return;
+      var s = num(r.Sales), m = num(r['Total Gross Margin']), q = num(r['Qty Sold']);
+      out[p].sales += s;
+      out[p].margin += m;
+      out[p].qty += q;
+      if(r.Is_Delivery === true || norm(r.Is_Delivery) === 'TRUE' || num(r.Is_Delivery) === 1) out[p].delivery += s;
+      if(sliceField){
+        var key = txt(r[sliceField]) || 'Sin dato';
+        var slot = out[p].slices[key] || (out[p].slices[key] = { sales:0, delivery:0, margin:0 });
+        slot.sales += s;
+        slot.margin += m;
+        if(r.Is_Delivery === true || norm(r.Is_Delivery) === 'TRUE' || num(r.Is_Delivery) === 1) slot.delivery += s;
+      }
+    });
+    return out;
+  }
+  function getTxRows(){ return getSheetRows(getMode() === 'mensual' ? 'Cubo_TX_Month_Fact' : 'Cubo_TX_Fact'); }
+  function aggregateTxByStore(){
+    var rows = getTxRows();
+    var ctx = getFilterContext();
+    var current = ctx.current;
+    var periodField = getMode() === 'mensual' ? 'CalMonth' : 'YearMonth';
+    var out = Object.create(null);
+    rows.forEach(function(r){
+      if(txt(r[periodField]) !== current) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      var st = txt(r.Store) || 'Sin tienda';
+      out[st] = (out[st] || 0) + num(r.Transactions);
+    });
+    return out;
+  }
+  function buildStoreKpiAnalysis(){
+    var ctx = getFilterContext();
+    var field = ctx.mode === 'mensual' ? 'CalMonth' : 'YearWeek';
+    var current = ctx.current;
+    var ly = shiftLy(current);
+    var salesRows = getSheetRows('Cubo_Sales_DetailHallazgos');
+    var txByStore = aggregateTxByStore();
+    var map = Object.create(null);
+    salesRows.forEach(function(r){
+      var p = txt(r[field]);
+      if(p !== current && p !== ly) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      var st = txt(r.Store) || 'Sin tienda';
+      var slot = map[st] || (map[st] = { store:st, sales:0, ly:0, margin:0 });
+      if(p === current){ slot.sales += num(r.Sales); slot.margin += num(r['Total Gross Margin']); }
+      if(p === ly){ slot.ly += num(r.Sales); }
+    });
+    var rows = Object.keys(map).map(function(k){
+      var r = map[k];
+      var tx = num(txByStore[r.store]);
+      var ticket = tx ? r.sales / tx : 0;
+      var marginPct = r.sales ? (r.margin / r.sales) * 100 : 0;
+      var delta = r.ly ? ((r.sales - r.ly) / r.ly) * 100 : 0;
+      return { store:r.store, sales:r.sales, ly:r.ly, delta:delta, tx:tx, ticket:ticket, margin:r.margin, marginPct:marginPct };
+    }).sort(function(a,b){ return b.sales - a.sales; });
+    var totalSales = rows.reduce(function(a,b){ return a + b.sales; }, 0);
+    var totalLy = rows.reduce(function(a,b){ return a + b.ly; }, 0);
+    var totalMargin = rows.reduce(function(a,b){ return a + b.margin; }, 0);
+    var totalTx = rows.reduce(function(a,b){ return a + b.tx; }, 0);
+    return {
+      type:'storeKpi',
+      rows: rows,
+      cards:[
+        {k:'Venta', v:fmtMoney(totalSales), s:'Corte actual filtrado'},
+        {k:'Delta vs LY', v:fmtDelta(totalLy ? ((totalSales-totalLy)/totalLy)*100 : 0), s:'Comparativo del mismo periodo LY'},
+        {k:'TX', v:fmtNum(totalTx), s:'Transacciones del periodo'},
+        {k:'Ticket', v:fmtMoney1(totalTx ? totalSales/totalTx : 0), s:'Venta / TX'},
+        {k:'Margen %', v:fmtPct(totalSales ? (totalMargin/totalSales)*100 : 0), s:'Margen bruto / venta'}
+      ],
+      answer:{
+        direct: rows.length ? ('La lectura hoy por tienda sí quedó resuelta con data real. ' + rows[0].store + ' lidera la venta del corte actual.') : 'No encontré datos de ventas/TX por tienda con el filtro actual.',
+        meaning: rows.length ? 'La decisión correcta no es ver venta aislada. Si una tienda vende pero diluye ticket o margen, la foto operativa queda incompleta.' : 'Revisá si el cubo cargado coincide con el periodo y las tiendas seleccionadas.',
+        action: rows.length ? ('Atacá primero ' + rows.slice(0,2).map(function(r){ return r.store; }).join(' y ') + ' para defender ticket y margen, y corregí la tienda con peor delta.') : 'Volvé a cargar el cubo y validá el filtro actual.',
+        more: rows.length ? 'Cruzar estas tiendas con share delivery, top categorías y SBF para separar presión comercial vs presión operativa.' : 'Luego correría una lectura por categoría y por daypart.',
+        priority: rows.length ? 'Alta.' : 'Media.',
+        kpi: 'Venta, Delta vs LY, TX, Ticket, Margen %.'
+      },
+      visual:{ kind:'table', title:'Scorecard por tienda', subtitle:'Venta, TX, ticket y margen bajo el filtro actual' }
+    };
+  }
+  function listPeriodsFromSheet(sheetName, field){
+    var key = 'periods::' + sheetName + '::' + field + '::' + getWorkbookStamp();
+    if(CACHE[key]) return CACHE[key];
+    var rows = getSheetRows(sheetName);
+    var map = Object.create(null);
+    rows.forEach(function(r){ var k = txt(r[field]); if(k) map[k] = 1; });
+    var arr = Object.keys(map).sort();
+    CACHE[key] = arr;
+    return arr;
+  }
+  function takeLastPeriodsFromSheet(sheetName, field, current, n){
+    var arr = listPeriodsFromSheet(sheetName, field);
+    if(!arr.length) return [];
+    var idx = current ? arr.indexOf(current) : -1;
+    if(idx === -1) idx = arr.length - 1;
+    var start = Math.max(0, idx - Math.max(0, (n || 1) - 1));
+    return arr.slice(start, idx + 1);
+  }
+  function detectRequestedPeriod(question, wantsWeeks){
+    var q = txt(question).toLowerCase();
+    if(wantsWeeks){
+      var m = q.match(/(?:semana|week|w)\s*0?(\d{1,2})(?:\D+|$).*?(20\d{2})/i) || q.match(/(20\d{2}).*?(?:semana|week|w)\s*0?(\d{1,2})/i);
+      if(!m){
+        var mw = q.match(/\b(20\d{2})\s*[-\/]?w\s*0?(\d{1,2})\b/i);
+        if(mw) return String(mw[1]) + '-W' + String(mw[2]).padStart(2,'0');
+      }
+      if(m){
+        var a = m[1], b = m[2];
+        var year = String(a).length === 4 ? a : b;
+        var week = String(a).length === 4 ? b : a;
+        if(year && week) return String(year) + '-W' + String(week).padStart(2,'0');
+      }
+      return '';
+    }
+    var m2 = q.match(/(20\d{2})[-\/]?(0[1-9]|1[0-2])/);
+    return m2 ? (String(m2[1]) + '-' + String(m2[2]).padStart(2,'0')) : '';
+  }
+  function aggregateHotDog(periodField, periods){
+    var rows = getSheetRows(periodField === 'YearWeek' ? 'Innovation_HotDog_Merma_Weekly' : 'Innovation_HotDog_Merma_Monthly');
+    var ctx = getFilterContext();
+    var out = Object.create(null);
+    periods.forEach(function(p){ out[p] = { qty:0, sales:0, margin:0, merma:0 }; });
+    rows.forEach(function(r){
+      var p = txt(r[periodField]);
+      if(!out[p]) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      out[p].qty += num(r['Qty Sold']);
+      out[p].sales += num(r.Sales);
+      out[p].margin += num(r.Margin);
+      out[p].merma += num(r.Merma);
+    });
+    return out;
+  }
+  function buildHotDogSeries(question){
+    var q = txt(question).toLowerCase();
+    var wantsWeeks = q.indexOf('mes') === -1 && (q.indexOf('seman') !== -1 || getMode() !== 'mensual');
+    var field = wantsWeeks ? 'YearWeek' : 'CalMonth';
+    var explicit = detectRequestedPeriod(question, wantsWeeks);
+    var current = explicit || (wantsWeeks && /^\d{4}-W\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : (!wantsWeeks && /^\d{4}-\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : ''));
+    var askedRange = /ultim[ao]s?|last|trend|tendencia|serie/i.test(q);
+    var count = explicit && !askedRange ? 1 : inferCount(question, wantsWeeks ? 6 : 3);
+    var periods = count === 1 && current ? [current] : takeLastPeriodsFromSheet(wantsWeeks ? 'Innovation_HotDog_Merma_Weekly' : 'Innovation_HotDog_Merma_Monthly', field, current, count);
+    if(!periods.length) return missingData('No pude obtener el periodo solicitado de Hot Dog desde el cubo cargado.');
+    var agg = aggregateHotDog(field, periods);
+    var rows = periods.map(function(p){
+      var cur = agg[p] || { qty:0, sales:0, margin:0, merma:0 };
+      var lyKey = shiftLy(p);
+      var lyAgg = aggregateHotDog(field, [lyKey])[lyKey] || { qty:0, sales:0 };
+      return {
+        period:p,
+        sales:cur.qty,
+        deliveryShare:0,
+        deltaLy:lyAgg.qty ? ((cur.qty - lyAgg.qty) / lyAgg.qty) * 100 : 0,
+        marginPct:pct(cur.margin, cur.sales),
+        qty:cur.qty,
+        salesAmt:cur.sales,
+        merma:cur.merma
+      };
+    });
+    var last = rows[rows.length - 1] || { qty:0, salesAmt:0, deltaLy:0, marginPct:0, merma:0 };
+    var totalQty = rows.reduce(function(a,b){ return a + num(b.qty); }, 0);
+    var totalSales = rows.reduce(function(a,b){ return a + num(b.salesAmt); }, 0);
+    var direct = count === 1
+      ? ('Sí encontré la data real de Hot Dog para ' + last.period + ': ' + fmtNum(last.qty) + ' unidades y delta vs LY de ' + fmtDelta(last.deltaLy) + '.')
+      : ('Sí encontré la serie real de Hot Dog y la resolví con unidades vendidas y delta vs LY desde el cubo.')
+    return {
+      type:'series',
+      rows:rows,
+      cards:[
+        {k:'Producto', v:'Hot Dog', s:'Motor local estructurado'},
+        {k:'Unidades', v:fmtNum(count === 1 ? last.qty : totalQty), s:(count === 1 ? ('Periodo ' + last.period) : ('Acumulado de ' + rows.length + ' periodos'))},
+        {k:'Venta', v:fmtMoney(count === 1 ? last.salesAmt : totalSales), s:(count === 1 ? 'Periodo consultado' : 'Venta acumulada')},
+        {k:'Delta vs LY', v:fmtDelta(last.deltaLy), s:'Último / periodo consultado'},
+        {k:'Margen %', v:fmtPct(last.marginPct), s:'Periodo consultado'}
+      ],
+      answer:{
+        direct: direct,
+        meaning:'El dato clave aquí es volumen real vendido. Si Hot Dog sube en unidades pero no traduce margen, el problema ya no es demanda: es mix, costo o ejecución.',
+        action:'Tomá el periodo consultado como punto de control y bajalo por tienda para validar dónde se acelera o se frena realmente.',
+        more:'Luego lo cruzaría contra ticket, daypart y venta Food Service para separar impulso real vs efecto de tráfico.',
+        priority: Math.abs(last.deltaLy) >= 5 ? 'Alta.' : 'Media.',
+        kpi:'Hot Dog vendidos, Delta vs LY, Venta $, Margen %, Venta por tienda.'
+      },
+      visual:{ kind:'series', title:'Hot Dog — ' + (count === 1 ? last.period : (wantsWeeks ? ('últimas ' + rows.length + ' semanas') : ('últimos ' + rows.length + ' meses'))), subtitle:'Serie local desde Innovation Hot Dog · unidades vendidas y delta vs LY', metricLabel:'Hot Dog vendidos', valueType:'units', hideShare:true, deltaLabel:'Delta vs LY %' }
+    };
+  }
+
+  function buildSeriesAnalysis(spec, question){
+    if(spec && spec.source === 'hotdog') return buildHotDogSeries(question);
+    if(!spec) return missingEntity('Necesito una categoría, departamento, marca o producto soportado para construir la serie local.');
+    var q = txt(question).toLowerCase();
+    var wantsWeeks = q.indexOf('seman') !== -1 || q.indexOf('week') !== -1 || getMode() !== 'mensual';
+    var explicit = detectRequestedPeriod(question, wantsWeeks);
+    var askedRange = /ultim[ao]s?|last|trend|tendencia|serie/i.test(q);
+    var count = explicit && !askedRange ? 1 : inferCount(question, wantsWeeks ? 6 : 3);
+    var field = wantsWeeks ? 'YearWeek' : 'CalMonth';
+    var current = explicit || (wantsWeeks && /^\d{4}-W\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : (!wantsWeeks && /^\d{4}-\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : ''));
+    var periods = count === 1 && current ? [current] : takeLastPeriods(field, current, count);
+    if(!periods.length) return missingData('No pude obtener periodos comparables desde el cubo cargado.');
+    var agg = aggregateSales(field, periods, spec, null);
+    var rows = periods.map(function(p){
+      var cur = agg[p] || { sales:0, delivery:0, margin:0 };
+      var lyKey = shiftLy(p);
+      var lyAgg = aggregateSales(field, [lyKey], spec, null)[lyKey] || { sales:0 };
+      return {
+        period:p,
+        sales:cur.sales,
+        deliveryShare:pct(cur.delivery, cur.sales),
+        deltaLy:lyAgg.sales ? ((cur.sales - lyAgg.sales) / lyAgg.sales) * 100 : 0,
+        marginPct:pct(cur.margin, cur.sales)
+      };
+    });
+    var last = rows[rows.length - 1];
+    var total = rows.reduce(function(a,b){ return a + b.sales; }, 0);
+    return {
+      type:'series',
+      rows:rows,
+      cards:[
+        {k:'Entidad', v:spec.value, s:'Motor local estructurado'},
+        {k:'Venta total', v:fmtMoney(total), s:(count === 1 ? ('Periodo ' + (last ? last.period : 'consultado')) : (wantsWeeks ? 'Últimas ' + rows.length + ' semanas' : 'Últimos ' + rows.length + ' meses'))},
+        {k:'Share delivery', v:fmtPct(last.deliveryShare), s:'Último periodo'},
+        {k:'Delta vs LY', v:fmtDelta(last.deltaLy), s:'Último / periodo consultado'},
+        {k:'Margen %', v:fmtPct(last.marginPct), s:'Último periodo'}
+      ],
+      answer:{
+        direct:(count === 1
+          ? ('Sí encontré la data real de ' + spec.value + ' para ' + (last ? last.period : 'el periodo consultado') + ' y ya la resolví con su delta vs LY.')
+          : ('Sí encontré la serie real de ' + spec.value + ' y la traduje a una lectura ejecutiva sobre venta, share delivery y delta vs LY.')),
+        meaning:'La combinación clave no es solo cuánto vende. Importa cuánto pesa delivery y si el movimiento contra LY viene por demanda real o por mezcla de canal.',
+        action:'Tomá el último periodo como foco. Si el share delivery sube pero el delta vs LY no acompaña, revisá surtido, precio y ejecución del canal.',
+        more:'Abriría la misma serie por tienda para separar qué parte del movimiento viene de mix comercial y qué parte viene de ejecución local.',
+        priority: Math.abs(last.deltaLy) >= 5 ? 'Alta.' : 'Media.',
+        kpi:'Venta, Share delivery, Delta vs LY, Margen %.'
+      },
+      visual:{ kind:'series', title: spec.value + ' — ' + (count === 1 ? (last ? last.period : 'periodo consultado') : (wantsWeeks ? ('últimas ' + rows.length + ' semanas') : ('últimos ' + rows.length + ' meses'))), subtitle:'Serie local desde el cubo real · venta, share delivery y delta vs LY' }
+    };
+  }
+  function buildPieAnalysis(spec){
+    if(!spec) return missingEntity('Necesito la categoría, departamento o marca para construir el gráfico de pastel con la data real.');
+    var ctx = getFilterContext();
+    var field = ctx.mode === 'mensual' ? 'CalMonth' : 'YearWeek';
+    var current = ctx.current;
+    var ly = shiftLy(current);
+    if(!current) return missingData('No tengo un periodo actual seleccionado para construir el gráfico.');
+    var sliceField = (ctx.stores.length > 1 || !ctx.stores.length) ? 'Store' : (spec.type === 'Department' ? 'Category' : (spec.type === 'Category' ? 'Brand' : 'Delivery_Channel'));
+    var currentAgg = aggregateSales(field, [current], spec, sliceField)[current] || { sales:0, slices:{} };
+    var lyAgg = aggregateSales(field, [ly], spec, sliceField)[ly] || { sales:0, slices:{} };
+    var rows = Object.keys(currentAgg.slices).map(function(k){
+      var cur = currentAgg.slices[k] || { sales:0 };
+      var prev = lyAgg.slices[k] || { sales:0 };
+      return { name:k || 'Sin dato', sales:cur.sales, share:pct(cur.sales, currentAgg.sales), deltaLy:prev.sales ? ((cur.sales - prev.sales) / prev.sales) * 100 : 0 };
+    }).filter(function(r){ return r.sales > 0; }).sort(function(a,b){ return b.sales - a.sales; });
+    if(rows.length > 8){
+      var keep = rows.slice(0,7);
+      var rest = rows.slice(7);
+      keep.push({ name:'Otros', sales: rest.reduce(function(a,b){ return a + b.sales; }, 0), share: rest.reduce(function(a,b){ return a + b.share; }, 0), deltaLy: rest.length ? rest.reduce(function(a,b){ return a + b.deltaLy; }, 0) / rest.length : 0 });
+      rows = keep;
+    }
+    if(!rows.length) return missingData('La entidad existe en el cubo, pero con el filtro actual no hay venta disponible para el gráfico de pastel.');
+    return {
+      type:'pie',
+      rows:rows,
+      cards:[
+        {k:'Entidad', v:spec.value, s:'Distribución actual'},
+        {k:'Venta', v:fmtMoney(currentAgg.sales), s:'Periodo actual'},
+        {k:'Slices', v:String(rows.length), s:'Bloques visibles'},
+        {k:'Delta vs LY', v:fmtDelta(lyAgg.sales ? ((currentAgg.sales - lyAgg.sales)/lyAgg.sales)*100 : 0), s:'Total de la entidad'}
+      ],
+      answer:{
+        direct:'Sí encontré la venta real de ' + spec.value + ' y armé el pastel con etiquetas y delta vs LY por bloque visible.',
+        meaning:'Este visual sirve para ver dónde está realmente concentrada la venta. El riesgo aparece cuando el peso está concentrado en pocos bloques y esos bloques además caen vs LY.',
+        action:'Defendé primero los slices más grandes y con peor delta. Ahí está la palanca más rápida para recuperar venta sin dispersar esfuerzo.',
+        more:'Después abriría el mismo corte por tienda y por canal para separar concentración sana vs concentración riesgosa.',
+        priority:'Alta.',
+        kpi:'Participación de venta, Delta vs LY por slice, concentración del top 3.'
+      },
+      visual:{ kind:'pie', title: spec.value + ' — distribución de venta', subtitle:'Pastel local con etiquetas de datos y delta vs LY por bloque' }
+    };
+  }
+  function aggregateByDepartment(periodField, current, compareLy){
+    var rows = getSheetRows('Cubo_Sales_DetailHallazgos');
+    var ctx = getFilterContext();
+    var ly = compareLy ? shiftLy(current) : '';
+    var map = Object.create(null);
+    rows.forEach(function(r){
+      var p = txt(r[periodField]);
+      if(p !== current && (!ly || p !== ly)) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      var dep = txt(r.Department) || 'Sin departamento';
+      var slot = map[dep] || (map[dep] = { name:dep, sales:0, margin:0, lySales:0, lyMargin:0 });
+      if(p === current){ slot.sales += num(r.Sales); slot.margin += num(r['Total Gross Margin']); }
+      if(ly && p === ly){ slot.lySales += num(r.Sales); slot.lyMargin += num(r['Total Gross Margin']); }
+    });
+    return Object.keys(map).map(function(k){
+      var r = map[k];
+      r.deltaSales = r.lySales ? ((r.sales - r.lySales) / r.lySales) * 100 : 0;
+      r.deltaMargin = r.lyMargin ? ((r.margin - r.lyMargin) / r.lyMargin) * 100 : 0;
+      r.impact = (r.sales - r.lySales);
+      return r;
+    }).sort(function(a,b){ return Math.abs(b.impact) - Math.abs(a.impact); });
+  }
+  function buildPriorityAnalysis(){
+    var ctx = getFilterContext();
+    var field = ctx.mode === 'mensual' ? 'CalMonth' : 'YearWeek';
+    var rows = aggregateByDepartment(field, ctx.current, true);
+    var negatives = rows.filter(function(r){ return r.deltaSales < 0 || r.deltaMargin < 0; }).sort(function(a,b){ return (a.deltaSales + a.deltaMargin) - (b.deltaSales + b.deltaMargin); }).slice(0,5);
+    var focus = negatives[0] || rows[0];
+    return {
+      type:'priority',
+      rows:negatives,
+      cards:[
+        {k:'Foco #1', v:focus ? focus.name : 'Sin dato', s:'Mayor presión combinada'},
+        {k:'Impacto $', v:focus ? fmtMoney(focus.impact) : '$0', s:'Vs LY en el corte actual'},
+        {k:'Delta venta', v:focus ? fmtDelta(focus.deltaSales) : '0%', s:'Departamento líder de presión'},
+        {k:'Delta margen', v:focus ? fmtDelta(focus.deltaMargin) : '0%', s:'Departamento líder de presión'}
+      ],
+      answer:{
+        direct: focus ? ('Priorizaría ' + focus.name + ' primero. Ahí se junta presión de venta y/o margen con impacto económico visible.') : 'No encontré suficiente data para priorizar con criterio.',
+        meaning:'La prioridad correcta no es el ruido comercial. Es la combinación de caída, tamaño económico e impacto sobre margen.',
+        action: focus ? ('Revisar surtido, precio, ejecución y promo de ' + focus.name + ' en el corte actual antes de dispersar recursos.') : 'Validá el periodo y las tiendas seleccionadas.',
+        more:'Abriría esa prioridad por tienda y por canal para ver si el problema es general o concentrado.',
+        priority:'Alta.',
+        kpi:'Impacto $, Delta venta vs LY, Delta margen vs LY, share de la categoría en la venta total.'
+      },
+      visual:{ kind:'ranking', title:'Prioridades para mover venta y margen', subtitle:'Ranking local por presión económica actual' }
+    };
+  }
+  function buildImpactAnalysis(){
+    var ctx = getFilterContext();
+    var field = ctx.mode === 'mensual' ? 'CalMonth' : 'YearWeek';
+    var rows = aggregateByDepartment(field, ctx.current, true).slice(0,8);
+    var top = rows[0];
+    return {
+      type:'impact',
+      rows:rows,
+      cards:[
+        {k:'Mayor impacto', v:top ? top.name : 'Sin dato', s:'Bloque económico líder'},
+        {k:'Impacto $', v:top ? fmtMoney(top.impact) : '$0', s:'Vs LY'},
+        {k:'Delta venta', v:top ? fmtDelta(top.deltaSales) : '0%', s:'Top impacto'},
+        {k:'Delta margen', v:top ? fmtDelta(top.deltaMargin) : '0%', s:'Top impacto'}
+      ],
+      answer:{
+        direct: top ? ('Hoy el mayor impacto económico está en ' + top.name + '.') : 'No encontré un driver económico claro con el filtro actual.',
+        meaning:'Ese bloque explica más movimiento real del negocio que muchos cambios pequeños dispersos.',
+        action: top ? ('Asignar seguimiento inmediato a ' + top.name + ' y revisar si la fuga es por volumen, mezcla o margen.') : 'Revisá el cubo y el periodo seleccionado.',
+        more:'Después compararía el mismo driver por tienda para ubicar exactamente dónde nace el impacto.',
+        priority: top && top.impact < 0 ? 'Alta.' : 'Media.',
+        kpi:'Impacto $, Delta venta vs LY, Delta margen vs LY.'
+      },
+      visual:{ kind:'ranking', title:'Mayor impacto económico', subtitle:'Ranking local por impacto vs LY' }
+    };
+  }
+  function getSbfRows(){ return getSheetRows(getMode() === 'mensual' ? 'Chart_SBF_Month_XF' : 'Cubo_SBF_Fact'); }
+  function buildSbfBlockerAnalysis(){
+    var rows = getSbfRows();
+    var ctx = getFilterContext();
+    var periodField = getMode() === 'mensual' ? 'CalMonth' : 'YearMonth';
+    var current = ctx.current;
+    var prev = ctx.prev && ctx.prev.length ? ctx.prev : [];
+    var map = Object.create(null);
+    rows.forEach(function(r){
+      var p = txt(r[periodField]);
+      if(p !== current && prev.indexOf(p) === -1) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      var key = txt(r.Provider) || 'Sin proveedor';
+      var slot = map[key] || (map[key] = { name:key, current:0, prev:0, dayparts:Object.create(null), stores:Object.create(null) });
+      if(p === current) slot.current += num(r.Transactions || r.TX);
+      else slot.prev += num(r.Transactions || r.TX);
+      if(p === current){
+        var dp = txt(r.Daypart) || 'Sin daypart';
+        var st = txt(r.Store) || 'Sin tienda';
+        slot.dayparts[dp] = (slot.dayparts[dp] || 0) + num(r.Transactions || r.TX);
+        slot.stores[st] = (slot.stores[st] || 0) + num(r.Transactions || r.TX);
+      }
+    });
+    var arr = Object.keys(map).map(function(k){
+      var r = map[k];
+      var base = prev.length ? (r.prev / prev.length) : r.prev;
+      r.delta = base ? ((r.current - base) / base) * 100 : 0;
+      r.block = r.current - base;
+      r.mainDaypart = Object.keys(r.dayparts).sort(function(a,b){ return r.dayparts[b] - r.dayparts[a]; })[0] || 'Sin dato';
+      r.mainStore = Object.keys(r.stores).sort(function(a,b){ return r.stores[b] - r.stores[a]; })[0] || 'Sin dato';
+      return r;
+    }).sort(function(a,b){ return a.delta - b.delta; }).slice(0,8);
+    var top = arr[0];
+    return {
+      type:'sbf',
+      rows:arr,
+      cards:[
+        {k:'Proveedor crítico', v:top ? top.name : 'Sin dato', s:'Mayor caída vs base comparable'},
+        {k:'Delta TX', v:top ? fmtDelta(top.delta) : '0%', s:'Proveedor crítico'},
+        {k:'Tienda foco', v:top ? top.mainStore : 'Sin dato', s:'Mayor peso actual'},
+        {k:'Daypart foco', v:top ? top.mainDaypart : 'Sin dato', s:'Mayor peso actual'}
+      ],
+      answer:{
+        direct: top ? ('SBF hoy se frena más por ' + top.name + '.') : 'No encontré una traba dominante en SBF con el filtro actual.',
+        meaning:'El cuello de botella real en SBF se detecta por proveedor, tienda y daypart, no solo por total agregado.',
+        action: top ? ('Revisar en ' + top.mainStore + ' y en ' + top.mainDaypart + ' si hay fricción operativa, visibilidad o abastecimiento del servicio de ' + top.name + '.') : 'Validar que el periodo y los comparativos estén bien aplicados.',
+        more:'Luego abriría la misma caída por hora para separar problema de ventana operativa vs problema de demanda.',
+        priority: top && top.delta < 0 ? 'Alta.' : 'Media.',
+        kpi:'TX SBF, Delta vs base comparable, concentración por proveedor, tienda y daypart.'
+      },
+      visual:{ kind:'ranking', title:'Qué está frenando SBF', subtitle:'Ranking local de proveedores vs base comparable' }
+    };
+  }
+  function buildGeneralExecutiveAnalysis(){ return buildImpactAnalysis(); }
+  function missingData(msg){
+    return { type:'empty', rows:[], cards:[], answer:{ direct:msg, meaning:'No voy a inventar data.', action:'Validá el cubo cargado, el periodo y el filtro actual.', more:'Cuando la data exista en el corte seleccionado, la resolveré localmente.', priority:'Media.', kpi:'Periodo, entidad, tiendas, cubo cargado.' }, visual:{ kind:'empty', title:'Sin visual disponible', subtitle:'No hay data suficiente en el corte actual' } };
+  }
+  function missingEntity(msg){ return missingData(msg); }
+  function detectIntent(question){
+    var q = txt(question).toLowerCase();
+    if(/sbf/.test(q) && /(frena|frenando|bloquea|bloqueando|traba)/.test(q)) return 'sbf';
+    if(/priorizar|mover venta y margen/.test(q)) return 'priority';
+    if(/impacto econ/.test(q)) return 'impact';
+    if(/tx/.test(q) && /ticket/.test(q) && /margen/.test(q) && /venta/.test(q) && /tienda/.test(q)) return 'storeKpi';
+    if(/pastel|pie|donut|dona/.test(q)) return 'pie';
+    if(/grafic|gráfic|compar|ultim|últim|serie|meses|semanas/.test(q)) return 'series';
+    return 'general';
+  }
+  function runLocal(question){
+    var kind = detectIntent(question);
+    var spec = detectEntity(question);
+    if(kind === 'storeKpi') return buildStoreKpiAnalysis();
+    if(kind === 'priority') return buildPriorityAnalysis();
+    if(kind === 'impact') return buildImpactAnalysis();
+    if(kind === 'sbf') return buildSbfBlockerAnalysis();
+    if(kind === 'pie') return buildPieAnalysis(spec);
+    if(kind === 'series') return buildSeriesAnalysis(spec, question);
+    return buildGeneralExecutiveAnalysis();
+  }
+  function ensureLabelPlugin(){
+    if(!window.Chart || pluginRegistered) return;
+    pluginRegistered = true;
+    try{
+      Chart.register({
+        id:'ampmCopilotLabels',
+        afterDatasetsDraw:function(chart){
+          var ctx = chart.ctx;
+          chart.data.datasets.forEach(function(ds, di){
+            if(!ds || !ds.showDataLabels) return;
+            var meta = chart.getDatasetMeta(di);
+            if(!meta || meta.hidden) return;
+            ctx.save();
+            ctx.font = '700 10px system-ui';
+            ctx.fillStyle = '#11284A';
+            meta.data.forEach(function(el, i){
+              var value = ds.data[i];
+              if(value == null) return;
+              if(chart.config.type === 'doughnut'){
+                var angle = (el.startAngle + el.endAngle) / 2;
+                var r = (el.innerRadius + el.outerRadius) / 2;
+                var x = el.x + Math.cos(angle) * r;
+                var y = el.y + Math.sin(angle) * r;
+                var label = ds.labelMode === 'pct' ? fmtPct0(value) : fmtMoney(value);
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x, y);
+              } else {
+                var p = el.tooltipPosition();
+                ctx.textAlign = 'center';
+                ctx.fillText(ds.labelMode === 'pct' ? fmtPct(value) : fmtMoney(value), p.x, p.y - 8);
+              }
+            });
+            ctx.restore();
+          });
+        }
+      });
+    }catch(_e){}
+  }
+  function destroyChart(){ try{ if(vizChart){ vizChart.destroy(); vizChart = null; } }catch(_e){ vizChart = null; } }
+  function renderPlaceholder(){
+    destroyChart();
+    var box = byId('ampmCopilotVizBox'); if(box) box.style.display = 'none';
+    var ph = byId('ampmCopilotVizPlaceholder'); if(ph) ph.style.display = 'flex';
+    var cards = byId('ampmCopilotVizCards'); if(cards) cards.innerHTML = '';
+    var list = byId('ampmCopilotVizList'); if(list) list.innerHTML = '';
+    var table = byId('ampmCopilotVizTable'); if(table) table.innerHTML = '';
+    var chips = byId('ampmCopilotVizChips'); if(chips) chips.innerHTML = '';
+    var title = byId('ampmCopilotVizTitle'); if(title) title.textContent = 'Espacio visual';
+    var sub = byId('ampmCopilotVizSub'); if(sub) sub.textContent = 'Gráficas, cards, scorecards o comparativos bajo demanda';
+  }
+  function renderCards(cards){
+    var box = byId('ampmCopilotVizCards'); if(!box) return; box.innerHTML = '';
+    (cards || []).forEach(function(c){
+      var el = document.createElement('div');
+      el.className = 'ampm-copilot-score';
+      el.innerHTML = '<div class="ampm-copilot-score-k">' + htmlEscape(c.k) + '</div><div class="ampm-copilot-score-v">' + htmlEscape(c.v) + '</div><div class="ampm-copilot-score-s">' + htmlEscape(c.s || '') + '</div>';
+      box.appendChild(el);
+    });
+  }
+  function renderList(rows, mode){
+    var wrap = byId('ampmCopilotVizList'); if(!wrap) return; wrap.innerHTML = '';
+    (rows || []).forEach(function(r, idx){
+      var right = mode === 'impact' || mode === 'priority' ? fmtMoney(r.impact) : (mode === 'sbf' ? fmtDelta(r.delta) : (r.period ? fmtMoney(r.sales) : fmtMoney(r.sales || 0)));
+      var sub = mode === 'sbf' ? ('Tienda foco: ' + (r.mainStore || '—') + ' · Daypart foco: ' + (r.mainDaypart || '—')) : (r.deltaSales != null ? ('Δ venta ' + fmtDelta(r.deltaSales) + ' · Δ margen ' + fmtDelta(r.deltaMargin)) : (r.deltaLy != null ? ('Δ vs LY ' + fmtDelta(r.deltaLy) + ' · share ' + fmtPct(r.share || 0)) : ''));
+      var el = document.createElement('div');
+      el.className = 'ampm-copilot-rank';
+      el.innerHTML = '<div class="ampm-copilot-rank-left"><div class="ampm-copilot-rank-name">' + htmlEscape((idx + 1) + '. ' + (r.name || r.store || r.period || 'Sin dato')) + '</div><div class="ampm-copilot-rank-sub">' + htmlEscape(sub) + '</div></div><div class="ampm-copilot-rank-val ' + clsDelta(mode === 'sbf' ? r.delta : (r.deltaLy || r.deltaSales || 0)) + '">' + htmlEscape(right) + '</div>';
+      wrap.appendChild(el);
+    });
+  }
+  function renderTable(rows, cols){
+    var host = byId('ampmCopilotVizTable'); if(!host) return; host.innerHTML = '';
+    var wrap = document.createElement('div'); wrap.className = 'ampm-copilot-table-wrap';
+    var table = document.createElement('table'); table.className = 'ampm-copilot-table';
+    var thead = document.createElement('thead');
+    thead.innerHTML = '<tr>' + cols.map(function(c){ return '<th>' + htmlEscape(c.label) + '</th>'; }).join('') + '</tr>';
+    var tbody = document.createElement('tbody');
+    (rows || []).forEach(function(r){
+      var tr = document.createElement('tr');
+      tr.innerHTML = cols.map(function(c){
+        var val = typeof c.render === 'function' ? c.render(r) : r[c.key];
+        return '<td class="' + (c.num ? 'num' : '') + '">' + htmlEscape(val == null ? '' : val) + '</td>';
+      }).join('');
+      tbody.appendChild(tr);
+    });
+    table.appendChild(thead); table.appendChild(tbody); wrap.appendChild(table); host.appendChild(wrap);
+  }
+  function renderChart(result){
+    destroyChart();
+    ensureLabelPlugin();
+    var canvas = byId('ampmCopilotVizCanvas'), box = byId('ampmCopilotVizBox'), ph = byId('ampmCopilotVizPlaceholder');
+    if(!canvas || !box || !window.Chart || !result || !result.visual || (result.visual.kind !== 'series' && result.visual.kind !== 'pie')){
+      if(ph) ph.style.display = 'flex';
+      if(box) box.style.display = 'none';
+      return;
+    }
+    if(ph) ph.style.display = 'none';
+    if(box) box.style.display = 'block';
+    var ctx = canvas.getContext('2d');
+    if(result.visual.kind === 'series'){
+      var primaryLabel = txt(result.visual.metricLabel || 'Venta');
+      var valueType = txt(result.visual.valueType || 'money').toLowerCase();
+      var showShare = !result.visual.hideShare;
+      var datasets = [
+        { label:primaryLabel, data:result.rows.map(function(r){ return Math.round(r.sales); }), backgroundColor:'rgba(0,94,167,.84)', borderRadius:8, yAxisID:'y', showDataLabels:false }
+      ];
+      if(showShare){
+        datasets.push({ label:'Share delivery %', data:result.rows.map(function(r){ return r.deliveryShare; }), type:'line', borderColor:'#F58320', backgroundColor:'#F58320', tension:.32, yAxisID:'y1', pointRadius:3 });
+      }
+      datasets.push({ label:txt(result.visual.deltaLabel || 'Delta vs LY %'), data:result.rows.map(function(r){ return r.deltaLy; }), type:'line', borderColor:'#11284A', backgroundColor:'#11284A', tension:.32, yAxisID:'y1', pointRadius:3 });
+      vizChart = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: result.rows.map(function(r){ return r.period; }), datasets: datasets },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{ position:'bottom', labels:{ boxWidth:12, color:'#11284A', font:{ weight:'700' } } },
+            tooltip:{ callbacks:{ label:function(ctx){
+              var isPrimary = ctx.dataset.yAxisID === 'y';
+              if(isPrimary){
+                var y = ctx.parsed.y;
+                return ctx.dataset.label + ': ' + (valueType === 'units' ? fmtNum(y) : fmtMoney(y));
+              }
+              return ctx.dataset.label + ': ' + fmtPct(ctx.parsed.y);
+            } } }
+          },
+          scales:{
+            y:{
+              beginAtZero:true,
+              ticks:{ callback:function(v){ return valueType === 'units' ? Number(v).toLocaleString('en-US') : ('$' + Number(v).toLocaleString('en-US')); }, color:'#334155' },
+              grid:{ color:'rgba(148,163,184,.18)' }
+            },
+            y1:{ beginAtZero:true, position:'right', ticks:{ callback:function(v){ return Number(v).toFixed(0) + '%'; }, color:'#334155' }, grid:{ drawOnChartArea:false } },
+            x:{ ticks:{ color:'#334155' }, grid:{ display:false } }
+          }
+        }
+      });
+    } else if(result.visual.kind === 'pie'){
+      vizChart = new Chart(ctx, {
+        type:'doughnut',
+        data:{
+          labels: result.rows.map(function(r){ return r.name; }),
+          datasets:[{ label:'Venta', data:result.rows.map(function(r){ return Math.round(r.sales); }), backgroundColor:['#005EA7','#F58320','#11284A','#FAA21E','#0C4D8F','#E67425','#7C98B6','#CED8E3'], borderColor:'#fff', borderWidth:2, hoverOffset:6, showDataLabels:true, labelMode:'money' }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, cutout:'54%',
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, color:'#11284A', font:{ weight:'700' } } }, tooltip:{ callbacks:{ label:function(ctx){ var row = result.rows[ctx.dataIndex]; return row.name + ': ' + fmtMoney(row.sales) + ' · ' + fmtPct(row.share) + ' · Δ ' + fmtDelta(row.deltaLy); } } } }
+        }
+      });
+    }
+  }
+  function renderVisual(result){
+    var title = byId('ampmCopilotVizTitle'); if(title) title.textContent = (result && result.visual && result.visual.title) || 'Espacio visual';
+    var sub = byId('ampmCopilotVizSub'); if(sub) sub.textContent = (result && result.visual && result.visual.subtitle) || 'Gráficas, cards, scorecards o comparativos bajo demanda';
+    var chips = byId('ampmCopilotVizChips');
+    if(chips){
+      chips.innerHTML = '';
+      ['Motor local','Data real','Corte actual'].forEach(function(t, idx){
+        var c = document.createElement('span');
+        c.className = 'ampm-copilot-pill ' + (idx===0?'blue':(idx===1?'orange':''));
+        c.textContent = t;
+        chips.appendChild(c);
+      });
+    }
+    renderCards(result.cards || []);
+    renderList([], '');
+    renderTable([], []);
+    renderChart(result);
+    if(result.type === 'priority' || result.type === 'impact' || result.type === 'sbf') renderList(result.rows, result.type);
+    if(result.type === 'pie'){
+      renderList(result.rows, 'pie');
+      renderTable(result.rows, [
+        {label:'Bloque', key:'name'},
+        {label:'Venta', num:true, render:function(r){ return fmtMoney(r.sales); }},
+        {label:'Share', num:true, render:function(r){ return fmtPct(r.share); }},
+        {label:'Delta vs LY', num:true, render:function(r){ return fmtDelta(r.deltaLy); }}
+      ]);
+    }
+    if(result.type === 'storeKpi'){
+      renderTable(result.rows, [
+        {label:'Tienda', key:'store'},
+        {label:'Venta', num:true, render:function(r){ return fmtMoney(r.sales); }},
+        {label:'TX', num:true, render:function(r){ return fmtNum(r.tx); }},
+        {label:'Ticket', num:true, render:function(r){ return fmtMoney1(r.ticket); }},
+        {label:'Margen %', num:true, render:function(r){ return fmtPct(r.marginPct); }},
+        {label:'Delta vs LY', num:true, render:function(r){ return fmtDelta(r.delta); }}
+      ]);
+    }
+    if(result.type === 'series'){
+      renderTable(result.rows, [
+        {label:'Periodo', key:'period'},
+        {label:'Venta', num:true, render:function(r){ return fmtMoney(r.sales); }},
+        {label:'Share delivery', num:true, render:function(r){ return fmtPct(r.deliveryShare); }},
+        {label:'Delta vs LY', num:true, render:function(r){ return fmtDelta(r.deltaLy); }},
+        {label:'Margen %', num:true, render:function(r){ return fmtPct(r.marginPct); }}
+      ]);
+    }
+  }
+  function buildAnswerHtml(answer){
+    var blocks = [
+      ['Respuesta directa', answer.direct],
+      ['Qué significa para el negocio', answer.meaning],
+      ['Acción inmediata', answer.action],
+      ['Qué más haría', answer.more],
+      ['Prioridad', answer.priority],
+      ['KPI sugerido', answer.kpi]
+    ];
+    return blocks.map(function(pair){ return '<div class="ampm-copilot-block"><div class="ampm-copilot-block-title">' + htmlEscape(pair[0]) + '</div><div class="ampm-copilot-block-text">' + htmlEscape(pair[1]) + '</div></div>'; }).join('');
+  }
+  function addMessage(role, html, meta){
+    var wrap = byId('ampmCopilotMessages'), empty = byId('ampmCopilotEmpty');
+    if(!wrap) return;
+    if(empty) empty.style.display = 'none';
+    var node = document.createElement('div');
+    node.className = 'ampm-copilot-msg ' + role;
+    node.innerHTML = '<div class="ampm-copilot-msg-top"><div class="ampm-copilot-msg-role">' + (role === 'user' ? 'Pregunta' : 'Copiloto') + '</div><div class="ampm-copilot-msg-meta">' + htmlEscape(meta || '') + '</div></div><div class="ampm-copilot-msg-body">' + html + '</div>';
+    wrap.appendChild(node);
+    wrap.scrollTop = wrap.scrollHeight + 500;
+  }
+  function setThinking(on){
+    var id = 'ampmCopilotThinking';
+    var prev = byId(id); if(prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    if(!on) return;
+    var wrap = byId('ampmCopilotMessages'), empty = byId('ampmCopilotEmpty');
+    if(!wrap) return;
+    if(empty) empty.style.display = 'none';
+    var node = document.createElement('div');
+    node.className = 'ampm-copilot-msg assistant';
+    node.id = id;
+    node.innerHTML = '<div class="ampm-copilot-msg-top"><div class="ampm-copilot-msg-role">Copiloto</div><div class="ampm-copilot-msg-meta">analizando</div></div><div class="ampm-copilot-msg-body"><p>Resolviendo la pregunta con la data real del cubo…</p></div>';
+    wrap.appendChild(node);
+    wrap.scrollTop = wrap.scrollHeight + 500;
+  }
+  function clearConversation(){
+    var wrap = byId('ampmCopilotMessages'), empty = byId('ampmCopilotEmpty');
+    if(wrap) wrap.innerHTML = '';
+    if(empty) empty.style.display = '';
+    renderPlaceholder();
+  }
+  function getAuthUser(){
+    try{
+      var raw = sessionStorage.getItem('ampm_report_auth_v1');
+      if(!raw) return '';
+      var obj = JSON.parse(raw);
+      return txt(obj.user || obj.username || obj.id || '');
+    }catch(_e){ return ''; }
+  }
+  function getActiveTab(){
+    var btn = document.querySelector('.tabBtn.active[data-tab]');
+    return txt(btn && btn.getAttribute('data-tab')).toLowerCase();
+  }
+  function shouldShow(){
+    return document.body.classList.contains('auth-ok') && getAuthUser().toLowerCase() === 'admin' && getActiveTab() === 'resumen';
+  }
+  function purgeLegacyRuntime(){
+    ['autoExecutive','autoExecutivePanel','autoKeyPanel','radar','radarExec'].forEach(function(id){ var el=byId(id); if(el && el.parentNode) el.parentNode.removeChild(el); });
+    document.querySelectorAll('[id^="ampmAi"], [id^="ampm-ai"]').forEach(function(el){
+      if(el && el.id !== 'ampmCopilotHost' && !el.closest('#ampmCopilotHost')){
+        if(el.parentNode) el.parentNode.removeChild(el);
+      }
+    });
+    try{ window.renderExecutiveRadar = function(){ return null; }; }catch(_e){}
+    try{ window.renderAutoExecutiveSummary = function(){ return null; }; }catch(_e){}
+  }
+  function ensureHost(){
+    host = byId('ampmCopilotHost');
+    if(!host){
+      var biz = byId('ampmBizSection');
+      if(biz && biz.parentNode){
+        host = document.createElement('div');
+        host.id = 'ampmCopilotHost';
+        host.setAttribute('data-tabpage','resumen');
+        biz.parentNode.insertBefore(host, biz);
+      }
+    }
+    if(!host) return null;
+    if(host.__built) return host;
+    host.__built = true;
+    host.innerHTML = ''
+      + '<section class="ampm-copilot-shell" id="ampmCopilotShell">'
+      +   '<div class="ampm-copilot-top">'
+      +     '<div><div class="ampm-copilot-title">Copiloto ejecutivo</div><div class="ampm-copilot-sub">Motor local estructurado + lectura ejecutiva. Resuelve series y comparativos desde el cubo real; no depende de adivinar lo que está visible en pantalla.</div></div>'
+      +     '<div class="ampm-copilot-tools"><span class="ampm-copilot-pill blue">Solo Resumen</span><span class="ampm-copilot-pill orange">Solo admin</span><button class="ampm-copilot-btn" id="ampmCopilotClearBtn" type="button">Limpiar</button></div>'
+      +   '</div>'
+      +   '<div class="ampm-copilot-grid">'
+      +     '<div class="ampm-copilot-pane left">'
+      +       '<div class="ampm-copilot-pane-head"><div><div class="ampm-copilot-pane-title">Consulta y lectura</div><div class="ampm-copilot-pane-sub">Historial con scroll, formato ejecutivo y respuesta local basada en el Excel compactado.</div></div></div>'
+      +       '<div class="ampm-copilot-history" id="ampmCopilotMessages">'
+      +         '<div class="ampm-copilot-empty" id="ampmCopilotEmpty"><strong>Listo para responder.</strong><br>Ejemplos:<br>• gráficame las últimas 6 semanas de Vapes con share delivery y delta vs LY<br>• hazme un gráfico de pastel de la venta de Licores con delta vs LY y etiquetas de datos<br>• qué priorizarías esta semana para mover venta y margen<br>• dónde está el mayor impacto económico hoy<br>• qué me está frenando SBF</div>'
+      +       '</div>'
+      +       '<div class="ampm-copilot-input-wrap">'
+      +         '<div class="ampm-copilot-input-row">'
+      +           '<textarea class="ampm-copilot-textarea" id="ampmCopilotInput" placeholder="Escribe tu pregunta sobre la data…" rows="3"></textarea>'
+      +           '<button class="ampm-copilot-send" id="ampmCopilotSend" type="button">▶</button>'
+      +         '</div>'
+      +         '<div class="ampm-copilot-footer"><span>Motor local · sin inventar data · orden ejecutivo</span><span id="ampmCopilotMeta">Cubo no cargado</span></div>'
+      +       '</div>'
+      +     '</div>'
+      +     '<div class="ampm-copilot-pane right">'
+      +       '<div class="ampm-copilot-viz-head"><div><div class="ampm-copilot-viz-title" id="ampmCopilotVizTitle">Espacio visual</div><div class="ampm-copilot-viz-sub" id="ampmCopilotVizSub">Gráficas, cards, scorecards o comparativos bajo demanda.</div></div><button class="ampm-copilot-btn primary" id="ampmCopilotVizClear" type="button">Limpiar visual</button></div>'
+      +       '<div class="ampm-copilot-viz-chips" id="ampmCopilotVizChips"></div>'
+      +       '<div class="ampm-copilot-viz-placeholder" id="ampmCopilotVizPlaceholder"><div><strong>Panel visual reservado</strong><br>Cuando pidas una gráfica, scorecard, ranking o comparativo, aparecerá aquí usando la data real del cubo.</div></div>'
+      +       '<div class="ampm-copilot-viz-box" id="ampmCopilotVizBox" style="display:none"><div class="ampm-copilot-canvas-wrap"><div class="ampm-copilot-canvas"><canvas id="ampmCopilotVizCanvas"></canvas></div></div></div>'
+      +       '<div class="ampm-copilot-vcards" id="ampmCopilotVizCards"></div>'
+      +       '<div class="ampm-copilot-vlist" id="ampmCopilotVizList"></div>'
+      +       '<div id="ampmCopilotVizTable"></div>'
+      +     '</div>'
+      +   '</div>'
+      + '</section>';
+    byId('ampmCopilotSend').addEventListener('click', function(){ handleQuestion(); });
+    byId('ampmCopilotInput').addEventListener('keydown', function(ev){ if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); handleQuestion(); } });
+    byId('ampmCopilotClearBtn').addEventListener('click', clearConversation);
+    byId('ampmCopilotVizClear').addEventListener('click', renderPlaceholder);
+    renderPlaceholder();
+    syncMeta();
+    return host;
+  }
+  function syncMeta(){
+    var meta = byId('ampmCopilotMeta'); if(!meta) return;
+    var wb = getWorkbook();
+    if(!wb){ meta.textContent = 'Cubo no cargado'; return; }
+    var ctx = getFilterContext();
+    meta.textContent = 'Modo ' + ctx.mode + ' · periodo ' + (ctx.current || '—') + ' · tiendas ' + ((ctx.stores && ctx.stores.length) ? ctx.stores.join(', ') : 'todas');
+  }
+  function syncVisibility(){
+    purgeLegacyRuntime();
+    ensureHost();
+    var shell = byId('ampmCopilotShell'); if(!shell) return;
+    var show = shouldShow();
+    shell.classList.toggle('is-visible', !!show);
+    shell.style.display = show ? 'block' : 'none';
+    host.hidden = !show;
+    host.setAttribute('aria-hidden', show ? 'false' : 'true');
+    syncMeta();
+  }
+  function handleQuestion(){
+    var input = byId('ampmCopilotInput');
+    var question = txt(input && input.value);
+    if(!question) return;
+    addMessage('user', '<p>' + htmlEscape(question) + '</p>', 'consulta');
+    if(input) input.value = '';
+    setThinking(true);
+    setTimeout(function(){
+      var result = runLocal(question);
+      setThinking(false);
+      addMessage('assistant', buildAnswerHtml(result.answer), (result.type || 'local') + ' · data real');
+      renderVisual(result);
+      syncMeta();
+    }, 30);
+  }
+
+  window.__ampmCopilotTest = {
+    detectIntent: detectIntent,
+    detectEntity: detectEntity,
+    runLocal: runLocal,
+    shouldShow: shouldShow,
+    syncVisibility: syncVisibility
+  };
+
+  function boot(){ ensureHost(); syncVisibility(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
+  window.addEventListener('load', syncVisibility);
+  document.addEventListener('click', function(){ setTimeout(syncVisibility, 60); }, true);
+  document.addEventListener('change', function(){ setTimeout(syncMeta, 50); setTimeout(syncVisibility, 60); }, true);
+  window.addEventListener('storage', syncVisibility);
+  try{ new MutationObserver(function(){ syncVisibility(); }).observe(document.documentElement, { subtree:true, attributes:true, attributeFilter:['class'] }); }catch(_e){}
+})();
 </script>
-<script src="./ampm_copilot_engine.js"></script>
+
+
+<style id="ampm-copilot-visibility-patch-v1">
+#ampmCopilotHost{display:block;width:100%;margin:0 0 18px;}
+#ampmCopilotHost[hidden]{display:none !important;}
+body.auth-ok #ampmCopilotHost[data-force-visible="1"]{display:block !important;}
+body.auth-ok #ampmCopilotHost[data-force-visible="1"] .ampm-copilot-shell{display:block !important;}
+</style>
+<script id="ampm-copilot-visibility-patch-script-v1">
+(function(){
+  if(window.__AMPM_COPILOT_VIS_PATCH_V1__) return;
+  window.__AMPM_COPILOT_VIS_PATCH_V1__ = true;
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function getAuthUser(){
+    try{
+      var raw = sessionStorage.getItem('ampm_report_auth_v1');
+      if(!raw) return '';
+      var obj = JSON.parse(raw);
+      return txt(obj.user || obj.username || obj.id || '').toLowerCase();
+    }catch(_e){ return ''; }
+  }
+  function getActiveTab(){
+    var btn = document.querySelector('.tabBtn.active[data-tab]');
+    return txt(btn && btn.getAttribute('data-tab')).toLowerCase();
+  }
+  function shouldShow(){
+    return document.body.classList.contains('auth-ok') && getAuthUser() === 'admin' && getActiveTab() === 'resumen';
+  }
+  function enforce(){
+    var host = document.getElementById('ampmCopilotHost');
+    if(!host) return;
+    try{
+      if(window.__ampmCopilotTest && typeof window.__ampmCopilotTest.syncVisibility === 'function'){
+        window.__ampmCopilotTest.syncVisibility();
+      }
+    }catch(_e){}
+    var shell = document.getElementById('ampmCopilotShell');
+    var show = shouldShow();
+    host.setAttribute('data-force-visible', show ? '1' : '0');
+    host.hidden = !show;
+    host.setAttribute('aria-hidden', show ? 'false' : 'true');
+    if(shell){
+      shell.style.display = show ? 'block' : 'none';
+      shell.classList.toggle('is-visible', !!show);
+    }
+  }
+  function bind(){
+    enforce();
+    ['click','change','keyup'].forEach(function(evt){
+      document.addEventListener(evt, function(){ setTimeout(enforce, 40); }, true);
+    });
+    window.addEventListener('load', function(){ setTimeout(enforce, 60); });
+    window.addEventListener('ampm:authchanged', function(){ setTimeout(enforce, 40); });
+    window.addEventListener('storage', function(){ setTimeout(enforce, 40); });
+    try{
+      new MutationObserver(function(){ setTimeout(enforce, 20); }).observe(document.documentElement, { subtree:true, attributes:true, childList:false, attributeFilter:['class'] });
+    }catch(_e){}
+    setTimeout(enforce, 120);
+    setTimeout(enforce, 400);
+    setTimeout(enforce, 900);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
+  else bind();
+})();
+</script>
 
 </body>
 </html>
