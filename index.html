@@ -56835,6 +56835,7 @@ function innovationOnePagerCreateBrandedShell(){
   function detectEntity(question){
     var qn = norm(question);
     var alias = [
+      { type:'InnovationItem', value:'Hot Dog', source:'hotdog', keys:['HOTDOG','HOT DOG','PERRO CALIENTE','HOTDOGS','HOT DOGS'] },
       { type:'Category', value:'Vapes', keys:['VAPES'] },
       { type:'Department', value:'Licores', keys:['LICORES'] },
       { type:'Department', value:'Cervezas y RTD', keys:['CERVEZAS','RTD'] }
@@ -56851,6 +56852,7 @@ function innovationOnePagerCreateBrandedShell(){
   function entityField(spec){ return spec && spec.type === 'Department' ? 'Department' : (spec && spec.type === 'Brand' ? 'Brand' : 'Category'); }
   function rowMatchesEntity(row, spec){
     if(!spec) return true;
+    if(spec && spec.type === 'InnovationItem') return true;
     var field = entityField(spec);
     return norm(row[field]) === norm(spec.value);
   }
@@ -56962,14 +56964,125 @@ function innovationOnePagerCreateBrandedShell(){
       visual:{ kind:'table', title:'Scorecard por tienda', subtitle:'Venta, TX, ticket y margen bajo el filtro actual' }
     };
   }
+  function listPeriodsFromSheet(sheetName, field){
+    var key = 'periods::' + sheetName + '::' + field + '::' + getWorkbookStamp();
+    if(CACHE[key]) return CACHE[key];
+    var rows = getSheetRows(sheetName);
+    var map = Object.create(null);
+    rows.forEach(function(r){ var k = txt(r[field]); if(k) map[k] = 1; });
+    var arr = Object.keys(map).sort();
+    CACHE[key] = arr;
+    return arr;
+  }
+  function takeLastPeriodsFromSheet(sheetName, field, current, n){
+    var arr = listPeriodsFromSheet(sheetName, field);
+    if(!arr.length) return [];
+    var idx = current ? arr.indexOf(current) : -1;
+    if(idx === -1) idx = arr.length - 1;
+    var start = Math.max(0, idx - Math.max(0, (n || 1) - 1));
+    return arr.slice(start, idx + 1);
+  }
+  function detectRequestedPeriod(question, wantsWeeks){
+    var q = txt(question).toLowerCase();
+    if(wantsWeeks){
+      var m = q.match(/(?:semana|week|w)\s*0?(\d{1,2})(?:\D+|$).*?(20\d{2})/i) || q.match(/(20\d{2}).*?(?:semana|week|w)\s*0?(\d{1,2})/i);
+      if(!m){
+        var mw = q.match(/\b(20\d{2})\s*[-\/]?w\s*0?(\d{1,2})\b/i);
+        if(mw) return String(mw[1]) + '-W' + String(mw[2]).padStart(2,'0');
+      }
+      if(m){
+        var a = m[1], b = m[2];
+        var year = String(a).length === 4 ? a : b;
+        var week = String(a).length === 4 ? b : a;
+        if(year && week) return String(year) + '-W' + String(week).padStart(2,'0');
+      }
+      return '';
+    }
+    var m2 = q.match(/(20\d{2})[-\/]?(0[1-9]|1[0-2])/);
+    return m2 ? (String(m2[1]) + '-' + String(m2[2]).padStart(2,'0')) : '';
+  }
+  function aggregateHotDog(periodField, periods){
+    var rows = getSheetRows(periodField === 'YearWeek' ? 'Innovation_HotDog_Merma_Weekly' : 'Innovation_HotDog_Merma_Monthly');
+    var ctx = getFilterContext();
+    var out = Object.create(null);
+    periods.forEach(function(p){ out[p] = { qty:0, sales:0, margin:0, merma:0 }; });
+    rows.forEach(function(r){
+      var p = txt(r[periodField]);
+      if(!out[p]) return;
+      if(!passesStore(r, ctx.stores)) return;
+      if(!passesDow(r, ctx.dows)) return;
+      out[p].qty += num(r['Qty Sold']);
+      out[p].sales += num(r.Sales);
+      out[p].margin += num(r.Margin);
+      out[p].merma += num(r.Merma);
+    });
+    return out;
+  }
+  function buildHotDogSeries(question){
+    var q = txt(question).toLowerCase();
+    var wantsWeeks = q.indexOf('mes') === -1 && (q.indexOf('seman') !== -1 || getMode() !== 'mensual');
+    var field = wantsWeeks ? 'YearWeek' : 'CalMonth';
+    var explicit = detectRequestedPeriod(question, wantsWeeks);
+    var current = explicit || (wantsWeeks && /^\d{4}-W\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : (!wantsWeeks && /^\d{4}-\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : ''));
+    var askedRange = /ultim[ao]s?|last|trend|tendencia|serie/i.test(q);
+    var count = explicit && !askedRange ? 1 : inferCount(question, wantsWeeks ? 6 : 3);
+    var periods = count === 1 && current ? [current] : takeLastPeriodsFromSheet(wantsWeeks ? 'Innovation_HotDog_Merma_Weekly' : 'Innovation_HotDog_Merma_Monthly', field, current, count);
+    if(!periods.length) return missingData('No pude obtener el periodo solicitado de Hot Dog desde el cubo cargado.');
+    var agg = aggregateHotDog(field, periods);
+    var rows = periods.map(function(p){
+      var cur = agg[p] || { qty:0, sales:0, margin:0, merma:0 };
+      var lyKey = shiftLy(p);
+      var lyAgg = aggregateHotDog(field, [lyKey])[lyKey] || { qty:0, sales:0 };
+      return {
+        period:p,
+        sales:cur.qty,
+        deliveryShare:0,
+        deltaLy:lyAgg.qty ? ((cur.qty - lyAgg.qty) / lyAgg.qty) * 100 : 0,
+        marginPct:pct(cur.margin, cur.sales),
+        qty:cur.qty,
+        salesAmt:cur.sales,
+        merma:cur.merma
+      };
+    });
+    var last = rows[rows.length - 1] || { qty:0, salesAmt:0, deltaLy:0, marginPct:0, merma:0 };
+    var totalQty = rows.reduce(function(a,b){ return a + num(b.qty); }, 0);
+    var totalSales = rows.reduce(function(a,b){ return a + num(b.salesAmt); }, 0);
+    var direct = count === 1
+      ? ('Sí encontré la data real de Hot Dog para ' + last.period + ': ' + fmtNum(last.qty) + ' unidades y delta vs LY de ' + fmtDelta(last.deltaLy) + '.')
+      : ('Sí encontré la serie real de Hot Dog y la resolví con unidades vendidas y delta vs LY desde el cubo.')
+    return {
+      type:'series',
+      rows:rows,
+      cards:[
+        {k:'Producto', v:'Hot Dog', s:'Motor local estructurado'},
+        {k:'Unidades', v:fmtNum(count === 1 ? last.qty : totalQty), s:(count === 1 ? ('Periodo ' + last.period) : ('Acumulado de ' + rows.length + ' periodos'))},
+        {k:'Venta', v:fmtMoney(count === 1 ? last.salesAmt : totalSales), s:(count === 1 ? 'Periodo consultado' : 'Venta acumulada')},
+        {k:'Delta vs LY', v:fmtDelta(last.deltaLy), s:'Último / periodo consultado'},
+        {k:'Margen %', v:fmtPct(last.marginPct), s:'Periodo consultado'}
+      ],
+      answer:{
+        direct: direct,
+        meaning:'El dato clave aquí es volumen real vendido. Si Hot Dog sube en unidades pero no traduce margen, el problema ya no es demanda: es mix, costo o ejecución.',
+        action:'Tomá el periodo consultado como punto de control y bajalo por tienda para validar dónde se acelera o se frena realmente.',
+        more:'Luego lo cruzaría contra ticket, daypart y venta Food Service para separar impulso real vs efecto de tráfico.',
+        priority: Math.abs(last.deltaLy) >= 5 ? 'Alta.' : 'Media.',
+        kpi:'Hot Dog vendidos, Delta vs LY, Venta $, Margen %, Venta por tienda.'
+      },
+      visual:{ kind:'series', title:'Hot Dog — ' + (count === 1 ? last.period : (wantsWeeks ? ('últimas ' + rows.length + ' semanas') : ('últimos ' + rows.length + ' meses'))), subtitle:'Serie local desde Innovation Hot Dog · unidades vendidas y delta vs LY', metricLabel:'Hot Dog vendidos', valueType:'units', hideShare:true, deltaLabel:'Delta vs LY %' }
+    };
+  }
+
   function buildSeriesAnalysis(spec, question){
-    if(!spec) return missingEntity('Necesito una categoría, departamento o marca para construir la serie local.');
+    if(spec && spec.source === 'hotdog') return buildHotDogSeries(question);
+    if(!spec) return missingEntity('Necesito una categoría, departamento, marca o producto soportado para construir la serie local.');
     var q = txt(question).toLowerCase();
     var wantsWeeks = q.indexOf('seman') !== -1 || q.indexOf('week') !== -1 || getMode() !== 'mensual';
-    var count = inferCount(question, wantsWeeks ? 6 : 3);
+    var explicit = detectRequestedPeriod(question, wantsWeeks);
+    var askedRange = /ultim[ao]s?|last|trend|tendencia|serie/i.test(q);
+    var count = explicit && !askedRange ? 1 : inferCount(question, wantsWeeks ? 6 : 3);
     var field = wantsWeeks ? 'YearWeek' : 'CalMonth';
-    var current = wantsWeeks && /\d{4}-W\d{2}/.test(getCurrentPeriod()) ? getCurrentPeriod() : (!wantsWeeks && /^\d{4}-\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : '');
-    var periods = takeLastPeriods(field, current, count);
+    var current = explicit || (wantsWeeks && /^\d{4}-W\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : (!wantsWeeks && /^\d{4}-\d{2}$/.test(getCurrentPeriod()) ? getCurrentPeriod() : ''));
+    var periods = count === 1 && current ? [current] : takeLastPeriods(field, current, count);
     if(!periods.length) return missingData('No pude obtener periodos comparables desde el cubo cargado.');
     var agg = aggregateSales(field, periods, spec, null);
     var rows = periods.map(function(p){
@@ -56991,20 +57104,22 @@ function innovationOnePagerCreateBrandedShell(){
       rows:rows,
       cards:[
         {k:'Entidad', v:spec.value, s:'Motor local estructurado'},
-        {k:'Venta total', v:fmtMoney(total), s:(wantsWeeks ? 'Últimas ' + rows.length + ' semanas' : 'Últimos ' + rows.length + ' meses')},
+        {k:'Venta total', v:fmtMoney(total), s:(count === 1 ? ('Periodo ' + (last ? last.period : 'consultado')) : (wantsWeeks ? 'Últimas ' + rows.length + ' semanas' : 'Últimos ' + rows.length + ' meses'))},
         {k:'Share delivery', v:fmtPct(last.deliveryShare), s:'Último periodo'},
-        {k:'Delta vs LY', v:fmtDelta(last.deltaLy), s:'Último periodo'},
+        {k:'Delta vs LY', v:fmtDelta(last.deltaLy), s:'Último / periodo consultado'},
         {k:'Margen %', v:fmtPct(last.marginPct), s:'Último periodo'}
       ],
       answer:{
-        direct:'Sí encontré la serie real de ' + spec.value + ' y la traduje a una lectura ejecutiva sobre venta, share delivery y delta vs LY.',
+        direct:(count === 1
+          ? ('Sí encontré la data real de ' + spec.value + ' para ' + (last ? last.period : 'el periodo consultado') + ' y ya la resolví con su delta vs LY.')
+          : ('Sí encontré la serie real de ' + spec.value + ' y la traduje a una lectura ejecutiva sobre venta, share delivery y delta vs LY.')),
         meaning:'La combinación clave no es solo cuánto vende. Importa cuánto pesa delivery y si el movimiento contra LY viene por demanda real o por mezcla de canal.',
         action:'Tomá el último periodo como foco. Si el share delivery sube pero el delta vs LY no acompaña, revisá surtido, precio y ejecución del canal.',
         more:'Abriría la misma serie por tienda para separar qué parte del movimiento viene de mix comercial y qué parte viene de ejecución local.',
         priority: Math.abs(last.deltaLy) >= 5 ? 'Alta.' : 'Media.',
         kpi:'Venta, Share delivery, Delta vs LY, Margen %.'
       },
-      visual:{ kind:'series', title: spec.value + ' — ' + (wantsWeeks ? ('últimas ' + rows.length + ' semanas') : ('últimos ' + rows.length + ' meses')), subtitle:'Serie local desde el cubo real · venta, share delivery y delta vs LY' }
+      visual:{ kind:'series', title: spec.value + ' — ' + (count === 1 ? (last ? last.period : 'periodo consultado') : (wantsWeeks ? ('últimas ' + rows.length + ' semanas') : ('últimos ' + rows.length + ' meses'))), subtitle:'Serie local desde el cubo real · venta, share delivery y delta vs LY' }
     };
   }
   function buildPieAnalysis(spec){
@@ -57303,20 +57418,41 @@ function innovationOnePagerCreateBrandedShell(){
     if(box) box.style.display = 'block';
     var ctx = canvas.getContext('2d');
     if(result.visual.kind === 'series'){
+      var primaryLabel = txt(result.visual.metricLabel || 'Venta');
+      var valueType = txt(result.visual.valueType || 'money').toLowerCase();
+      var showShare = !result.visual.hideShare;
+      var datasets = [
+        { label:primaryLabel, data:result.rows.map(function(r){ return Math.round(r.sales); }), backgroundColor:'rgba(0,94,167,.84)', borderRadius:8, yAxisID:'y', showDataLabels:false }
+      ];
+      if(showShare){
+        datasets.push({ label:'Share delivery %', data:result.rows.map(function(r){ return r.deliveryShare; }), type:'line', borderColor:'#F58320', backgroundColor:'#F58320', tension:.32, yAxisID:'y1', pointRadius:3 });
+      }
+      datasets.push({ label:txt(result.visual.deltaLabel || 'Delta vs LY %'), data:result.rows.map(function(r){ return r.deltaLy; }), type:'line', borderColor:'#11284A', backgroundColor:'#11284A', tension:.32, yAxisID:'y1', pointRadius:3 });
       vizChart = new Chart(ctx, {
         type:'bar',
-        data:{
-          labels: result.rows.map(function(r){ return r.period; }),
-          datasets:[
-            { label:'Venta', data:result.rows.map(function(r){ return Math.round(r.sales); }), backgroundColor:'rgba(0,94,167,.84)', borderRadius:8, yAxisID:'y', showDataLabels:false },
-            { label:'Share delivery %', data:result.rows.map(function(r){ return r.deliveryShare; }), type:'line', borderColor:'#F58320', backgroundColor:'#F58320', tension:.32, yAxisID:'y1', pointRadius:3 },
-            { label:'Delta vs LY %', data:result.rows.map(function(r){ return r.deltaLy; }), type:'line', borderColor:'#11284A', backgroundColor:'#11284A', tension:.32, yAxisID:'y1', pointRadius:3 }
-          ]
-        },
+        data:{ labels: result.rows.map(function(r){ return r.period; }), datasets: datasets },
         options:{
           responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, color:'#11284A', font:{ weight:'700' } } }, tooltip:{ callbacks:{ label:function(ctx){ return ctx.dataset.label + ': ' + (ctx.dataset.yAxisID === 'y' ? fmtMoney(ctx.parsed.y) : fmtPct(ctx.parsed.y)); } } } },
-          scales:{ y:{ beginAtZero:true, ticks:{ callback:function(v){ return '$' + Number(v).toLocaleString('en-US'); }, color:'#334155' }, grid:{ color:'rgba(148,163,184,.18)' } }, y1:{ beginAtZero:true, position:'right', ticks:{ callback:function(v){ return Number(v).toFixed(0) + '%'; }, color:'#334155' }, grid:{ drawOnChartArea:false } }, x:{ ticks:{ color:'#334155' }, grid:{ display:false } } }
+          plugins:{
+            legend:{ position:'bottom', labels:{ boxWidth:12, color:'#11284A', font:{ weight:'700' } } },
+            tooltip:{ callbacks:{ label:function(ctx){
+              var isPrimary = ctx.dataset.yAxisID === 'y';
+              if(isPrimary){
+                var y = ctx.parsed.y;
+                return ctx.dataset.label + ': ' + (valueType === 'units' ? fmtNum(y) : fmtMoney(y));
+              }
+              return ctx.dataset.label + ': ' + fmtPct(ctx.parsed.y);
+            } } }
+          },
+          scales:{
+            y:{
+              beginAtZero:true,
+              ticks:{ callback:function(v){ return valueType === 'units' ? Number(v).toLocaleString('en-US') : ('$' + Number(v).toLocaleString('en-US')); }, color:'#334155' },
+              grid:{ color:'rgba(148,163,184,.18)' }
+            },
+            y1:{ beginAtZero:true, position:'right', ticks:{ callback:function(v){ return Number(v).toFixed(0) + '%'; }, color:'#334155' }, grid:{ drawOnChartArea:false } },
+            x:{ ticks:{ color:'#334155' }, grid:{ display:false } }
+          }
         }
       });
     } else if(result.visual.kind === 'pie'){
@@ -57553,53 +57689,4 @@ function innovationOnePagerCreateBrandedShell(){
 </script>
 
 </body>
-
-
-<style id="innovation-fs-margin-card-fill-v72-overrides">
-/* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
-  align-items:start !important;
-}
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
-  align-self:start !important;
-  display:flex !important;
-  flex-direction:column !important;
-  height:auto !important;
-  min-height:0 !important;
-  max-height:none !important;
-}
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
-  flex:0 0 360px !important;
-  height:360px !important;
-  min-height:360px !important;
-  max-height:none !important;
-  padding:8px 10px 6px !important;
-}
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
-  width:100% !important;
-  height:100% !important;
-  max-height:none !important;
-}
-@media (max-width:1100px){
-  body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
-    flex-basis:300px !important;
-    height:300px !important;
-    min-height:300px !important;
-  }
-}
-</style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </html>
