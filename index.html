@@ -4497,13 +4497,13 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   var TOPICS = {
     chat: {
       title: 'Chat libre',
-      sub: 'Copiloto conectado al backend. Haz preguntas abiertas, pide comparativos y solicita gráficos ejecutivos.',
+      sub: 'Copiloto analítico conectado al motor backend. Responde usando el workbook publicado en GitHub como fuente de verdad.',
       prompts: [
         'Dame la lectura ejecutiva del negocio con los filtros actuales.',
         '¿Cuál es el principal riesgo del negocio hoy?',
         'Haz un gráfico del indicador más crítico con los filtros actuales.'
       ],
-      scope: 'Contexto: backend + dashboard'
+      scope: 'Contexto: backend + workbook GitHub'
     },
     ejecutivo: {
       title: 'Lectura ejecutiva',
@@ -4685,9 +4685,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     var keyHint = document.querySelector('.ampm-ai-modal-hint');
     if(keyHint) keyHint.textContent = 'Si el backend falla, revisa Railway y ALLOWED_ORIGINS.';
     var footer = el('ampmAiFooterHint');
-    if(footer) footer.textContent = 'Copiloto conectado al backend · sin exponer API keys en el HTML.';
+    if(footer) footer.textContent = 'Motor analítico backend · usa el workbook publicado en GitHub como fuente de verdad.';
     var placeholder = el('ampmAiInput');
-    if(placeholder) placeholder.placeholder = 'Ejemplo: dame ventas de marzo 2026 vs marzo 2025, o grafícame delivery por hora.';
+    if(placeholder) placeholder.placeholder = 'Ejemplo: top 10 categorías de marzo AMPM01, SBF por tienda vs LY, merma por descripción, inventario por tienda.';
   }
   function setTopic(topic, forcePrompt){
     stateAi.topic = TOPICS[topic] ? topic : 'chat';
@@ -4889,7 +4889,10 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
         report_mode: (typeof window.getUnifiedReportMode === 'function' ? txt(window.getUnifiedReportMode()) : txt(el('reportMode') && el('reportMode').value) || txt(window.state && window.state.reportMode)),
         url: window.location.href
       },
-      filters: collectFilters()
+      filters: collectFilters(),
+      data_url: (function(){
+        try{ return new URL('./Cubo_Semanal_Compactado.xlsx', window.location.href).href; }catch(_e){ return ''; }
+      })()
     };
   }
   function formatResultHtml(payload){
@@ -4922,16 +4925,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     return await response.json();
   }
   function tryLocalAnalytics(question){
-    try{
-      if(typeof window.__ampmAiDirectCuboBuild !== 'function') return null;
-      var local = window.__ampmAiDirectCuboBuild(question);
-      if(!local) return null;
-      var hasSeries = Array.isArray(local.labels) && local.labels.length && Array.isArray(local.datasets) && local.datasets.length;
-      if(!hasSeries) return null;
-      return local;
-    }catch(_e){
-      return null;
-    }
+    return null;
   }
   function formatLocalHtml(result){
     var html = '';
@@ -4957,45 +4951,26 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     if(input) input.value = '';
     var thinking = addThinking();
     setLoading(true);
-    setStageNote('Preparando datasets del JSON local…');
+    setStageNote('Consultando motor analítico sobre el workbook publicado…');
 
     try{
-      if(typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function'){
-        try{ await window.__ampmJsonRouteV2EnsureReadyForQuestion(question); }catch(_prepErr){}
-      }
-
-      setStageNote('Intentando resolver con el motor JSON local…');
-      var localResult = tryLocalAnalytics(question);
-      if(localResult){
-        if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
-        addMessage('assistant', formatLocalHtml(localResult), 'local');
-        renderChart(localResult);
-        setText('ampmAiStageTitle', txt(localResult.title) || 'Visual local');
-        setText('ampmAiStageSub', txt(localResult.subtitle) || txt(localResult.note) || 'Respuesta resuelta desde el JSON local del dashboard');
-        setStageNote('Consulta resuelta localmente con JSON preprocesado.');
-        setText('ampmAiUsageMeta', 'Motor local JSON · sin llamada al backend');
-        updateStaticUi();
-        return;
-      }
-
-      setStageNote('El motor local no cerró una resolución segura. Consultando Railway…');
       var data = await callBackend(question);
       if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
       var result = data && data.result ? data.result : data;
       addMessage('assistant', formatResultHtml(result), 'backend');
       renderChart(result && result.chart ? result.chart : null);
-      setText('ampmAiStageTitle', txt(result && result.title) || 'Visual backend');
-      setText('ampmAiStageSub', txt(result && result.summary) || 'Respuesta resuelta por el backend');
-      setStageNote(Array.isArray(result && result.notes) && result.notes.length ? result.notes.join(' · ') : 'Respuesta entregada por el backend.');
-      setText('ampmAiUsageMeta', 'API: Railway · origen: ' + window.location.origin);
+      setText('ampmAiStageTitle', txt(result && result.title) || 'Visual analítico');
+      setText('ampmAiStageSub', txt(result && result.summary) || 'Respuesta resuelta por el motor analítico');
+      setStageNote(Array.isArray(result && result.notes) && result.notes.length ? result.notes.join(' · ') : 'Respuesta entregada por el motor analítico.');
+      setText('ampmAiUsageMeta', 'Motor analítico backend · fuente: workbook publicado en GitHub');
       stateAi.backendOk = true;
       updateStaticUi();
     }catch(err){
       if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
       var msg = txt(err && err.message) || 'No fue posible consultar el backend.';
-      addMessage('assistant', '<p><strong>Error de conexión</strong></p><p>' + htmlEscape(msg) + '</p><p>Si el backend ya está vivo, revisa <strong>ALLOWED_ORIGINS</strong> en Railway e incluye este origen: <strong>' + htmlEscape(window.location.origin) + '</strong>.</p>', 'error', 'error');
+      addMessage('assistant', '<p><strong>Error de conexión</strong></p><p>' + htmlEscape(msg) + '</p><p>Verifica que Railway pueda leer el workbook publicado y que ALLOWED_ORIGINS incluya <strong>' + htmlEscape(window.location.origin) + '</strong>.</p>', 'error', 'error');
       hideChart();
-      setStageNote('Error al consultar el backend.');
+      setStageNote('Error al consultar el motor analítico.');
       setText('ampmAiUsageMeta', 'Sin respuesta del backend');
       stateAi.backendOk = false;
       updateStaticUi();
@@ -5011,11 +4986,11 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       stateAi.lastHealth = await res.json();
       stateAi.backendOk = true;
       setText('ampmAiStageMode', 'Backend activo');
-      setStageNote('Backend conectado: ' + API_BASE_URL.replace(/^https?:\/\//, ''));
+      setStageNote('Motor analítico conectado: ' + API_BASE_URL.replace(/^https?:\/\//, ''));
     }catch(_e){
       stateAi.backendOk = false;
       setText('ampmAiStageMode', 'Backend pendiente');
-      setStageNote('No se pudo validar la conexión al backend todavía.');
+      setStageNote('No se pudo validar la conexión al motor analítico todavía.');
     }
     updateStaticUi();
   }
@@ -59839,41 +59814,288 @@ function innovationOnePagerCreateBrandedShell(){
 
 <script id="ampm-json-fastpath-v4">
 (function(){
-  if(window.__AMPM_JSON_FASTPATH_V4_DISABLED__) return;
-  window.__AMPM_JSON_FASTPATH_V4_DISABLED__ = true;
-  try{ console.info('AMPM fast-path v4 desactivado para priorizar el router JSON determinístico.'); }catch(_e){}
-})();
-</script>
+  if(window.__AMPM_JSON_FASTPATH_V4__) return;
+  window.__AMPM_JSON_FASTPATH_V4__ = true;
 
-
-<script id="ampm-ai-router-hardening-v1">
-(function(){
-  if(window.__AMPM_AI_ROUTER_HARDENING_V1__) return;
-  window.__AMPM_AI_ROUTER_HARDENING_V1__ = true;
+  var BASE = './data_api/out/';
+  var CACHE = Object.create(null);
+  var LOADING = Object.create(null);
+  var PRELOAD = [
+    'meta/manifest.json',
+    'ventas/monthly_business.json',
+    'ventas/weekly_business.json',
+    'ventas/monthly_department.json',
+    'ventas/weekly_department.json',
+    'ventas/monthly_category.json',
+    'ventas/weekly_category.json',
+    'ventas/monthly_brand.json',
+    'ventas/weekly_brand.json',
+    'ventas/monthly_description.json',
+    'ventas/weekly_description.json'
+  ];
 
   function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function arr(v){ return Array.isArray(v) ? v : []; }
   function norm(v){
     var s = txt(v);
     try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
     return s.toLowerCase().trim();
   }
-  function isAnalyticQuestion(q){
-    return /(venta|ventas|sbf|delivery|uber|pedidos ya|pedidoya|pya|inventario|merma|hallazgo|hallazgos|innovacion|innovación|cxc|prd en cero|doi|categoria|categoría|marca|descripcion|descripción|sku|tienda|store|grafico|gráfico|grafica|gráfica|pastel|pie|barra|barras|linea|línea|vs|ly|lm|mes|semana|dia|día|hora|horario|share|delta|top)/.test(norm(q));
-  }
-  var baseTry = window.tryLocalAnalytics;
-  if(typeof baseTry === 'function'){
-    window.tryLocalAnalytics = function(question){
-      var model = baseTry(question);
-      if(model) return model;
-      return null;
+  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
+  function monthNameMap(){
+    return {
+      enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12'
     };
   }
-  var baseCall = window.callBackend;
-  window.__ampmShouldPreferBackendForQuestion = function(question){
-    return !isAnalyticQuestion(question);
+  function detectMetric(question){
+    var q = norm(question);
+    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
+    if(/margen|margin|gm/.test(q)) return 'margin';
+    if(/qty|unidades|cantidad/.test(q)) return 'qty';
+    return 'sales';
+  }
+  function metricLabel(metric){
+    return ({sales:'Venta', margin:'Margen', margin_pct:'Margen %', qty:'Unidades'})[metric] || metric;
+  }
+  function yFormat(metric){
+    if(metric === 'margin_pct') return 'percent';
+    if(metric === 'sales' || metric === 'margin') return 'currency';
+    return 'number';
+  }
+  function fmt(v, kind){
+    var n = Number(v || 0);
+    if(kind === 'percent') return n.toLocaleString('es-SV', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return n.toLocaleString('es-SV', {maximumFractionDigits:2});
+  }
+  function detectChart(question){
+    var q = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/linea|linea|línea|tendencia|trend|serie|evolucion|evolución/.test(q)) return 'line';
+    if(/barra|barras|graf|gráfico|grafico|chart|top|ranking/.test(q)) return 'bar';
+    return '';
+  }
+  function detectMode(question){
+    return /semana|week/.test(norm(question)) ? 'week' : 'month';
+  }
+  function detectDimension(question, chartType){
+    var q = norm(question);
+    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
+    if(/marca/.test(q)) return 'brand';
+    if(/departamento|depto/.test(q)) return 'department';
+    if(/categor|subcategor/.test(q)) return 'category';
+    if(chartType === 'pie') return 'category';
+    return 'category';
+  }
+  function detectAlias(question){
+    var q = norm(question);
+    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores', label:'Licores' };
+    if(/cerveza|beer|rtd/.test(q)) return { field:'department', value:'Cervezas y RTD', label:'Cervezas y RTD' };
+    if(/food service|hot dog|hamburguesa|pizza|burrito|nacho|cafe|café/.test(q)) return { field:'department', value:'Food Service', label:'Food Service' };
+    return null;
+  }
+  function detectPeriod(question, mode){
+    var q = norm(question);
+    if(mode === 'month'){
+      var map = monthNameMap();
+      var m = q.match(/\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(20\d{2})\b/);
+      if(m) return m[2] + '-' + map[m[1]];
+      m = q.match(/\b(20\d{2})[-\/](0[1-9]|1[0-2])\b/);
+      if(m) return m[1] + '-' + m[2];
+      var manifest = CACHE['meta/manifest.json'];
+      if(manifest && Array.isArray(manifest.months_available) && manifest.months_available.length) return manifest.months_available[manifest.months_available.length - 1];
+      var mb = CACHE['ventas/monthly_business.json'];
+      if(Array.isArray(mb) && mb.length) return String(mb[mb.length - 1].month_key || '');
+      return '';
+    }
+    var w = q.match(/semana\s*(\d{1,2})(?:\s*de)?\s*(20\d{2})/);
+    if(w) return w[2] + '-W' + String(w[1]).padStart(2,'0');
+    var manifest2 = CACHE['meta/manifest.json'];
+    if(manifest2 && Array.isArray(manifest2.weeks_available) && manifest2.weeks_available.length) return manifest2.weeks_available[manifest2.weeks_available.length - 1];
+    var wb = CACHE['ventas/weekly_business.json'];
+    if(Array.isArray(wb) && wb.length) return String(wb[wb.length - 1].week_key || '');
+    return '';
+  }
+  function selectedStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function'){
+        return uniq(arr(getSelectedStoresOrAll()).map(function(v){ return txt(v).toUpperCase(); }));
+      }
+    }catch(_e){}
+    return [];
+  }
+  function loadJson(rel){
+    if(CACHE[rel]) return Promise.resolve(CACHE[rel]);
+    if(LOADING[rel]) return LOADING[rel];
+    LOADING[rel] = fetch(BASE + rel, { cache:'no-store' })
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status + ' · ' + rel); return res.json(); })
+      .then(function(data){ CACHE[rel] = data; delete LOADING[rel]; return data; })
+      .catch(function(err){ delete LOADING[rel]; throw err; });
+    return LOADING[rel];
+  }
+  function preload(){ PRELOAD.forEach(function(rel){ loadJson(rel).catch(function(){}); }); }
+
+  function salesDatasetRel(mode, dimension){
+    var prefix = mode === 'week' ? 'ventas/weekly_' : 'ventas/monthly_';
+    if(dimension === 'brand') return prefix + 'brand.json';
+    if(dimension === 'description') return prefix + 'description.json';
+    if(dimension === 'department') return prefix + 'department.json';
+    return prefix + 'category.json';
+  }
+  function timeField(mode){ return mode === 'week' ? 'week_key' : 'month_key'; }
+  function groupField(dimension){
+    if(dimension === 'brand') return 'brand';
+    if(dimension === 'description') return 'description';
+    if(dimension === 'department') return 'department';
+    return 'category';
+  }
+  function rowText(row){
+    return [row.department, row.category, row.brand, row.description, row.supplier].map(function(v){ return norm(v); }).join(' | ');
+  }
+  function filterSalesRows(rows, cfg){
+    var tf = timeField(cfg.mode);
+    var scopeStores = selectedStores();
+    var alias = cfg.alias;
+    return arr(rows).filter(function(row){
+      if(txt(row[tf]) !== txt(cfg.periodKey)) return false;
+      if(scopeStores.length){
+        var st = txt(row.store_name || row.store).toUpperCase();
+        if(st && scopeStores.indexOf(st) < 0) return false;
+      }
+      if(alias){
+        var fieldVal = norm(row[alias.field]);
+        if(fieldVal.indexOf(norm(alias.value)) < 0) return false;
+      }
+      return true;
+    });
+  }
+  function aggregateRows(rows, dimension, metric){
+    var gf = groupField(dimension);
+    var mf = metric === 'margin_pct' ? 'margin_pct' : metric;
+    var map = new Map();
+    arr(rows).forEach(function(row){
+      var label = txt(row[gf] || row.category || row.brand || row.description || row.department || 'Sin dato');
+      if(!label) return;
+      if(!map.has(label)) map.set(label, { label:label, value:0, sales:0, margin:0 });
+      var bucket = map.get(label);
+      if(metric === 'margin_pct'){
+        bucket.sales += num(row.sales);
+        bucket.margin += num(row.margin);
+      }else{
+        bucket.value += num(row[mf]);
+      }
+    });
+    var entries = Array.from(map.values()).map(function(x){
+      if(metric === 'margin_pct') x.value = x.sales ? (x.margin / x.sales) * 100 : 0;
+      return { label:x.label, value:x.value };
+    }).filter(function(x){ return Math.abs(num(x.value)) > 0; })
+      .sort(function(a,b){ return Math.abs(b.value) - Math.abs(a.value); });
+    return entries;
+  }
+  function buildSalesModelSync(question){
+    var chartType = detectChart(question);
+    if(!chartType) return null;
+    var mode = detectMode(question);
+    var dimension = detectDimension(question, chartType);
+    var metric = detectMetric(question);
+    var alias = detectAlias(question);
+    var periodKey = detectPeriod(question, mode);
+    var rel = salesDatasetRel(mode, dimension);
+    var rows = CACHE[rel];
+    if(!Array.isArray(rows) || !rows.length) return null;
+    var cfg = { mode:mode, periodKey:periodKey, alias:alias };
+    var scoped = filterSalesRows(rows, cfg);
+    if(!scoped.length && dimension === 'category'){
+      var fallbackRows = CACHE[salesDatasetRel(mode, 'description')];
+      if(Array.isArray(fallbackRows) && fallbackRows.length){
+        scoped = filterSalesRows(fallbackRows, cfg);
+      }
+    }
+    if(!scoped.length) return null;
+    var aggDimension = dimension;
+    if(aggDimension === 'category' && scoped[0] && scoped[0].category == null){ aggDimension = 'description'; }
+    var entries = aggregateRows(scoped, aggDimension, metric).slice(0, chartType === 'pie' ? 12 : 15);
+    if(!entries.length) return null;
+    var total = entries.reduce(function(acc, x){ return acc + num(x.value); }, 0);
+    var labels = entries.map(function(x){ return x.label; });
+    var datasetLabel = metricLabel(metric);
+    var titleParts = [datasetLabel, 'de', alias && alias.label ? alias.label : 'Ventas'];
+    var title = titleParts.join(' ') + ' · ' + (aggDimension === 'category' ? 'categoría' : (aggDimension === 'brand' ? 'marca' : (aggDimension === 'department' ? 'departamento' : 'descripción')));
+    var subtitle = mode === 'month' ? ('Corte ' + periodKey) : ('Corte ' + periodKey);
+    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmt(x.value, yFormat(metric)); }).join(' | ');
+    return {
+      title: title,
+      subtitle: subtitle,
+      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
+      labels: labels,
+      datasets: [{ label: datasetLabel, data: entries.map(function(x){ return x.value; }), type: chartType === 'pie' ? 'pie' : (chartType === 'line' ? 'line' : 'bar'), color:'#0C4D8F' }],
+      note: 'Fuente JSON fast-path · ' + rel,
+      type: chartType === 'pie' ? 'pie' : (chartType === 'line' ? 'line' : 'bar'),
+      horizontal: chartType !== 'pie' && labels.length > 6,
+      yFormat: yFormat(metric),
+      questionScopedContext: 'Periodo ' + periodKey + '. ' + (alias ? ('Foco: ' + alias.label + '. ') : '') + 'Breakdown por ' + aggDimension + '. Total visible: ' + fmt(total, yFormat(metric)) + '. Top: ' + topText + '. Fuente JSON: ' + rel + '.'
+    };
+  }
+
+  function buildFastModelSync(question){
+    try{ return buildSalesModelSync(question); }catch(_e){ return null; }
+  }
+  async function ensureFastModel(question){
+    var mode = detectMode(question);
+    var dimension = detectDimension(question, detectChart(question));
+    var rel = salesDatasetRel(mode, dimension);
+    var fallback = salesDatasetRel(mode, 'description');
+    await Promise.all([loadJson('meta/manifest.json').catch(function(){}), loadJson(rel).catch(function(){}), loadJson(fallback).catch(function(){})]);
+    return buildFastModelSync(question);
+  }
+
+  preload();
+
+  var oldDirect = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
+  var oldScoped = typeof window.buildAiQuestionScopedContext === 'function' ? window.buildAiQuestionScopedContext : null;
+  var oldRender = typeof window.renderRequestedLocalVisual === 'function' ? window.renderRequestedLocalVisual : null;
+
+  window.__ampmAiDirectCuboBuild = function(question){
+    var fast = buildFastModelSync(question);
+    return fast || (oldDirect ? oldDirect(question) : null);
+  };
+  try{ aiBuildLocalIntentModel = window.__ampmAiDirectCuboBuild; }catch(_e){}
+  try{ aiBuildSeries = window.__ampmAiDirectCuboBuild; }catch(_e){}
+  window.buildAiQuestionScopedContext = function(question){
+    var fast = buildFastModelSync(question);
+    if(fast && fast.questionScopedContext) return fast.questionScopedContext;
+    return oldScoped ? oldScoped(question) : null;
+  };
+
+  window.renderRequestedLocalVisual = function(question, pack, options){
+    var qn = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca|graf|gráfico|grafico|chart|barra|linea|línea|trend|tendencia/.test(qn)){
+      try{ if(typeof setStageLoading === 'function') setStageLoading('Preparando visual analítico…'); }catch(_e){}
+      var syncModel = buildFastModelSync(question);
+      if(syncModel && typeof showStageChart === 'function'){
+        showStageChart(syncModel, syncModel.note || 'Fuente JSON fast-path');
+        return true;
+      }
+      ensureFastModel(question).then(function(model){
+        if(model && typeof showStageChart === 'function'){
+          showStageChart(model, model.note || 'Fuente JSON fast-path');
+          return;
+        }
+        if(oldRender){ oldRender(question, pack, options); return; }
+        if(typeof resetStage === 'function') resetStage('No encontré una estructura local suficiente para esa solicitud.');
+      }).catch(function(err){
+        console.error('AMPM fast-path v4', err);
+        if(oldRender){ oldRender(question, pack, options); return; }
+        if(typeof resetStage === 'function') resetStage('No pude preparar el visual analítico: ' + txt(err && err.message || err));
+      });
+      return true;
+    }
+    return oldRender ? oldRender(question, pack, options) : false;
   };
 })();
 </script>
+
 </body>
 
 
