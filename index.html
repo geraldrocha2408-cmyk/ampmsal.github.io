@@ -60105,6 +60105,340 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-json-route-a">
+(function(){
+  const JSON_URLS = {
+    meta: './data_api/out/meta.json',
+    monthlyCategorySales: './data_api/out/monthly_category_sales.json',
+    monthlyCompare: './data_api/out/monthly_compare.json'
+  };
+
+  const JSON_CACHE = {
+    ready: false,
+    failed: false,
+    meta: null,
+    monthlyCategorySales: [],
+    monthlyCompare: []
+  };
+
+  function norm(v){
+    return String(v || '')
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g,'')
+      .toLowerCase()
+      .trim();
+  }
+
+  function fmtMoney(v){
+    const n = Number(v || 0);
+    return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function fmtPct(v){
+    if(v == null || isNaN(v)) return 'N/D';
+    return Number(v).toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+  }
+
+  function fmtNum(v){
+    if(v == null || isNaN(v)) return 'N/D';
+    return Number(v).toLocaleString('en-US', {maximumFractionDigits:0});
+  }
+
+  async function loadJsons(){
+    try{
+      const [meta, monthlyCategorySales, monthlyCompare] = await Promise.all([
+        fetch(JSON_URLS.meta, {cache:'no-store'}).then(r => r.json()),
+        fetch(JSON_URLS.monthlyCategorySales, {cache:'no-store'}).then(r => r.json()),
+        fetch(JSON_URLS.monthlyCompare, {cache:'no-store'}).then(r => r.json())
+      ]);
+
+      JSON_CACHE.meta = meta;
+      JSON_CACHE.monthlyCategorySales = Array.isArray(monthlyCategorySales) ? monthlyCategorySales : [];
+      JSON_CACHE.monthlyCompare = Array.isArray(monthlyCompare) ? monthlyCompare : [];
+      JSON_CACHE.ready = true;
+      JSON_CACHE.failed = false;
+
+      console.log('AMPM JSON layer ready', {
+        months: meta && meta.months ? meta.months.length : 0,
+        monthlyCategorySales: JSON_CACHE.monthlyCategorySales.length,
+        monthlyCompare: JSON_CACHE.monthlyCompare.length
+      });
+    }catch(err){
+      JSON_CACHE.ready = false;
+      JSON_CACHE.failed = true;
+      console.warn('AMPM JSON layer failed', err);
+    }
+  }
+
+  function resolveMonthYear(question){
+    const q = norm(question);
+    const monthMap = {
+      enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06',
+      julio:'07', agosto:'08', septiembre:'09', setiembre:'09',
+      octubre:'10', noviembre:'11', diciembre:'12'
+    };
+
+    let year = null;
+    let month = null;
+
+    Object.keys(monthMap).forEach(name => {
+      if(q.includes(name)) month = monthMap[name];
+    });
+
+    const years = q.match(/20\d{2}/g);
+    if(years && years.length) year = years[0];
+
+    if(month && year) return `${year}-${month}`;
+
+    const compact = q.match(/(20\d{2})[-\/](\d{1,2})/);
+    if(compact){
+      return `${compact[1]}-${String(compact[2]).padStart(2,'0')}`;
+    }
+
+    return null;
+  }
+
+  function resolveCompareMonth(question, currentMonthKey){
+    const q = norm(question);
+    const years = q.match(/20\d{2}/g);
+
+    if(years && years.length >= 2 && currentMonthKey){
+      const month = currentMonthKey.slice(5,7);
+      return `${years[1]}-${month}`;
+    }
+
+    if(currentMonthKey && /ly|año pasado|ano pasado|vs 2025|vs 2024|vs 2023/.test(q)){
+      const year = Number(currentMonthKey.slice(0,4)) - 1;
+      const month = currentMonthKey.slice(5,7);
+      return `${year}-${month}`;
+    }
+
+    return null;
+  }
+
+  function resolveDepartment(question){
+    const q = norm(question);
+
+    if(q.includes('licor') || q.includes('whisky') || q.includes('vodka') || q.includes('ron') || q.includes('tequila') || q.includes('gin') || q.includes('brandy') || q.includes('vino') || q.includes('champagne')){
+      return 'Licores';
+    }
+    if(q.includes('cerveza') || q.includes('beer')){
+      return 'Cervezas';
+    }
+    if(q.includes('food service') || q.includes('hot dog') || q.includes('pizza') || q.includes('hamburguesa')){
+      return 'Food Service';
+    }
+    if(q.includes('snack') || q.includes('boquita')){
+      return 'Boquitas';
+    }
+
+    return null;
+  }
+
+  function wantsPie(question){
+    const q = norm(question);
+    return q.includes('pastel') || q.includes('pie');
+  }
+
+  function wantsInsights(question){
+    const q = norm(question);
+    return q.includes('insight') || q.includes('hallazgo') || q.includes('resumen') || q.includes('vs') || q.includes('compar') || q.includes('ly');
+  }
+
+  function buildMonthlyCategoryModel(question){
+    const monthKey = resolveMonthYear(question);
+    const department = resolveDepartment(question);
+
+    if(!monthKey || !department) return null;
+
+    const rows = JSON_CACHE.monthlyCategorySales.filter(r =>
+      String(r._month_key || '') === monthKey &&
+      norm(r._department) === norm(department)
+    );
+
+    if(!rows.length) return null;
+
+    rows.sort((a,b) => Number(b._sales || 0) - Number(a._sales || 0));
+
+    const labels = rows.map(r => r._category || 'Sin categoría');
+    const values = rows.map(r => Number(r._sales || 0));
+    const total = values.reduce((a,b) => a + b, 0);
+
+    const top1 = rows[0];
+    const top3 = rows.slice(0,3).map(r => `${r._category}: ${fmtMoney(r._sales)}`).join(' · ');
+
+    return {
+      labels,
+      values,
+      total,
+      monthKey,
+      department,
+      top1,
+      top3
+    };
+  }
+
+  function buildMonthlyCompareModel(question){
+    const currentMonthKey = resolveMonthYear(question);
+    if(!currentMonthKey) return null;
+
+    const compareMonthKey = resolveCompareMonth(question, currentMonthKey) || `${Number(currentMonthKey.slice(0,4))-1}-${currentMonthKey.slice(5,7)}`;
+
+    const current = JSON_CACHE.monthlyCompare.find(r => String(r._month_key || '') === currentMonthKey);
+    const ly = JSON_CACHE.monthlyCompare.find(r => String(r._month_key || '') === compareMonthKey);
+
+    if(!current || !ly) return null;
+
+    const sales = Number(current._sales || 0);
+    const salesLY = Number(ly._sales || 0);
+    const margin = Number(current._margin || 0);
+    const marginLY = Number(ly._margin || 0);
+    const tx = Number(current._tx || 0);
+    const txLY = Number(ly._tx || 0);
+
+    const avgTicket = tx ? sales / tx : null;
+    const avgTicketLY = txLY ? salesLY / txLY : null;
+    const marginPct = sales ? (margin / sales) * 100 : null;
+    const marginPctLY = salesLY ? (marginLY / salesLY) * 100 : null;
+
+    return {
+      currentMonthKey,
+      compareMonthKey,
+      sales,
+      salesLY,
+      tx,
+      txLY,
+      avgTicket,
+      avgTicketLY,
+      marginPct,
+      marginPctLY,
+      salesDeltaPct: salesLY ? ((sales / salesLY) - 1) * 100 : null,
+      txDeltaPct: txLY ? ((tx / txLY) - 1) * 100 : null,
+      avgTicketDeltaPct: (avgTicketLY && avgTicket) ? ((avgTicket / avgTicketLY) - 1) * 100 : null,
+      marginPctDelta: (marginPct != null && marginPctLY != null) ? (marginPct - marginPctLY) : null
+    };
+  }
+
+  function buildCategoryChartResponse(question, model){
+    return {
+      mode: 'month',
+      metric: 'sales',
+      periods: [model.monthKey],
+      labels: model.labels,
+      datasets: [
+        {
+          label: `Venta ${model.department}`,
+          data: model.values,
+          type: wantsPie(question) ? 'pie' : 'bar',
+          color: '#0C4D8F'
+        }
+      ],
+      title: `Venta por categoría · ${model.department}`,
+      subtitle: `Corte mensual ${model.monthKey}`,
+      tag: wantsPie(question) ? 'Participación' : 'Mensual',
+      yFormat: 'currency',
+      type: wantsPie(question) ? 'pie' : 'bar',
+      horizontal: !wantsPie(question),
+      note: 'Fuente JSON preprocesado desde Cubo_Semanal_Compactado.xlsx',
+      questionScopedContext:
+        `Periodo: ${model.monthKey}. ` +
+        `Departamento: ${model.department}. ` +
+        `Venta total: ${fmtMoney(model.total)}. ` +
+        `Categoría líder: ${model.top1._category} con ${fmtMoney(model.top1._sales)}. ` +
+        `Top 3: ${model.top3}.`
+    };
+  }
+
+  function buildCompareChartResponse(model){
+    return {
+      mode: 'month',
+      metric: 'sales',
+      periods: [model.currentMonthKey, model.compareMonthKey],
+      labels: ['Venta', 'TX'],
+      datasets: [
+        {
+          label: model.currentMonthKey,
+          data: [model.sales, model.tx],
+          type: 'bar',
+          color: '#0C4D8F'
+        },
+        {
+          label: model.compareMonthKey,
+          data: [model.salesLY, model.txLY],
+          type: 'bar',
+          color: '#F58320'
+        }
+      ],
+      title: `Comparativo mensual ${model.currentMonthKey} vs ${model.compareMonthKey}`,
+      subtitle: 'Ventas y transacciones',
+      tag: 'Actual vs LY',
+      yFormat: 'number',
+      type: 'bar',
+      horizontal: false,
+      note: 'Fuente JSON preprocesado desde Cubo_Semanal_Compactado.xlsx',
+      questionScopedContext:
+        `Comparativo mensual ${model.currentMonthKey} vs ${model.compareMonthKey}. ` +
+        `Venta actual: ${fmtMoney(model.sales)} vs ${fmtMoney(model.salesLY)} LY. ` +
+        `Delta venta: ${fmtPct(model.salesDeltaPct)}. ` +
+        `TX actual: ${fmtNum(model.tx)} vs ${fmtNum(model.txLY)} LY. ` +
+        `Delta TX: ${fmtPct(model.txDeltaPct)}. ` +
+        `Ticket promedio actual: ${fmtMoney(model.avgTicket)} vs ${fmtMoney(model.avgTicketLY)} LY. ` +
+        `Delta ticket: ${fmtPct(model.avgTicketDeltaPct)}. ` +
+        `Margen % actual: ${fmtPct(model.marginPct)} vs ${fmtPct(model.marginPctLY)} LY. ` +
+        `Brecha margen: ${model.marginPctDelta == null ? 'N/D' : model.marginPctDelta.toFixed(1) + ' pp'}.`
+    };
+  }
+
+  const oldBuild = (typeof window.__ampmAiDirectCuboBuild === 'function')
+    ? window.__ampmAiDirectCuboBuild
+    : (typeof aiBuildLocalIntentModel === 'function' ? aiBuildLocalIntentModel : null);
+
+  window.__ampmJsonRouteAReady = function(){
+    return !!JSON_CACHE.ready;
+  };
+
+  window.__ampmAiDirectCuboBuild = function(question){
+    try{
+      if(JSON_CACHE.ready){
+        if(wantsInsights(question)){
+          const compareModel = buildMonthlyCompareModel(question);
+          if(compareModel) return buildCompareChartResponse(compareModel);
+        }
+
+        const categoryModel = buildMonthlyCategoryModel(question);
+        if(categoryModel) return buildCategoryChartResponse(question, categoryModel);
+      }
+
+      if(typeof oldBuild === 'function'){
+        return oldBuild(question);
+      }
+
+      return null;
+    }catch(err){
+      console.warn('JSON Route A fallback failed', err);
+      if(typeof oldBuild === 'function'){
+        try { return oldBuild(question); } catch(_e) {}
+      }
+      return null;
+    }
+  };
+
+  aiBuildLocalIntentModel = window.__ampmAiDirectCuboBuild;
+  aiBuildSeries = window.__ampmAiDirectCuboBuild;
+  buildAiQuestionScopedContext = function(question){
+    try{
+      const model = window.__ampmAiDirectCuboBuild(question);
+      return model ? model.questionScopedContext : null;
+    }catch(_e){
+      return null;
+    }
+  };
+
+  loadJsons();
+})();
+</script>
+
 </body>
 
 
