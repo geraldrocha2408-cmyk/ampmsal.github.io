@@ -4479,128 +4479,122 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 .ampm-ai-scorecard-note,.ampm-ai-opp-line,.ampm-ai-source-chip{color:#334155;}
 </style>
 
-<script id="ampm-ai-script-v3">
+<script id="ampm-ai-script-v4-backend">
 (function(){
-  if(window.__AMPM_AI_V3_READY__) return;
-  window.__AMPM_AI_V3_READY__ = true;
+  if(window.__AMPM_AI_BACKEND_READY__) return;
+  window.__AMPM_AI_BACKEND_READY__ = true;
 
-  var LS_KEY = 'ampm_openai_key_v1';
   var AUTH_KEY = 'ampm_report_auth_v1';
-  var OPENAI_MODEL = 'gpt-5.4';
-  var OPENAI_FALLBACK_MODEL = 'gpt-5.4-mini';
-  var OPENAI_MAX_OUTPUT_TOKENS = 6800;
+  var API_BASE_URL = 'https://ampmsalgithubio-production.up.railway.app';
   var stateAi = {
     topic: 'chat',
-    lastResponseId: '',
-    uiMessages: [],
     chart: null,
-    activePack: null,
-    lastTopicForResponse: '',
-    lastUsage: '',
-    visualMode: 'idle',
-    imageObjectUrl: ''
+    backendOk: false,
+    loading: false,
+    lastHealth: null
   };
 
   var TOPICS = {
     chat: {
       title: 'Chat libre',
-      sub: 'Haz preguntas abiertas, pide gráficos, infografías o imágenes. La IA detecta el frente útil y se adapta al formato que necesites.',
+      sub: 'Copiloto conectado al backend. Haz preguntas abiertas, pide comparativos y solicita gráficos ejecutivos.',
       prompts: [
-        '¿Cuál es el principal riesgo del negocio con los filtros actuales?',
-        '¿Dónde está el mayor impacto económico hoy?',
-        '¿Qué priorizarías esta semana para mover venta y margen?'
+        'Dame la lectura ejecutiva del negocio con los filtros actuales.',
+        '¿Cuál es el principal riesgo del negocio hoy?',
+        'Haz un gráfico del indicador más crítico con los filtros actuales.'
       ],
-      defaultPack: 'ejecutivo'
+      scope: 'Contexto: backend + dashboard'
     },
     ejecutivo: {
       title: 'Lectura ejecutiva',
-      sub: 'Resumen corto del negocio con foco en impacto, drivers y próximos pasos.',
+      sub: 'Resumen ejecutivo priorizado con foco en impacto, drivers y siguientes acciones.',
       prompts: [
-        'Dame la lectura ejecutiva del negocio con prioridad y KPI.',
-        '¿Qué tres señales debo vigilar hoy?',
-        'Resume el estado general en formato ejecutivo.'
-      ]
+        'Dame la lectura ejecutiva del negocio con los filtros actuales.',
+        'Resume el estado general en formato dirección.',
+        '¿Qué tres señales debo vigilar hoy?'
+      ],
+      scope: 'Contexto: lectura ejecutiva'
     },
     acciones: {
       title: 'Prioridades y acciones',
-      sub: 'Acciones concretas aterrizadas al dashboard, no teoría.',
+      sub: 'Acciones concretas, aterrizadas y priorizadas según el contexto activo.',
       prompts: [
-        'Dame un plan de acción de 7 días.',
+        'Dame un plan de acción de 7 días con prioridad.',
         '¿Qué atacas primero y por qué?',
         'Prioriza oportunidades por impacto económico.'
-      ]
+      ],
+      scope: 'Contexto: plan de acción'
     },
     ventas: {
       title: 'Ventas y tráfico',
-      sub: 'Venta, TX, margen, meta y mix comercial usando solo señales de ventas.',
+      sub: 'Ventas, TX, LY, meta y mix comercial con foco en señales reales del cubo.',
       prompts: [
-        '¿Qué está explicando la variación de ventas?',
-        '¿Cuál es la brecha real vs meta y qué harías?',
+        'Dame ventas del periodo actual vs LY.',
+        'Haz un gráfico de ventas por tienda con los filtros actuales.',
         '¿Qué categoría o marca está moviendo más impacto?'
-      ]
+      ],
+      scope: 'Contexto: ventas'
     },
     delivery: {
       title: 'Delivery',
-      sub: 'Share, crecimiento y oportunidad comercial sin mezclar ruido de otras áreas.',
+      sub: 'Share, crecimiento, día, hora y oportunidad del canal delivery.',
       prompts: [
-        '¿Cómo está delivery y qué acción concreta harías?',
-        '¿El share de delivery está sano o no?',
+        'Dame delivery por hora.',
+        'Haz un gráfico de delivery por día de semana.',
         '¿Dónde hay oportunidad real en delivery?'
-      ]
+      ],
+      scope: 'Contexto: delivery'
     },
     sbf: {
       title: 'SBF y CXC',
       sub: 'Lectura correcta de TX SBF, LY, CXC y foco operativo.',
       prompts: [
-        '¿Cómo está SBF realmente vs LY?',
+        'Dame el análisis de SBF con los filtros actuales.',
         'Explícame SBF y CXC con criterio de negocio.',
         '¿Qué harías para recuperar TX SBF?'
-      ]
+      ],
+      scope: 'Contexto: SBF y CXC'
     },
     merma: {
       title: 'Merma y ajuste',
-      sub: 'Aprovecha la data de merma disponible antes de concluir que falta información.',
+      sub: 'Merma por descripción, bloque y hallazgo con foco en impacto económico.',
       prompts: [
         'Explícame la merma y el impacto real.',
-        '¿Qué productos o bloques están presionando merma?',
+        'Dame merma por descripción.',
         '¿Qué acción concreta harías para bajar el ajuste?'
-      ]
+      ],
+      scope: 'Contexto: merma'
     },
     inventario: {
       title: 'Inventario y transfer',
-      sub: 'Días inventario, sugerencias y transferencias con foco en caja y rotación.',
+      sub: 'Inventario, transferencias y oportunidades de rotación con criterio comercial.',
       prompts: [
-        '¿Dónde está el riesgo de inventario?',
-        '¿Qué moverías por transfer y qué no comprarías?',
-        '¿Qué harías para bajar días inventario?'
-      ]
+        'Dame inventario por tienda.',
+        '¿Dónde está el mayor riesgo de inventario?',
+        '¿Qué moverías por transfer y qué no comprarías?'
+      ],
+      scope: 'Contexto: inventario'
     },
     prd_cero: {
       title: 'PRD en cero',
-      sub: 'Identifica quiebres con impacto y prioriza la recuperación.',
+      sub: 'Quiebres con impacto y prioridades de recuperación.',
       prompts: [
         '¿Qué tan grave es PRD en cero y qué atacas primero?',
         '¿Cuál es el impacto operativo de los quiebres?',
         'Dame acciones concretas para bajar PRD en cero.'
-      ]
+      ],
+      scope: 'Contexto: PRD en cero'
     }
   };
 
   function el(id){ return document.getElementById(id); }
-  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
   function htmlEscape(v){
     return String(v == null ? '' : v)
       .replace(/&/g,'&amp;')
       .replace(/</g,'&lt;')
       .replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
-  }
-  function isVisible(node){
-    try{
-      if(!node) return false;
-      var st = window.getComputedStyle(node);
-      return st && st.display !== 'none' && st.visibility !== 'hidden';
-    }catch(_e){ return false; }
   }
   function readSession(){
     try{
@@ -4633,47 +4627,17 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       }
     }catch(_e){}
   }
-  function setApiKey(value){
-    try{ localStorage.setItem(LS_KEY, txt(value)); }catch(_e){}
-  }
-  function getApiKey(){
-    try{ return txt(localStorage.getItem(LS_KEY)); }catch(_e){ return ''; }
-  }
-  function updateKeyStatus(){
-    var hasKey = /^sk-/.test(getApiKey());
-    var wrap = el('ampmAiKeyStatus');
-    var txtEl = el('ampmAiKeyStatusTxt');
-    if(wrap) wrap.classList.toggle('ok', hasKey);
-    if(txtEl) txtEl.textContent = hasKey ? 'API Key lista' : 'Sin API Key';
-  }
-  function openKeyModal(){
-    var modal = el('ampmAiKeyModal');
-    var input = el('ampmAiKeyInput');
-    if(!modal) return;
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    if(input){
-      input.value = getApiKey();
-      setTimeout(function(){ try{ input.focus(); input.select(); }catch(_e){} }, 40);
-    }
+  function disableInput(disabled){
+    var input = el('ampmAiInput');
+    var btn = el('ampmAiSendBtn');
+    if(input) input.disabled = !!disabled;
+    if(btn) btn.disabled = !!disabled;
   }
   function closeKeyModal(){
     var modal = el('ampmAiKeyModal');
     if(!modal) return;
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
-  }
-  function saveKeyFromModal(){
-    var input = el('ampmAiKeyInput');
-    setApiKey(input ? input.value : '');
-    updateKeyStatus();
-    closeKeyModal();
-  }
-  function disableInput(disabled){
-    var input = el('ampmAiInput');
-    var btn = el('ampmAiSendBtn');
-    if(input) input.disabled = !!disabled;
-    if(btn) btn.disabled = !!disabled;
   }
   function updateVisibility(){
     ensurePlacement();
@@ -4684,1780 +4648,374 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     panel.classList.toggle('ampm-ai-visible', shouldShow);
     panel.style.display = shouldShow ? 'flex' : 'none';
-    disableInput(!shouldShow);
-    if(!shouldShow){
-      closeKeyModal();
+    disableInput(!shouldShow || stateAi.loading);
+    if(!shouldShow) closeKeyModal();
+  }
+  function getSelectedValues(node){
+    try{
+      if(!node) return [];
+      return Array.from(node.selectedOptions || [])
+        .map(function(opt){ return txt(opt && opt.value); })
+        .filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function getTopicConfig(topic){
+    return TOPICS[topic] || TOPICS.chat;
+  }
+  function setText(id, value){
+    var node = el(id);
+    if(node) node.textContent = value;
+  }
+  function updateStaticUi(){
+    setText('ampmAiKeyStatusTxt', stateAi.backendOk ? 'Backend conectado' : 'Backend sin conexión');
+    var statusWrap = el('ampmAiKeyStatus');
+    if(statusWrap) statusWrap.classList.toggle('ok', !!stateAi.backendOk);
+    var keyBtn = el('ampmAiOpenKeyBtn');
+    if(keyBtn) keyBtn.style.display = 'none';
+    var headKeyBtn = el('ampmAiHeaderKeyBtn');
+    if(headKeyBtn) headKeyBtn.style.display = 'none';
+    var keyModal = el('ampmAiKeyModal');
+    if(keyModal) keyModal.style.display = 'none';
+    var keyInput = el('ampmAiKeyInput');
+    if(keyInput) keyInput.value = '';
+    var title = el('ampmAiKeyModalTitle');
+    if(title) title.textContent = 'Backend externo';
+    var modalSub = document.querySelector('.ampm-ai-modal-sub');
+    if(modalSub) modalSub.textContent = 'La llave ya no vive en el navegador. Todo pasa por el backend.';
+    var keyHint = document.querySelector('.ampm-ai-modal-hint');
+    if(keyHint) keyHint.textContent = 'Si el backend falla, revisa Railway y ALLOWED_ORIGINS.';
+    var footer = el('ampmAiFooterHint');
+    if(footer) footer.textContent = 'Copiloto conectado al backend · sin exponer API keys en el HTML.';
+    var placeholder = el('ampmAiInput');
+    if(placeholder) placeholder.placeholder = 'Ejemplo: dame ventas de marzo 2026 vs marzo 2025, o grafícame delivery por hora.';
+  }
+  function setTopic(topic, forcePrompt){
+    stateAi.topic = TOPICS[topic] ? topic : 'chat';
+    var cfg = getTopicConfig(stateAi.topic);
+    Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
+      btn.classList.toggle('active', txt(btn.getAttribute('data-topic')) === stateAi.topic);
+    });
+    setText('ampmAiHeaderTitle', cfg.title);
+    setText('ampmAiHeaderSub', cfg.sub);
+    setText('ampmAiScopeBadge', cfg.scope || 'Contexto: backend + dashboard');
+    if(forcePrompt){
+      var input = el('ampmAiInput');
+      if(input && !txt(input.value) && Array.isArray(cfg.prompts) && cfg.prompts[0]) input.value = cfg.prompts[0];
     }
-  }
-
-  function parseNumber(raw){
-    var s = txt(raw);
-    if(!s) return NaN;
-    var isPct = s.indexOf('%') >= 0;
-    s = s.replace(/[A-Za-z$€£¥₡]/g,'');
-    s = s.replace(/\s/g,'');
-    s = s.replace(/,/g,'');
-    s = s.replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-');
-    var m = s.match(/-?\d+(?:\.\d+)?/);
-    if(!m) return NaN;
-    var n = Number(m[0]);
-    if(!isFinite(n)) return NaN;
-    if(isPct) return n / 100;
-    return n;
-  }
-  function parseDisplayNumber(raw){
-    var s = txt(raw);
-    if(!s) return NaN;
-    s = s.replace(/[A-Za-z$€£¥₡]/g,'');
-    s = s.replace(/\s/g,'');
-    s = s.replace(/,/g,'');
-    s = s.replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-');
-    var m = s.match(/-?\d+(?:\.\d+)?/);
-    return m ? Number(m[0]) : NaN;
-  }
-  function fmtMoney(n){
-    if(!isFinite(n)) return '—';
-    try{ return '$' + Number(n).toLocaleString('es-SV', { maximumFractionDigits: 2, minimumFractionDigits: 2 }); }
-    catch(_e){ return '$' + Math.round(n * 100) / 100; }
-  }
-  function fmtInt(n){
-    if(!isFinite(n)) return '—';
-    try{ return Math.round(n).toLocaleString('es-SV'); }
-    catch(_e){ return String(Math.round(n)); }
-  }
-  function fmtPct(n){
-    if(!isFinite(n)) return '—';
-    return (n * 100).toFixed(2) + '%';
-  }
-  function fmtRatio(n){
-    if(!isFinite(n)) return '—';
-    return Number(n).toFixed(2) + 'x';
   }
   function nowStamp(){
     try{
-      return new Date().toLocaleTimeString('es-SV', { hour:'2-digit', minute:'2-digit' });
-    }catch(_e){ return ''; }
+      return new Intl.DateTimeFormat('es-SV', { hour:'2-digit', minute:'2-digit' }).format(new Date());
+    }catch(_e){ return new Date().toLocaleTimeString(); }
   }
-  function extractRatioFromNote(note){
-    var m = txt(note).match(/(-?\d+(?:\.\d+)?)/);
-    return m ? Number(m[1]) : NaN;
-  }
-  function higherBetterStatus(value, target){
-    if(!isFinite(value)) return 'neutral';
-    if(isFinite(target)){
-      if(value >= target) return 'good';
-      if(value >= target * 0.95) return 'warn';
-      return 'bad';
-    }
-    return value > 0 ? 'good' : (value < 0 ? 'bad' : 'neutral');
-  }
-  function lowerBetterStatus(value, target){
-    if(!isFinite(value)) return 'neutral';
-    if(isFinite(target)){
-      if(value <= target) return 'good';
-      if(value <= target * 1.15) return 'warn';
-      return 'bad';
-    }
-    return value < 0 ? 'good' : (value > 0 ? 'bad' : 'neutral');
-  }
-  function ratioStatus(ratio){
-    if(!isFinite(ratio)) return 'neutral';
-    if(ratio > 1.02) return 'good';
-    if(ratio >= 0.98) return 'warn';
-    return 'bad';
-  }
-  function normalizeTone(status){
-    return (status === 'good' || status === 'warn' || status === 'bad') ? status : 'neutral';
-  }
-
-  function collectFilters(){
-    var summary = { reportMode:'', current:'', prev:'', stores:'' };
-    try{
-      var reportMode = el('reportMode');
-      summary.reportMode = txt(reportMode && reportMode.value);
-      var currentMonth = el('currentMonth');
-      summary.current = txt(currentMonth && currentMonth.options && currentMonth.selectedOptions && currentMonth.selectedOptions[0] ? currentMonth.selectedOptions[0].textContent : currentMonth && currentMonth.value);
-      var prevMonths = el('prevMonths');
-      if(prevMonths && prevMonths.selectedOptions){
-        summary.prev = Array.prototype.slice.call(prevMonths.selectedOptions).map(function(o){ return txt(o.textContent || o.value); }).filter(Boolean).slice(0,3).join(' | ');
-      }
-      if(typeof getSelectedStoresOrAll === 'function'){
-        var stores = getSelectedStoresOrAll() || [];
-        summary.stores = Array.isArray(stores) ? stores.join(' | ') : txt(stores);
-      } else {
-        var storeSel = el('storeFilter');
-        if(storeSel && storeSel.selectedOptions){
-          summary.stores = Array.prototype.slice.call(storeSel.selectedOptions).map(function(o){ return txt(o.textContent || o.value); }).filter(Boolean).join(' | ');
-        }
-      }
-    }catch(_e){}
-    return summary;
-  }
-
-  function extractKpiCard(card){
-    if(!card) return null;
-    var key = txt(card.getAttribute('data-kpi'));
-    var title = txt(card.querySelector('.kpiTitle') && card.querySelector('.kpiTitle').textContent);
-    var valueText = txt(card.querySelector('.kpiValue') && card.querySelector('.kpiValue').textContent);
-    var subTexts = Array.prototype.slice.call(card.querySelectorAll('.kpiSub')).map(function(node){ return txt(node.textContent); }).filter(Boolean);
-    var payload = {
-      key: key,
-      title: title,
-      valueText: valueText,
-      valueNumber: parseNumber(valueText),
-      displayNumber: parseDisplayNumber(valueText),
-      notes: subTexts,
-      noteJoined: subTexts.join(' | ')
-    };
-    return payload;
-  }
-
-  function collectKpis(){
-    return Array.prototype.slice.call(document.querySelectorAll('#kpiBoard .kpiCard[data-kpi]')).map(extractKpiCard).filter(Boolean);
-  }
-  function findKpi(kpis, key){
-    return (kpis || []).find(function(item){ return item && item.key === key; }) || null;
-  }
-
-  function collectTextList(id, limit){
-    var root = el(id);
-    if(!root) return [];
-    var items = Array.prototype.slice.call(root.querySelectorAll('li, .insightLine, .wlTitle, .wlVal, .actionTitle, .actionDesc')).map(function(node){
-      return txt(node.textContent);
-    }).filter(Boolean);
-    return items.slice(0, limit || 6);
-  }
-
-  function tablePreview(id, label, maxRows, maxCols){
-    var table = el(id);
-    if(!table) return null;
-    var headRows = Array.prototype.slice.call(table.querySelectorAll('thead tr'));
-    var headerCells = headRows.length ? Array.prototype.slice.call(headRows[headRows.length - 1].children) : [];
-    var headers = headerCells.map(function(th){ return txt(th.textContent); }).filter(Boolean);
-    var bodyRows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
-    var rows = bodyRows.map(function(tr){
-      return Array.prototype.slice.call(tr.children).map(function(td){ return txt(td.textContent); });
-    }).filter(function(cells){
-      return cells.some(Boolean) && !/^total$/i.test(txt(cells[0]));
-    });
-    if(!rows.length) return null;
-    if(!headers.length){
-      headers = rows[0].map(function(_v, i){ return i === 0 ? 'Concepto' : ('Col ' + (i + 1)); });
-    }
-    var clippedRows = rows.slice(0, maxRows || 5).map(function(r){ return r.slice(0, maxCols || 6); });
-    var clippedHeaders = headers.slice(0, maxCols || 6);
-    return { id:id, label:label || id, headers:clippedHeaders, rows:clippedRows };
-  }
-
-  function pickRankingFromTable(preview){
-    if(!preview || !preview.rows || !preview.rows.length) return [];
-    var headers = preview.headers || [];
-    var rows = preview.rows || [];
-    var bestIndex = -1;
-    var bestScore = -999;
-    headers.forEach(function(head, idx){
-      if(idx === 0) return;
-      var values = rows.map(function(r){ return parseDisplayNumber(r[idx]); }).filter(function(v){ return isFinite(v); });
-      if(!values.length) return;
-      var label = txt(head).toLowerCase();
-      var score = 0;
-      if(/venta|sales|mtd|actual|current|qty|tx|margen|monto|importe|valor|total/i.test(label)) score += 4;
-      if(/delta|ly|lw|prom|share|ratio|pp|meta|vs/i.test(label)) score -= 5;
-      if(/%/.test(label)) score -= 3;
-      score += Math.min(values.length, 4);
-      if(score > bestScore){
-        bestScore = score;
-        bestIndex = idx;
-      }
-    });
-    if(bestIndex < 0){
-      for(var i = 1; i < headers.length; i++){
-        if(rows.some(function(r){ return isFinite(parseDisplayNumber(r[i])); })){ bestIndex = i; break; }
-      }
-    }
-    if(bestIndex < 0) return [];
-    return rows.map(function(r){
-      return {
-        label: txt(r[0]),
-        value: parseDisplayNumber(r[bestIndex]),
-        note: txt(headers[bestIndex]),
-        raw: r
-      };
-    }).filter(function(item){
-      return item.label && isFinite(item.value);
-    }).sort(function(a,b){
-      return Math.abs(b.value) - Math.abs(a.value);
-    }).slice(0, 6);
-  }
-
-  function inferTopicFromQuestion(question){
-    var q = txt(question).toLowerCase();
-    if(!q) return 'ejecutivo';
-    if(/merma|ajuste|inventario ajuste|shrink/i.test(q)) return 'merma';
-    if(/sbf|cxc|cobro|agentes/i.test(q)) return 'sbf';
-    if(/prd en cero|prd cero|quiebre|sin stock|agotad/i.test(q)) return 'prd_cero';
-    if(/inventario|dias inventario|transfer|hueso|rop|no buy|nobuy/i.test(q)) return 'inventario';
-    if(/delivery|uber|pedidos ya|pedidoya|share/i.test(q)) return 'delivery';
-    if(/venta|ventas|tx|trafico|ticket|margen|meta|proyeccion|ly|lw|prom/i.test(q)) return 'ventas';
-    if(/accion|prioridad|que har[ií]as|plan/i.test(q)) return 'acciones';
-    return 'ejecutivo';
-  }
-
-  function buildTopicPack(topic, question){
-    var kpis = collectKpis();
-    var filters = collectFilters();
-    var pack = {
-      topic: topic,
-      question: txt(question),
-      filters: filters,
-      kpis: kpis,
-      tables: [],
-      facts: [],
-      sourceLabels: [],
-      scorecards: [],
-      opps: [],
-      chart: { title:'Top drivers', subtitle:'Priorizado con data disponible del dashboard', tag:'Local', labels:[], values:[], note:'', positiveBetter:true }
-    };
-
-    var salesCur = findKpi(kpis, 'sales_cur');
-    var salesLm = findKpi(kpis, 'sales_lm');
-    var salesLy = findKpi(kpis, 'sales_ly');
-    var tx = findKpi(kpis, 'tx');
-    var margin = findKpi(kpis, 'margin');
-    var meta = findKpi(kpis, 'meta');
-    var proj = findKpi(kpis, 'proj');
-    var delivery = findKpi(kpis, 'del');
-    var noDel = findKpi(kpis, 'no_del');
-    var invAdj = findKpi(kpis, 'inv_adj');
-    var prd0 = findKpi(kpis, 'prd0');
-    var daysInv = findKpi(kpis, 'days_inv');
-    var cxc = findKpi(kpis, 'cxc');
-    var txSbf = findKpi(kpis, 'tx_sbf');
-
-    function addFact(text){
-      text = txt(text);
-      if(text) pack.facts.push(text);
-    }
-    function addSource(label){
-      label = txt(label);
-      if(label && pack.sourceLabels.indexOf(label) < 0) pack.sourceLabels.push(label);
-    }
-    function addTable(id, label, rows, cols){
-      var preview = tablePreview(id, label, rows, cols);
-      if(preview){
-        pack.tables.push(preview);
-        addSource(label || id);
-      }
-      return preview;
-    }
-    function scorecard(title, value, note, status){
-      pack.scorecards.push({
-        title: title,
-        value: value,
-        note: note,
-        status: normalizeTone(status)
-      });
-    }
-    function opp(title, priority, impact, cause, action, kpiTxt){
-      pack.opps.push({
-        title: title,
-        priority: priority,
-        impact: impact,
-        cause: cause,
-        action: action,
-        kpi: kpiTxt
-      });
-    }
-
-    addSource('KPIs Resumen');
-
-    if(salesCur) addFact('Venta actual visible: ' + salesCur.valueText + '.');
-    if(tx) addFact('TX visible: ' + tx.valueText + '.');
-    if(margin) addFact('Margen visible: ' + margin.valueText + '.');
-    if(delivery) addFact('Delivery visible: ' + delivery.valueText + ' | ' + delivery.noteJoined + '.');
-
-    if(topic === 'chat') topic = TOPICS.chat.defaultPack || inferTopicFromQuestion(question);
-    pack.resolvedTopic = topic;
-
-    if(topic === 'ejecutivo' || topic === 'acciones'){
-      addSource('Insights automáticos');
-      addSource('Key Findings');
-      addSource('Radar Ejecutivo');
-      collectTextList('autoSummaryList', 4).forEach(addFact);
-      collectTextList('autoKeyLy', 3).forEach(addFact);
-      collectTextList('autoKeyLm', 3).forEach(addFact);
-      collectTextList('radarInsights', 4).forEach(addFact);
-
-      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura disponible', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || salesCur && salesCur.noteJoined || '')));
-      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura disponible', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
-      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura disponible', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
-      scorecard('Meta / Proyección', proj ? proj.valueText : '—', proj ? proj.noteJoined : (meta ? meta.noteJoined : 'Sin lectura disponible'), ratioStatus(extractRatioFromNote(proj && proj.noteJoined || '')));
-
-      var executiveMetrics = [
-        { label:'Venta vs LY', value: extractRatioFromNote(salesLy && salesLy.noteJoined || salesCur && salesCur.noteJoined || '') },
-        { label:'Venta vs LW', value: extractRatioFromNote(salesLm && salesLm.noteJoined || '') },
-        { label:'TX vs LY', value: extractRatioFromNote(tx && tx.noteJoined || '') },
-        { label:'Proy vs Meta', value: extractRatioFromNote(proj && proj.noteJoined || '') }
-      ].filter(function(item){ return isFinite(item.value); });
-      pack.chart.title = 'Semáforo de ratios clave';
-      pack.chart.subtitle = 'Mayor a 1.00 = crecimiento / menor a 1.00 = caída';
-      pack.chart.tag = 'Ratios';
-      pack.chart.labels = executiveMetrics.map(function(item){ return item.label; });
-      pack.chart.values = executiveMetrics.map(function(item){ return Number((item.value * 100).toFixed(2)); });
-      pack.chart.note = '% del ratio respecto a 1.00x';
-      pack.chart.positiveBetter = true;
-
-      if(salesLy){
-        var salesRatio = extractRatioFromNote(salesLy.noteJoined);
-        opp(
-          'Proteger venta base',
-          salesRatio < 1 ? 'alta' : 'media',
-          salesLy.valueText ? 'Venta LY visible: ' + salesLy.valueText : 'Mover venta real',
-          salesRatio < 1 ? 'El ratio vs LY viene por debajo de 1.00 y la base se está erosionando.' : 'La base de venta requiere sostenerse para no perder tracción.',
-          'Atacar primero tiendas o categorías con mayor brecha absoluta, no solo porcentual.',
-          'KPI: Delta vs LY + brecha $'
-        );
-      }
-      if(invAdj){
-        opp(
-          'Contener ajuste de inventario',
-          lowerBetterStatus(invAdj.valueNumber, 0.0055) === 'bad' ? 'alta' : 'media',
-          'El ajuste pega margen y caja.',
-          'La métrica de ajuste debe leerse contra meta 0.55%, no aislada.',
-          'Revisar top productos y tiendas con mayor impacto antes de negociar compras nuevas.',
-          'KPI: Ajuste % vs meta'
-        );
-      }
-      if(txSbf){
-        var sbfRatioExec = extractRatioFromNote(txSbf.noteJoined);
-        opp(
-          'Recuperar TX SBF',
-          sbfRatioExec < 1 ? 'alta' : 'media',
-          'SBF afecta tráfico y recurrencia.',
-          isFinite(sbfRatioExec) && sbfRatioExec < 1 ? 'Ratio SBF menor a 1.00 = caída real vs LY.' : 'SBF necesita sostener conversión operativa.',
-          'Monitorear tiendas con menor ratio y asegurar ejecución comercial y de servicio.',
-          'KPI: TX SBF vs LY'
-        );
-      }
-    }
-
-    if(topic === 'ventas'){
-      addTable('t_sales', 'Venta por tienda', 6, 6);
-      addTable('t_dept_sales', 'Venta por departamento', 6, 6);
-      addTable('t_brand_sales', 'Venta por marca', 6, 6);
-      addTable('t_cat_sales', 'Venta por categoría', 6, 6);
-      addTable('t_tx_store', 'TX por tienda', 6, 6);
-
-      var salesRatio = extractRatioFromNote(salesLy && salesLy.noteJoined || '');
-      var salesLmRatio = extractRatioFromNote(salesLm && salesLm.noteJoined || '');
-      var txRatio = extractRatioFromNote(tx && tx.noteJoined || '');
-      addFact(isFinite(salesRatio) ? ('Interpretación local: ratio venta vs LY ' + salesRatio.toFixed(2) + ' => ' + (salesRatio > 1 ? 'crecimiento' : (salesRatio < 1 ? 'caída' : 'estable')) + '.') : '');
-      addFact(isFinite(salesLmRatio) ? ('Interpretación local: ratio venta vs LW/LM ' + salesLmRatio.toFixed(2) + ' => ' + (salesLmRatio > 1 ? 'mejora' : (salesLmRatio < 1 ? 'caída' : 'estable')) + '.') : '');
-      addFact(isFinite(txRatio) ? ('Interpretación local: ratio TX vs LY ' + txRatio.toFixed(2) + ' => ' + (txRatio > 1 ? 'crecimiento' : (txRatio < 1 ? 'caída' : 'estable')) + '.') : '');
-
-      scorecard('Venta actual', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(salesRatio));
-      scorecard('Venta vs LY', salesLy ? salesLy.valueText : '—', salesLy ? salesLy.noteJoined : 'Sin lectura', ratioStatus(salesRatio));
-      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(txRatio));
-      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
-
-      var salesRanking = pickRankingFromTable(pack.tables[1] || pack.tables[2] || pack.tables[0]);
-      pack.chart.title = 'Top drivers comerciales';
-      pack.chart.subtitle = 'Ranking local desde tabla de ventas disponible';
-      pack.chart.tag = 'Drivers';
-      pack.chart.labels = salesRanking.map(function(item){ return item.label; });
-      pack.chart.values = salesRanking.map(function(item){ return item.value; });
-      pack.chart.note = salesRanking.length ? salesRanking[0].note : '';
-      pack.chart.positiveBetter = true;
-
-      opp('Recuperar venta con impacto real', ratioStatus(salesRatio) === 'bad' ? 'alta' : 'media', 'La brecha de venta pega flujo y absorción de gastos.', 'Si el ratio vs LY es menor a 1.00, el negocio viene por debajo de la base.', 'Ataca primero categorías o tiendas con mayor brecha absoluta en $.', 'KPI: Venta actual vs LY / delta $');
-      opp('Proteger tráfico', ratioStatus(txRatio) === 'bad' ? 'alta' : 'media', 'TX sostiene recurrencia y ticket futuro.', 'Una caída de TX suele anticipar presión en venta aun si el ticket aguanta.', 'Activa ejecución comercial por franja y tienda con mayor caída de TX.', 'KPI: Delta TX vs LY');
-      opp('Blindar margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'El margen convierte venta en utilidad real.', 'Una venta que sube sin margen puede destruir rentabilidad.', 'Revisar mix, subsidios y productos de baja contribución antes de empujar volumen.', 'KPI: Margen % vs meta');
-    }
-
-    if(topic === 'delivery'){
-      addTable('t_delshare', 'Share delivery', 6, 6);
-      addTable('t_del', 'Venta delivery', 6, 6);
-      addTable('t_nodel', 'Venta sin delivery', 6, 6);
-      addTable('t_cat_sales_del', 'Categorías delivery', 6, 6);
-      addTable('t_brand_sales_del', 'Marcas delivery', 6, 6);
-
-      var delRatio = extractRatioFromNote(delivery && delivery.noteJoined || '');
-      var shareText = delivery ? delivery.noteJoined : '';
-      addFact(isFinite(delRatio) ? ('Interpretación local: delivery vs LY ' + delRatio.toFixed(2) + ' => ' + (delRatio > 1 ? 'crecimiento' : (delRatio < 1 ? 'caída' : 'estable')) + '.') : '');
-      if(shareText) addFact('Share delivery visible: ' + shareText + '.');
-
-      scorecard('Venta delivery', delivery ? delivery.valueText : '—', delivery ? delivery.noteJoined : 'Sin lectura', ratioStatus(delRatio));
-      scorecard('Vta sin delivery', noDel ? noDel.valueText : '—', noDel ? noDel.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(noDel && noDel.noteJoined || '')));
-      scorecard('Share delivery', delivery ? delivery.noteJoined : '—', 'Participación sobre venta', ratioStatus(delRatio));
-      scorecard('Margen', margin ? margin.valueText : '—', 'No perder rentabilidad por volumen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
-
-      var delRanking = pickRankingFromTable(pack.tables[0] || pack.tables[3] || pack.tables[4] || pack.tables[1]);
-      pack.chart.title = 'Drivers de delivery';
-      pack.chart.subtitle = 'Ranking local del bloque delivery';
-      pack.chart.tag = 'Canal';
-      pack.chart.labels = delRanking.map(function(item){ return item.label; });
-      pack.chart.values = delRanking.map(function(item){ return item.value; });
-      pack.chart.note = delRanking.length ? delRanking[0].note : '';
-      pack.chart.positiveBetter = true;
-
-      opp('Defender crecimiento del canal', ratioStatus(delRatio) === 'bad' ? 'alta' : 'media', 'Delivery aporta venta incremental y cobertura de ocasión.', 'Si el ratio vs LY es menor a 1.00, el canal no está escalando al ritmo esperado.', 'Prioriza categorías con mayor tracción y mejora ejecución/promos del canal.', 'KPI: Delivery vs LY');
-      opp('Cuidar el share, no solo la venta', 'media', 'El share muestra peso real del canal sobre la venta total.', 'Un share plano puede ocultar falta de captura digital.', 'Sube conversión en surtido ganador y campañas del canal con objetivo de share.', 'KPI: % Delivery / Vta');
-      opp('No sacrificar margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'Venta digital sin margen suficiente destruye rentabilidad.', 'Descuentos o mix pueden estar comprando venta cara.', 'Revisar mix, combos y subsidios antes de ampliar pauta o descuentos.', 'KPI: Margen %');
-    }
-
-    if(topic === 'sbf'){
-      addTable('t_sbf_store', 'SBF por tienda', 6, 6);
-      addTable('t_sbf_prov', 'SBF por proveedor', 6, 6);
-      addTable('t_cxc', 'CXC', 6, 6);
-      addTable('t_sbf_dow', 'SBF por día', 6, 6);
-
-      var sbfRatio = extractRatioFromNote(txSbf && txSbf.noteJoined || '');
-      addFact(isFinite(sbfRatio) ? ('Interpretación local obligatoria: ratio TX SBF vs LY ' + sbfRatio.toFixed(2) + ' => ' + (sbfRatio > 1 ? 'crecimiento' : (sbfRatio < 1 ? 'caída' : 'estable')) + '. Nunca interpretarlo al revés.') : '');
-      if(cxc && cxc.valueText) addFact('CXC visible: ' + cxc.valueText + ' | ' + cxc.noteJoined + '.');
-
-      scorecard('TX SBF', txSbf ? txSbf.valueText : '—', txSbf ? txSbf.noteJoined : 'Sin lectura', ratioStatus(sbfRatio));
-      scorecard('CXC', cxc ? cxc.valueText : '—', cxc ? cxc.noteJoined : 'Sin lectura', lowerBetterStatus(cxc ? cxc.displayNumber : NaN, 0));
-      scorecard('Venta actual', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
-      scorecard('TX general', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
-
-      var sbfRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1] || pack.tables[2]);
-      pack.chart.title = 'Ranking SBF / CXC';
-      pack.chart.subtitle = 'Lectura local del bloque financiero-operativo';
-      pack.chart.tag = 'SBF';
-      pack.chart.labels = sbfRanking.map(function(item){ return item.label; });
-      pack.chart.values = sbfRanking.map(function(item){ return item.value; });
-      pack.chart.note = sbfRanking.length ? sbfRanking[0].note : '';
-      pack.chart.positiveBetter = true;
-
-      opp('Recuperar TX SBF', ratioStatus(sbfRatio) === 'bad' ? 'alta' : 'media', 'SBF ayuda a tráfico y frecuencia.', isFinite(sbfRatio) && sbfRatio < 1 ? 'El ratio menor a 1.00 indica caída real vs LY.' : 'La base SBF debe sostenerse con ejecución consistente.', 'Ataca primero tiendas/proveedores con mayor caída absoluta, no solo porcentual.', 'KPI: TX SBF vs LY');
-      opp('Bajar presión de CXC', cxc && isFinite(cxc.displayNumber) && cxc.displayNumber > 0 ? 'alta' : 'media', 'CXC pega caja y disciplina operativa.', 'Cuando CXC sube, la presión no es solo comercial sino de control.', 'Asignar seguimiento con responsable y fecha por lote/agente crítico.', 'KPI: CXC agentes MTD');
-      opp('Cruzar SBF con tráfico', ratioStatus(sbfRatio) === 'bad' && ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')) === 'bad' ? 'alta' : 'media', 'La caída simultánea de SBF y TX suele amplificar el deterioro.', 'No leer SBF aislado; hay que validar si además se está perdiendo tráfico general.', 'Empujar activación de servicios en tiendas donde el tráfico aún aguanta.', 'KPI: TX SBF + TX general');
-    }
-
-    if(topic === 'merma'){
-      addTable('t_merma_matrix', 'Merma resumen', 6, 6);
-      addTable('t_merma_drill', 'Merma drill', 6, 6);
-
-      var mermaTarget = 0.0055;
-      var mermaValue = invAdj ? invAdj.valueNumber : NaN;
-      addFact('La data de merma / ajuste sí existe en el dashboard vía KPI y tablas de merma.');
-      addFact(isFinite(mermaValue) ? ('Lectura local: ajuste visible ' + fmtPct(mermaValue) + ' vs meta 0.55%.') : 'Lectura local: existe data de merma en tablas aunque el KPI no esté numéricamente parseado.');
-
-      scorecard('Ajuste inventario', invAdj ? invAdj.valueText : '—', invAdj ? invAdj.noteJoined : 'Meta 0.55%', lowerBetterStatus(mermaValue, mermaTarget));
-      scorecard('Margen', margin ? margin.valueText : '—', 'Merma impacta margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
-      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
-      scorecard('Prioridad', lowerBetterStatus(mermaValue, mermaTarget) === 'bad' ? 'Alta' : 'Media', 'Semáforo local', lowerBetterStatus(mermaValue, mermaTarget));
-
-      var mermaRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1]);
-      pack.chart.title = 'Top impacto de merma';
-      pack.chart.subtitle = 'Ranking local usando tabla de merma disponible';
-      pack.chart.tag = 'Merma';
-      pack.chart.labels = mermaRanking.map(function(item){ return item.label; });
-      pack.chart.values = mermaRanking.map(function(item){ return item.value; });
-      pack.chart.note = mermaRanking.length ? mermaRanking[0].note : '';
-      pack.chart.positiveBetter = false;
-
-      opp('Bajar ajuste por encima de meta', lowerBetterStatus(mermaValue, mermaTarget) === 'bad' ? 'alta' : 'media', 'Merma presiona margen y utilidad.', 'Debe leerse contra meta 0.55%, no como dato aislado.', 'Ataca primero productos/tiendas con mayor impacto absoluto antes de generalizar acciones.', 'KPI: Ajuste % vs 0.55%');
-      opp('Conectar merma con margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'La pérdida de margen puede venir acompañada de ajuste alto.', 'Si margen cae y merma sube, hay destrucción de rentabilidad.', 'Cruzar top merma con top caída de margen antes de definir promociones o compras.', 'KPI: Margen % + ajuste %');
-      opp('Cerrar causa operativa', 'media', 'La merma no se corrige solo con reporte.', 'Necesita disciplina en recepción, control y ejecución en tienda.', 'Asignar revisión física a los top ítems del ranking local y definir acción dueña.', 'KPI: Top ítems corregidos / semana');
-    }
-
-    if(topic === 'inventario'){
-      addTable('t_rop_sug', 'Sugerencias inventario', 6, 6);
-      addTable('t_transfers', 'Transferencias', 6, 6);
-      addTable('t_hueso', 'Productos hueso', 6, 6);
-      addTable('t_hueso_prop', 'Hueso propuesta', 6, 6);
-
-      addFact('La lectura de inventario usa solo días inventario, sugerencias y transfers del dashboard.');
-      if(daysInv && daysInv.valueText) addFact('Días inventario visible: ' + daysInv.valueText + '.');
-
-      scorecard('Días inventario', daysInv ? daysInv.valueText : '—', daysInv ? daysInv.noteJoined : 'Sin lectura', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30));
-      scorecard('PRD en cero', prd0 ? prd0.valueText : '—', prd0 ? prd0.noteJoined : 'Sin lectura', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
-      scorecard('Ajuste inventario', invAdj ? invAdj.valueText : '—', invAdj ? invAdj.noteJoined : 'Meta 0.55%', lowerBetterStatus(invAdj ? invAdj.valueNumber : NaN, 0.0055));
-      scorecard('Caja inmovilizada', daysInv && isFinite(daysInv.displayNumber) ? fmtInt(daysInv.displayNumber) + ' d' : '—', 'Velocidad de rotación', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30));
-
-      var invRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1] || pack.tables[2]);
-      pack.chart.title = 'Top señales de inventario';
-      pack.chart.subtitle = 'Ranking local desde sugerencias / transfers / hueso';
-      pack.chart.tag = 'Inventario';
-      pack.chart.labels = invRanking.map(function(item){ return item.label; });
-      pack.chart.values = invRanking.map(function(item){ return item.value; });
-      pack.chart.note = invRanking.length ? invRanking[0].note : '';
-      pack.chart.positiveBetter = false;
-
-      opp('Bajar días inventario', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Más días inventario inmovilizan caja.', 'Si el inventario rota lento, la rentabilidad se deteriora por capital amarrado.', 'Congelar compras no críticas y mover inventario por transfer donde sí hay salida.', 'KPI: Días inventario');
-      opp('Prevenir quiebres con criterio', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Bajar inventario no debe abrir más quiebres.', 'El riesgo es recortar stock sin distinguir velocidad y criticidad.', 'Priorizar disponibilidad de fast movers y corregir low movers por transfer o no-buy.', 'KPI: PRD en cero + días inventario');
-      opp('Limpiar hueso comercial', 'media', 'El hueso consume espacio y caja.', 'Inventario lento compite contra productos que sí venden.', 'Definir plan de salida o rebalanceo para top ítems hueso identificados en el dashboard.', 'KPI: % inventario lento');
-    }
-
-    if(topic === 'prd_cero'){
-      addTable('t_prd0_prov', 'PRD en cero por proveedor', 6, 6);
-
-      addFact('La data de PRD en cero está disponible y se prioriza sin mezclar otros frentes.');
-      if(prd0 && prd0.valueText) addFact('PRD en cero visible: ' + prd0.valueText + ' | ' + prd0.noteJoined + '.');
-
-      scorecard('PRD en cero', prd0 ? prd0.valueText : '—', prd0 ? prd0.noteJoined : 'Meta < 30', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
-      scorecard('Venta', salesCur ? salesCur.valueText : '—', 'Quiebre bloquea venta capturable', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
-      scorecard('TX', tx ? tx.valueText : '—', 'Quiebre también erosiona tráfico', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
-      scorecard('Prioridad', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'Alta' : 'Media', 'Semáforo local', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
-
-      var prdRanking = pickRankingFromTable(pack.tables[0]);
-      pack.chart.title = 'Top quiebres con foco';
-      pack.chart.subtitle = 'Ranking local del bloque PRD en cero';
-      pack.chart.tag = 'Quiebres';
-      pack.chart.labels = prdRanking.map(function(item){ return item.label; });
-      pack.chart.values = prdRanking.map(function(item){ return item.value; });
-      pack.chart.note = prdRanking.length ? prdRanking[0].note : '';
-      pack.chart.positiveBetter = false;
-
-      opp('Bajar PRD en cero con impacto', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Cada quiebre frena venta y experiencia.', 'No todos los quiebres pesan igual: hay que ir por los de mayor impacto.', 'Atacar primero proveedores o productos con mayor incidencia en la tabla local.', 'KPI: PRD en cero');
-      opp('Recuperar venta capturable', 'media', 'El quiebre destruye venta que sí tenía demanda.', 'Si además venta o TX vienen débiles, el costo del quiebre es mayor.', 'Cruzar top quiebres con fast movers antes de reordenar el surtido completo.', 'KPI: PRD en cero + venta');
-      opp('Subir disciplina de reposición', 'media', 'La raíz suele ser ejecución, no solo compra.', 'Proveedor, pedido y reposición deben cerrarse con responsable claro.', 'Definir tablero semanal de top quiebres con dueño y fecha de corrección.', 'KPI: Ítems recuperados / semana');
-    }
-
-    if(!pack.scorecards.length){
-      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
-      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
-      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
-      scorecard('Proyección', proj ? proj.valueText : '—', proj ? proj.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(proj && proj.noteJoined || '')));
-    }
-    if(!pack.opps.length){
-      opp('Priorizar brecha principal', 'media', 'Mover primero el frente con mayor impacto económico.', 'Una lectura ejecutiva útil prioriza $ antes que ruido.', 'Revisar scorecards y atacar la métrica en rojo con mayor peso de negocio.', 'KPI: driver principal');
-    }
-
-    pack.opps = pack.opps.slice(0, 3);
-    pack.scorecards = pack.scorecards.slice(0, 4);
-
-    var compactTables = pack.tables.slice(0, 5).map(function(t){
-      return {
-        label: t.label,
-        headers: t.headers,
-        rows: t.rows.slice(0, 8)
-      };
-    });
-
-    var promptPayload = {
-      topic: pack.resolvedTopic || pack.topic,
-      question: pack.question || '',
-      filters: pack.filters,
-      facts: pack.facts.slice(0, 24),
-      source_labels: pack.sourceLabels.slice(0, 12),
-      scorecards: pack.scorecards.map(function(item){
-        return { title:item.title, value:item.value, note:item.note, status:item.status };
-      }),
-      top_local_opportunities: pack.opps.map(function(item){
-        return { title:item.title, priority:item.priority, impact:item.impact, cause:item.cause, action:item.action, kpi:item.kpi };
-      }),
-      tables: compactTables,
-      question_scoped_context: buildAiQuestionScopedContext(pack.question)
-    };
-    pack.context = JSON.stringify(promptPayload);
-    return pack;
-  }
-
-  function renderSourceChips(labels){
-    var root = el('ampmAiSourceChips');
-    if(!root) return;
-    root.innerHTML = (labels || []).slice(0, 8).map(function(label){
-      return '<span class="ampm-ai-source-chip">' + htmlEscape(label) + '</span>';
-    }).join('');
-  }
-  function renderScorecards(cards){
-    var root = el('ampmAiScorecards');
-    if(!root) return;
-    root.innerHTML = (cards || []).map(function(card){
-      return ''
-        + '<div class="ampm-ai-scorecard">'
-        +   '<div class="ampm-ai-scorecard-head">'
-        +     '<div class="ampm-ai-scorecard-title">' + htmlEscape(card.title) + '</div>'
-        +     '<span class="ampm-ai-scorecard-status ' + htmlEscape(card.status) + '">' + htmlEscape(card.status === 'good' ? 'Sano' : (card.status === 'warn' ? 'Atento' : (card.status === 'bad' ? 'Crítico' : 'Neutro'))) + '</span>'
-        +   '</div>'
-        +   '<div class="ampm-ai-scorecard-value">' + htmlEscape(card.value) + '</div>'
-        +   '<div class="ampm-ai-scorecard-note">' + htmlEscape(card.note) + '</div>'
-        + '</div>';
-    }).join('');
-  }
-  function renderOpps(items){
-    var root = el('ampmAiOpps');
-    if(!root) return;
-    root.innerHTML = (items || []).map(function(item){
-      return ''
-        + '<div class="ampm-ai-opp">'
-        +   '<div class="ampm-ai-opp-top">'
-        +     '<div class="ampm-ai-opp-title">' + htmlEscape(item.title) + '</div>'
-        +     '<span class="ampm-ai-priority ' + htmlEscape(item.priority) + '">' + htmlEscape(item.priority) + '</span>'
-        +   '</div>'
-        +   '<div class="ampm-ai-opp-body">'
-        +     '<div class="ampm-ai-opp-line"><b>Impacto:</b> ' + htmlEscape(item.impact) + '</div>'
-        +     '<div class="ampm-ai-opp-line"><b>Causa probable:</b> ' + htmlEscape(item.cause) + '</div>'
-        +     '<div class="ampm-ai-opp-line"><b>Acción concreta:</b> ' + htmlEscape(item.action) + '</div>'
-        +     '<div class="ampm-ai-opp-line"><b>KPI sugerido:</b> ' + htmlEscape(item.kpi) + '</div>'
-        +   '</div>'
-        + '</div>';
-    }).join('');
-  }
-
-  function destroyChart(){
-    try{
-      if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy();
-    }catch(_e){}
-    stateAi.chart = null;
-  }
-
-  function renderChart(chartModel){
-    var titleEl = el('ampmAiChartTitle');
-    var subEl = el('ampmAiChartSub');
-    var tagEl = el('ampmAiChartTag');
-    var canvas = el('ampmAiChart');
-    var empty = el('ampmAiChartEmpty');
-
-    if(titleEl) titleEl.textContent = txt(chartModel && chartModel.title) || 'Visual local';
-    if(subEl) subEl.textContent = txt(chartModel && chartModel.subtitle) || 'Serie construida con data estructurada del cubo';
-    if(tagEl) tagEl.textContent = txt(chartModel && chartModel.tag) || 'Local';
-
-    destroyChart();
-    if(!canvas || !window.Chart){
-      if(empty){ empty.classList.add('show'); empty.textContent = 'No fue posible inicializar la visual.'; }
-      return;
-    }
-
-    var labels = (chartModel && chartModel.labels) || [];
-    var datasets = (chartModel && Array.isArray(chartModel.datasets) && chartModel.datasets.length)
-      ? chartModel.datasets.slice()
-      : [{ label: txt(chartModel && chartModel.note) || 'Valor', data: (chartModel && chartModel.values) || [] }];
-
-    if(!labels.length || !datasets.length || !datasets.some(function(ds){ return Array.isArray(ds && ds.data) && ds.data.length; })){
-      if(empty){ empty.classList.add('show'); empty.textContent = 'No hay suficiente data estructurada para graficar este foco.'; }
-      return;
-    }
-    if(empty) empty.classList.remove('show');
-
-    var palette = ['#0C4D8F','#F58320','#16A34A','#64748B','#7C3AED','#DC2626','#059669','#F59E0B','#334155','#0EA5E9','#9333EA','#E11D48'];
-    var type = txt(chartModel && chartModel.type) || (datasets.length > 1 ? 'line' : 'bar');
-    var isCircular = /^(pie|doughnut)$/i.test(type);
-    var horizontal = !isCircular && !!(chartModel && chartModel.horizontal);
-    var yFormat = txt(chartModel && chartModel.yFormat) || 'number';
-
-    function fmtValue(value){
-      if(!isFinite(value)) return '—';
-      if(yFormat === 'money') return (typeof money === 'function') ? money(value) : ('$' + Number(value).toLocaleString('es-SV'));
-      if(yFormat === 'percent') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 }) + '%';
-      if(yFormat === 'ratio') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
-      if(yFormat === 'int') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 0 });
-      return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
-    }
-
-    var normalizedSets = datasets.map(function(ds, idx){
-      var color = ds.color || palette[idx % palette.length];
-      var dsType = ds.type || type;
-      var base = {
-        type: dsType,
-        label: txt(ds.label) || ('Serie ' + (idx + 1)),
-        data: Array.isArray(ds.data) ? ds.data : [],
-        borderColor: color,
-        backgroundColor: color,
-        tension: dsType === 'line' ? 0.28 : 0,
-        pointRadius: dsType === 'line' ? 4 : 0,
-        pointHoverRadius: dsType === 'line' ? 5 : 0,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: color,
-        pointBorderWidth: dsType === 'line' ? 2 : 0,
-        borderWidth: dsType === 'line' ? 3 : 1,
-        fill: false
-      };
-      if(dsType === 'bar'){
-        base.borderRadius = 10;
-        base.borderSkipped = false;
-        base.barPercentage = 0.72;
-        base.categoryPercentage = 0.72;
-      }
-      if(/^(pie|doughnut)$/i.test(dsType)){
-        base.backgroundColor = labels.map(function(_x, j){ return palette[j % palette.length]; });
-        base.borderColor = '#ffffff';
-        base.borderWidth = 2;
-      }
-      return Object.assign(base, ds);
-    });
-
-    var options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      layout: { padding: { left: 8, right: 12, top: 6, bottom: 0 } },
-      interaction: { mode: isCircular ? 'nearest' : 'index', intersect: isCircular },
-      plugins: {
-        legend: { display: true, position: 'bottom', labels:{ color:'#1f2937', font:{ weight:'800' }, boxWidth: 14, boxHeight: 14 } },
-        tooltip: { callbacks: { label: function(ctx){ var parsed = isCircular ? ctx.raw : (horizontal ? (ctx.parsed && ctx.parsed.x) : (ctx.parsed && ctx.parsed.y)); return ' ' + (ctx.dataset && ctx.dataset.label ? ctx.dataset.label + ': ' : '') + fmtValue(parsed != null ? parsed : ctx.raw); } } }
-      }
-    };
-
-    if(!isCircular){
-      options.indexAxis = horizontal ? 'y' : 'x';
-      options.scales = {
-        x: {
-          beginAtZero: !horizontal,
-          grid: { color:'rgba(148,163,184,.18)', display: !horizontal },
-          ticks: { color:'#334155', font:{ weight:'800' }, callback:function(v){ return horizontal ? String(v) : fmtValue(v); } }
-        },
-        y: {
-          beginAtZero: horizontal,
-          grid: { color:'rgba(148,163,184,.18)', display: horizontal ? false : true },
-          ticks: { color:'#0f172a', font:{ weight:'900' }, callback:function(v){ return horizontal ? fmtValue(v) : String(labels[v] || v); } }
-        }
-      };
-    }
-
-    stateAi.chart = new Chart(canvas.getContext('2d'), {
-      type: type,
-      data: { labels: labels, datasets: normalizedSets },
-      options: options
-    });
-  }
-
-  function truncateMiddle(text, max){
-    text = txt(text);
-    max = max || 72;
-    if(text.length <= max) return text;
-    return text.slice(0, max - 1) + '…';
-  }
-
-  function clearStageImage(){
-    var img = el('ampmAiImage');
-    if(img) img.removeAttribute('src');
-    stateAi.imageObjectUrl = '';
-  }
-
-  function setStageMode(label){
-    var mode = el('ampmAiStageMode');
-    if(mode) mode.textContent = txt(label) || 'Esperando solicitud';
-  }
-
-  function setStageNote(note){
-    var node = el('ampmAiStageNote');
-    if(!node) return;
-    note = txt(note);
-    node.textContent = note;
-    node.style.display = note ? '' : 'none';
-  }
-
-  function resetStage(message){
-    destroyChart();
-    clearStageImage();
-    var empty = el('ampmAiStageEmpty');
-    var chartCard = el('ampmAiStageChartCard');
-    var imageCard = el('ampmAiImageCard');
-    if(chartCard) chartCard.hidden = true;
-    if(imageCard) imageCard.hidden = true;
-    if(empty){
-      empty.textContent = txt(message) || 'Pide un gráfico, una infografía o una imagen de campaña para mostrarla aquí.';
-      empty.style.display = '';
-    }
-    setStageNote('');
-    setStageMode('Esperando solicitud');
-    stateAi.visualMode = 'idle';
-  }
-
-  function setStageLoading(message){
-    destroyChart();
-    clearStageImage();
-    var empty = el('ampmAiStageEmpty');
-    var chartCard = el('ampmAiStageChartCard');
-    var imageCard = el('ampmAiImageCard');
-    if(chartCard) chartCard.hidden = true;
-    if(imageCard) imageCard.hidden = true;
-    if(empty){
-      empty.textContent = txt(message) || 'Preparando visual…';
-      empty.style.display = '';
-    }
-    setStageMode('Generando visual');
-    stateAi.visualMode = 'loading';
-  }
-
-  function showStageChart(chartModel, note){
-    var empty = el('ampmAiStageEmpty');
-    var chartCard = el('ampmAiStageChartCard');
-    var imageCard = el('ampmAiImageCard');
-    if(imageCard) imageCard.hidden = true;
-    clearStageImage();
-    if(chartCard) chartCard.hidden = false;
-    if(empty) empty.style.display = 'none';
-    renderChart(chartModel);
-    setStageNote(note || '');
-    setStageMode('Gráfico local');
-    stateAi.visualMode = 'chart';
-  }
-
-  function showStageImage(src, title, subtitle, note){
-    var empty = el('ampmAiStageEmpty');
-    var chartCard = el('ampmAiStageChartCard');
-    var imageCard = el('ampmAiImageCard');
-    var img = el('ampmAiImage');
-    var titleEl = el('ampmAiImageTitle');
-    var subEl = el('ampmAiImageSub');
-    var noteEl = el('ampmAiImageNote');
-    destroyChart();
-    if(chartCard) chartCard.hidden = true;
-    if(imageCard) imageCard.hidden = false;
-    if(empty) empty.style.display = 'none';
-    if(img) img.src = src || '';
-    if(titleEl) titleEl.textContent = txt(title) || 'Imagen IA';
-    if(subEl) subEl.textContent = txt(subtitle) || 'Generada con la solicitud actual';
-    if(noteEl) noteEl.textContent = txt(note) || '';
-    setStageNote('');
-    setStageMode('Imagen IA');
-    stateAi.visualMode = 'image';
-  }
-
-  function detectVisualIntent(question){
-    var q = txt(question).toLowerCase();
-    if(!q) return { type:'none' };
-    var has = function(words){
-      return words.some(function(word){ return q.indexOf(word) >= 0; });
-    };
-    if(has(['imagen','image','key visual','campaña','campana','post','story','banner','afiche','flyer','pieza','creativ','arte','mockup','foto'])) return { type:'image' };
-    if(has(['infografia','infografía','infographic','one pager visual','visual ejecutivo'])) return { type:'infographic' };
-    if(has(['graf','gráf','grafica','gráfica','grafico','gráfico','chart','barra','barras','linea','línea','tendencia','evolucion','evolución','comparativo','share','mix','participacion','participación','ranking','top','delta','vs '])) return { type:'chart' };
-    return { type:'text' };
-  }
-
-  function buildVisualTitleFromQuestion(question, fallback){
-    var q = truncateMiddle(question || '', 68);
-    if(!q) return txt(fallback) || 'Visual local';
-    q = q.replace(/[?]+$/,'');
-    return q.charAt(0).toUpperCase() + q.slice(1);
-  }
-
-  function aiNormCompact(value){
-    return stripAccents(txt(value)).toUpperCase().replace(/[^A-Z0-9]+/g,'');
-  }
-
-  function aiSelectedStores(){
-    var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []);
-    return (Array.isArray(stores) ? stores : [stores]).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean);
-  }
-
-  function aiScopedSalesRows(){
-    var rows = Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows.slice() : [];
-    try{
-      if(typeof getDowScopedRows === 'function') rows = getDowScopedRows(rows);
-    }catch(_e){}
-    var storeSet = new Set(aiSelectedStores());
-    if(storeSet.size){
-      rows = rows.filter(function(r){ return r && storeSet.has(String(r.store || '').trim().toUpperCase()); });
-    }
-    return rows.filter(Boolean);
-  }
-
-  function aiRequestedMode(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    var asksMonth = /mensual|mtd|mes|meses|month/.test(q);
-    var asksWeek = /semanal|semana|semanas|week|weeks/.test(q);
-    if(asksMonth && !asksWeek) return 'month';
-    if(asksWeek && !asksMonth) return 'week';
-    return (typeof isMonthlyReport === 'function' && isMonthlyReport()) ? 'month' : 'week';
-  }
-
-  function aiRequestedCount(question, mode){
-    var q = stripAccents(txt(question)).toLowerCase();
-    var match = q.match(/ultim(?:a|as|o|os)?\s+(\d+)\s+(semanas?|meses?)/i) || q.match(/(\d+)\s+(semanas?|meses?)/i);
-    var value = match ? parseInt(match[1], 10) : NaN;
-    if(Number.isFinite(value) && value > 0){
-      return Math.min(value, mode === 'month' ? 18 : 16);
-    }
-    return mode === 'month' ? 6 : 8;
-  }
-
-
-
-  function aiFindEntity(rows, question){
-    var q = aiNormCompact(question);
-    if(!q) return null;
-
-    var aliases = [
-      { prop:'category', value:'Whisky', label:'Whisky', norm:'WHISKY' },
-      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZAS' },
-      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZA' },
-      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'RTD' },
-      { prop:'department', value:'Licores', label:'Licores', norm:'LICORES' },
-      { prop:'department', value:'Licores', label:'Licores', norm:'LICOR' },
-      { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
-      { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
-      { prop:'category', value:'Ready to Drink', label:'Ready to Drink', norm:'READYTODRINK' }
-    ];
-    for(var i=0;i<aliases.length;i+=1){
-      if(q.indexOf(aliases[i].norm) >= 0) return aliases[i];
-    }
-
-    var pools = [
-      { prop:'description', priority:4 },
-      { prop:'brand', priority:3 },
-      { prop:'category', priority:2 },
-      { prop:'department', priority:1 }
-    ];
-    var best = null;
-    pools.forEach(function(pool){
-      var map = new Map();
-      rows.forEach(function(r){
-        var raw = txt(r && r[pool.prop]);
-        if(!raw || raw.length < 3) return;
-        var norm = aiNormCompact(raw);
-        if(norm.length < 3) return;
-        if(!map.has(norm)) map.set(norm, { prop:pool.prop, value:raw, label:raw, norm:norm, priority:pool.priority });
-      });
-      map.forEach(function(item){
-        if(q.indexOf(item.norm) >= 0){
-          if(!best || item.priority > best.priority || (item.priority === best.priority && item.norm.length > best.norm.length)) best = item;
-        }
-      });
-    });
-    return best;
-  }
-
-  function aiRowMatchesEntity(row, entity){
-    if(!entity) return true;
-    var rowValue = aiNormCompact(row && row[entity.prop]);
-    return !!rowValue && (rowValue === entity.norm || rowValue.indexOf(entity.norm) >= 0 || entity.norm.indexOf(rowValue) >= 0);
-  }
-
-  function aiMetricMode(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(/sin delivery|no delivery|nondelivery/.test(q)) return 'non_delivery_sales';
-    if(/margen bruto|gross margin|\bgm\b|margen/.test(q)) return 'gross_margin';
-    if(/share|participacion|participacion/.test(q) && /delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_share';
-    if(/delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_sales';
-    return 'sales';
-  }
-
-  function aiDetectChartType(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
-    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
-    if(/barra|barras|ranking|top/.test(q)) return 'bar';
-    if(/linea|lineas|tendencia|evolucion|serie|ultim/.test(q)) return 'line';
-    return 'auto';
-  }
-
-  function aiDetectBreakdownDimension(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(/categor/i.test(q) || /categoria|categorias/.test(q)) return 'category';
-    if(/marca|marcas/.test(q)) return 'brand';
-    if(/departamento|departamentos|depto/.test(q)) return 'department';
-    if(/tienda|tiendas|store|stores/.test(q)) return 'store';
-    if(/turno|turnos|horario|horarios|daypart/.test(q)) return 'daypart';
-    if(/dia de semana|dow|dia |dias /.test(q)) return 'dow';
-    return '';
-  }
-
-  function aiDetectChannelFilter(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(/uber/.test(q)) return 'UBER';
-    if(/pedidos ya|pedidoya|pya|peya/.test(q)) return 'PYA';
-    return '';
-  }
-
-  function aiMetricLabel(metric){
-    if(metric === 'delivery_share') return 'Share delivery';
-    if(metric === 'delivery_sales') return 'Venta delivery';
-    if(metric === 'non_delivery_sales') return 'Venta sin delivery';
-    if(metric === 'gross_margin') return 'Margen bruto';
-    return 'Venta';
-  }
-
-  function aiMetricYFormat(metric){
-    if(metric === 'delivery_share') return 'percent';
-    return 'money';
-  }
-
-  function aiBucketAdd(bucket, row){
-    if(!bucket || !row) return;
-    var sales = Number(row.sales || 0) || 0;
-    bucket.total += sales;
-    bucket.delivery += row.is_delivery ? sales : 0;
-    bucket.non_delivery += row.is_delivery ? 0 : sales;
-    bucket.margin += Number(row.gross_margin || 0) || 0;
-  }
-
-  function aiMetricValueFromBucket(bucket, metric){
-    var b = bucket || { total:0, delivery:0, non_delivery:0, margin:0 };
-    if(metric === 'delivery_share') return b.total ? Number(((b.delivery / b.total) * 100).toFixed(2)) : 0;
-    if(metric === 'delivery_sales') return Number(b.delivery || 0);
-    if(metric === 'non_delivery_sales') return Number(b.non_delivery || 0);
-    if(metric === 'gross_margin') return Number(b.margin || 0);
-    return Number(b.total || 0);
-  }
-
-  function aiSortEntries(entries){
-    return (entries || []).slice().sort(function(a,b){
-      var av = Math.abs(Number(a && a.value || 0));
-      var bv = Math.abs(Number(b && b.value || 0));
-      if(bv !== av) return bv - av;
-      return String(a && a.label || '').localeCompare(String(b && b.label || ''));
-    });
-  }
-
-  function aiWantsBreakdown(question, chartType, dimension){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(chartType === 'pie') return true;
-    if(dimension && !/ultim|seman|mensual|mtd|serie|tendencia|evolucion/.test(q)) return true;
-    if(/participacion|share|mix|top|ranking/.test(q) && dimension) return true;
-    return false;
-  }
-
-  function aiFilterRowsByQuestion(rows, entity, channelFilter){
-    var scoped = Array.isArray(rows) ? rows.slice() : [];
-    if(entity){
-      scoped = scoped.filter(function(r){ return aiRowMatchesEntity(r, entity); });
-    }
-    if(channelFilter){
-      scoped = scoped.filter(function(r){
-        var ch = stripAccents(txt(r && r.delivery_channel)).toUpperCase();
-        if(channelFilter === 'UBER') return ch.indexOf('UBER') >= 0;
-        if(channelFilter === 'PYA') return ch.indexOf('PEDIDOS') >= 0 || ch.indexOf('PYA') >= 0 || ch.indexOf('PEYA') >= 0;
-        return true;
-      });
-    }
-    return scoped;
-  }
-
-  function aiGroupLabel(row, dimension){
-    if(!row) return '';
-    if(dimension === 'store') return txt(row.store).toUpperCase();
-    if(dimension === 'department') return txt(row.department);
-    if(dimension === 'category') return txt(row.category);
-    if(dimension === 'brand') return txt(row.brand);
-    if(dimension === 'daypart') return txt(row.daypart);
-    if(dimension === 'dow') return txt(row.dow_name || row.dow || row.dowLabel);
-    return '';
-  }
-
-  function aiBuildBreakdownContext(entries, metric, dimension, usePeriods, compareLy, entity){
-    var total = entries.reduce(function(acc, item){ return acc + (Number(item.value || 0) || 0); }, 0);
-    var topItems = entries.slice(0, 10).map(function(item, idx){
-      var share = total ? Number((((Number(item.value || 0) || 0) / total) * 100).toFixed(2)) : 0;
-      var ly = Number(item.lyValue || 0) || 0;
-      return {
-        rank: idx + 1,
-        label: item.label,
-        current_value: Number(item.value || 0) || 0,
-        ly_value: compareLy ? ly : null,
-        delta_vs_ly: compareLy ? Number(((Number(item.value || 0) || 0) - ly).toFixed(2)) : null,
-        share_pct: share
-      };
-    });
-    return {
-      analysis_type: 'breakdown',
-      dimension: dimension,
-      metric: metric,
-      metric_label: aiMetricLabel(metric),
-      compare_vs_ly: !!compareLy,
-      filters_detected: entity ? { focus: entity.label, focus_prop: entity.prop } : null,
-      periods_used: (usePeriods || []).slice(),
-      totals: {
-        visible_total: Number(total.toFixed(2))
-      },
-      top_items: topItems
-    };
-  }
-
-  function aiBuildTimeSeriesContext(labels, currentValues, lyValues, metric, entity, mode){
-    return {
-      analysis_type: 'time_series',
-      period_mode: mode,
-      metric: metric,
-      metric_label: aiMetricLabel(metric),
-      entity: entity ? entity.label : 'Total',
-      labels: labels.slice(),
-      current_series: currentValues.slice(),
-      ly_series: Array.isArray(lyValues) && lyValues.length ? lyValues.slice() : []
-    };
-  }
-
-  function aiBuildLocalIntentModel(question){
-    var rows = aiScopedSalesRows();
-    if(!rows.length) return null;
-
-    var q = stripAccents(txt(question)).toLowerCase();
-    var mode = aiRequestedMode(question);
-    var metric = aiMetricMode(question);
-    var count = aiRequestedCount(question, mode);
-    var compareLy = /\bly\b|ano pasado|año pasado|vs ly|contra ly|compar/i.test(q);
-    var chartType = aiDetectChartType(question);
-    var dimension = aiDetectBreakdownDimension(question);
-    var breakdown = aiWantsBreakdown(question, chartType, dimension);
-    var explicitTemporal = /ultim|seman|mensual|semanal|mtd|mes|month|week|serie|tendencia|evolucion|histor/.test(q);
-    var entity = aiFindEntity(rows, question);
-    var channelFilter = aiDetectChannelFilter(question);
-
-    var scoped = aiFilterRowsByQuestion(rows, entity, channelFilter);
-    if(!scoped.length && entity) scoped = rows.slice();
-    if(!scoped.length) return null;
-
-    var allPeriods = aiSortPeriods(Array.from(new Set(scoped.map(function(r){ return aiPeriodKey(r, mode); }).filter(Boolean))), mode);
-    if(!allPeriods.length) return null;
-
-    var usePeriods = explicitTemporal ? allPeriods.slice(-count) : (breakdown ? allPeriods.slice(-1) : allPeriods.slice(-count));
-    if(!usePeriods.length) usePeriods = allPeriods.slice(-1);
-    var periodSet = new Set(usePeriods);
-    var currentRows = scoped.filter(function(r){ return periodSet.has(aiPeriodKey(r, mode)); });
-    if(!currentRows.length) currentRows = scoped.slice();
-
-    if(breakdown){
-      var dim = dimension || 'category';
-      var currentMap = new Map();
-      currentRows.forEach(function(r){
-        var label = aiGroupLabel(r, dim);
-        if(!label) return;
-        if(!currentMap.has(label)) currentMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
-        aiBucketAdd(currentMap.get(label), r);
-      });
-
-      var lyMap = new Map();
-      if(compareLy){
-        var lyPeriods = usePeriods.map(function(pk){ return aiLyPeriod(pk, mode); }).filter(Boolean);
-        var lySet = new Set(lyPeriods);
-        scoped.forEach(function(r){
-          var rpk = aiPeriodKey(r, mode);
-          if(!lySet.has(rpk)) return;
-          var label = aiGroupLabel(r, dim);
-          if(!label) return;
-          if(!lyMap.has(label)) lyMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
-          aiBucketAdd(lyMap.get(label), r);
-        });
-      }
-
-      var labelsAll = Array.from(new Set([].concat(Array.from(currentMap.keys()), Array.from(lyMap.keys()))));
-      var entries = labelsAll.map(function(label){
-        var value = aiMetricValueFromBucket(currentMap.get(label), metric);
-        var lyValue = aiMetricValueFromBucket(lyMap.get(label), metric);
-        return { label: label, value: value, lyValue: lyValue };
-      }).filter(function(item){ return Number(item.value || 0) !== 0 || Number(item.lyValue || 0) !== 0; });
-
-      entries = aiSortEntries(entries).slice(0, chartType === 'pie' ? 10 : 12);
-      if(!entries.length) return null;
-
-      var labels = entries.map(function(item){ return item.label; });
-      var values = entries.map(function(item){ return Number(item.value || 0) || 0; });
-      var lyValues = entries.map(function(item){ return Number(item.lyValue || 0) || 0; });
-      var dimLabelMap = { category:'categoría', brand:'marca', department:'departamento', store:'tienda', daypart:'turno', dow:'día' };
-      var dimLabel = dimLabelMap[dim] || dim;
-      var focusLabel = entity ? (' de ' + entity.label) : '';
-      var effectiveType = chartType === 'pie' ? 'pie' : ((chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)) ? 'bar' : 'bar');
-      var datasets = compareLy && chartType !== 'pie'
-        ? [
-            { label: aiMetricLabel(metric) + ' actual', data: values, type:'bar', color:'#0C4D8F' },
-            { label: aiMetricLabel(metric) + ' LY', data: lyValues, type:'bar', color:'#F58320' }
-          ]
-        : [
-            { label: aiMetricLabel(metric), data: values, type: effectiveType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-          ];
-
-      return {
-        mode: mode,
-        metric: metric,
-        entity: entity,
-        chartType: effectiveType,
-        periods: usePeriods,
-        labels: labels,
-        datasets: datasets,
-        title: aiMetricLabel(metric) + ' por ' + dimLabel + focusLabel,
-        subtitle: breakdown && explicitTemporal
-          ? ('Breakdown acumulado de los últimos ' + usePeriods.length + ' ' + (mode === 'month' ? 'meses' : 'periodos'))
-          : ('Breakdown del último ' + (mode === 'month' ? 'mes' : 'periodo') + ' disponible en el cubo'),
-        tag: compareLy && chartType !== 'pie' ? 'Actual vs LY' : (effectiveType === 'pie' ? 'Participación' : 'Breakdown'),
-        yFormat: aiMetricYFormat(metric),
-        type: effectiveType === 'pie' ? 'pie' : 'bar',
-        horizontal: effectiveType !== 'pie' && (chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)),
-        note: 'Fuente directa: Cubo_Sales_DetailHallazgos',
-        questionScopedContext: aiBuildBreakdownContext(entries, metric, dim, usePeriods, compareLy, entity)
-      };
-    }
-
-    var periodAgg = new Map();
-    scoped.forEach(function(r){
-      var key = aiPeriodKey(r, mode);
-      if(!key) return;
-      if(!periodAgg.has(key)) periodAgg.set(key, { total:0, delivery:0, non_delivery:0, margin:0 });
-      aiBucketAdd(periodAgg.get(key), r);
-    });
-
-    var periods = aiSortPeriods(Array.from(periodAgg.keys()), mode).slice(-count);
-    if(!periods.length) return null;
-
-    var currentValues = periods.map(function(pk){ return aiMetricValueFromBucket(periodAgg.get(pk), metric); });
-    var datasetsTs = [{
-      label: aiMetricLabel(metric) + ' actual',
-      data: currentValues,
-      type: chartType === 'bar' ? 'bar' : 'line',
-      color: '#0C4D8F'
-    }];
-
-    var lyValues = [];
-    if(compareLy){
-      lyValues = periods.map(function(pk){
-        var lyKey = aiLyPeriod(pk, mode);
-        if(!lyKey) return 0;
-        return aiMetricValueFromBucket(periodAgg.get(lyKey), metric);
-      });
-      datasetsTs.push({
-        label: aiMetricLabel(metric) + ' LY',
-        data: lyValues,
-        type: chartType === 'bar' ? 'bar' : 'line',
-        color: '#F58320'
-      });
-    }
-
-    var baseLabel = entity ? entity.label : 'total seleccionado';
-    return {
-      mode: mode,
-      metric: metric,
-      entity: entity,
-      periods: periods,
-      labels: periods.map(function(pk){ return aiPeriodLabel(pk, mode); }),
-      datasets: datasetsTs,
-      title: aiMetricLabel(metric) + ' de ' + baseLabel,
-      subtitle: mode === 'month' ? 'Serie mensual directa desde el cubo' : 'Serie semanal directa desde el cubo',
-      tag: compareLy ? 'Actual vs LY' : (mode === 'month' ? 'Mensual' : 'Semanal'),
-      yFormat: aiMetricYFormat(metric),
-      note: 'Fuente directa: Cubo_Sales_DetailHallazgos / Cubo_Sales',
-      questionScopedContext: aiBuildTimeSeriesContext(periods.map(function(pk){ return aiPeriodLabel(pk, mode); }), currentValues, lyValues, metric, entity, mode)
-    };
-  }
-
-  function aiBuildSeries(question){
-    return aiBuildLocalIntentModel(question);
-  }
-
-  function buildAiQuestionScopedContext(question){
-    try{
-      var localSeries = aiBuildLocalIntentModel(question);
-      return localSeries ? localSeries.questionScopedContext : null;
-    }catch(_e){
-      return null;
-    }
-  }
-
-  function renderRequestedLocalVisual(question, pack, options){
-    var smart = null;
-    try{ smart = aiBuildLocalIntentModel(question); }catch(_e){ smart = null; }
-
-    var model = smart ? {
-      title: buildVisualTitleFromQuestion(question, smart.title),
-      subtitle: smart.subtitle,
-      tag: smart.tag,
-      labels: smart.labels,
-      datasets: smart.datasets,
-      note: smart.note,
-      type: smart.type || 'line',
-      horizontal: !!smart.horizontal,
-      yFormat: smart.yFormat
-    } : {
-      title: buildVisualTitleFromQuestion(question, pack && pack.chart && pack.chart.title),
-      subtitle: 'Visual local generado con la mejor data estructurada disponible del dashboard',
-      tag: (pack && pack.resolvedTopic && TOPICS[pack.resolvedTopic] ? TOPICS[pack.resolvedTopic].title : 'Local'),
-      labels: pack && pack.chart && Array.isArray(pack.chart.labels) ? pack.chart.labels.slice() : [],
-      values: pack && pack.chart && Array.isArray(pack.chart.values) ? pack.chart.values.slice() : [],
-      note: pack && pack.chart ? pack.chart.note : '',
-      type: 'bar',
-      horizontal: true,
-      yFormat: (pack && pack.chart && /%|ratio/i.test(pack.chart.note || '')) ? 'ratio' : 'number'
-    };
-
-    var hasData = (model.labels && model.labels.length) && (
-      (Array.isArray(model.datasets) && model.datasets.some(function(ds){ return Array.isArray(ds && ds.data) && ds.data.some(function(v){ return Number(v || 0) !== 0; }); }))
-      || (Array.isArray(model.values) && model.values.length)
-    );
-
-    if(!hasData){
-      if(!(options && options.__retried) && typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function'){
-        try{
-          setStageLoading('Preparando capa JSON para tu solicitud…');
-          window.__ampmJsonRouteV2EnsureReadyForQuestion(question)
-            .then(function(){
-              var ok = false;
-              try{ ok = renderRequestedLocalVisual(question, pack, { __retried:true }); }catch(_e){ ok = false; }
-              if(!ok){
-                resetStage('No encontré una estructura local suficiente para graficar exactamente esa solicitud con la data disponible.');
-              }
-            })
-            .catch(function(err){
-              resetStage('No pude preparar la capa JSON para esa solicitud: ' + txt(err && err.message || err));
-            });
-          return true;
-        }catch(_e){}
-      }
-      resetStage('No encontré una estructura local suficiente para graficar exactamente esa solicitud con la data disponible.');
-      return false;
-    }
-
-    var note = smart
-      ? ('Fuentes usadas: Cubo_Sales_DetailHallazgos / Cubo_Sales · periodos usados: ' + ((smart.periods || []).join(', ') || 'actual') + (smart.entity ? (' · foco detectado: ' + smart.entity.label) : ' · foco general'))
-      : ('Fuentes usadas: ' + ((pack && pack.sourceLabels && pack.sourceLabels.length) ? pack.sourceLabels.join(', ') : 'dashboard actual'));
-    showStageChart(model, note);
-    return true;
-  }
-
-  function buildImagePrompt(question, pack, kind){
-    var facts = (pack && Array.isArray(pack.facts) ? pack.facts : []).slice(0, 6).join(' ');
-    var filters = '';
-    try{ filters = JSON.stringify(pack && pack.filters ? pack.filters : {}); }catch(_e){ filters = ''; }
-    var base = [
-      'Crear una pieza visual premium para AMPM El Salvador.',
-      kind === 'infographic'
-        ? 'El estilo debe ser una infografía ejecutiva moderna, limpia, corporativa, con módulos visuales claros, look premium y estética retail/convenience 24/7.'
-        : 'El estilo debe ser publicitario, fotorealista, comercial, premium y listo para campaña de tienda de conveniencia 24/7.',
-      'Brief principal del usuario: ' + txt(question) + '.',
-      facts ? ('Contexto validado del dashboard: ' + facts) : '',
-      filters ? ('Filtros activos del dashboard: ' + filters) : '',
-      'Usar una composición profesional, moderna y brand-safe.',
-      'No inventar precios, promociones ni claims no confirmados en el brief.',
-      'Mantener texto mínimo dentro de la imagen, salvo que el usuario lo haya pedido explícitamente.'
-    ].filter(Boolean);
-    return base.join('\n');
-  }
-
-  function requestImageVisual(question, pack, kind){
-    var apiKey = getApiKey();
-    if(!/^sk-/.test(apiKey)){
-      resetStage(kind === 'infographic' ? 'Para generar infografías o imágenes IA, primero configura la API Key.' : 'Para generar imágenes IA, primero configura la API Key.');
-      return Promise.resolve(false);
-    }
-    setStageLoading(kind === 'infographic' ? 'Generando infografía IA…' : 'Generando imagen IA…');
-    return fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model: 'gpt-image-1',
-        size: '1536x1024',
-        prompt: buildImagePrompt(question, pack, kind)
-      })
-    })
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if(data && data.error) throw new Error(data.error.message || 'No se pudo generar la imagen.');
-      var item = data && Array.isArray(data.data) ? data.data[0] : null;
-      var src = '';
-      if(item && item.b64_json) src = 'data:image/png;base64,' + item.b64_json;
-      else if(item && item.url) src = item.url;
-      if(!src) throw new Error('No vino una imagen utilizable.');
-      showStageImage(
-        src,
-        kind === 'infographic' ? 'Infografía IA' : 'Imagen IA',
-        buildVisualTitleFromQuestion(question, kind === 'infographic' ? 'Infografía ejecutiva' : 'Visual de campaña'),
-        'Visual generado desde la solicitud actual. Recomendación: valida copy final y claims antes de publicar.'
-      );
-      return true;
-    })
-    .catch(function(err){
-      resetStage('No se pudo generar el visual IA: ' + txt(err && err.message || err));
-      return false;
-    });
-  }
-
-  function renderVisuals(topic, question){
-    var effectiveTopic = topic === 'chat' ? inferTopicFromQuestion(question) : topic;
-    var pack = buildTopicPack(effectiveTopic, question);
-    stateAi.activePack = pack;
-    renderSourceChips(pack.sourceLabels);
-    renderScorecards(pack.scorecards);
-    renderOpps(pack.opps);
-
-    var footer = el('ampmAiFooterHint');
-    if(footer){
-      footer.textContent = 'Contexto activo: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo') + ' · fuentes: ' + (pack.sourceLabels.join(', ') || 'dashboard actual') + '.';
-    }
-    var scopeBadge = el('ampmAiScopeBadge');
-    if(scopeBadge) scopeBadge.textContent = 'Contexto: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo');
-
-    var stageSub = el('ampmAiStageSub');
-    if(stageSub){
-      stageSub.textContent = 'Base analítica activa: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo') + '. Pide un gráfico local o una imagen IA y se mostrará aquí.';
-    }
-
-    var visualIntent = detectVisualIntent(question);
-    if(!txt(question)){
-      resetStage();
-      return pack;
-    }
-    if(visualIntent.type === 'chart') renderRequestedLocalVisual(question, pack);
-    return pack;
-  }
-
-  function syncTopicUi(){
-    var conf = TOPICS[stateAi.topic] || TOPICS.chat;
-    var titleEl = el('ampmAiHeaderTitle');
-    var subEl = el('ampmAiHeaderSub');
-    if(titleEl) titleEl.textContent = conf.title;
-    if(subEl) subEl.textContent = conf.sub;
-
-    Array.prototype.slice.call(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
-      btn.classList.toggle('active', txt(btn.getAttribute('data-topic')) === stateAi.topic);
-    });
-
-    var promptsRoot = el('ampmAiPrompts');
-    if(promptsRoot){
-      promptsRoot.innerHTML = conf.prompts.map(function(prompt){
-        return '<button class="ampm-ai-prompt-pill" type="button" data-prompt="' + htmlEscape(prompt) + '">' + htmlEscape(prompt) + '</button>';
-      }).join('');
-    }
-
-    renderVisuals(stateAi.topic, '');
-  }
-
-  function setUsageMeta(text){
-    stateAi.lastUsage = txt(text);
-    var meta = el('ampmAiUsageMeta');
-    if(meta) meta.textContent = stateAi.lastUsage;
-  }
-
-  function clearConversation(fullReset){
-    stateAi.uiMessages = [];
-    stateAi.lastResponseId = '';
-    stateAi.lastTopicForResponse = '';
-    var messages = el('ampmAiMessages');
+  function showEmpty(show){
     var empty = el('ampmAiEmpty');
-    if(messages) messages.innerHTML = '';
-    if(empty) empty.style.display = '';
-    setUsageMeta('');
-    if(fullReset){
-      renderVisuals(stateAi.topic, '');
-      resetStage();
-    }
+    if(empty) empty.style.display = show ? '' : 'none';
   }
-
-  function formatMessageHtml(body, role){
-    var raw = txt(body);
-    if(!raw) return '';
-    var blocks = raw.replace(/\r/g,'').split(/\n{2,}/).map(function(block){ return txt(block); }).filter(Boolean);
-    if(!blocks.length) blocks = [raw];
-
-    function formatInline(text){
-      var safe = htmlEscape(txt(text));
-      safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      safe = safe.replace(/__(.+?)__/g, '<strong>$1</strong>');
-      safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
-      return safe;
-    }
-
-    return blocks.map(function(block){
-      var lines = block.split(/\n+/).map(function(line){ return txt(line); }).filter(Boolean);
-      if(lines.length > 1 && lines.every(function(line){ return /^[-•*]\s+/.test(line) || /^\d+[\.)]\s+/.test(line); })){
-        var ordered = lines.every(function(line){ return /^\d+[\.)]\s+/.test(line); });
-        var tag = ordered ? 'ol' : 'ul';
-        var items = lines.map(function(line){
-          return '<li>' + formatInline(line.replace(/^([-•*]|\d+[\.)])\s+/, '')) + '</li>';
-        }).join('');
-        return '<' + tag + '>' + items + '</' + tag + '>';
-      }
-      return '<p>' + lines.map(formatInline).join('<br>') + '</p>';
-    }).join('');
+  function scrollMessages(){
+    var chat = el('ampmAiChat');
+    if(chat) chat.scrollTop = chat.scrollHeight;
   }
-
-  function appendMessage(role, body, kind, meta){
-    var messages = el('ampmAiMessages');
-    var empty = el('ampmAiEmpty');
-    if(!messages) return null;
-    if(empty) empty.style.display = 'none';
-
+  function formatParagraphs(text){
+    var clean = String(text || '').trim();
+    if(!clean) return '';
+    return clean
+      .split(/\n{2,}/)
+      .map(function(part){ return '<p>' + htmlEscape(part).replace(/\n/g, '<br>') + '</p>'; })
+      .join('');
+  }
+  function addMessage(role, bodyHtml, meta, extraClass){
+    var host = el('ampmAiMessages');
+    if(!host) return null;
+    showEmpty(false);
     var node = document.createElement('div');
-    node.className = 'ampm-ai-msg ' + (role === 'user' ? 'user' : 'assistant') + (kind === 'error' ? ' error' : '');
+    node.className = 'ampm-ai-msg ' + (role === 'user' ? 'user' : 'assistant') + (extraClass ? ' ' + extraClass : '');
     node.innerHTML = ''
       + '<div class="ampm-ai-msg-top">'
-      +   '<div class="ampm-ai-msg-role">' + (role === 'user' ? 'Usuario' : 'IA ejecutiva') + '</div>'
+      +   '<div class="ampm-ai-msg-role">' + (role === 'user' ? 'Usuario' : 'Copiloto backend') + '</div>'
       +   '<div class="ampm-ai-msg-meta">' + htmlEscape(meta || nowStamp()) + '</div>'
       + '</div>'
-      + '<div class="ampm-ai-msg-body"></div>';
-    node.querySelector('.ampm-ai-msg-body').innerHTML = formatMessageHtml(body || '', role);
-    messages.appendChild(node);
-    messages.scrollTop = messages.scrollHeight + 200;
+      + '<div class="ampm-ai-msg-body">' + (bodyHtml || '') + '</div>';
+    host.appendChild(node);
+    scrollMessages();
     return node;
   }
-
-  function setAssistantThinking(){
-    var messages = el('ampmAiMessages');
-    var empty = el('ampmAiEmpty');
-    if(!messages) return null;
-    if(empty) empty.style.display = 'none';
-    var node = document.createElement('div');
-    node.className = 'ampm-ai-msg assistant';
-    node.id = 'ampmAiThinkingNode';
-    node.innerHTML = ''
-      + '<div class="ampm-ai-msg-top">'
-      +   '<div class="ampm-ai-msg-role">IA ejecutiva</div>'
-      +   '<div class="ampm-ai-msg-meta">analizando</div>'
-      + '</div>'
-      + '<div class="ampm-ai-msg-body"><span class="ampm-ai-thinking"><i></i><i></i><i></i></span></div>';
-    messages.appendChild(node);
-    messages.scrollTop = messages.scrollHeight + 200;
-    return node;
+  function addThinking(){
+    return addMessage('assistant', '<p>Consultando backend y preparando respuesta…</p>', 'analizando', '');
   }
-  function removeThinking(){
-    var node = el('ampmAiThinkingNode');
-    if(node && node.parentNode) node.parentNode.removeChild(node);
-  }
-
-  function extractResponseText(data){
-    try{
-      if(data && typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
-      var output = data && Array.isArray(data.output) ? data.output : [];
-      var parts = [];
-      output.forEach(function(item){
-        if(item && item.type === 'message' && Array.isArray(item.content)){
-          item.content.forEach(function(part){
-            if(part && typeof part.text === 'string' && txt(part.text)) parts.push(txt(part.text));
-          });
-        }
-      });
-      return parts.join('\n\n').trim();
-    }catch(_e){ return ''; }
-  }
-
-  function normalizeAssistantReply(raw){
-    var text = String(raw == null ? '' : raw).replace(/\r/g,'').trim();
-    if(!text) return '';
-    text = text.replace(/```(?:mermaid)?[\s\S]*?```/gi, function(block){
-      return block.replace(/```(?:mermaid)?/gi,'').replace(/```/g,'').trim();
-    });
-    if(/\n\n/.test(text)) return text;
-    if(/^[-•*]\s+/m.test(text) || /^\d+[\.)]\s+/m.test(text)) return text;
-    text = text.replace(/([.!?])\s+(?=(Si quer[eé]s|Si quieres|Adem[aá]s|Importante|En resumen|Conclusi[oó]n|Por otro lado|Ahora bien))/gi, '$1\n\n');
-    if(/\n\n/.test(text)) return text;
-    var sentences = text.match(/[^.!?\n]+(?:[.!?]+|$)/g) || [text];
-    sentences = sentences.map(function(s){ return s.replace(/\s+/g,' ').trim(); }).filter(Boolean);
-    if(sentences.length <= 2) return text;
-    var chunks = [];
-    for(var i=0;i<sentences.length;i+=2){
-      chunks.push(sentences.slice(i, i+2).join(' '));
+  function clearConversation(initial){
+    var host = el('ampmAiMessages');
+    if(host) host.innerHTML = '';
+    showEmpty(true);
+    setText('ampmAiUsageMeta', '');
+    hideChart();
+    setStageIdle();
+    if(initial){
+      var cfg = getTopicConfig(stateAi.topic);
+      setText('ampmAiStageTitle', 'Visual dinámico');
+      setText('ampmAiStageSub', 'El backend devolverá gráficos ejecutivos cuando la consulta lo amerite.');
+      setText('ampmAiStageNote', 'Sugerencia: ' + ((cfg.prompts && cfg.prompts[0]) || 'Haz una pregunta libre sobre el negocio.'));
     }
-    return chunks.join('\n\n');
   }
-
-  function buildSystemPrompt(topic, pack){
-    return [
-      'Sos un copiloto ejecutivo y comercial para AMPM EL SALVADOR.',
-      'Respondé siempre en español, con criterio de negocio, claridad y lenguaje ejecutivo natural.',
-      'Usá únicamente la data confirmada del contexto entregado cuando hables de números, tendencias o hallazgos.',
-      'No inventés datos, causas ni tendencias que no estén en el contexto.',
-      'Cuando una razón no esté probada por la data, presentala como hipótesis o causa probable, no como hecho.',
-      'Leé correctamente las métricas: ratio > 1 = crecimiento; ratio < 1 = caída; pp = puntos porcentuales; share y mix no son venta absoluta.',
-      'Adaptá la forma de responder a cada consulta: puede ser una respuesta breve, una lectura ejecutiva, un plan, una explicación, ideas creativas, o una recomendación puntual.',
-      'No uses siempre la misma estructura. Variá profundidad y formato según lo que el usuario pida.',
-      'Usá punto y aparte. Nunca entregués toda la respuesta en un solo párrafo.',
-      'Usá párrafos cortos de una a tres líneas. Si conviene, podés usar subtítulos breves o viñetas cortas.',
-      'Si el usuario pide campañas, copies, conceptos, piezas o creatividad, puedes proponer ideas comerciales sólidas; separa claramente lo que viene de data y lo que es propuesta.',
-      'Si el usuario pide un gráfico, una infografía o una imagen, asumí que el visual se está generando aparte y usá el texto solo para complementar, contextualizar o recomendar qué leer de ese visual.',
-      'Si el contexto local dice explícitamente que una métrica sí existe, no respondás que no hay data.',
-      'Si existe contexto específico de la pregunta o question_scoped_context del cubo, úsalo como fuente principal antes que los KPIs generales.',
-      'Si question_scoped_context trae series, breakdown, ranking o comparativos exactos, responde con esos números de forma directa y ejecutiva.',
-      'No expliques el modelo, no uses texto académico y no metas relleno.',
-      'No devuelvas mermaid, JSON, tablas técnicas ni pseudo-código salvo que el usuario lo pida explícitamente.',
-      'Si puedes responder con data del cubo, hazlo directo y sin decir que falta data cuando sí existe una estructura razonable para resolver la consulta.',
-      'Tema actual: ' + (TOPICS[topic] ? TOPICS[topic].title : topic) + '.',
-      'Contexto ampliado del dashboard (JSON, prioriza question_scoped_context cuando exista): ' + pack.context
-    ].join('\n');
+  function setLoading(flag){
+    stateAi.loading = !!flag;
+    disableInput(flag || !isAdminLogged() || resolveActiveTab() !== 'resumen');
+    setText('ampmAiSendLabel', flag ? '…' : '▶');
+    setText('ampmAiStageMode', flag ? 'Consultando backend' : (stateAi.backendOk ? 'Backend activo' : 'Backend pendiente'));
   }
-
-  function requestOpenAI(userQuestion){
-    var apiKey = getApiKey();
-    var effectiveTopic = stateAi.topic === 'chat' ? inferTopicFromQuestion(userQuestion) : stateAi.topic;
-    var pack = renderVisuals(stateAi.topic, userQuestion) || buildTopicPack(effectiveTopic, userQuestion);
-    stateAi.activePack = pack;
-    var visualIntent = detectVisualIntent(userQuestion);
-
-    if(visualIntent.type === 'image' || visualIntent.type === 'infographic'){
-      requestImageVisual(userQuestion, pack, visualIntent.type === 'infographic' ? 'infographic' : 'image');
+  function hideChart(){
+    try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){}
+    stateAi.chart = null;
+    var card = el('ampmAiStageChartCard');
+    var empty = el('ampmAiChartEmpty');
+    if(card) card.hidden = true;
+    if(empty) empty.style.display = '';
+  }
+  function hideImage(){
+    var card = el('ampmAiImageCard');
+    if(card) card.hidden = true;
+    var img = el('ampmAiImage');
+    if(img){ img.removeAttribute('src'); }
+  }
+  function setStageIdle(){
+    hideImage();
+    var empty = el('ampmAiStageEmpty');
+    if(empty) empty.style.display = '';
+    setText('ampmAiStageMode', stateAi.backendOk ? 'Backend activo' : 'Esperando solicitud');
+  }
+  function setStageNote(text){
+    setText('ampmAiStageNote', txt(text));
+  }
+  function normalizeDatasets(chartSpec){
+    if(Array.isArray(chartSpec && chartSpec.datasets) && chartSpec.datasets.length) return chartSpec.datasets;
+    if(Array.isArray(chartSpec && chartSpec.data)){
+      return [{ label: txt(chartSpec.label || chartSpec.title || 'Serie'), data: chartSpec.data.slice() }];
     }
-
-    if(!/^sk-/.test(apiKey)){
-      if(visualIntent.type === 'chart'){
-        appendMessage('assistant', 'Te dejé el gráfico local en el panel derecho.\n\nYa quedó conectado a la data del dashboard actual.\n\nPara respuestas conversacionales más profundas o para generar imágenes, configura la API Key.');
-        return;
-      }
-      appendMessage('assistant', 'Primero configura la API Key para habilitar las respuestas del copiloto y la generación de imágenes. Los gráficos locales del dashboard seguirán funcionando cuando la solicitud lo permita.', 'error');
-      openKeyModal();
+    return [];
+  }
+  function renderChart(chartSpec){
+    hideImage();
+    var empty = el('ampmAiStageEmpty');
+    var card = el('ampmAiStageChartCard');
+    var chartEmpty = el('ampmAiChartEmpty');
+    var canvas = el('ampmAiChart');
+    if(!canvas || !chartSpec || txt(chartSpec.type).toLowerCase() === 'none'){
+      hideChart();
+      if(empty) empty.style.display = '';
+      if(chartEmpty) chartEmpty.style.display = '';
       return;
     }
-
-    var body = {
-      model: OPENAI_MODEL,
-      store: true,
-      reasoning: { effort: 'high' },
-      text: { verbosity: 'high' },
-      max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
-      input: [
-        { role:'system', content:[{ type:'input_text', text: buildSystemPrompt(effectiveTopic, pack) }] },
-        { role:'user', content:[{ type:'input_text', text: userQuestion }] }
-      ]
-    };
-    if(stateAi.lastResponseId && stateAi.lastTopicForResponse === effectiveTopic){
-      body.previous_response_id = stateAi.lastResponseId;
+    if(typeof window.Chart === 'undefined'){
+      hideChart();
+      if(empty) empty.style.display = 'none';
+      if(card) card.hidden = false;
+      if(chartEmpty){
+        chartEmpty.style.display = '';
+        chartEmpty.textContent = 'Chart.js no está disponible para pintar el gráfico.';
+      }
+      return;
     }
-
-    disableInput(true);
-    setAssistantThinking();
-
-    function runResponseRequest(requestBody, allowFallback){
-      return fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + apiKey
+    var labels = Array.isArray(chartSpec.labels) ? chartSpec.labels.slice() : [];
+    var datasets = normalizeDatasets(chartSpec).map(function(ds, idx){
+      return {
+        label: txt(ds.label || ('Serie ' + (idx + 1))),
+        data: Array.isArray(ds.data) ? ds.data.slice() : []
+      };
+    });
+    if(!labels.length || !datasets.length){
+      hideChart();
+      if(empty) empty.style.display = 'none';
+      if(card) card.hidden = false;
+      if(chartEmpty){
+        chartEmpty.style.display = '';
+        chartEmpty.textContent = 'El backend respondió sin un dataset graficable.';
+      }
+      return;
+    }
+    try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){}
+    if(empty) empty.style.display = 'none';
+    if(card) card.hidden = false;
+    if(chartEmpty) chartEmpty.style.display = 'none';
+    setText('ampmAiChartTitle', txt(chartSpec.title || 'Visual backend'));
+    setText('ampmAiChartSub', txt(chartSpec.subtitle || 'Resuelto desde la API externa'));
+    setText('ampmAiChartTag', 'Backend');
+    var chartType = txt(chartSpec.type || 'bar').toLowerCase();
+    if(!['bar','line','pie','doughnut','radar','polarArea'].includes(chartType)) chartType = 'bar';
+    stateAi.chart = new window.Chart(canvas.getContext('2d'), {
+      type: chartType,
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          title: { display: false }
         },
-        body: JSON.stringify(requestBody)
-      })
-      .then(function(res){ return res.json(); })
-      .then(function(data){
-        if(data && data.error){
-          var msg = txt(data.error.message || JSON.stringify(data.error));
-          if(allowFallback && requestBody.model === OPENAI_MODEL && OPENAI_FALLBACK_MODEL && /model|permission|access|not found|unsupported/i.test(msg)){
-            var retryBody = Object.assign({}, requestBody, { model: OPENAI_FALLBACK_MODEL });
-            return runResponseRequest(retryBody, false);
-          }
-          throw new Error(msg || 'No se pudo completar la solicitud al modelo.');
+        scales: (chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea') ? {} : {
+          x: { ticks: { color:'#11284A' }, grid: { display:false } },
+          y: { ticks: { color:'#11284A' }, grid: { color:'rgba(15,23,42,.08)' }, beginAtZero: true }
         }
-        return data;
-      });
+      }
+    });
+  }
+  function collectFilters(){
+    var storesNode = el('stores');
+    var prevNode = el('prevMonths');
+    var dowNode = el('dowFilter');
+    var filters = {
+      stores: getSelectedValues(storesNode),
+      current_period: txt(el('currentMonth') && el('currentMonth').value),
+      compare_periods: getSelectedValues(prevNode),
+      ly_override: txt(el('lyWeekOverride') && el('lyWeekOverride').value),
+      day_of_week: getSelectedValues(dowNode),
+      active_tab: resolveActiveTab(),
+      report_mode: (typeof window.getUnifiedReportMode === 'function' ? txt(window.getUnifiedReportMode()) : txt(el('reportMode') && el('reportMode').value) || txt(window.state && window.state.reportMode)),
+      topic: stateAi.topic
+    };
+    try{
+      if(window.state && typeof window.state === 'object'){
+        filters.delivery_mode = txt(window.state.deliveryMode);
+        filters.dow_scope = txt(window.state.dowFilter);
+      }
+    }catch(_e){}
+    return filters;
+  }
+  function buildPayload(question){
+    return {
+      question: txt(question),
+      page_context: {
+        tab: resolveActiveTab(),
+        topic: stateAi.topic,
+        report_mode: (typeof window.getUnifiedReportMode === 'function' ? txt(window.getUnifiedReportMode()) : txt(el('reportMode') && el('reportMode').value) || txt(window.state && window.state.reportMode)),
+        url: window.location.href
+      },
+      filters: collectFilters()
+    };
+  }
+  function formatResultHtml(payload){
+    var html = '';
+    if(txt(payload && payload.title)) html += '<p><strong>' + htmlEscape(payload.title) + '</strong></p>';
+    if(txt(payload && payload.summary)) html += formatParagraphs(payload.summary);
+    if(Array.isArray(payload && payload.actions) && payload.actions.length){
+      html += '<p><strong>Acciones recomendadas</strong></p><ul>'
+        + payload.actions.map(function(item){ return '<li>' + htmlEscape(item) + '</li>'; }).join('')
+        + '</ul>';
     }
-
-    runResponseRequest(body, true)
-    .then(function(data){
-      removeThinking();
-      disableInput(false);
-
-      var reply = normalizeAssistantReply(extractResponseText(data));
-      if(!reply){
-        appendMessage('assistant', 'No vino una respuesta utilizable del modelo.', 'error');
-        return;
-      }
-
-      stateAi.lastResponseId = txt(data && data.id);
-      stateAi.lastTopicForResponse = effectiveTopic;
-      var usage = data && data.usage ? data.usage : null;
-      var total = usage && usage.total_tokens ? Number(usage.total_tokens) : 0;
-      var inputTokens = usage && usage.input_tokens ? Number(usage.input_tokens) : 0;
-      var outputTokens = usage && usage.output_tokens ? Number(usage.output_tokens) : 0;
-      setUsageMeta(total ? ('Uso tokens · in ' + inputTokens.toLocaleString('es-SV') + ' · out ' + outputTokens.toLocaleString('es-SV') + ' · total ' + total.toLocaleString('es-SV')) : 'Contexto ampliado enviado');
-
-      appendMessage('assistant', reply, '', effectiveTopic === stateAi.topic ? nowStamp() : (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : nowStamp()));
-    })
-    .catch(function(err){
-      removeThinking();
-      disableInput(false);
-      appendMessage('assistant', 'Error de conexión o modelo: ' + String(err), 'error');
-    });
+    if(Array.isArray(payload && payload.notes) && payload.notes.length){
+      html += '<p><strong>Notas</strong></p><ul>'
+        + payload.notes.map(function(item){ return '<li>' + htmlEscape(item) + '</li>'; }).join('')
+        + '</ul>';
+    }
+    return html || '<p>El backend respondió sin contenido legible.</p>';
   }
-
-  function handleSend(){
-    if(!isAdminLogged() || resolveActiveTab() !== 'resumen') return;
+  async function callBackend(question){
+    var response = await fetch(API_BASE_URL + '/api/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildPayload(question))
+    });
+    if(!response.ok){
+      var errorText = '';
+      try{ errorText = await response.text(); }catch(_e){}
+      throw new Error('Backend respondió ' + response.status + (errorText ? ' · ' + errorText.slice(0, 180) : ''));
+    }
+    return await response.json();
+  }
+  async function sendQuestion(){
+    if(stateAi.loading) return;
     var input = el('ampmAiInput');
-    var userQuestion = txt(input && input.value);
-    if(!userQuestion) return;
-    appendMessage('user', userQuestion);
+    var question = txt(input && input.value);
+    if(!question){
+      var cfg = getTopicConfig(stateAi.topic);
+      question = (cfg.prompts && cfg.prompts[0]) || '';
+      if(input && question) input.value = question;
+    }
+    question = txt(question);
+    if(!question) return;
+
+    addMessage('user', '<p>' + htmlEscape(question) + '</p>', nowStamp());
     if(input) input.value = '';
-    requestOpenAI(userQuestion);
+    var thinking = addThinking();
+    setLoading(true);
+    setStageNote('Resolviendo consulta desde Railway…');
+
+    try{
+      var data = await callBackend(question);
+      if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
+      var result = data && data.result ? data.result : data;
+      addMessage('assistant', formatResultHtml(result), 'backend');
+      renderChart(result && result.chart ? result.chart : null);
+      setText('ampmAiStageTitle', txt(result && result.title) || 'Visual backend');
+      setText('ampmAiStageSub', txt(result && result.summary) || 'Respuesta resuelta por el backend');
+      setStageNote(Array.isArray(result && result.notes) && result.notes.length ? result.notes.join(' · ') : 'Respuesta entregada por el backend.');
+      setText('ampmAiUsageMeta', 'API: Railway · origen: ' + window.location.origin);
+      stateAi.backendOk = true;
+      updateStaticUi();
+    }catch(err){
+      if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
+      var msg = txt(err && err.message) || 'No fue posible consultar el backend.';
+      addMessage('assistant', '<p><strong>Error de conexión</strong></p><p>' + htmlEscape(msg) + '</p><p>Si el backend ya está vivo, revisa <strong>ALLOWED_ORIGINS</strong> en Railway e incluye este origen: <strong>' + htmlEscape(window.location.origin) + '</strong>.</p>', 'error', 'error');
+      hideChart();
+      setStageNote('Error al consultar el backend.');
+      setText('ampmAiUsageMeta', 'Sin respuesta del backend');
+      stateAi.backendOk = false;
+      updateStaticUi();
+    }finally{
+      setLoading(false);
+      updateVisibility();
+    }
   }
-
-  function handleTopicChange(nextTopic){
-    nextTopic = txt(nextTopic);
-    if(!TOPICS[nextTopic]) nextTopic = 'chat';
-    stateAi.topic = nextTopic;
-    stateAi.lastResponseId = '';
-    stateAi.lastTopicForResponse = '';
-    syncTopicUi();
-    clearConversation(false);
+  async function healthCheck(){
+    try{
+      var res = await fetch(API_BASE_URL + '/health', { method:'GET' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      stateAi.lastHealth = await res.json();
+      stateAi.backendOk = true;
+      setText('ampmAiStageMode', 'Backend activo');
+      setStageNote('Backend conectado: ' + API_BASE_URL.replace(/^https?:\/\//, ''));
+    }catch(_e){
+      stateAi.backendOk = false;
+      setText('ampmAiStageMode', 'Backend pendiente');
+      setStageNote('No se pudo validar la conexión al backend todavía.');
+    }
+    updateStaticUi();
   }
-
-  function bindUi(){
-    var panel = el('ampmAiSection');
-    if(!panel || panel.__aiBoundV3) return;
-    panel.__aiBoundV3 = true;
-
-    panel.addEventListener('click', function(ev){
-      var navBtn = ev.target.closest('.ampm-ai-nav-btn');
-      if(navBtn){
-        handleTopicChange(navBtn.getAttribute('data-topic'));
-        return;
-      }
-      var promptBtn = ev.target.closest('.ampm-ai-prompt-pill');
-      if(promptBtn){
-        var prompt = txt(promptBtn.getAttribute('data-prompt'));
-        var input = el('ampmAiInput');
-        if(input){
-          input.value = prompt;
-          input.focus();
-        }
-        return;
-      }
-      if(ev.target.id === 'ampmAiClearBtn'){
-        clearConversation(true);
-        return;
-      }
-      if(ev.target.id === 'ampmAiOpenKeyBtn' || ev.target.id === 'ampmAiHeaderKeyBtn'){
-        openKeyModal();
-        return;
-      }
-      if(ev.target.id === 'ampmAiSendBtn'){
-        handleSend();
-        return;
-      }
-      if(ev.target.id === 'ampmAiKeySaveBtn'){
-        saveKeyFromModal();
-        return;
-      }
-      if(ev.target.id === 'ampmAiKeyCancelBtn'){
-        closeKeyModal();
-        return;
-      }
-      if(ev.target.id === 'ampmAiKeyModal'){
-        closeKeyModal();
-      }
+  function bindEvents(){
+    Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        setTopic(txt(btn.getAttribute('data-topic')).toLowerCase(), true);
+      });
     });
-
+    var clearBtn = el('ampmAiClearBtn');
+    if(clearBtn) clearBtn.addEventListener('click', function(){ clearConversation(true); });
+    var sendBtn = el('ampmAiSendBtn');
+    if(sendBtn) sendBtn.addEventListener('click', sendQuestion);
     var input = el('ampmAiInput');
     if(input){
       input.addEventListener('keydown', function(ev){
-        if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){
+        if(ev.key === 'Enter' && !ev.shiftKey){
           ev.preventDefault();
-          handleSend();
+          sendQuestion();
         }
       });
     }
-
-    ['ampm:tabshown', 'ampm:authchanged', 'ampm:refresh'].forEach(function(evt){
-      window.addEventListener(evt, function(){
-        updateVisibility();
-        if(isAdminLogged() && resolveActiveTab() === 'resumen'){
-          setTimeout(function(){ renderVisuals(stateAi.topic, ''); }, 80);
-        }
-      });
+    document.addEventListener('click', function(ev){
+      var btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab]') : null;
+      if(btn) setTimeout(updateVisibility, 40);
     });
-
-    window.addEventListener('resize', function(){
-      try{
-        if(stateAi.chart && typeof stateAi.chart.resize === 'function') stateAi.chart.resize();
-      }catch(_e){}
-    }, { passive:true });
-
-    var logoutBtn = el('ampmLogoutBtn');
-    if(logoutBtn){
-      logoutBtn.addEventListener('click', function(){
-        stateAi.lastResponseId = '';
-        stateAi.lastTopicForResponse = '';
-        clearConversation(true);
-        updateVisibility();
-      }, true);
-    }
+    try{
+      var observer = new MutationObserver(function(){ updateVisibility(); });
+      observer.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    }catch(_e){}
+    window.addEventListener('focus', updateVisibility);
   }
-
   function init(){
-    updateKeyStatus();
-    ensurePlacement();
-    bindUi();
-    syncTopicUi();
+    updateStaticUi();
+    setTopic('chat', false);
     clearConversation(true);
+    bindEvents();
     updateVisibility();
+    healthCheck();
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true });
