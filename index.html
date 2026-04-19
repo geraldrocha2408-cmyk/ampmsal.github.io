@@ -3728,6 +3728,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 .ampm-ai-wrap[style*="display:none"]{display:none!important}
 body.auth-ok .ampm-ai-wrap#ampmAiSection.ampm-ai-visible{display:flex!important}
+body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visible{display:flex!important}
 .ampm-ai-nav{
   width:196px;
   min-width:196px;
@@ -5397,23 +5398,48 @@ ${visualBlockSpec}
     setSendDisabled(false);
   };
 
+  function resolveActiveTab(){
+    try{
+      var activeBtn = document.querySelector('.tabBtn.active');
+      var activeTab = String((activeBtn && activeBtn.dataset && activeBtn.dataset.tab) || '').toLowerCase().trim();
+      if(activeTab) return activeTab;
+      var visiblePage = document.querySelector('[data-tabpage]:not([style*="display: none"]):not([style*="display:none"])');
+      return String((visiblePage && visiblePage.getAttribute('data-tabpage')) || '').toLowerCase().trim();
+    }catch(_e){ return ''; }
+  }
+
+  function resolveAdminSession(){
+    try{
+      var raw = sessionStorage.getItem('ampm_report_auth_v1');
+      if(!raw) return false;
+      var s = JSON.parse(raw);
+      var u = String(s && s.user || '').toLowerCase().trim();
+      return u === 'admin';
+    }catch(_e){ return false; }
+  }
+
+  function syncAiPanelPlacement(panel){
+    try{
+      if(!panel) return;
+      var anchor = getEl('autoKeyPanel');
+      if(anchor && anchor.parentNode && panel.previousElementSibling !== anchor){
+        anchor.insertAdjacentElement('afterend', panel);
+      }
+    }catch(_e){}
+  }
+
   function updateAiPanelVisibility(){
     try{
       var panel = getEl('ampmAiSection');
       if(!panel) return;
-      var raw = sessionStorage.getItem('ampm_report_auth_v1');
-      var activeTab = String((document.querySelector('.tabBtn.active') && document.querySelector('.tabBtn.active').dataset && document.querySelector('.tabBtn.active').dataset.tab) || '').toLowerCase().trim();
-      var isAdmin = false;
-      if(raw){
-        try{
-          var s = JSON.parse(raw);
-          var u = String(s && s.user || '').toLowerCase().trim();
-          isAdmin = (u === 'admin');
-        }catch(_e){}
-      }
-      var shouldShow = !!isAdmin && activeTab === 'resumen';
+      syncAiPanelPlacement(panel);
+      var activeTab = resolveActiveTab();
+      var isAdmin = resolveAdminSession();
+      var shouldShow = !!isAdmin && activeTab === 'resumen' && document.body.classList.contains('auth-ok');
+      document.body.setAttribute('data-active-tab', activeTab || '');
       panel.classList.toggle('ampm-ai-visible', shouldShow);
       panel.style.display = shouldShow ? 'flex' : 'none';
+      panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     }catch(_e){}
   }
 
@@ -5434,14 +5460,17 @@ ${visualBlockSpec}
     checkAdmin();
     bindEnter();
     updateKeyStatus();
-    setInterval(updateAiPanelVisibility, 2000);
+    setInterval(updateAiPanelVisibility, 1200);
     window.addEventListener('ampm:tabshown', function(){ setTimeout(updateAiPanelVisibility, 20); });
+    window.addEventListener('ampm:authchanged', function(){ setTimeout(updateAiPanelVisibility, 40); });
     document.addEventListener('click',function(e){
       var t = e.target;
-      if(t&&(t.id==='ampmLogoutBtn'||t.closest&&t.closest('#ampmAuthForm'))){
-        setTimeout(checkAdmin,300);
+      if(t&&(t.id==='ampmLogoutBtn'||t.closest&&t.closest('#ampmAuthForm')||t.closest&&t.closest('.tabBtn'))){
+        setTimeout(checkAdmin,160);
       }
     });
+    setTimeout(updateAiPanelVisibility, 350);
+    window.addEventListener('load', function(){ setTimeout(updateAiPanelVisibility, 120); }, {once:true});
   }
 
   if(document.readyState==='loading'){
@@ -56729,6 +56758,8 @@ function innovationOnePagerCreateBrandedShell(){
     if(gate){
       gate.setAttribute('aria-hidden', ok ? 'true' : 'false');
     }
+
+    try{ window.dispatchEvent(new CustomEvent('ampm:authchanged', { detail:{ user:user, ok:ok } })); }catch(_e){}
 
     if(ok){
       setMessage('');
