@@ -59619,6 +59619,349 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-copilot-router-hotfix-v1">
+(function(){
+  if(window.__AMPM_COPILOT_ROUTER_HOTFIX_V1__) return;
+  window.__AMPM_COPILOT_ROUTER_HOTFIX_V1__ = true;
+
+  var BASE = './data_api/out/';
+  var CACHE = Object.create(null);
+  var LOADING = Object.create(null);
+  var oldDirect = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
+  var oldScoped = typeof window.buildAiQuestionScopedContext === 'function' ? window.buildAiQuestionScopedContext : null;
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function arr(v){ return Array.isArray(v) ? v : []; }
+  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
+  function norm(v){ var s = txt(v); try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){} return s.toLowerCase().trim(); }
+  function compactSpaces(v){ return norm(v).replace(/\s+/g, ' '); }
+  function fmt(v, kind){
+    var n = Number(v || 0);
+    if(kind === 'percent') return n.toLocaleString('es-SV', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return n.toLocaleString('es-SV', {maximumFractionDigits:2});
+  }
+  function chartPalette(n){
+    var base = ['#0C4D8F','#F58320','#11284A','#FAA21E','#1D4ED8','#0F766E','#9A3412','#7C3AED','#B91C1C','#475569','#0284C7','#059669'];
+    var out=[]; for(var i=0;i<Math.max(1,n||1);i++) out.push(base[i % base.length]);
+    return out;
+  }
+  function loadJson(rel){
+    if(CACHE[rel]) return Promise.resolve(CACHE[rel]);
+    if(LOADING[rel]) return LOADING[rel];
+    LOADING[rel] = fetch(BASE + rel, { cache:'no-store' })
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status + ' · ' + rel); return res.json(); })
+      .then(function(data){ CACHE[rel] = data; delete LOADING[rel]; return data; })
+      .catch(function(err){ delete LOADING[rel]; throw err; });
+    return LOADING[rel];
+  }
+  function cacheSync(rel){ return CACHE[rel]; }
+  function detectExplicitDomains(question){
+    var q = norm(question), out = [];
+    if(/\bsbf\b|western union|puntoxpress|rapibac|smart ticket|n1co|aki pago|recarga/.test(q)) out.push('sbf');
+    if(/delivery|uber|pedidos ya|pedidoya|\bpya\b|plataforma/.test(q)) out.push('delivery');
+    if(/inventario|doi|transfer|sobreinventario|faltante/.test(q)) out.push('inventario');
+    if(/merma|shrink/.test(q)) out.push('merma');
+    if(/innovacion|innovation|combo|food service/.test(q)) out.push('innovation');
+    if(/hallazgo|senal|señal/.test(q)) out.push('hallazgos');
+    if(!out.length) out.push('sales');
+    return uniq(out);
+  }
+  function detectPrimaryDomain(question){
+    var domains = detectExplicitDomains(question);
+    if(domains.length > 1) return 'conflict';
+    return domains[0] || 'sales';
+  }
+  function detectChart(question){
+    var q = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/linea|línea|tendencia|trend|serie|evolucion|evolución/.test(q)) return 'line';
+    if(/barra|barras|graf|gráfico|grafico|chart|top|ranking/.test(q)) return 'bar';
+    return '';
+  }
+  function detectMode(question){ return /semana|week/.test(norm(question)) ? 'week' : 'month'; }
+  function detectMetric(question, domain){
+    var q = norm(question);
+    if(domain === 'sbf') return 'tx';
+    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
+    if(/margen|margin|gm/.test(q)) return 'margin';
+    if(/qty|unidades|cantidad/.test(q)) return 'qty';
+    return 'sales';
+  }
+  function metricLabel(metric){ return ({sales:'Venta', margin:'Margen', margin_pct:'Margen %', qty:'Unidades', tx:'TX'})[metric] || metric; }
+  function yFormat(metric){ return metric === 'margin_pct' ? 'percent' : ((metric === 'sales' || metric === 'margin') ? 'currency' : 'number'); }
+  function monthNameMap(){ return {enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12'}; }
+  function selectedStoresUi(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function') return uniq(arr(getSelectedStoresOrAll()).map(function(v){ return txt(v).toUpperCase(); }));
+    }catch(_e){}
+    return [];
+  }
+  function questionStores(question){
+    var q = norm(question);
+    var tokens = [];
+    var re = /\b(?:ampm\s*0*([1-9]\d?)|a\s*0*([1-9]\d?))\b/gi, m;
+    while((m = re.exec(q))){
+      var n = m[1] || m[2];
+      tokens.push('AMPM' + String(n).padStart(2,'0'));
+    }
+    var storesMeta = cacheSync('meta/stores.json');
+    arr(storesMeta).forEach(function(s){
+      var code = txt(s.store_code || s.code || s.store || s.store_name).toUpperCase();
+      var label = norm(s.store_name || s.label || s.store || '');
+      if(code && q.indexOf(norm(code)) >= 0) tokens.push(code);
+      if(label && q.indexOf(label) >= 0 && code) tokens.push(code);
+    });
+    return uniq(tokens);
+  }
+  function effectiveStores(question){
+    var fromQuestion = questionStores(question);
+    return fromQuestion.length ? fromQuestion : selectedStoresUi();
+  }
+  function pickLatestMonthByName(mm){
+    var manifest = cacheSync('meta/manifest.json');
+    var months = arr(manifest && manifest.months_available);
+    var hits = months.filter(function(x){ return txt(x).slice(5,7) === mm; }).sort();
+    if(hits.length) return hits[hits.length - 1];
+    return months.length ? months[months.length - 1] : '';
+  }
+  function detectPeriod(question, mode){
+    var q = norm(question);
+    if(mode === 'month'){
+      var map = monthNameMap();
+      var m = q.match(/\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(20\d{2})\b/);
+      if(m) return m[2] + '-' + map[m[1]];
+      m = q.match(/\b(20\d{2})[-\/](0?[1-9]|1[0-2])\b/);
+      if(m) return m[1] + '-' + String(m[2]).padStart(2,'0');
+      for(var k in map){ if(q.indexOf(k) >= 0) return pickLatestMonthByName(map[k]); }
+      var manifest = cacheSync('meta/manifest.json');
+      var months = arr(manifest && manifest.months_available).slice().sort();
+      return months.length ? months[months.length - 1] : '';
+    }
+    var w = q.match(/semana\s*(\d{1,2})(?:\s*de)?\s*(20\d{2})/);
+    if(w) return w[2] + '-W' + String(w[1]).padStart(2,'0');
+    var manifest2 = cacheSync('meta/manifest.json');
+    var weeks = arr(manifest2 && manifest2.weeks_available).slice().sort();
+    return weeks.length ? weeks[weeks.length - 1] : '';
+  }
+  function stopwords(){
+    return new Set(['ampm','ventas','venta','grafico','gráfico','graf','chart','barra','barras','pie','pastel','donut','doughnut','linea','línea','top','ranking','mes','meses','semana','semanal','mensual','de','del','la','el','las','los','por','para','vs','ly','tienda','store','marzo','abril','mayo','junio','julio','agosto','septiembre','setiembre','octubre','noviembre','diciembre','enero','febrero','2024','2025','2026']);
+  }
+  function detectAliasFilters(question){
+    var q = norm(question), out = [];
+    if(/cigarro|cigarrillo/.test(q)) out.push({ field:'category', value:'cigarrill', label:'Cigarrillos', fuzzy:true });
+    if(/vape/.test(q)) out.push({ field:'category', value:'vape', label:'Vapes', fuzzy:true });
+    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) out.push({ field:'department', value:'licor', label:'Licores', fuzzy:true });
+    if(/cerveza|beer|rtd/.test(q)) out.push({ field:'department', value:'cerveza', label:'Cervezas y RTD', fuzzy:true });
+    if(/food service|hamburguesa|pizza|hot dog|cafe|café|burrito|nacho/.test(q)) out.push({ field:'department', value:'food service', label:'Food Service', fuzzy:true });
+    if(/pedido(s)? ya|pedidoya|\bpya\b/.test(q)) out.push({ field:'platform', value:'pedidos ya', label:'Pedidos Ya', fuzzy:true });
+    if(/uber/.test(q)) out.push({ field:'platform', value:'uber', label:'Uber', fuzzy:true });
+    return out;
+  }
+  function buildRowText(row){
+    return compactSpaces([
+      row.department,row.category,row.brand,row.description,row.supplier,row.store_name,row.store,row.service,row.platform,row.combo_label,row.dow_name,row.daypart
+    ].join(' | '));
+  }
+  function labelFiltersFromRows(question, rows, groupField){
+    var q = compactSpaces(question);
+    var sw = stopwords();
+    var alias = detectAliasFilters(question);
+    var fields = ['department','category','brand','description','service','platform','combo_label'];
+    var found = [];
+    fields.forEach(function(field){
+      if(field === groupField) return;
+      var seen = new Set();
+      arr(rows).forEach(function(r){
+        var raw = txt(r && r[field]);
+        var n = compactSpaces(raw);
+        if(!n || n.length < 4 || n.length > 48) return;
+        if(sw.has(n)) return;
+        if(seen.has(n)) return;
+        seen.add(n);
+        if(q.indexOf(n) >= 0) found.push({ field:field, value:n, label:raw });
+      });
+    });
+    return uniq(found.concat(alias).map(function(x){ return x.field + '||' + x.value; })).map(function(key){
+      var p = key.split('||');
+      var original = found.concat(alias).find(function(x){ return x.field === p[0] && x.value === p[1]; }) || { field:p[0], value:p[1], label:p[1] };
+      return original;
+    });
+  }
+  function rowMatchesFilters(row, filters){
+    if(!filters.length) return true;
+    return filters.every(function(f){
+      var val = compactSpaces(row && row[f.field]);
+      if(!val) return false;
+      var needle = compactSpaces(f.value);
+      if(f.fuzzy) return val.indexOf(needle) >= 0 || needle.indexOf(val) >= 0;
+      return val.indexOf(needle) >= 0;
+    });
+  }
+  function topLimit(question, def){
+    var q = norm(question), m = q.match(/top\s*(\d{1,2})/);
+    if(m) return Math.max(1, Math.min(25, Number(m[1])));
+    if(/top|ranking/.test(q)) return 10;
+    return def || 12;
+  }
+  function aggregate(rows, groupField, metric, compareField){
+    var map = new Map();
+    arr(rows).forEach(function(r){
+      var label = txt(r[groupField] || r.category || r.brand || r.description || r.department || r.service || r.platform || r.store_name || 'Sin dato');
+      if(!label) return;
+      if(!map.has(label)) map.set(label, { label:label, current:0, compare:0, sales:0, margin:0, salesCompare:0, marginCompare:0 });
+      var b = map.get(label);
+      if(metric === 'margin_pct'){
+        b.sales += num(r.sales); b.margin += num(r.margin); b.salesCompare += num(r.sales_ly); b.marginCompare += num(r.margin_ly);
+      } else {
+        b.current += num(r[metric]);
+        if(compareField) b.compare += num(r[compareField]);
+      }
+    });
+    var out = Array.from(map.values()).map(function(x){
+      if(metric === 'margin_pct'){
+        x.current = x.sales ? (x.margin / x.sales) * 100 : 0;
+        x.compare = x.salesCompare ? (x.marginCompare / x.salesCompare) * 100 : 0;
+      }
+      x.delta = x.current - x.compare;
+      return x;
+    });
+    out = out.filter(function(x){ return Math.abs(num(x.current)) > 0 || Math.abs(num(x.compare)) > 0; });
+    out.sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); });
+    return out;
+  }
+  function compareRequested(question){ return /\bvs\b|\bly\b|año pasado|contra ly|compar|delta/.test(norm(question)); }
+  function salesDatasetRel(mode, dimension){
+    var prefix = mode === 'week' ? 'ventas/weekly_' : 'ventas/monthly_';
+    if(dimension === 'brand') return prefix + 'brand.json';
+    if(dimension === 'description') return prefix + 'description.json';
+    if(dimension === 'department') return prefix + 'department.json';
+    return prefix + 'category.json';
+  }
+  function salesGroupField(dimension){ return dimension === 'brand' ? 'brand' : (dimension === 'description' ? 'description' : (dimension === 'department' ? 'department' : 'category')); }
+  function detectSalesDimension(question, chartType){
+    var q = norm(question);
+    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
+    if(/marca/.test(q)) return 'brand';
+    if(/departamento|depto/.test(q)) return 'department';
+    if(/categor|subcategor/.test(q)) return 'category';
+    if(chartType === 'pie') return 'category';
+    return 'category';
+  }
+  function ensureFiles(files){ return Promise.all(uniq(files).filter(Boolean).map(function(rel){ return loadJson(rel).catch(function(){ return null; }); })); }
+  function buildConflictModel(question){
+    var domains = detectExplicitDomains(question);
+    if(domains.length <= 1) return null;
+    return {
+      title:'Consulta ambigua', subtitle:'Se detectaron dominios distintos en la misma pregunta', type:'none', horizontal:false, yFormat:'number', labels:[], datasets:[],
+      sourceTruth:'router local',
+      customSummary:'La consulta mezcla frentes distintos: ' + domains.join(' + ') + '. Sepárala en una sola intención para evitar cruces falsos. Ejemplo: "SBF por tienda vs LY" o "Delivery Pedidos Ya por tienda vs LY".'
+    };
+  }
+  function buildSales(question){
+    var chartType = detectChart(question) || 'bar';
+    var mode = detectMode(question);
+    var dimension = detectSalesDimension(question, chartType);
+    var metric = detectMetric(question, 'sales');
+    var periodKey = detectPeriod(question, mode);
+    var rel = salesDatasetRel(mode, dimension);
+    var rows = arr(cacheSync(rel));
+    if(!rows.length) return null;
+    var tf = mode === 'week' ? 'week_key' : 'month_key';
+    var stores = effectiveStores(question);
+    var groupField = salesGroupField(dimension);
+    var scopedBase = rows.filter(function(r){
+      if(periodKey && txt(r[tf]) !== txt(periodKey)) return false;
+      if(stores.length){
+        var st = txt(r.store_name || r.store).toUpperCase();
+        if(st && stores.indexOf(st) < 0) return false;
+      }
+      return true;
+    });
+    if(!scopedBase.length) return null;
+    var filters = labelFiltersFromRows(question, scopedBase, groupField);
+    var scoped = scopedBase.filter(function(r){ return rowMatchesFilters(r, filters); });
+    if(!scoped.length && filters.length) return { title:'Consulta sin match', subtitle:'La data sí cargó, pero el filtro no encontró coincidencias', type:'none', labels:[], datasets:[], yFormat:'number', sourceTruth:rel, customSummary:'Encontré el periodo ' + periodKey + ' pero no hubo coincidencias para los filtros explícitos de la pregunta. Revisa nombre de tienda, categoría, marca o descripción.' };
+    if(!scoped.length) scoped = scopedBase;
+    var compField = compareRequested(question) ? (metric === 'qty' ? 'qty_ly' : (metric === 'margin' ? 'margin_ly' : (metric === 'margin_pct' ? 'margin_ly' : 'sales_ly'))) : '';
+    var entries = aggregate(scoped, groupField, metric === 'qty' ? 'qty' : (metric === 'margin' ? 'margin' : (metric === 'margin_pct' ? 'margin_pct' : 'sales')), compField).slice(0, topLimit(question, chartType === 'pie' ? 12 : 15));
+    if(!entries.length) return null;
+    var total = entries.reduce(function(acc, x){ return acc + num(x.current); }, 0);
+    var title = metricLabel(metric) + ' de Ventas · ' + ({category:'categoría',brand:'marca',department:'departamento',description:'descripción'})[dimension];
+    var subtitle = 'Corte ' + periodKey + (stores.length ? (' · ' + stores.join(', ')) : '');
+    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmt(x.current, yFormat(metric)); }).join(' | ');
+    var dsets = [{ label: metricLabel(metric), data: entries.map(function(x){ return Number(x.current.toFixed(2)); }), type: chartType, color:'#0C4D8F' }];
+    if(compField && entries.some(function(x){ return Math.abs(num(x.compare)) > 0; })) dsets.push({ label:'LY', data: entries.map(function(x){ return Number(x.compare.toFixed(2)); }), type: chartType === 'pie' ? 'bar' : 'bar', color:'#F58320' });
+    return { title:title, subtitle:subtitle, tag: chartType === 'pie' ? 'Participación' : 'Breakdown', type: chartType, horizontal: chartType !== 'pie' && entries.length > 6, yFormat:yFormat(metric), labels:entries.map(function(x){ return x.label; }), datasets:dsets, sourceTruth:rel, customSummary:'Periodo ' + periodKey + (stores.length ? (' · Tienda ' + stores.join(', ') + '. ') : '. ') + (filters.length ? ('Filtro detectado: ' + filters.map(function(f){ return f.label || f.value; }).join(', ') + '. ') : '') + 'Total visible: ' + fmt(total, yFormat(metric)) + '. Top: ' + topText + '.' };
+  }
+  function buildSbf(question){
+    var mode = detectMode(question);
+    var rel = mode === 'week' ? 'sbf/weekly_service_store.json' : 'sbf/monthly_service_store.json';
+    var rows = arr(cacheSync(rel));
+    if(!rows.length) return null;
+    var tf = mode === 'week' ? 'week_key' : 'month_key';
+    var periodKey = detectPeriod(question, mode);
+    var stores = effectiveStores(question);
+    var scopedBase = rows.filter(function(r){
+      if(periodKey && txt(r[tf]) !== txt(periodKey)) return false;
+      if(stores.length){ var st = txt(r.store_name || r.store).toUpperCase(); if(st && stores.indexOf(st) < 0) return false; }
+      return true;
+    });
+    if(!scopedBase.length) return null;
+    var byStore = /por tienda|tienda/.test(norm(question));
+    var groupField = byStore ? 'store_name' : 'service';
+    var filters = labelFiltersFromRows(question, scopedBase, groupField);
+    var scoped = scopedBase.filter(function(r){ return rowMatchesFilters(r, filters); });
+    if(!scoped.length && filters.length) return { title:'Consulta sin match', subtitle:'SBF cargó pero el filtro no encontró coincidencias', type:'none', labels:[], datasets:[], yFormat:'number', sourceTruth:rel, customSummary:'La capa SBF sí está activa, pero no encontré coincidencias con el servicio o tienda solicitada para ' + periodKey + '.' };
+    if(!scoped.length) scoped = scopedBase;
+    var entries = aggregate(scoped, groupField, 'tx', compareRequested(question) ? 'tx_ly' : '').slice(0, topLimit(question, 12));
+    if(!entries.length) return null;
+    var dsets = [{ label:'TX', data: entries.map(function(x){ return Number(x.current.toFixed(2)); }), type:'bar', color:'#0C4D8F' }];
+    if(compareRequested(question) && entries.some(function(x){ return Math.abs(num(x.compare)) > 0; })) dsets.push({ label:'LY', data: entries.map(function(x){ return Number(x.compare.toFixed(2)); }), type:'bar', color:'#F58320' });
+    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmt(x.current, 'number'); }).join(' | ');
+    return { title:'SBF · ' + (byStore ? 'tienda' : 'servicio'), subtitle:'Corte ' + periodKey + (filters.length ? (' · ' + filters.map(function(f){ return f.label || f.value; }).join(', ')) : ''), tag: compareRequested(question) ? 'Comparativo' : 'Breakdown', type:'bar', horizontal: entries.length > 6, yFormat:'number', labels:entries.map(function(x){ return x.label; }), datasets:dsets, sourceTruth:rel, customSummary:'Periodo ' + periodKey + '. ' + (filters.length ? ('Filtro detectado: ' + filters.map(function(f){ return f.label || f.value; }).join(', ') + '. ') : '') + 'Top visible: ' + topText + '.' };
+  }
+  function route(question){
+    var conflict = buildConflictModel(question);
+    if(conflict) return conflict;
+    var domain = detectPrimaryDomain(question);
+    if(domain === 'sales') return buildSales(question);
+    if(domain === 'sbf') return buildSbf(question);
+    return null;
+  }
+  async function ensure(question){
+    var files = ['meta/manifest.json','meta/stores.json'];
+    var domain = detectPrimaryDomain(question);
+    if(domain === 'sales'){
+      var mode = detectMode(question), dim = detectSalesDimension(question, detectChart(question) || 'bar');
+      files.push(salesDatasetRel(mode, dim));
+    } else if(domain === 'sbf') {
+      files.push(detectMode(question) === 'week' ? 'sbf/weekly_service_store.json' : 'sbf/monthly_service_store.json');
+    }
+    return ensureFiles(files);
+  }
+
+  window.__ampmJsonRouteV2EnsureReadyForQuestion = (function(old){
+    return function(question){ return Promise.all([old ? old(question).catch(function(){}) : Promise.resolve(), ensure(question)]); };
+  })(typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function' ? window.__ampmJsonRouteV2EnsureReadyForQuestion : null);
+
+  window.__ampmAiDirectCuboBuild = function(question){
+    try{
+      var hot = route(question);
+      if(hot) return hot;
+    }catch(err){ console.warn('AMPM router hotfix', err); }
+    return oldDirect ? oldDirect(question) : null;
+  };
+  window.buildAiQuestionScopedContext = function(question){
+    var m = window.__ampmAiDirectCuboBuild(question);
+    if(m && m.customSummary) return m.customSummary;
+    return oldScoped ? oldScoped(question) : null;
+  };
+})();
+</script>
+
 </body>
 
 
