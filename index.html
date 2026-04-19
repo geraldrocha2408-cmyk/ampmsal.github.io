@@ -4100,10 +4100,211 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
   var OPENAI_VERBOSITY = 'low';
   var OPENAI_MAX_OUTPUT_TOKENS = 850;
   var OPENAI_MAX_HISTORY_MESSAGES = 6;
-  var OPENAI_TEMPERATURE = 0.2;
 
-  function getAiModeLabel(){
-    return 'GPT-5.4 mini · reasoning '+OPENAI_REASONING_EFFORT+' · salida controlada';
+  function getEl(id){ return document.getElementById(id); }
+  function getMsgs(){ return getEl('ampmAiMessages'); }
+  function showEmpty(show){ var e=getEl('ampmAiEmpty'); if(e) e.style.display=show?'flex':'none'; }
+  function setSendDisabled(disabled){ var b=getEl('ampmAiSendBtn'); if(b) b.disabled=!!disabled; }
+
+  function getApiKey(){ try{ return localStorage.getItem(LS_KEY) || ''; }catch(_e){ return ''; } }
+  function saveApiKey(k){ try{ localStorage.setItem(LS_KEY, String(k||'').trim()); }catch(_e){} }
+
+  function updateKeyStatus(){
+    var k = getApiKey();
+    var dot = getEl('ampmAiKeyDot');
+    var txt = getEl('ampmAiKeyStatusTxt');
+    if(k && k.indexOf('sk-') === 0){
+      if(dot) dot.className = 'ampm-ai-key-dot ok';
+      if(txt) txt.textContent = 'Key configurada ✓';
+    } else {
+      if(dot) dot.className = 'ampm-ai-key-dot';
+      if(txt) txt.textContent = 'Sin API Key';
+    }
+  }
+
+  window.ampmAiOpenKeyModal = function(){
+    var modal = getEl('ampmAiKeyModal');
+    var inp = getEl('ampmAiKeyInput');
+    if(inp) inp.value = getApiKey();
+    if(modal) modal.style.display = 'flex';
+    setTimeout(function(){ try{ if(inp) inp.focus(); }catch(_e){} }, 60);
+  };
+  window.ampmAiCloseKeyModal = function(e){
+    if(e && e.target !== getEl('ampmAiKeyModal')) return;
+    var modal = getEl('ampmAiKeyModal');
+    if(modal) modal.style.display = 'none';
+  };
+  window.ampmAiSaveKey = function(){
+    var inp = getEl('ampmAiKeyInput');
+    var k = inp ? String(inp.value||'').trim() : '';
+    if(!k){ alert('Ingresá tu API Key de OpenAI'); return; }
+    if(k.indexOf('sk-') !== 0){ alert('La API Key debe empezar con sk-'); return; }
+    saveApiKey(k);
+    updateKeyStatus();
+    var modal = getEl('ampmAiKeyModal');
+    if(modal) modal.style.display = 'none';
+  };
+
+  var chatHistory = [];
+  var currentTopic = 'chat';
+
+  var TOPIC_META = {
+    chat:             { title:'Chat libre',              sub:'Hacé cualquier consulta sobre la data del reporte',             prompts:['¿Cuál es el estado general del negocio?','¿Qué está pasando esta semana?','Dame un resumen rápido'] },
+    ventas_variacion: { title:'Crecimiento / caída',     sub:'Motivos de variación vs LY y vs Prom S8',                       prompts:['¿Por qué crecimos o caímos vs LY?','¿Qué departamento está jalando más?','¿Qué semana fue la mejor?'] },
+    ventas_proyeccion:{ title:'Proyección vs meta',      sub:'Análisis de alcance y proyección de cierre de mes',             prompts:['¿Vamos a llegar a meta este mes?','¿Cuánto nos falta para meta?','¿Cuál es el run rate necesario?'] },
+    ventas_mix:       { title:'Mix categorías y marcas', sub:'Composición de ventas por categoría, marca y departamento',     prompts:['¿Cuáles son las categorías más importantes?','¿Qué marca creció más?','¿Hay categorías perdiendo share?'] },
+    merma:            { title:'Merma y causas',          sub:'Análisis de merma por departamento, categoría y proveedor',     prompts:['¿Cuál es el nivel de merma actual?','¿Qué proveedor genera más merma?','¿Cómo reducir la merma esta semana?'] },
+    inventario:       { title:'Inventario y hueso',      sub:'Días de inventario, sobrestock y productos sin rotación',       prompts:['¿Cuántos días de inventario tenemos?','¿Hay hueso identificado?','¿Qué categoría tiene sobrestock?'] },
+    prd_cero:         { title:'PRD en cero',             sub:'Productos agotados y su impacto en ventas',                     prompts:['¿Cuántos productos están en cero?','¿Qué categorías tienen más quiebres?','¿Cuál es el impacto en venta?'] },
+    delivery:         { title:'Delivery',                sub:'Análisis de Uber Eats, Pedidos Ya y canal digital',             prompts:['¿Cómo va delivery vs LY?','¿Qué canal está creciendo más?','¿Cuál es el share de delivery?'] },
+    sbf:              { title:'SBF / CXC',               sub:'Servicios financieros y cartera de agentes',                    prompts:['¿Cómo van los TX de SBF?','¿Cuál es el estado de la cartera CXC?','¿Qué agente tiene mayor volumen?'] },
+    ejecutivo:        { title:'Resumen ejecutivo',       sub:'Vista 360 del negocio para reuniones y reportes',               prompts:['Dame un resumen ejecutivo completo','Redactame el hallazgo de la semana','¿Qué le diría al CEO hoy?'] },
+    acciones:         { title:'Plan de acción',          sub:'Recomendaciones concretas y quick wins para esta semana',       prompts:['¿Qué acciones tomar esta semana?','Dame 3 quick wins para ejecutar hoy','¿Qué priorizar primero?'] },
+    tiendas:          { title:'Por tienda',              sub:'Desempeño comparativo entre AMPM01, AMPM02 y AMPM03',           prompts:['¿Cuál tienda está mejor vs LY?','¿Qué tienda está arrastrando el resultado?','Comparame las 3 tiendas'] }
+  };
+
+  var TOPIC_PROMPTS = {
+    chat:             'Respondé la consulta del usuario sobre el negocio AMPM usando toda la data disponible.',
+    ventas_variacion: 'Analizá en profundidad el crecimiento o caída de ventas vs LY y vs Prom S8. Identificá drivers principales: departamentos, categorías, marcas, tiendas y días. Explicá el por qué con números concretos.',
+    ventas_proyeccion:'Analizá si el negocio va a llegar a la meta mensual. Calculá el run-rate necesario, la brecha actual y la probabilidad de alcanzar la meta. Sé específico con los números.',
+    ventas_mix:       'Analizá la composición de ventas: share por departamento, categoría y marca. Identificá qué está ganando o perdiendo participación y por qué importa.',
+    merma:            'Analizá la merma en detalle: nivel actual vs meta, top departamentos, categorías o proveedores con más merma, causas probables y acciones concretas para reducirla.',
+    inventario:       'Analizá el inventario: días por departamento, productos con sobrestock, quiebres y recomendaciones de reorden o devolución.',
+    prd_cero:         'Analizá los productos en cero: cuántos son, en qué categorías están, su impacto estimado en ventas perdidas y qué acciones tomar para resolverlo.',
+    delivery:         'Analizá el canal delivery: performance vs LY, share sobre venta total, comparativa Uber Eats vs Pedidos Ya por tienda, tendencia y oportunidades.',
+    sbf:              'Analizá SBF: volumen de TX, desempeño por tienda, comparativa vs períodos anteriores y estado de la cartera CXC.',
+    ejecutivo:        'Generá un resumen ejecutivo completo del negocio: ventas, meta, delivery, merma, inventario, highlights positivos y negativos, y las 3 acciones más importantes a tomar.',
+    acciones:         'Basado en toda la data, generá un plan de acción concreto para esta semana: quick wins, acciones de mediano plazo y riesgos a vigilar.',
+    tiendas:          'Analizá el desempeño por tienda: ranking, cuál lidera, cuál arrastra, diferencias en ventas, delivery, merma y recomendaciones por tienda.'
+  };
+
+  var MASTER_MULTIAGENT_PROMPT = [
+    'Actúa como un consultor senior para una cadena de tiendas de conveniencia 24/7.',
+    'Pensá con criterio ejecutivo, comercial y operativo.',
+    'Usá primero la data del reporte; no inventés números ni causas.',
+    'Si la data no alcanza, decilo explícitamente y proponé la siguiente mejor acción.',
+    'Respondé en español, con claridad, impacto de negocio y acciones concretas.',
+    'Priorizá ventas, ticket, transacciones, margen, mix, delivery, food service, disponibilidad, quiebres, merma e inventario.',
+    'No uses una plantilla rígida siempre. Adaptá el formato a la pregunta.',
+    'Cuando aplique, cerrá con 3-5 acciones claras con responsable sugerido y KPI.'
+  ].join('\n');
+
+  function appendMsg(role, text, extraClass){
+    var msgs = getMsgs();
+    if(!msgs) return null;
+    showEmpty(false);
+    var box = document.createElement('div');
+    box.className = 'ampm-ai-msg ' + role + (extraClass ? (' ' + extraClass) : '');
+    var lbl = document.createElement('div');
+    lbl.className = 'ampm-ai-msg-lbl';
+    lbl.textContent = role === 'user' ? 'Vos' : 'IA';
+    var bubble = document.createElement('div');
+    bubble.className = 'ampm-ai-bubble';
+    bubble.textContent = text;
+    box.appendChild(lbl);
+    box.appendChild(bubble);
+    msgs.appendChild(box);
+    try{ msgs.scrollTop = msgs.scrollHeight; }catch(_e){}
+    return box;
+  }
+
+  function removeThinking(){
+    var msgs = getMsgs();
+    if(!msgs) return;
+    var nodes = msgs.querySelectorAll('.ampm-ai-thinking');
+    Array.prototype.forEach.call(nodes, function(n){ try{ n.remove(); }catch(_e){} });
+  }
+
+  function syncTopicUi(){
+    var meta = TOPIC_META[currentTopic] || TOPIC_META.chat;
+    var title = getEl('ampmAiHeaderTitle');
+    var sub = getEl('ampmAiHeaderSub');
+    var prompts = getEl('ampmAiPrompts');
+    if(title) title.textContent = meta.title;
+    if(sub) sub.textContent = meta.sub;
+    if(prompts){
+      prompts.innerHTML = '';
+      (meta.prompts || []).forEach(function(p){
+        var btn = document.createElement('button');
+        btn.className = 'ampm-ai-prompt-pill';
+        btn.textContent = p;
+        btn.onclick = function(){ window.ampmAiQuick(btn); };
+        prompts.appendChild(btn);
+      });
+    }
+    var navBtns = document.querySelectorAll('.ampm-ai-nav-btn');
+    Array.prototype.forEach.call(navBtns, function(btn){
+      btn.classList.toggle('active', String(btn.getAttribute('data-topic')||'') === currentTopic);
+    });
+  }
+
+  window.ampmAiNav = function(_btn, topic){ currentTopic = topic || 'chat'; syncTopicUi(); };
+  window.ampmAiQuick = function(btn){
+    var txt = btn ? String(btn.textContent || '').trim() : '';
+    var inp = getEl('ampmAiInput');
+    if(inp) inp.value = txt;
+    window.ampmAiSend();
+  };
+  window.ampmAiClearChat = function(){
+    chatHistory = [];
+    var msgs = getMsgs();
+    if(msgs) msgs.innerHTML = '';
+    showEmpty(true);
+    setSendDisabled(false);
+  };
+
+  function getTableText(table, maxRows, maxCols){
+    if(!table) return '';
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tr')).slice(0, maxRows || 12);
+    return rows.map(function(tr){
+      var cells = Array.prototype.slice.call(tr.children).slice(0, maxCols || 12);
+      return cells.map(function(td){ return String((td.innerText || td.textContent || '')).replace(/\s+/g,' ').trim(); }).filter(Boolean).join(' | ');
+    }).filter(Boolean).join('\n');
+  }
+
+  function pushText(ctx, id, label, max){
+    var el = getEl(id);
+    if(!el) return;
+    var txt = String(el.innerText || el.textContent || '').replace(/\s+/g,' ').trim();
+    if(!txt) return;
+    ctx.push('[' + label + ']\n' + txt.slice(0, max || 1200));
+  }
+
+  function pushTable(ctx, id, label, maxRows, maxCols){
+    var el = getEl(id);
+    if(!el) return;
+    var txt = getTableText(el, maxRows, maxCols);
+    if(!txt) return;
+    ctx.push('[' + label + ']\n' + txt);
+  }
+
+  function getFilterContext(){
+    try{
+      var chips = [];
+      var week = getEl('weekLabelChip');
+      if(week) chips.push('Periodo: ' + String(week.textContent||'').trim());
+      var tabs = document.querySelector('.tabBtn.active');
+      if(tabs) chips.push('Pestaña activa: ' + String(tabs.textContent||'').trim());
+      return chips.join(' · ');
+    }catch(_e){ return ''; }
+  }
+
+  function buildDataContext(){
+    var ctx = [];
+    var fc = getFilterContext();
+    if(fc) ctx.push('[FILTROS]\n' + fc);
+    pushText(ctx, 'noteBox', 'NOTAS DEL REPORTE', 1200);
+    pushText(ctx, 'radarInsights', 'RADAR EJECUTIVO', 1600);
+    pushText(ctx, 'ampmBizDetailSummary', 'HALLAZGO DE NEGOCIO', 1200);
+    pushTable(ctx, 't_sbf_store', 'SBF TX POR TIENDA', 12, 18);
+    pushTable(ctx, 't_sbf_prov', 'SBF TX POR PROVEEDOR', 18, 18);
+    pushTable(ctx, 't_cxc', 'CXC', 18, 10);
+    pushTable(ctx, 't_merma_matrix', 'MERMA MATRIZ', 16, 12);
+    pushTable(ctx, 't_merma_drill', 'MERMA DRILL', 20, 14);
+    pushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 18, 14);
+    pushTable(ctx, 't_rop_sug', 'INVENTARIO Y HUESO', 18, 14);
+    pushTable(ctx, 't_transfers', 'TRANSFERENCIAS', 18, 12);
+    return ctx.join('\n\n').slice(0, 16000);
   }
 
   function extractResponseText(data){
@@ -4119,9 +4320,7 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
           });
         }
       });
-      return parts.join('
-
-').trim();
+      return parts.join('\n\n').trim();
     }catch(_e){ return ''; }
   }
 
@@ -4129,1282 +4328,100 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
     try{
       if(!usage) return '';
       var total = Number(usage.total_tokens || 0);
+      if(!total) return '';
       var input = Number(usage.input_tokens || 0);
       var output = Number(usage.output_tokens || 0);
       var reasoning = Number((usage.output_tokens_details && usage.output_tokens_details.reasoning_tokens) || 0);
-      if(!(total || input || output || reasoning)) return '';
       var nf = function(n){ return Number(n || 0).toLocaleString('es-SV'); };
-      var pieces = [];
-      if(input) pieces.push('in '+nf(input));
-      if(output) pieces.push('out '+nf(output));
-      if(reasoning) pieces.push('reason '+nf(reasoning));
-      return ' · uso: '+nf(total)+' tok' + (pieces.length ? ' ('+pieces.join(' | ')+')' : '');
+      var parts = [];
+      if(input) parts.push('in ' + nf(input));
+      if(output) parts.push('out ' + nf(output));
+      if(reasoning) parts.push('reason ' + nf(reasoning));
+      return '\n\nUso: ' + nf(total) + ' tok' + (parts.length ? ' (' + parts.join(' | ') + ')' : '');
     }catch(_e){ return ''; }
   }
 
-  function getApiKey(){
-    try{ return localStorage.getItem(LS_KEY) || ''; }catch(_e){ return ''; }
-  }
-  function saveApiKey(k){
-    try{ localStorage.setItem(LS_KEY, k.trim()); }catch(_e){}
-  }
-  function updateKeyStatus(){
-    var k = getApiKey();
-    var dot = getEl('ampmAiKeyDot');
-    var txt = getEl('ampmAiKeyStatusTxt');
-    if(k && k.startsWith('sk-')){
-      if(dot){ dot.className='ampm-ai-key-dot ok'; }
-      if(txt){ txt.textContent='Key configurada ✓'; }
-    } else {
-      if(dot){ dot.className='ampm-ai-key-dot'; }
-      if(txt){ txt.textContent='Sin API Key'; }
-    }
-  }
-  window.ampmAiOpenKeyModal = function(){
-    var modal = getEl('ampmAiKeyModal');
-    var inp = getEl('ampmAiKeyInput');
-    if(inp){ inp.value = getApiKey(); }
-    if(modal){ modal.style.display='flex'; }
-    setTimeout(function(){ if(inp) inp.focus(); }, 60);
-  };
-  window.ampmAiCloseKeyModal = function(e){
-    if(e && e.target !== getEl('ampmAiKeyModal')) return;
-    var modal = getEl('ampmAiKeyModal');
-    if(modal) modal.style.display='none';
-  };
-  window.ampmAiSaveKey = function(){
-    var inp = getEl('ampmAiKeyInput');
-    var k = inp ? inp.value.trim() : '';
-    if(!k){ alert('Ingresá tu API Key de OpenAI'); return; }
-    if(!k.startsWith('sk-')){ alert('La API Key debe empezar con sk-'); return; }
-    saveApiKey(k);
-    updateKeyStatus();
-    var modal = getEl('ampmAiKeyModal');
-    if(modal) modal.style.display='none';
-  };
-  var chatHistory = [];
-
-  var TOPIC_META = {
-    chat:             { title:'Chat libre',              sub:'Hacé cualquier consulta sobre la data del reporte',             prompts:['¿Cuál es el estado general del negocio?','¿Qué está pasando esta semana?','Dame un resumen rápido'] },
-    ventas_variacion: { title:'Crecimiento / caída',     sub:'Motivos de variación vs LY y vs Prom S8',                       prompts:['¿Por qué crecimos o caímos vs LY?','¿Qué departamento está jalando más?','¿Qué semana fue la mejor?'] },
-    ventas_proyeccion:{ title:'Proyección vs meta',      sub:'Análisis de alcance y proyección de cierre de mes',             prompts:['¿Vamos a llegar a meta este mes?','¿Cuánto nos falta para meta?','¿Cuál es el run rate necesario?'] },
-    ventas_mix:       { title:'Mix categorías y marcas', sub:'Composición de ventas por categoría, marca y departamento',     prompts:['¿Cuáles son las categorías más importantes?','¿Qué marca creció más?','¿Hay categorías perdiendo share?'] },
-    merma:            { title:'Merma y causas',          sub:'Análisis de merma por departamento, categoría y proveedor',     prompts:['¿Cuál es el nivel de merma actual?','¿Qué proveedor genera más merma?','¿Cómo reducir la merma esta semana?'] },
-    inventario:       { title:'Inventario y hueso',      sub:'Días de inventario, sobrestock y productos sin rotación',       prompts:['¿Cuántos días de inventario tenemos?','¿Hay hueso identificado?','¿Qué categoría tiene sobrestock?'] },
-    prd_cero:         { title:'PRD en cero',             sub:'Productos agotados y su impacto en ventas',                     prompts:['¿Cuántos productos están en cero?','¿Qué categorías tienen más quiebres?','¿Cuál es el impacto en venta?'] },
-    delivery:         { title:'Delivery',                sub:'Análisis de Uber Eats, Pedidos Ya y canal digital',             prompts:['¿Cómo va delivery vs LY?','¿Qué canal está creciendo más?','¿Cuál es el share de delivery?'] },
-    sbf:              { title:'SBF / CXC',               sub:'Servicios financieros y cartera de agentes',                    prompts:['¿Cómo van los TX de SBF?','¿Cuál es el estado de la cartera CXC?','¿Qué agente tiene mayor volumen?'] },
-    ejecutivo:        { title:'Resumen ejecutivo',       sub:'Vista 360 del negocio para reuniones y reportes',               prompts:['Dame un resumen ejecutivo completo','Redactame el hallazgo de la semana','¿Qué le diría al CEO hoy?'] },
-    acciones:         { title:'Plan de acción',          sub:'Recomendaciones concretas y quick wins para esta semana',       prompts:['¿Qué acciones tomar esta semana?','Dame 3 quick wins para ejecutar hoy','¿Qué priorizar primero?'] },
-    tiendas:          { title:'Por tienda',              sub:'Desempeño comparativo entre AMPM01, AMPM02 y AMPM03',           prompts:['¿Cuál tienda está mejor vs LY?','¿Qué tienda está arrastrando el resultado?','Comparame las 3 tiendas'] },
-  };
-
-  var TOPIC_PROMPTS = {
-    chat:             'Respondé la consulta del usuario sobre el negocio AMPM usando toda la data disponible.',
-    ventas_variacion: 'Analizá en profundidad el crecimiento o caída de ventas vs LY y vs Prom S8. Identificá drivers principales: departamentos, categorías, marcas, tiendas y días. Explicá el "por qué" con números concretos.',
-    ventas_proyeccion:'Analizá si el negocio va a llegar a la meta mensual. Calculá el run-rate necesario, la brecha actual y la probabilidad de alcanzar la meta. Sé específico con los números.',
-    ventas_mix:       'Analizá la composición de ventas: share por departamento, categoría y marca. Identificá qué está ganando o perdiendo participación y por qué importa.',
-    merma:            'Analizá la merma en detalle: nivel actual vs meta, top departamentos/categorías/proveedores con más merma, causas probables y acciones concretas para reducirla.',
-    inventario:       'Analizá el inventario: días por departamento, productos con sobrestock (hueso), quiebres, y recomendaciones de reorden o devolución.',
-    prd_cero:         'Analizá los productos en cero: cuántos son, en qué categorías están, su impacto estimado en ventas perdidas y qué acciones tomar para resolverlo.',
-    delivery:         'Analizá el canal delivery: performance vs LY, share sobre venta total, comparativa Uber Eats vs Pedidos Ya por tienda, tendencia y oportunidades.',
-    sbf:              'Analizá SBF: volumen de TX, desempeño por tienda, comparativa vs períodos anteriores, y estado de la cartera CXC de agentes.',
-    ejecutivo:        'Generá un resumen ejecutivo completo del negocio: ventas, meta, delivery, merma, inventario, highlights positivos y negativos, y las 3 acciones más importantes a tomar.',
-    acciones:         'Basado en toda la data, generá un plan de acción concreto para esta semana: quick wins que se pueden ejecutar hoy, acciones de mediano plazo y riesgos a vigilar. Sé específico y accionable.',
-    tiendas:          'Analizá el desempeño por tienda (AMPM01, AMPM02, AMPM03): ranking, cuál lidera, cuál arrastra, diferencias en ventas/delivery/merma y recomendaciones por tienda.',
-  };
-
-  var currentTopic = 'chat';
-
-  var MASTER_MULTIAGENT_PROMPT = `ACTÚA COMO: “CONVENIENCE GROWTH OS 24/7 – MASTER MULTIAGENTE”
-
-Eres mi sistema maestro de consultoría estratégica para una cadena de tiendas de conveniencia 24 horas.
-Operas como un equipo multiagente senior, pero me respondes en una sola voz ejecutiva, clara, corta, visual y accionable.
-
-TU OBJETIVO
-Convertir data, dashboards, reportes, contexto operativo, observaciones de tienda, tendencias mundiales y necesidades del shopper en:
-- hallazgos claros
-- prioridades ejecutivas
-- campañas aterrizadas
-- acciones razonables
-- MVPs viables
-- decisiones útiles para crecer mejor
-
-NO QUIERO
-- respuestas largas
-- teoría innecesaria
-- ideas genéricas
-- relleno
-- propuestas imposibles
-- recomendaciones sin KPI
-- campañas “bonitas” sin lógica comercial
-- respuestas de informe académico
-
-QUIERO
-- respuestas cortas
-- formato visual
-- pensamiento estratégico
-- enfoque comercial
-- enfoque operativo
-- benchmark mundial aterrizado
-- acciones alcanzables
-- criterio ejecutivo
-- claridad total
-
-==================================================
-ARQUITECTURA MULTIAGENTE
-==================================================
-
-AGENTE 1: ORQUESTADOR ESTRATÉGICO / CEO
-Rol:
-- integra todo
-- prioriza
-- decide qué importa más
-- convierte análisis en dirección ejecutiva
-
-AGENTE 2: CRECIMIENTO COMERCIAL Y MARKETING
-Rol:
-- detecta oportunidades de venta
-- propone campañas
-- analiza mix, ticket, tráfico, frecuencia, shopper y promociones
-- identifica quick wins comerciales
-
-AGENTE 3: FOODSERVICE / DELIVERY / INNOVACIÓN
-Rol:
-- analiza food service, combos, attach rate, marketplace, momentos de consumo e innovación
-- propone MVPs rápidos
-- detecta oportunidades de diferenciación rentable
-
-AGENTE 4: OPERACIÓN / INVENTARIO / MERMA / EJECUCIÓN
-Rol:
-- detecta pérdidas por quiebres, sobreinventario, merma, mala ejecución y procesos débiles
-- aterriza mejoras realistas para tienda
-
-AGENTE 5: BENCHMARK GLOBAL / TENDENCIAS / EXPANSIÓN / SOCIAL
-Rol:
-- revisa tendencias mundiales
-- separa moda de oportunidad real
-- aterriza mejores prácticas globales
-- propone evolución de marca, experiencia, campañas y contenido social
-
-REGLA DE FUNCIONAMIENTO
-1. Los 5 agentes analizan.
-2. El Orquestador integra.
-3. Me respondes en una sola voz ejecutiva.
-4. No me muestras debates internos largos.
-5. Solo me das la conclusión integrada, priorizada y accionable.
-
-==================================================
-CONTEXTO DE NEGOCIO QUE SIEMPRE DEBES TENER EN MENTE
-==================================================
-
-Debes pensar siempre como experto en tiendas de conveniencia 24/7.
-
-Analiza el negocio bajo estas palancas:
-- ventas
-- ticket
-- transacciones
-- tráfico
-- margen
-- mix comercial
-- categorías
-- marcas
-- food service
-- delivery
-- surtido
-- disponibilidad
-- quiebres
-- inventario
-- merma
-- productos en cero
-- ejecución en tienda
-- shopper
-- campañas
-- experiencia
-- innovación
-- oportunidad por tienda
-- oportunidad por canal
-- oportunidad por horario
-- oportunidad por momento de consumo
-
-==================================================
-FUENTES DE VERDAD
-==================================================
-
-1. Usa primero como base la información que yo te comparta.
-2. Si tienes acceso a información externa, compárala con tendencias actuales y benchmarks mundiales.
-3. Nunca reemplaces mi realidad por moda global.
-4. Toda tendencia o benchmark debe traducirse a una versión viable para el negocio.
-5. Debes distinguir siempre entre:
-- inspiración
-- oportunidad real
-- piloto posible
-- escalabilidad
-- humo
-
-==================================================
-MARCO DE ANÁLISIS OBLIGATORIO
-==================================================
-
-Siempre evalúa estas preguntas:
-
-A. CRECIMIENTO
-- ¿Dónde está la oportunidad más clara de crecer?
-- ¿Qué palancas pueden subir ventas sin destruir margen?
-- ¿Qué tienda, canal, categoría, marca, día u horario tiene más upside?
-
-B. RENTABILIDAD
-- ¿Dónde se vende pero no se gana?
-- ¿Qué promociones, subsidios, descuentos o mixes dañan la rentabilidad?
-- ¿Qué mejora margen sin frenar tráfico?
-
-C. EJECUCIÓN
-- ¿Qué problema es de ejecución y no de estrategia?
-- ¿Qué depende de layout, reposición, surtido, velocidad, disponibilidad o disciplina comercial?
-
-D. FOODSERVICE
-- ¿Qué producto, combo, horario o canal puede generar tráfico y ticket?
-- ¿Qué prueba rápida puede mejorar attach rate, frecuencia o margen?
-
-E. DELIVERY
-- ¿Qué gaps hay entre tienda y marketplace?
-- ¿Qué falla en disponibilidad, fotos, surtido, pricing, combos o conversión?
-- ¿Qué se debería resolver por canal y no de forma general?
-
-F. SHOPPER
-- ¿Qué quiere hoy el cliente?
-- ¿Qué valora más: rapidez, ahorro de tiempo, urgencia, indulgencia, practicidad, noche, conveniencia o experiencia?
-
-G. OPERACIÓN
-- ¿Qué sí se puede ejecutar con el equipo actual?
-- ¿Qué puede resolverse con procesos, seguimiento y disciplina?
-- ¿Qué requiere piloto antes de escalar?
-
-H. INNOVACIÓN
-- ¿Qué MVP vale la pena correr en 7, 15 o 30 días?
-- ¿Qué aprendizaje generaría?
-
-I. BENCHMARK GLOBAL
-- ¿Qué hacen bien los líderes mundiales?
-- ¿Por qué les funciona?
-- ¿Qué sí aplica?
-- ¿Qué no aplica?
-- ¿Cuál es la versión tropicalizada?
-
-J. PRIORIZACIÓN
-- ¿Qué hacer ya?
-- ¿Qué pilotear ya?
-- ¿Qué escalar?
-- ¿Qué dejar fuera por ahora?
-
-==================================================
-MÓDULO OBLIGATORIO: TENDENCIAS MUNDIALES QUE MUEVEN EL NEGOCIO
-==================================================
-
-Siempre revisa cómo estas fuerzas globales afectan la necesidad y evolución de las tiendas de conveniencia:
-
-1. VALOR + CONVENIENCIA
-Evalúa cómo compra el shopper cuando quiere:
-- ahorrar tiempo
-- resolver rápido
-- comprar de paso
-- darse un gusto pequeño
-- combinar practicidad con valor
-
-2. FRICCIÓN CERO
-Evalúa oportunidades para mejorar:
-- rapidez de compra
-- facilidad de elección
-- visibilidad de promociones
-- facilidad de pago
-- velocidad de entrega
-- experiencia simple
-
-3. FOODSERVICE COMO DIFERENCIADOR
-Evalúa si food service está actuando como:
-- motor de tráfico
-- motor de ticket
-- motor de frecuencia
-- generador de marca
-- generador de combos y cross-sell
-
-4. OMNICANALIDAD
-Evalúa cómo conectar mejor:
-- tienda física
-- delivery apps
-- WhatsApp
-- redes sociales
-- campañas digitales
-- contenido
-- promociones por canal
-
-5. PERSONALIZACIÓN E IA
-Evalúa oportunidades para aplicar IA o lógica predictiva en:
-- promociones
-- segmentación
-- contenido
-- pricing
-- análisis de categorías
-- disponibilidad
-- quiebres
-- detección de oportunidades
-
-6. LEALTAD Y VÍNCULO DE MARCA
-No analices lealtad solo como descuento.
-Evalúa también:
-- hábito
-- recordación
-- afinidad
-- frecuencia
-- vínculo emocional
-- comunidad
-
-7. SHOPPER ACTUAL Y NUEVAS GENERACIONES
-Evalúa cambios en:
-- Gen Z
-- millennials
-- shopper nocturno
-- shopper de urgencia
-- shopper práctico
-- shopper indulgente
-- shopper digital
-
-8. SALUD, PROTEÍNA, FUNCIONALIDAD E INDULGENCIA
-Evalúa oportunidades en:
-- proteína
-- snacks funcionales
-- bebidas funcionales
-- indulgencia premium
-- consumo on-the-go
-- antojo nocturno
-
-9. EXPERIENCIA Y PROPUESTA DE VALOR
-Evalúa si la tienda está evolucionando en:
-- experiencia
-- conveniencia real
-- visibilidad
-- señalización
-- propuesta diferenciada
-- razón para preferirla
-
-10. NUEVAS OPORTUNIDADES DE CRECIMIENTO
-Evalúa ideas como:
-- bundles por momento de consumo
-- combos dinámicos
-- menú rotativo
-- ediciones limitadas
-- colaboraciones
-- loyalty gamificado
-- activaciones hiperlocales
-- comunidad digital
-- nuevos servicios
-
-CUANDO HABLES DE VANGUARDIA
-Siempre clasifica cada oportunidad en:
-- APLICAR YA
-- PILOTEAR
-- MONITOREAR
-- NO PRIORITARIO
-
-==================================================
-MÓDULO OBLIGATORIO: REDES SOCIALES, CAMPAÑAS CREATIVAS Y ENGAGEMENT
-==================================================
-
-Cuando me propongas campañas o ideas de social media, no quiero solo promociones.
-Quiero ideas que construyan:
-- comunidad
-- engagement real
-- recordación
-- afinidad con la marca
-- visitas a tienda
-- tráfico a delivery
-- conversación
-- contenido guardable o compartible
-- conexión con momentos reales
-
-Siempre evalúa estos territorios de contenido:
-
-1. MOMENTOS REALES
-Ejemplos:
-- madrugada
-- camino al trabajo
-- break
-- after office
-- previa
-- snack rápido
-- urgencia
-- cierre del día
-- partido
-- quincena
-
-2. CONTENIDO SERIADO
-Piensa en series, no solo posts sueltos:
-- combo de la semana
-- pick del equipo
-- madrugada AMPM
-- antojo del día
-- lo nuevo en tienda
-- arma tu combo
-- top picks del finde
-- hack de conveniencia
-
-3. CONTENIDO CON PERSONAS
-Prioriza:
-- colaboradores
-- clientes
-- behind the scenes
-- preparación real
-- recomendaciones reales
-- storytelling corto
-- retos y dinámicas
-
-4. CONTENIDO DE COMUNIDAD
-Ejemplos:
-- votaciones
-- rankings
-- versus
-- elegir nuevo sabor
-- team madrugada vs team mañana
-- comunidad fan de hot dogs, café, cerveza, snacks, etc.
-
-5. CONTENIDO HIPERRELEVANTE
-Conecta con:
-- clima
-- tráfico
-- quincena
-- partidos
-- conciertos
-- oficina
-- universidad
-- noche
-- fechas locales
-- momentos culturales
-
-6. CONTENIDO DE CONVERSIÓN
-Cada idea debe decir si busca:
-- alcance
-- interacción
-- visita a tienda
-- ticket
-- prueba de producto
-- tráfico a delivery
-- recompra
-- awareness
-- UGC
-
-7. CONTENIDO DE PRUEBA RÁPIDA
-Siempre propone:
-- versión orgánica
-- versión con pauta
-- versión MVP de bajo costo
-- KPI por formato
-
-8. CONTENIDO CON LÓGICA DE MARCA
-Toda idea debe responder:
-- qué construye
-- qué hábito quiere instalar
-- qué percepción quiere mover
-- qué conducta quiere provocar
-
-==================================================
-CUANDO ANALICES DATA
-==================================================
-
-Debes buscar:
-- caídas relevantes
-- aceleradores de venta
-- diferencias entre tiendas
-- diferencias entre canales
-- oportunidades por horario
-- oportunidades por daypart
-- oportunidades por momento de consumo
-- categorías tractoras
-- categorías débiles
-- productos con potencial
-- productos que frenan margen
-- productos en cero
-- quiebres
-- exceso de inventario
-- merma relevante
-- promociones mal diseñadas
-- gaps de delivery
-- gaps de food service
-- problemas de ejecución
-- inconsistencias en la data
-- quick wins
-- MVPs viables
-
-==================================================
-CUANDO PROPONGAS CAMPAÑAS
-==================================================
-
-Cada campaña debe incluir:
-- objetivo
-- insight del shopper
-- mecánica
-- surtido o combo
-- ticket objetivo
-- lógica de margen
-- canal ideal
-- timing
-- KPI
-- versión MVP
-- versión escalable
-
-==================================================
-CUANDO PROPONGAS MVPs
-==================================================
-
-Siempre incluye:
-- oportunidad o problema
-- hipótesis
-- prueba mínima viable
-- duración
-- complejidad
-- costo relativo
-- KPI de éxito
-- criterio de descarte
-- siguiente paso
-
-==================================================
-REGLA DE ACCIONABILIDAD
-==================================================
-
-Toda recomendación debe cumplir:
-- clara
-- realista
-- alcanzable
-- ejecutable
-- con responsable
-- con KPI
-- con prioridad
-- con versión piloto si aplica
-
-Si una recomendación no cumple eso, no la dejes así. Reformúlala.
-
-==================================================
-FORMATO DE RESPUESTA ADAPTATIVO
-==================================================
-
-Tu formato NO es fijo.
-No repitas siempre la misma plantilla.
-Primero entiende qué tipo de pregunta te hicieron y luego responde con la estructura que mejor ayude a decidir.
-
-TIPOS DE RESPUESTA POSIBLES
-
-1. SI LA PREGUNTA ES PUNTUAL
-Responde directo.
-Usa este orden:
-- respuesta corta
-- impacto en el negocio
-- qué haría
-- KPI o señal a seguir
-
-2. SI LA PREGUNTA ES DE DIAGNÓSTICO
-Usa una versión compacta de:
-- hallazgo clave
-- por qué está pasando
-- impacto
-- acción recomendada
-- prioridad
-
-3. SI LA PREGUNTA ES DE CRECIMIENTO O RENTABILIDAD
-Prioriza:
-- palanca
-- impacto esperado
-- riesgo
-- acción inmediata
-- KPI
-
-4. SI LA PREGUNTA ES DE CAMPAÑA, CONTENIDO O ACTIVACIÓN
-Prioriza:
-- insight
-- idea
-- mecánica
-- por qué puede mover negocio
-- canal ideal
-- KPI
-- versión MVP
-
-5. SI LA PREGUNTA ES DE MVP, PILOTO O INNOVACIÓN
-Prioriza:
-- hipótesis
-- prueba mínima viable
-- duración
-- costo relativo
-- KPI de éxito
-- criterio de descarte
-
-6. SI LA PREGUNTA ES DE PRIORIZACIÓN O COMPARACIÓN
-Usa ranking, tabla simple o matriz breve.
-No metas secciones innecesarias.
-
-7. SI EL USUARIO PIDE PROFUNDIDAD
-Solo entonces amplía el análisis y abre más bloques.
-
-==================================================
-REGLA DE RESPUESTA INTELIGENTE
-==================================================
-
-Cada respuesta debe sentirse pensada para la pregunta concreta.
-No uses la misma salida para todo.
-No fuerces semáforo, tabla, benchmark o campañas si no aportan valor real.
-
-SIEMPRE ENTREGA ESTO, AUNQUE SEA EN FORMATO BREVE:
-- la respuesta a la pregunta
-- el impacto en ventas, margen, tráfico, ticket, ejecución o experiencia
-- qué haría para mejorar
-- cómo medir si funcionó
-
-SI HAY DATA SUFICIENTE
-- concluye
-- prioriza
-- recomienda
-
-SI LA DATA NO ALCANZA
-- dilo explícitamente
-- no inventes
-- da la mejor hipótesis ejecutiva posible
-- di qué dato faltaría para tomar mejor decisión
-
-FORMAS VISUALES PERMITIDAS SEGÚN CONVENGA
-- bullets ejecutivos
-- mini tabla
-- ranking
-- checklist
-- semáforo
-- matriz simple
-- roadmap breve
-- 3 decisiones clave
-
-NO OBLIGUES UNA ESTRUCTURA FIJA.
-OBLIGA SOLO CLARIDAD, IMPACTO Y ACCIÓN.
-
-==================================================
-REGLA FINAL
-==================================================
-
-Tu trabajo no es impresionarme.
-Tu trabajo es ayudarme a:
-- decidir mejor
-- ejecutar mejor
-- crecer mejor
-- innovar con lógica
-- estar a la vanguardia sin perder aterrizaje comercial
-
-Cada vez que te comparta información, empieza de inmediato con:
-- resumen ejecutivo
-- semáforo
-- visión multiagente
-- hallazgos
-- acciones
-- campañas o MVPs
-- benchmark aterrizado
-- prioridades`;
-
-
-  function aiResolveTopic(topic, userText){
-    var t = String(topic || currentTopic || 'chat').trim();
-    var q = String(userText || '').toLowerCase();
-    if(/\b(sbf|cxc|agente|recarga|rapibac|western union|western|puntoxpress|smart ticket|n1co|aki pago|loto|promerica)\b/.test(q)) return 'sbf';
-    if(/\b(merma|desperdicio|vencimiento|caduc|proveedor.*merma|merma.*proveedor)\b/.test(q)) return 'merma';
-    if(/\b(inventario|hueso|sobrestock|stock|dias de inventario|d[ií]as de inventario|rop|reorden|transfer)\b/.test(q)) return 'inventario';
-    if(/\b(prd|quiebre|agotado|agotados|en cero|fuera de stock|sin inventario)\b/.test(q)) return 'prd_cero';
-    if(/\b(delivery|uber|pedidos ?ya|pya|marketplace|canal digital)\b/.test(q)) return 'delivery';
-    if(/\b(meta|proyecci[oó]n|run rate|cierre de mes|alcance)\b/.test(q)) return 'ventas_proyeccion';
-    if(/\b(mix|share|categor[ií]a|categorias|marca|marcas|departamento|departamentos)\b/.test(q)) return 'ventas_mix';
-    if(/\b(tienda|tiendas|ampm01|ampm02|ampm03|store)\b/.test(q)) return 'tiendas';
-    if(/\b(ly|lw|vs ly|vs lw|vs prom|vs s8|crec|ca[ií]da|variaci[oó]n|decrec|tendencia|desempe[nñ]o)\b/.test(q)) return (t === 'chat' ? 'ventas_variacion' : t);
-    return t || 'chat';
-  }
-
-  function aiGetFilterContext(){
-    var mode = (typeof getUnifiedReportMode === 'function' ? getUnifiedReportMode() : 'diario');
-    var currentYm = (document.getElementById('currentMonth') && document.getElementById('currentMonth').value) || 'N/D';
-    var prev = [];
-    try{ prev = (typeof getSelectedValues === 'function') ? getSelectedValues(document.getElementById('prevMonths')) : []; }catch(_e){}
-    var stores = [];
-    try{ stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : []; }catch(_e){}
-    var parts = [
-      'Modo reporte: ' + mode,
-      'Periodo actual: ' + currentYm,
-      'Comparables: ' + (prev && prev.length ? prev.join(', ') : 'N/D'),
-      'Tiendas: ' + (stores && stores.length ? stores.join(', ') : 'Todas')
-    ];
-    return '=== CONTEXTO DE FILTROS ===\n' + parts.join('\n');
-  }
-
-  function aiPushText(ctx, id, label, max){
-    var el = document.getElementById(id);
-    if(!el) return;
-    var raw = String(el.textContent || '').replace(/\s+/g,' ').trim();
-    if(!raw || raw === '—' || raw === 'Pendiente') return;
-    ctx.push('=== ' + label + ' ===\n' + raw.substring(0, max || 1200));
-  }
-
-  function aiPushKpis(ctx){
-    var defs = [
-      ['kpi_sales_cur','Venta actual'],['kpi_sales_ly','Venta LY'],['kpi_sales_delta_ly','Delta ventas vs LY'],
-      ['kpi_meta','Meta mensual'],['kpi_proj','Proyección cierre'],['kpi_proj_vs_meta','Proyección vs meta'],
-      ['kpi_margin','Margen'],['kpi_del','Venta delivery'],['kpi_del_share_pill','Share delivery'],
-      ['kpi_drop','Drop'],['kpi_prd0','PRD en cero'],['kpi_days_inv','Días inventario'],['kpi_tx_sbf','TX SBF'],['kpi_cxc','CXC MTD']
-    ];
-    var lines = [];
-    defs.forEach(function(def){
-      var el = document.getElementById(def[0]);
-      var val = el ? String(el.textContent || '').replace(/\s+/g,' ').trim() : '';
-      if(val && val !== '—' && val !== 'Pendiente') lines.push(def[1] + ': ' + val);
+  function buildInputItems(systemPrompt){
+    var items = [{ role:'system', content:[{ type:'input_text', text:systemPrompt }] }];
+    chatHistory.slice(-OPENAI_MAX_HISTORY_MESSAGES).forEach(function(m){
+      items.push({ role:m.role, content:[{ type:'input_text', text:String(m.content || '') }] });
     });
-    if(lines.length) ctx.push('=== KPIs RESUMEN ===\n' + lines.join('\n'));
+    return items;
   }
-
-  function aiPushTable(ctx, id, label, maxRows, maxCols){
-    var table = document.getElementById(id);
-    if(!table) return;
-    var rows = Array.prototype.slice.call(table.querySelectorAll('tr') || []);
-    if(!rows.length) return;
-    var lines = [];
-    var rowLimit = maxRows || 18;
-    var colLimit = maxCols || 20;
-    for(var i=0; i<rows.length && lines.length < rowLimit; i++){
-      var cells = Array.prototype.slice.call(rows[i].querySelectorAll('th,td') || []);
-      if(!cells.length) continue;
-      var vals = [];
-      for(var c=0; c<cells.length && vals.length < colLimit; c++){
-        var txt = String(cells[c].textContent || '').replace(/\s+/g,' ').trim();
-        if(txt) vals.push(txt);
-      }
-      var line = vals.join(' | ');
-      if(line && line.replace(/[|\s]/g,'')) lines.push(line);
-    }
-    if(lines.length) ctx.push('=== ' + label + ' ===\n' + lines.join('\n'));
-  }
-
-  function buildDataContext(topic, userText){
-    var resolvedTopic = aiResolveTopic(topic, userText);
-    var ctx = [aiGetFilterContext()];
-
-    if(['chat','ejecutivo','acciones','tiendas','ventas_variacion','ventas_mix','ventas_proyeccion'].indexOf(resolvedTopic) >= 0){
-      aiPushKpis(ctx);
-      aiPushText(ctx, 'radarInsights', 'RADAR EJECUTIVO', 1400);
-      aiPushText(ctx, 'radarWatchlist', 'WATCHLIST', 700);
-      aiPushText(ctx, 'radarQuickWins', 'QUICK WINS', 700);
-      aiPushText(ctx, 'radarInitiatives', 'INICIATIVAS', 700);
-      aiPushText(ctx, 'ampmBizDetailSummary', 'HALLAZGO DE NEGOCIO SELECCIONADO', 900);
-      aiPushText(ctx, 'ampmBizMoverList', 'PALANCAS SOBRESALIENTES', 1200);
-    }
-
-    switch(resolvedTopic){
-      case 'sbf':
-        ctx.push('=== REGLA DE LECTURA SBF ===\nEn las tablas SBF de este dashboard, las columnas "Delta vs ..." son ratios: > 1.00 = crecimiento, < 1.00 = caída, = 1.00 = flat. Las columnas "Dif vs ..." son diferencias absolutas. Para SBF y CXC mandan las tablas específicas; no usar KPIs generales si contradicen la tabla.');
-        aiPushTable(ctx, 't_sbf_store', 'SBF — TX POR TIENDA', 12, 18);
-        aiPushTable(ctx, 't_sbf_prov', 'SBF — TX POR PROVEEDOR', 16, 18);
-        aiPushTable(ctx, 't_sbf_daypart', 'SBF — TX POR HORARIO FS', 12, 16);
-        aiPushTable(ctx, 't_sbf_dow', 'SBF — TX POR DÍA', 12, 16);
-        aiPushTable(ctx, 't_cxc', 'CXC AGENTES', 18, 10);
-        aiPushText(ctx, 'sbfHourCompareNote', 'NOTA SBF HORAS', 300);
-        break;
-      case 'merma':
-        ctx.push('=== REGLA DE LECTURA MERMA ===\nPara merma, mayor % o mayor monto implica peor desempeño. Si la tabla detalle muestra proveedor, categoría o producto, usalos como fuente principal para responder top de merma.');
-        aiPushTable(ctx, 't_merma_matrix', 'MERMA POR DEPARTAMENTO', 18, 16);
-        aiPushTable(ctx, 't_merma_drill', 'MERMA DETALLE', 24, 18);
-        break;
-      case 'inventario':
-        ctx.push('=== REGLA DE LECTURA INVENTARIO ===\nPriorizar días de inventario altos, sobrestock, hueso y propuestas de transferencia/reorden.');
-        aiPushTable(ctx, 't_inv_dept', 'INVENTARIO POR DEPARTAMENTO', 18, 14);
-        aiPushTable(ctx, 't_rop_sug', 'PROPUESTAS DE REORDEN', 18, 14);
-        aiPushTable(ctx, 't_hueso', 'HUESO — SEGUIMIENTO', 18, 14);
-        aiPushTable(ctx, 't_hueso_prop', 'HUESO — PROPUESTAS', 18, 14);
-        break;
-      case 'prd_cero':
-        ctx.push('=== REGLA DE LECTURA PRD EN CERO ===\nPriorizar quiebres con impacto de venta, recurrencia y oportunidad de reposición rápida.');
-        aiPushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 22, 16);
-        break;
-      case 'delivery':
-        ctx.push('=== REGLA DE LECTURA DELIVERY ===\nSeparar lectura por canal y por share. En ratios Delta: > 1.00 crece, < 1.00 cae.');
-        aiPushTable(ctx, 't_del', 'SALES DELIVERY', 14, 18);
-        aiPushTable(ctx, 't_delshare', 'SHARE DELIVERY', 14, 18);
-        aiPushTable(ctx, 't_delx', 'VENTA POR CANAL DELIVERY', 14, 18);
-        break;
-      case 'ventas_mix':
-        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
-        aiPushTable(ctx, 't_fs_cat', 'FOOD SERVICE POR CATEGORÍA', 14, 16);
-        break;
-      case 'ventas_proyeccion':
-        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
-        aiPushText(ctx, 'radarForecastTable', 'PROYECCIÓN 4 SEMANAS', 1200);
-        aiPushText(ctx, 'radarForecastInsights', 'LECTURA PROYECCIÓN', 800);
-        break;
-      case 'tiendas':
-        aiPushTable(ctx, 't_sales', 'SALES POR TIENDA', 12, 18);
-        aiPushTable(ctx, 't_del', 'DELIVERY POR TIENDA', 12, 18);
-        aiPushTable(ctx, 't_sbf_store', 'SBF POR TIENDA', 12, 18);
-        aiPushTable(ctx, 't_merma_matrix', 'MERMA POR DEPARTAMENTO', 10, 16);
-        break;
-      case 'ventas_variacion':
-      case 'chat':
-      case 'ejecutivo':
-      case 'acciones':
-      default:
-        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
-        aiPushTable(ctx, 't_del', 'SALES DELIVERY', 12, 18);
-        aiPushTable(ctx, 't_merma_matrix', 'MERMA', 10, 16);
-        aiPushTable(ctx, 't_sbf_store', 'SBF POR TIENDA', 10, 18);
-        aiPushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 12, 16);
-        break;
-    }
-
-    if(!ctx.length) return 'No hay data cargada en el reporte. Cargá un archivo y actualizá los cuadros antes de consultar.';
-    return ctx.join('\n\n');
-  }
-
-  function getEl(id){ return document.getElementById(id); }
-  function getMsgs(){ return getEl('ampmAiMessages'); }
-
-  function showEmpty(show){
-    var e = getEl('ampmAiEmpty');
-    if(e) e.style.display = show ? '' : 'none';
-  }
-
-  function escapeHtml(str){
-    return String(str==null?'':str)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/\"/g,'&quot;')
-      .replace(/'/g,'&#39;');
-  }
-
-  function tryParseAmpmVisualPayload(text){
-    if(!text) return null;
-    var raw = String(text).trim();
-    var match = raw.match(/<AMPM_VISUAL>([\s\S]*?)<\/AMPM_VISUAL>/i);
-    var jsonText = match ? match[1].trim() : '';
-    if(!jsonText && raw.charAt(0)==='{') jsonText = raw;
-    if(!jsonText) return null;
-    try{
-      var payload = JSON.parse(jsonText);
-      if(payload && typeof payload === 'object') return payload;
-    }catch(_e){}
-    return null;
-  }
-
-  function ampmFmtValue(val, format){
-    if(val==null || val==='') return '—';
-    if(typeof val === 'number'){
-      if(format === 'money') return '$'+val.toLocaleString('en-US',{maximumFractionDigits:0});
-      if(format === 'percent') return val.toLocaleString('en-US',{maximumFractionDigits:1})+'%';
-      return val.toLocaleString('en-US',{maximumFractionDigits:1});
-    }
-    return String(val);
-  }
-
-  function renderAmpmVisualPayload(payload){
-    var host = document.createElement('div');
-    host.className = 'ampm-ai-visual';
-
-    if(payload.summary){
-      var s = document.createElement('div');
-      s.className = 'ampm-ai-v-summary';
-      s.textContent = payload.summary;
-      host.appendChild(s);
-    }
-
-    if(Array.isArray(payload.cards) && payload.cards.length){
-      var cards = document.createElement('div');
-      cards.className = 'ampm-ai-v-cards';
-      payload.cards.slice(0,6).forEach(function(card){
-        var status = String(card.status||'').toLowerCase();
-        var c = document.createElement('div');
-        c.className = 'ampm-ai-v-card'+(status?(' '+status):'');
-        var label = document.createElement('div');
-        label.className = 'ampm-ai-v-label';
-        label.textContent = card.label || 'Indicador';
-        var value = document.createElement('div');
-        value.className = 'ampm-ai-v-value';
-        value.textContent = ampmFmtValue(card.value, card.format || payload.value_format);
-        c.appendChild(label); c.appendChild(value);
-        if(card.delta){
-          var delta = document.createElement('div');
-          delta.className = 'ampm-ai-v-delta'+(status?(' '+status):'');
-          delta.textContent = String(card.delta);
-          c.appendChild(delta);
-        }
-        cards.appendChild(c);
-      });
-      host.appendChild(cards);
-    }
-
-    if(payload.chart && Array.isArray(payload.chart.labels) && payload.chart.labels.length && Array.isArray(payload.chart.values) && payload.chart.values.length){
-      var chartWrap = document.createElement('div');
-      chartWrap.className = 'ampm-ai-v-chart';
-      var head = document.createElement('div');
-      head.className = 'ampm-ai-v-chart-head';
-      var headLeft = document.createElement('div');
-      var ttl = document.createElement('div');
-      ttl.className = 'ampm-ai-v-chart-title';
-      ttl.textContent = payload.chart.title || 'Visual de apoyo';
-      headLeft.appendChild(ttl);
-      if(payload.chart.subtitle){
-        var sub = document.createElement('div');
-        sub.className = 'ampm-ai-v-chart-sub';
-        sub.textContent = payload.chart.subtitle;
-        headLeft.appendChild(sub);
-      }
-      head.appendChild(headLeft);
-      chartWrap.appendChild(head);
-      var cvWrap = document.createElement('div');
-      cvWrap.className = 'ampm-ai-v-canvas';
-      var cv = document.createElement('canvas');
-      cvWrap.appendChild(cv);
-      chartWrap.appendChild(cvWrap);
-      host.appendChild(chartWrap);
-      setTimeout(function(){
-        try{
-          if(!window.Chart) return;
-          var t = String(payload.chart.type||'bar').toLowerCase();
-          var chartType = (t==='line'||t==='doughnut'||t==='pie') ? t : 'bar';
-          var labels = payload.chart.labels.slice(0,12);
-          var values = payload.chart.values.slice(0,12).map(function(v){ return Number(v)||0; });
-          var palette = ['#0C4D8F','#F58320','#11284A','#0EA5E9','#E67425','#1D4ED8','#7C3AED','#B45309','#334155','#14B8A6','#F59E0B','#2563EB'];
-          var dataset = {
-            label: payload.chart.series_label || 'Valor',
-            data: values,
-            borderColor: '#0C4D8F',
-            borderWidth: 2,
-            tension: 0.28,
-            fill: chartType === 'line',
-            pointRadius: chartType === 'line' ? 4 : 0,
-            pointHoverRadius: chartType === 'line' ? 5 : 0,
-            pointBackgroundColor: '#0C4D8F',
-            pointBorderColor: '#ffffff',
-            pointBorderWidth: chartType === 'line' ? 1.5 : 0,
-            backgroundColor: chartType === 'line'
-              ? 'rgba(12,77,143,0.14)'
-              : labels.map(function(_, idx){ return palette[idx % palette.length]; }),
-            borderRadius: chartType === 'bar' ? 10 : 0,
-            maxBarThickness: chartType === 'bar' ? 46 : undefined,
-            categoryPercentage: chartType === 'bar' ? 0.7 : undefined,
-            barPercentage: chartType === 'bar' ? 0.78 : undefined
-          };
-          var chartPlugins = [];
-          if((chartType === 'bar' || chartType === 'line') && typeof ValueLabels !== 'undefined') chartPlugins.push(ValueLabels);
-          new Chart(cv.getContext('2d'), {
-            type: chartType,
-            data: { labels: labels, datasets: [dataset] },
-            options: {
-              responsive:true,
-              maintainAspectRatio:false,
-              animation:false,
-              layout:{padding:{top:10,right:10,left:6,bottom:0}},
-              plugins:{
-                legend:{display:(chartType==='doughnut'||chartType==='pie'||!!payload.chart.show_legend), position:'bottom', labels:{boxWidth:12, usePointStyle:true, pointStyle:'circle', color:'#334155', font:{weight:'700'}}},
-                title:{display:false},
-                tooltip:{
-                  backgroundColor:'rgba(15,23,42,0.95)',
-                  titleColor:'#fff',
-                  bodyColor:'#e2e8f0',
-                  padding:10,
-                  displayColors:false,
-                  callbacks:{label:function(ctx){ var raw = (ctx.parsed && ctx.parsed.y!=null) ? ctx.parsed.y : (ctx.parsed != null ? ctx.parsed : ctx.raw); return (ctx.dataset.label ? ctx.dataset.label + ': ' : '') + ampmFmtValue(raw, payload.chart.format || ''); }}
-                },
-                valueLabels:{
-                  bar: chartType === 'bar',
-                  line: chartType === 'line',
-                  formatter:function(v){ return ampmFmtValue(Number(v)||0, payload.chart.format || ''); }
-                }
-              },
-              scales: (chartType==='bar'||chartType==='line') ? {
-                y:{
-                  beginAtZero:true,
-                  grid:{color:'rgba(148,163,184,0.18)', drawBorder:false},
-                  ticks:{color:'#475569', font:{weight:'700'}, callback:function(v){ return ampmFmtValue(v, payload.chart.format || ''); }}
-                },
-                x:{
-                  grid:{display:false, drawBorder:false},
-                  ticks:{color:'#334155', font:{weight:'800'}, autoSkip:false, maxRotation:0, minRotation:0}
-                }
-              } : {}
-            },
-            plugins: chartPlugins
-          });
-        }catch(_e){}
-      },0);
-    }
-
-    if(Array.isArray(payload.table) && payload.table.length){
-      var wrap = document.createElement('div');
-      wrap.className = 'ampm-ai-v-table-wrap';
-      var table = document.createElement('table');
-      table.className = 'ampm-ai-v-table';
-      var cols = Object.keys(payload.table[0] || {});
-      if(cols.length){
-        var thead = document.createElement('thead');
-        var trh = document.createElement('tr');
-        cols.forEach(function(col){ var th = document.createElement('th'); th.textContent = col; trh.appendChild(th); });
-        thead.appendChild(trh); table.appendChild(thead);
-        var tbody = document.createElement('tbody');
-        payload.table.slice(0,8).forEach(function(row){
-          var tr = document.createElement('tr');
-          cols.forEach(function(col){ var td = document.createElement('td'); td.textContent = row[col]==null?'—':String(row[col]); tr.appendChild(td); });
-          tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        wrap.appendChild(table);
-        host.appendChild(wrap);
-      }
-    }
-
-    if(Array.isArray(payload.actions) && payload.actions.length){
-      var actions = document.createElement('div');
-      actions.className = 'ampm-ai-v-actions';
-      payload.actions.slice(0,4).forEach(function(action){
-        var a = document.createElement('div');
-        a.className = 'ampm-ai-v-action';
-        var t = document.createElement('div');
-        t.className = 'ampm-ai-v-action-title';
-        t.textContent = action.title || action.action || 'Acción sugerida';
-        a.appendChild(t);
-        if(action.detail){
-          var d = document.createElement('div');
-          d.style.marginTop = '4px';
-          d.style.fontSize = '12px';
-          d.style.lineHeight = '1.45';
-          d.style.color = '#334155';
-          d.textContent = action.detail;
-          a.appendChild(d);
-        }
-        var meta = document.createElement('div');
-        meta.className = 'ampm-ai-v-action-meta';
-        [['Prioridad',action.priority],['Responsable',action.owner],['KPI',action.kpi]].forEach(function(pair){
-          if(!pair[1]) return;
-          var pill = document.createElement('span');
-          pill.className = 'ampm-ai-v-pill';
-          pill.textContent = pair[0]+': '+pair[1];
-          meta.appendChild(pill);
-        });
-        if(meta.childNodes.length) a.appendChild(meta);
-        actions.appendChild(a);
-      });
-      host.appendChild(actions);
-    }
-
-    if(Array.isArray(payload.notes) && payload.notes.length){
-      var notes = document.createElement('div');
-      notes.className = 'ampm-ai-v-notes';
-      payload.notes.slice(0,4).forEach(function(n){
-        var item = document.createElement('div');
-        item.className = 'ampm-ai-v-note';
-        item.textContent = n;
-        notes.appendChild(item);
-      });
-      host.appendChild(notes);
-    }
-
-    return host;
-  }
-
-  function appendMsg(role, text, extraClass){
-    showEmpty(false);
-    var msgs = getMsgs();
-    if(!msgs) return;
-    var wrap = document.createElement('div');
-    wrap.className = 'ampm-ai-msg '+role+(extraClass?' '+extraClass:'');
-    var lbl = document.createElement('div');
-    lbl.className = 'ampm-ai-msg-lbl';
-    lbl.textContent = role === 'user' ? 'Vos' : 'IA';
-    var bubble = document.createElement('div');
-    bubble.className = 'ampm-ai-bubble';
-    if(role === 'assistant'){
-      var payload = tryParseAmpmVisualPayload(text);
-      if(payload){
-        bubble.classList.add('visual');
-        bubble.appendChild(renderAmpmVisualPayload(payload));
-      } else {
-        bubble.textContent = text;
-      }
-    } else {
-      bubble.textContent = text;
-    }
-    wrap.appendChild(lbl);
-    wrap.appendChild(bubble);
-    msgs.appendChild(wrap);
-    var chat = getEl('ampmAiChat');
-    if(chat) chat.scrollTop = chat.scrollHeight;
-    return wrap;
-  }
-
-  function removeThinking(){
-    try{
-      var msgs = getMsgs();
-      if(!msgs) return;
-      msgs.querySelectorAll('.ampm-ai-thinking').forEach(function(el){ try{el.remove();}catch(_e){} });
-    }catch(_e){}
-  }
-
-  function setSendDisabled(d){
-    var btn = getEl('ampmAiSendBtn');
-    var lbl = getEl('ampmAiSendLabel');
-    if(btn) btn.disabled = d;
-    if(lbl) lbl.textContent = d ? '…' : '▶';
-  }
-
-  window.ampmAiNav = function(btn, topic){
-    currentTopic = topic;
-    document.querySelectorAll('.ampm-ai-nav-btn').forEach(function(b){ b.classList.remove('active'); });
-    btn.classList.add('active');
-    var meta = TOPIC_META[topic] || TOPIC_META.chat;
-    var titleEl = getEl('ampmAiHeaderTitle');
-    var subEl = getEl('ampmAiHeaderSub');
-    if(titleEl) titleEl.textContent = meta.title;
-    if(subEl) subEl.textContent = meta.sub + ' · ' + getAiModeLabel();
-    var promptsEl = getEl('ampmAiPrompts');
-    if(promptsEl){
-      promptsEl.innerHTML = '';
-      (meta.prompts || []).forEach(function(p){
-        var btn2 = document.createElement('button');
-        btn2.className = 'ampm-ai-prompt-pill';
-        btn2.textContent = p;
-        btn2.onclick = function(){ ampmAiQuick(btn2); };
-        promptsEl.appendChild(btn2);
-      });
-    }
-  };
-
-  window.ampmAiQuick = function(btn){
-    var input = getEl('ampmAiInput');
-    if(input){ input.value = btn.textContent; }
-    ampmAiSend();
-  };
 
   window.ampmAiSend = function(){
-    var OPENAI_API_KEY = getApiKey();
-    if(!OPENAI_API_KEY || !OPENAI_API_KEY.startsWith('sk-')){
-      appendMsg('assistant','⚠️ Primero configurá tu API Key de OpenAI. Hacé clic en "⚙ Configurar Key" en el menú lateral.','error');
-      ampmAiOpenKeyModal();
+    var apiKey = getApiKey();
+    if(!apiKey || apiKey.indexOf('sk-') !== 0){
+      appendMsg('assistant','⚠️ Primero configurá tu API Key de OpenAI.','error');
+      window.ampmAiOpenKeyModal();
       return;
     }
     var inputEl = getEl('ampmAiInput');
-    var userText = inputEl ? inputEl.value.trim() : '';
+    var userText = inputEl ? String(inputEl.value || '').trim() : '';
     if(!userText) return;
 
     appendMsg('user', userText);
     if(inputEl) inputEl.value = '';
     chatHistory.push({ role:'user', content:userText });
-
     setSendDisabled(true);
     appendMsg('assistant','Analizando…','ampm-ai-thinking');
 
-    var resolvedTopic = aiResolveTopic(currentTopic, userText);
-    var dataContext = buildDataContext(resolvedTopic, userText);
-    var visualIntent = /graf|gr[aá]fic|visual|compar|ranking|top|vs | versus |impacto|tendenc|c[oó]mo van|cu[aá]l|d[oó]nde|mejor|peor|proveedor|tienda|share|mix|resumen|scorecard|sem[aá]foro/i.test(userText) || ['ejecutivo','tiendas','ventas_variacion','delivery','sbf','merma','inventario','prd_cero'].indexOf(resolvedTopic) >= 0;
     var topicInstr = TOPIC_PROMPTS[currentTopic] || TOPIC_PROMPTS.chat;
-    var visualBlockSpec = `
-<AMPM_VISUAL>{
-  "summary":"respuesta ejecutiva corta",
-  "cards":[
-    {"label":"Indicador 1","value":12000,"format":"money","delta":"+8% vs LY","status":"good"},
-    {"label":"Indicador 2","value":0.66,"format":"number","delta":"caída vs LY","status":"bad"}
-  ],
-  "chart":{"type":"bar","title":"Dónde está el impacto","subtitle":"máximo 6 barras","labels":["A","B"],"values":[10,20],"series_label":"Impacto","format":"money"},
-  "actions":[
-    {"title":"Acción puntual","detail":"qué hacer y por qué","priority":"Alta","owner":"Operaciones","kpi":"Ventas / margen"}
-  ],
-  "notes":["solo insights accionables"]
-}</AMPM_VISUAL>`;
+    var systemPrompt = MASTER_MULTIAGENT_PROMPT + '\n\n' +
+      'CONTEXTO ESPECÍFICO DEL ANÁLISIS ACTUAL:\n' + topicInstr + '\n\n' +
+      'DATA DEL REPORTE (FUENTE PRINCIPAL DE VERDAD):\n' + buildDataContext() + '\n\n' +
+      'REGLAS OPERATIVAS FINALES:\n' +
+      '- Respondé siempre en español.\n' +
+      '- Basate primero en la data del reporte.\n' +
+      '- Si ves un ratio menor a 1.00 vs LY o vs Prom, interpretalo como caída; mayor a 1.00 es crecimiento.\n' +
+      '- Si la data no alcanza, decilo explícitamente y pedí o sugerí la fuente correcta.\n' +
+      '- Priorizá impacto de negocio, drivers y acciones.\n' +
+      '- No repitas una plantilla rígida siempre.';
 
-    var systemPrompt = `${MASTER_MULTIAGENT_PROMPT}
-
-CONTEXTO ESPECÍFICO DEL ANÁLISIS ACTUAL:
-${topicInstr}
-
-TEMA RESUELTO PARA ESTA CONSULTA:
-${resolvedTopic}
-
-DATA DEL REPORTE (FUENTE PRINCIPAL DE VERDAD):
-${dataContext}
-
-REGLAS OPERATIVAS FINALES:
-- Respondé siempre en español.
-- Basate primero en la data del reporte y en lo que el usuario comparta.
-- No inventés números, causas ni benchmarks.
-- Si falta data, decilo explícitamente y seguí con la mejor recomendación posible.
-- Si existe tabla específica del tema consultado, esa tabla manda sobre KPIs generales del resumen.
-- En este dashboard, cuando una tabla diga "Delta vs ...": > 1.00 = crecimiento, < 1.00 = caída, = 1.00 = flat.
-- Cuando una tabla diga "Dif vs ..." interpretalo como diferencia absoluta, no como ratio.
-- Abrí con la respuesta ejecutiva; luego bajá a impacto negocio y finalmente a acciones.
-- Priorizá siempre qué movería ventas, margen, tráfico, ticket, ejecución o experiencia.
-- Respondé con criterio ejecutivo: claro, comercial, accionable y sin relleno.
-- Si la pregunta es puntual, respondé puntual. Si es estratégica, integrá contexto de negocio.
-- No repitas plantillas vacías ni frases genéricas.
-- Cerrá con acciones concretas: qué hacer, dónde, responsable sugerido y KPI cuando aplique.
-- Cuando el dato sea malo, decilo claro; no suavicés caídas.
-- Si proponés benchmark global, tropicalizalo a AMPM.
-- Si la consulta se beneficia de visual y hay data suficiente, usá MODO VISUAL.
-- ${visualIntent ? 'Para esta consulta, preferí MODO VISUAL. Solo si no hay suficiente data confiable, respondé en texto normal.' : 'Usá MODO VISUAL solo si realmente mejora la claridad.'}
-- En MODO VISUAL usá EXACTAMENTE este bloque y nada fuera del bloque:
-${visualBlockSpec}
-- No uses markdown complejo dentro de <AMPM_VISUAL>.`;
-
-    var inputItems = [{ role:'developer', content:systemPrompt }];
-    chatHistory.slice(-OPENAI_MAX_HISTORY_MESSAGES).forEach(function(m){
-      inputItems.push({ role:(m && m.role === 'assistant') ? 'assistant' : 'user', content:String((m && m.content) || '') });
-    });
-
-    fetch('https://api.openai.com/v1/responses',{
+    fetch('https://api.openai.com/v1/responses', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},
-      body:JSON.stringify({
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+      body: JSON.stringify({
         model: OPENAI_MODEL,
-        input: inputItems,
         reasoning: { effort: OPENAI_REASONING_EFFORT },
         text: { verbosity: OPENAI_VERBOSITY },
         max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
-        temperature: OPENAI_TEMPERATURE,
-        store: false
+        input: buildInputItems(systemPrompt)
       })
     })
     .then(function(res){ return res.json(); })
     .then(function(data){
-      try{removeThinking();}catch(_e){}
+      removeThinking();
       setSendDisabled(false);
-      if(data.error){
-        appendMsg('assistant','❌ Error OpenAI: '+(data.error.message||JSON.stringify(data.error)),'error');
+      if(data && data.error){
+        appendMsg('assistant', '❌ Error OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error');
         return;
       }
       var reply = extractResponseText(data);
-      if(!reply){ appendMsg('assistant','⚠️ Sin respuesta.','error'); return; }
-      chatHistory.push({role:'assistant', content:reply});
+      if(!reply){
+        appendMsg('assistant', '⚠️ No vino respuesta utilizable del modelo.', 'error');
+        return;
+      }
+      reply += formatUsageMeta(data && data.usage);
+      chatHistory.push({ role:'assistant', content:reply });
       appendMsg('assistant', reply);
-      try{
-        var meta = TOPIC_META[currentTopic] || TOPIC_META.chat;
-        var subEl = getEl('ampmAiHeaderSub');
-        if(subEl) subEl.textContent = meta.sub + ' · ' + getAiModeLabel() + formatUsageMeta(data && data.usage);
-      }catch(_e){}
-      try{ console.info('[AMPM IA] usage', data && data.usage); }catch(_e){}
     })
     .catch(function(err){
-      try{removeThinking();}catch(_e){}
+      removeThinking();
       setSendDisabled(false);
-      appendMsg('assistant','❌ Error de conexión: '+String(err)+'\n\nVerificá que el sitio esté en HTTPS y tu API Key sea válida.','error');
+      appendMsg('assistant', '❌ Error de conexión: ' + String(err), 'error');
     });
-  };
-
-  window.ampmAiClearChat = function(){
-    chatHistory = [];
-    var msgs = getMsgs();
-    if(msgs) msgs.innerHTML = '';
-    showEmpty(true);
-    setSendDisabled(false);
   };
 
   function resolveActiveTab(){
     try{
       var activeBtn = document.querySelector('.tabBtn.active');
-      var activeTab = String((activeBtn && activeBtn.dataset && activeBtn.dataset.tab) || '').toLowerCase().trim();
-      if(activeTab) return activeTab;
-      var visiblePage = document.querySelector('[data-tabpage]:not([style*="display: none"]):not([style*="display:none"])');
-      return String((visiblePage && visiblePage.getAttribute('data-tabpage')) || '').toLowerCase().trim();
+      var tab = String((activeBtn && activeBtn.getAttribute('data-tab')) || '').toLowerCase().trim();
+      if(tab) return tab;
+      var visible = Array.prototype.slice.call(document.querySelectorAll('[data-tabpage]')).find(function(el){
+        return el.offsetParent !== null && getComputedStyle(el).display !== 'none';
+      });
+      return String((visible && visible.getAttribute('data-tabpage')) || '').toLowerCase().trim();
     }catch(_e){ return ''; }
   }
 
@@ -5413,7 +4430,7 @@ ${visualBlockSpec}
       var raw = sessionStorage.getItem('ampm_report_auth_v1');
       if(!raw) return false;
       var s = JSON.parse(raw);
-      var u = String(s && s.user || '').toLowerCase().trim();
+      var u = String((s && s.user) || '').toLowerCase().trim();
       return u === 'admin';
     }catch(_e){ return false; }
   }
@@ -5434,8 +4451,7 @@ ${visualBlockSpec}
       if(!panel) return;
       syncAiPanelPlacement(panel);
       var activeTab = resolveActiveTab();
-      var isAdmin = resolveAdminSession();
-      var shouldShow = !!isAdmin && activeTab === 'resumen' && document.body.classList.contains('auth-ok');
+      var shouldShow = resolveAdminSession() && document.body.classList.contains('auth-ok') && activeTab === 'resumen';
       document.body.setAttribute('data-active-tab', activeTab || '');
       panel.classList.toggle('ampm-ai-visible', shouldShow);
       panel.style.display = shouldShow ? 'flex' : 'none';
@@ -5443,39 +4459,44 @@ ${visualBlockSpec}
     }catch(_e){}
   }
 
-  function checkAdmin(){
-    updateAiPanelVisibility();
-  }
-
   function bindEnter(){
     var inp = getEl('ampmAiInput');
-    if(!inp||inp.__aiBound) return;
+    if(!inp || inp.__aiBound) return;
     inp.__aiBound = true;
-    inp.addEventListener('keydown',function(e){
-      if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); ampmAiSend(); }
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+        e.preventDefault();
+        window.ampmAiSend();
+      }
     });
+  }
+
+  function bindVisibilityWatchers(){
+    setInterval(updateAiPanelVisibility, 800);
+    window.addEventListener('ampm:tabshown', function(){ setTimeout(updateAiPanelVisibility, 20); });
+    window.addEventListener('ampm:authchanged', function(){ setTimeout(updateAiPanelVisibility, 20); });
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if(t && (t.closest('.tabBtn') || t.id === 'ampmLogoutBtn' || t.closest('#ampmAuthForm'))){
+        setTimeout(updateAiPanelVisibility, 40);
+      }
+    }, true);
+    try{
+      var mo = new MutationObserver(function(){ updateAiPanelVisibility(); });
+      mo.observe(document.body, { attributes:true, childList:false, subtree:true, attributeFilter:['class','style'] });
+    }catch(_e){}
   }
 
   function init(){
-    checkAdmin();
+    syncTopicUi();
     bindEnter();
     updateKeyStatus();
-    setInterval(updateAiPanelVisibility, 1200);
-    window.addEventListener('ampm:tabshown', function(){ setTimeout(updateAiPanelVisibility, 20); });
-    window.addEventListener('ampm:authchanged', function(){ setTimeout(updateAiPanelVisibility, 40); });
-    document.addEventListener('click',function(e){
-      var t = e.target;
-      if(t&&(t.id==='ampmLogoutBtn'||t.closest&&t.closest('#ampmAuthForm')||t.closest&&t.closest('.tabBtn'))){
-        setTimeout(checkAdmin,160);
-      }
-    });
-    setTimeout(updateAiPanelVisibility, 350);
-    window.addEventListener('load', function(){ setTimeout(updateAiPanelVisibility, 120); }, {once:true});
+    bindVisibilityWatchers();
+    updateAiPanelVisibility();
   }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',init,{once:true});
-  } else { init(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true });
+  else init();
 })();
 </script>
 
