@@ -4479,581 +4479,84 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 .ampm-ai-scorecard-note,.ampm-ai-opp-line,.ampm-ai-source-chip{color:#334155;}
 </style>
 
-<script id="ampm-ai-script-v4-backend">
+<script id="ampm-ai-script-v5-local-deterministic">
 (function(){
-  if(window.__AMPM_AI_BACKEND_READY__) return;
-  window.__AMPM_AI_BACKEND_READY__ = true;
+  if(window.__AMPM_AI_LOCAL_READY__) return;
+  window.__AMPM_AI_LOCAL_READY__ = true;
 
   var AUTH_KEY = 'ampm_report_auth_v1';
-  var API_BASE_URL = 'https://ampmsalgithubio-production.up.railway.app';
-  var stateAi = {
-    topic: 'chat',
-    chart: null,
-    backendOk: false,
-    loading: false,
-    lastHealth: null
-  };
-
+  var stateAi = { topic:'chat', chart:null, loading:false };
   var TOPICS = {
-    chat: {
-      title: 'Chat libre',
-      sub: 'Copiloto conectado al backend. Haz preguntas abiertas, pide comparativos y solicita gráficos ejecutivos.',
-      prompts: [
-        'Dame la lectura ejecutiva del negocio con los filtros actuales.',
-        '¿Cuál es el principal riesgo del negocio hoy?',
-        'Haz un gráfico del indicador más crítico con los filtros actuales.'
-      ],
-      scope: 'Contexto: backend + dashboard'
-    },
-    ejecutivo: {
-      title: 'Lectura ejecutiva',
-      sub: 'Resumen ejecutivo priorizado con foco en impacto, drivers y siguientes acciones.',
-      prompts: [
-        'Dame la lectura ejecutiva del negocio con los filtros actuales.',
-        'Resume el estado general en formato dirección.',
-        '¿Qué tres señales debo vigilar hoy?'
-      ],
-      scope: 'Contexto: lectura ejecutiva'
-    },
-    acciones: {
-      title: 'Prioridades y acciones',
-      sub: 'Acciones concretas, aterrizadas y priorizadas según el contexto activo.',
-      prompts: [
-        'Dame un plan de acción de 7 días con prioridad.',
-        '¿Qué atacas primero y por qué?',
-        'Prioriza oportunidades por impacto económico.'
-      ],
-      scope: 'Contexto: plan de acción'
-    },
-    ventas: {
-      title: 'Ventas y tráfico',
-      sub: 'Ventas, TX, LY, meta y mix comercial con foco en señales reales del cubo.',
-      prompts: [
-        'Dame ventas del periodo actual vs LY.',
-        'Haz un gráfico de ventas por tienda con los filtros actuales.',
-        '¿Qué categoría o marca está moviendo más impacto?'
-      ],
-      scope: 'Contexto: ventas'
-    },
-    delivery: {
-      title: 'Delivery',
-      sub: 'Share, crecimiento, día, hora y oportunidad del canal delivery.',
-      prompts: [
-        'Dame delivery por hora.',
-        'Haz un gráfico de delivery por día de semana.',
-        '¿Dónde hay oportunidad real en delivery?'
-      ],
-      scope: 'Contexto: delivery'
-    },
-    sbf: {
-      title: 'SBF y CXC',
-      sub: 'Lectura correcta de TX SBF, LY, CXC y foco operativo.',
-      prompts: [
-        'Dame el análisis de SBF con los filtros actuales.',
-        'Explícame SBF y CXC con criterio de negocio.',
-        '¿Qué harías para recuperar TX SBF?'
-      ],
-      scope: 'Contexto: SBF y CXC'
-    },
-    merma: {
-      title: 'Merma y ajuste',
-      sub: 'Merma por descripción, bloque y hallazgo con foco en impacto económico.',
-      prompts: [
-        'Explícame la merma y el impacto real.',
-        'Dame merma por descripción.',
-        '¿Qué acción concreta harías para bajar el ajuste?'
-      ],
-      scope: 'Contexto: merma'
-    },
-    inventario: {
-      title: 'Inventario y transfer',
-      sub: 'Inventario, transferencias y oportunidades de rotación con criterio comercial.',
-      prompts: [
-        'Dame inventario por tienda.',
-        '¿Dónde está el mayor riesgo de inventario?',
-        '¿Qué moverías por transfer y qué no comprarías?'
-      ],
-      scope: 'Contexto: inventario'
-    },
-    prd_cero: {
-      title: 'PRD en cero',
-      sub: 'Quiebres con impacto y prioridades de recuperación.',
-      prompts: [
-        '¿Qué tan grave es PRD en cero y qué atacas primero?',
-        '¿Cuál es el impacto operativo de los quiebres?',
-        'Dame acciones concretas para bajar PRD en cero.'
-      ],
-      scope: 'Contexto: PRD en cero'
-    }
+    chat:{ title:'Chat libre', sub:'Copiloto local deterministicamente conectado a la capa JSON. Resuelve primero con data real y solo responde lo que sí puede calcular.', scope:'Contexto: motor JSON local', prompts:['Dame ventas de marzo 2026 vs marzo 2025.'] },
+    ejecutivo:{ title:'Lectura ejecutiva', sub:'Lectura priorizada con foco en variación, materialidad y acciones accionables.', scope:'Contexto: lectura ejecutiva', prompts:['Dame la lectura ejecutiva del negocio con el último mes disponible.'] },
+    acciones:{ title:'Prioridades y acciones', sub:'Acciones concretas con base en señales reales del dataset.', scope:'Contexto: prioridades accionables', prompts:['Dame hallazgos con acciones.'] },
+    ventas:{ title:'Ventas y tráfico', sub:'Ventas, TX, ticket y mix comercial usando la capa JSON del dashboard.', scope:'Contexto: ventas', prompts:['Dame ventas de marzo 2026 vs marzo 2025.'] },
+    delivery:{ title:'Delivery', sub:'Canal delivery por periodo, día, horario operativo y plataforma cuando la data existe.', scope:'Contexto: delivery', prompts:['Dame delivery por día de semana.'] },
+    sbf:{ title:'SBF y CXC', sub:'TX SBF, servicios y eventos CXC con foco operativo.', scope:'Contexto: SBF y CXC', prompts:['Dame SBF por periodo.'] },
+    merma:{ title:'Merma y ajuste', sub:'Merma por descripción, proveedor o tienda sin inventar cifras.', scope:'Contexto: merma', prompts:['Dame merma por descripción.'] },
+    inventario:{ title:'Inventario y transfer', sub:'Stock, DOI, sobreinventario, faltantes y transferencias.', scope:'Contexto: inventario', prompts:['Dame inventario por tienda.'] },
+    prd_cero:{ title:'PRD en cero', sub:'Quiebres y venta perdida con prioridad comercial.', scope:'Contexto: PRD en cero', prompts:['Dame PRD en cero con prioridad.'] }
   };
+  var EXTRA_JSON_CACHE = Object.create(null);
+  var EXTRA_JSON_LOADING = Object.create(null);
 
   function el(id){ return document.getElementById(id); }
-  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
-  function htmlEscape(v){
-    return String(v == null ? '' : v)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
-  }
-  function readSession(){
-    try{
-      var raw = sessionStorage.getItem(AUTH_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(_e){ return null; }
-  }
-  function isAdminLogged(){
-    try{
-      var s = readSession();
-      var u = txt(s && s.user).toLowerCase();
-      return !!(document.body.classList.contains('auth-ok') && u === 'admin');
-    }catch(_e){ return false; }
-  }
-  function resolveActiveTab(){
-    try{
-      var activeBtn = document.querySelector('.tabBtn.active');
-      var tab = txt(activeBtn && activeBtn.getAttribute('data-tab')).toLowerCase();
-      if(tab) return tab;
-      var stored = txt(localStorage.getItem('ampm_tab')).toLowerCase();
-      return stored || 'resumen';
-    }catch(_e){ return 'resumen'; }
-  }
-  function ensurePlacement(){
-    try{
-      var panel = el('ampmAiSection');
-      var anchor = el('autoKeyPanel');
-      if(panel && anchor && anchor.parentNode && panel.previousElementSibling !== anchor){
-        anchor.insertAdjacentElement('afterend', panel);
-      }
-    }catch(_e){}
-  }
-  function disableInput(disabled){
-    var input = el('ampmAiInput');
-    var btn = el('ampmAiSendBtn');
-    if(input) input.disabled = !!disabled;
-    if(btn) btn.disabled = !!disabled;
-  }
-  function closeKeyModal(){
-    var modal = el('ampmAiKeyModal');
-    if(!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-  }
-  function updateVisibility(){
-    ensurePlacement();
-    var panel = el('ampmAiSection');
-    if(!panel) return;
-    var shouldShow = isAdminLogged() && resolveActiveTab() === 'resumen';
-    panel.hidden = !shouldShow;
-    panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
-    panel.classList.toggle('ampm-ai-visible', shouldShow);
-    panel.style.display = shouldShow ? 'flex' : 'none';
-    disableInput(!shouldShow || stateAi.loading);
-    if(!shouldShow) closeKeyModal();
-  }
-  function getSelectedValues(node){
-    try{
-      if(!node) return [];
-      return Array.from(node.selectedOptions || [])
-        .map(function(opt){ return txt(opt && opt.value); })
-        .filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function getTopicConfig(topic){
-    return TOPICS[topic] || TOPICS.chat;
-  }
-  function setText(id, value){
-    var node = el(id);
-    if(node) node.textContent = value;
-  }
-  function updateStaticUi(){
-    setText('ampmAiKeyStatusTxt', stateAi.backendOk ? 'Backend conectado' : 'Backend sin conexión');
-    var statusWrap = el('ampmAiKeyStatus');
-    if(statusWrap) statusWrap.classList.toggle('ok', !!stateAi.backendOk);
-    var keyBtn = el('ampmAiOpenKeyBtn');
-    if(keyBtn) keyBtn.style.display = 'none';
-    var headKeyBtn = el('ampmAiHeaderKeyBtn');
-    if(headKeyBtn) headKeyBtn.style.display = 'none';
-    var keyModal = el('ampmAiKeyModal');
-    if(keyModal) keyModal.style.display = 'none';
-    var keyInput = el('ampmAiKeyInput');
-    if(keyInput) keyInput.value = '';
-    var title = el('ampmAiKeyModalTitle');
-    if(title) title.textContent = 'Backend externo';
-    var modalSub = document.querySelector('.ampm-ai-modal-sub');
-    if(modalSub) modalSub.textContent = 'La llave ya no vive en el navegador. Todo pasa por el backend.';
-    var keyHint = document.querySelector('.ampm-ai-modal-hint');
-    if(keyHint) keyHint.textContent = 'Si el backend falla, revisa Railway y ALLOWED_ORIGINS.';
-    var footer = el('ampmAiFooterHint');
-    if(footer) footer.textContent = 'Copiloto conectado al backend · sin exponer API keys en el HTML.';
-    var placeholder = el('ampmAiInput');
-    if(placeholder) placeholder.placeholder = 'Ejemplo: dame ventas de marzo 2026 vs marzo 2025, o grafícame delivery por hora.';
-  }
-  function setTopic(topic, forcePrompt){
-    stateAi.topic = TOPICS[topic] ? topic : 'chat';
-    var cfg = getTopicConfig(stateAi.topic);
-    Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
-      btn.classList.toggle('active', txt(btn.getAttribute('data-topic')) === stateAi.topic);
-    });
-    setText('ampmAiHeaderTitle', cfg.title);
-    setText('ampmAiHeaderSub', cfg.sub);
-    setText('ampmAiScopeBadge', cfg.scope || 'Contexto: backend + dashboard');
-    if(forcePrompt){
-      var input = el('ampmAiInput');
-      if(input && !txt(input.value) && Array.isArray(cfg.prompts) && cfg.prompts[0]) input.value = cfg.prompts[0];
-    }
-  }
-  function nowStamp(){
-    try{
-      return new Intl.DateTimeFormat('es-SV', { hour:'2-digit', minute:'2-digit' }).format(new Date());
-    }catch(_e){ return new Date().toLocaleTimeString(); }
-  }
-  function showEmpty(show){
-    var empty = el('ampmAiEmpty');
-    if(empty) empty.style.display = show ? '' : 'none';
-  }
-  function scrollMessages(){
-    var chat = el('ampmAiChat');
-    if(chat) chat.scrollTop = chat.scrollHeight;
-  }
-  function formatParagraphs(text){
-    var clean = String(text || '').trim();
-    if(!clean) return '';
-    return clean
-      .split(/\n{2,}/)
-      .map(function(part){ return '<p>' + htmlEscape(part).replace(/\n/g, '<br>') + '</p>'; })
-      .join('');
-  }
-  function addMessage(role, bodyHtml, meta, extraClass){
-    var host = el('ampmAiMessages');
-    if(!host) return null;
-    showEmpty(false);
-    var node = document.createElement('div');
-    node.className = 'ampm-ai-msg ' + (role === 'user' ? 'user' : 'assistant') + (extraClass ? ' ' + extraClass : '');
-    node.innerHTML = ''
-      + '<div class="ampm-ai-msg-top">'
-      +   '<div class="ampm-ai-msg-role">' + (role === 'user' ? 'Usuario' : 'Copiloto backend') + '</div>'
-      +   '<div class="ampm-ai-msg-meta">' + htmlEscape(meta || nowStamp()) + '</div>'
-      + '</div>'
-      + '<div class="ampm-ai-msg-body">' + (bodyHtml || '') + '</div>';
-    host.appendChild(node);
-    scrollMessages();
-    return node;
-  }
-  function addThinking(){
-    return addMessage('assistant', '<p>Consultando backend y preparando respuesta…</p>', 'analizando', '');
-  }
-  function clearConversation(initial){
-    var host = el('ampmAiMessages');
-    if(host) host.innerHTML = '';
-    showEmpty(true);
-    setText('ampmAiUsageMeta', '');
-    hideChart();
-    setStageIdle();
-    if(initial){
-      var cfg = getTopicConfig(stateAi.topic);
-      setText('ampmAiStageTitle', 'Visual dinámico');
-      setText('ampmAiStageSub', 'El backend devolverá gráficos ejecutivos cuando la consulta lo amerite.');
-      setText('ampmAiStageNote', 'Sugerencia: ' + ((cfg.prompts && cfg.prompts[0]) || 'Haz una pregunta libre sobre el negocio.'));
-    }
-  }
-  function setLoading(flag){
-    stateAi.loading = !!flag;
-    disableInput(flag || !isAdminLogged() || resolveActiveTab() !== 'resumen');
-    setText('ampmAiSendLabel', flag ? '…' : '▶');
-    setText('ampmAiStageMode', flag ? 'Consultando backend' : (stateAi.backendOk ? 'Backend activo' : 'Backend pendiente'));
-  }
-  function hideChart(){
-    try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){}
-    stateAi.chart = null;
-    var card = el('ampmAiStageChartCard');
-    var empty = el('ampmAiChartEmpty');
-    if(card) card.hidden = true;
-    if(empty) empty.style.display = '';
-  }
-  function hideImage(){
-    var card = el('ampmAiImageCard');
-    if(card) card.hidden = true;
-    var img = el('ampmAiImage');
-    if(img){ img.removeAttribute('src'); }
-  }
-  function setStageIdle(){
-    hideImage();
-    var empty = el('ampmAiStageEmpty');
-    if(empty) empty.style.display = '';
-    setText('ampmAiStageMode', stateAi.backendOk ? 'Backend activo' : 'Esperando solicitud');
-  }
-  function setStageNote(text){
-    setText('ampmAiStageNote', txt(text));
-  }
-  function normalizeDatasets(chartSpec){
-    if(Array.isArray(chartSpec && chartSpec.datasets) && chartSpec.datasets.length) return chartSpec.datasets;
-    if(Array.isArray(chartSpec && chartSpec.data)){
-      return [{ label: txt(chartSpec.label || chartSpec.title || 'Serie'), data: chartSpec.data.slice() }];
-    }
-    return [];
-  }
-  function renderChart(chartSpec){
-    hideImage();
-    var empty = el('ampmAiStageEmpty');
-    var card = el('ampmAiStageChartCard');
-    var chartEmpty = el('ampmAiChartEmpty');
-    var canvas = el('ampmAiChart');
-    if(!canvas || !chartSpec || txt(chartSpec.type).toLowerCase() === 'none'){
-      hideChart();
-      if(empty) empty.style.display = '';
-      if(chartEmpty) chartEmpty.style.display = '';
-      return;
-    }
-    if(typeof window.Chart === 'undefined'){
-      hideChart();
-      if(empty) empty.style.display = 'none';
-      if(card) card.hidden = false;
-      if(chartEmpty){
-        chartEmpty.style.display = '';
-        chartEmpty.textContent = 'Chart.js no está disponible para pintar el gráfico.';
-      }
-      return;
-    }
-    var labels = Array.isArray(chartSpec.labels) ? chartSpec.labels.slice() : [];
-    var datasets = normalizeDatasets(chartSpec).map(function(ds, idx){
-      return {
-        label: txt(ds.label || ('Serie ' + (idx + 1))),
-        data: Array.isArray(ds.data) ? ds.data.slice() : []
-      };
-    });
-    if(!labels.length || !datasets.length){
-      hideChart();
-      if(empty) empty.style.display = 'none';
-      if(card) card.hidden = false;
-      if(chartEmpty){
-        chartEmpty.style.display = '';
-        chartEmpty.textContent = 'El backend respondió sin un dataset graficable.';
-      }
-      return;
-    }
-    try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){}
-    if(empty) empty.style.display = 'none';
-    if(card) card.hidden = false;
-    if(chartEmpty) chartEmpty.style.display = 'none';
-    setText('ampmAiChartTitle', txt(chartSpec.title || 'Visual backend'));
-    setText('ampmAiChartSub', txt(chartSpec.subtitle || 'Resuelto desde la API externa'));
-    setText('ampmAiChartTag', 'Backend');
-    var chartType = txt(chartSpec.type || 'bar').toLowerCase();
-    if(!['bar','line','pie','doughnut','radar','polarArea'].includes(chartType)) chartType = 'bar';
-    stateAi.chart = new window.Chart(canvas.getContext('2d'), {
-      type: chartType,
-      data: { labels: labels, datasets: datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'bottom' },
-          title: { display: false }
-        },
-        scales: (chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea') ? {} : {
-          x: { ticks: { color:'#11284A' }, grid: { display:false } },
-          y: { ticks: { color:'#11284A' }, grid: { color:'rgba(15,23,42,.08)' }, beginAtZero: true }
-        }
-      }
-    });
-  }
-  function collectFilters(){
-    var storesNode = el('stores');
-    var prevNode = el('prevMonths');
-    var dowNode = el('dowFilter');
-    var filters = {
-      stores: getSelectedValues(storesNode),
-      current_period: txt(el('currentMonth') && el('currentMonth').value),
-      compare_periods: getSelectedValues(prevNode),
-      ly_override: txt(el('lyWeekOverride') && el('lyWeekOverride').value),
-      day_of_week: getSelectedValues(dowNode),
-      active_tab: resolveActiveTab(),
-      report_mode: (typeof window.getUnifiedReportMode === 'function' ? txt(window.getUnifiedReportMode()) : txt(el('reportMode') && el('reportMode').value) || txt(window.state && window.state.reportMode)),
-      topic: stateAi.topic
-    };
-    try{
-      if(window.state && typeof window.state === 'object'){
-        filters.delivery_mode = txt(window.state.deliveryMode);
-        filters.dow_scope = txt(window.state.dowFilter);
-      }
-    }catch(_e){}
-    return filters;
-  }
-  function buildPayload(question){
-    return {
-      question: txt(question),
-      page_context: {
-        tab: resolveActiveTab(),
-        topic: stateAi.topic,
-        report_mode: (typeof window.getUnifiedReportMode === 'function' ? txt(window.getUnifiedReportMode()) : txt(el('reportMode') && el('reportMode').value) || txt(window.state && window.state.reportMode)),
-        url: window.location.href
-      },
-      filters: collectFilters()
-    };
-  }
-  function formatResultHtml(payload){
-    var html = '';
-    if(txt(payload && payload.title)) html += '<p><strong>' + htmlEscape(payload.title) + '</strong></p>';
-    if(txt(payload && payload.summary)) html += formatParagraphs(payload.summary);
-    if(Array.isArray(payload && payload.actions) && payload.actions.length){
-      html += '<p><strong>Acciones recomendadas</strong></p><ul>'
-        + payload.actions.map(function(item){ return '<li>' + htmlEscape(item) + '</li>'; }).join('')
-        + '</ul>';
-    }
-    if(Array.isArray(payload && payload.notes) && payload.notes.length){
-      html += '<p><strong>Notas</strong></p><ul>'
-        + payload.notes.map(function(item){ return '<li>' + htmlEscape(item) + '</li>'; }).join('')
-        + '</ul>';
-    }
-    return html || '<p>El backend respondió sin contenido legible.</p>';
-  }
-  async function callBackend(question){
-    var response = await fetch(API_BASE_URL + '/api/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildPayload(question))
-    });
-    if(!response.ok){
-      var errorText = '';
-      try{ errorText = await response.text(); }catch(_e){}
-      throw new Error('Backend respondió ' + response.status + (errorText ? ' · ' + errorText.slice(0, 180) : ''));
-    }
-    return await response.json();
-  }
-  function tryLocalAnalytics(question){
-    try{
-      if(typeof window.__ampmAiDirectCuboBuild !== 'function') return null;
-      var local = window.__ampmAiDirectCuboBuild(question);
-      if(!local) return null;
-      var hasSeries = Array.isArray(local.labels) && local.labels.length && Array.isArray(local.datasets) && local.datasets.length;
-      if(!hasSeries) return null;
-      return local;
-    }catch(_e){
-      return null;
-    }
-  }
-  function formatLocalHtml(result){
-    var html = '';
-    if(txt(result && result.title)) html += '<p><strong>' + htmlEscape(result.title) + '</strong></p>';
-    if(txt(result && result.questionScopedContext)) html += formatParagraphs(result.questionScopedContext);
-    else if(txt(result && result.note)) html += formatParagraphs(result.note);
-    else html += '<p>Consulta resuelta desde el JSON preprocesado del dashboard.</p>';
-    return html;
-  }
-  async function sendQuestion(){
-    if(stateAi.loading) return;
-    var input = el('ampmAiInput');
-    var question = txt(input && input.value);
-    if(!question){
-      var cfg = getTopicConfig(stateAi.topic);
-      question = (cfg.prompts && cfg.prompts[0]) || '';
-      if(input && question) input.value = question;
-    }
-    question = txt(question);
-    if(!question) return;
-
-    addMessage('user', '<p>' + htmlEscape(question) + '</p>', nowStamp());
-    if(input) input.value = '';
-    var thinking = addThinking();
-    setLoading(true);
-    setStageNote('Intentando resolver primero con JSON local…');
-
-    try{
-      var localResult = tryLocalAnalytics(question);
-      if(localResult){
-        if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
-        addMessage('assistant', formatLocalHtml(localResult), 'local');
-        renderChart(localResult);
-        setText('ampmAiStageTitle', txt(localResult.title) || 'Visual local');
-        setText('ampmAiStageSub', txt(localResult.subtitle) || txt(localResult.note) || 'Respuesta resuelta desde el JSON local del dashboard');
-        setStageNote('Consulta resuelta localmente con JSON preprocesado.');
-        setText('ampmAiUsageMeta', 'Motor local JSON · sin llamada al backend');
-        updateStaticUi();
-        return;
-      }
-
-      setStageNote('JSON local sin match claro. Consultando Railway…');
-      var data = await callBackend(question);
-      if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
-      var result = data && data.result ? data.result : data;
-      addMessage('assistant', formatResultHtml(result), 'backend');
-      renderChart(result && result.chart ? result.chart : null);
-      setText('ampmAiStageTitle', txt(result && result.title) || 'Visual backend');
-      setText('ampmAiStageSub', txt(result && result.summary) || 'Respuesta resuelta por el backend');
-      setStageNote(Array.isArray(result && result.notes) && result.notes.length ? result.notes.join(' · ') : 'Respuesta entregada por el backend.');
-      setText('ampmAiUsageMeta', 'API: Railway · origen: ' + window.location.origin);
-      stateAi.backendOk = true;
-      updateStaticUi();
-    }catch(err){
-      if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
-      var msg = txt(err && err.message) || 'No fue posible consultar el backend.';
-      addMessage('assistant', '<p><strong>Error de conexión</strong></p><p>' + htmlEscape(msg) + '</p><p>Si el backend ya está vivo, revisa <strong>ALLOWED_ORIGINS</strong> en Railway e incluye este origen: <strong>' + htmlEscape(window.location.origin) + '</strong>.</p>', 'error', 'error');
-      hideChart();
-      setStageNote('Error al consultar el backend.');
-      setText('ampmAiUsageMeta', 'Sin respuesta del backend');
-      stateAi.backendOk = false;
-      updateStaticUi();
-    }finally{
-      setLoading(false);
-      updateVisibility();
-    }
-  }
-  async function healthCheck(){
-    try{
-      var res = await fetch(API_BASE_URL + '/health', { method:'GET' });
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      stateAi.lastHealth = await res.json();
-      stateAi.backendOk = true;
-      setText('ampmAiStageMode', 'Backend activo');
-      setStageNote('Backend conectado: ' + API_BASE_URL.replace(/^https?:\/\//, ''));
-    }catch(_e){
-      stateAi.backendOk = false;
-      setText('ampmAiStageMode', 'Backend pendiente');
-      setStageNote('No se pudo validar la conexión al backend todavía.');
-    }
-    updateStaticUi();
-  }
-  function bindEvents(){
-    Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
-      btn.addEventListener('click', function(){
-        setTopic(txt(btn.getAttribute('data-topic')).toLowerCase(), true);
-      });
-    });
-    var clearBtn = el('ampmAiClearBtn');
-    if(clearBtn) clearBtn.addEventListener('click', function(){ clearConversation(true); });
-    var sendBtn = el('ampmAiSendBtn');
-    if(sendBtn) sendBtn.addEventListener('click', sendQuestion);
-    var input = el('ampmAiInput');
-    if(input){
-      input.addEventListener('keydown', function(ev){
-        if(ev.key === 'Enter' && !ev.shiftKey){
-          ev.preventDefault();
-          sendQuestion();
-        }
-      });
-    }
-    document.addEventListener('click', function(ev){
-      var btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab]') : null;
-      if(btn) setTimeout(updateVisibility, 40);
-    });
-    try{
-      var observer = new MutationObserver(function(){ updateVisibility(); });
-      observer.observe(document.body, { attributes:true, attributeFilter:['class'] });
-    }catch(_e){}
-    window.addEventListener('focus', updateVisibility);
-  }
-  function init(){
-    updateStaticUi();
-    setTopic('chat', false);
-    clearConversation(true);
-    bindEvents();
-    updateVisibility();
-    healthCheck();
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true });
-  else init();
+  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function raw(v){ return String(v == null ? '' : v); }
+  function htmlEscape(v){ return raw(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }
+  function norm(v){ return txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function compactMoney(v){ return '$' + num(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function compactPct(v){ return Number(num(v)).toLocaleString('en-US',{minimumFractionDigits:1, maximumFractionDigits:1}) + '%'; }
+  function compactNum(v){ return Number(num(v)).toLocaleString('en-US',{maximumFractionDigits:2}); }
+  function arr(v){ return Array.isArray(v) ? v : []; }
+  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
+  function chartPalette(n){ var base=['#0C4D8F','#F58320','#11284A','#2E7D32','#7C3AED','#D97706','#0EA5E9','#BE123C','#334155','#16A34A','#9333EA','#EA580C']; var out=[]; for(var i=0;i<n;i+=1) out.push(base[i % base.length]); return out; }
+  function readSession(){ try{ var raw = sessionStorage.getItem(AUTH_KEY); return raw ? JSON.parse(raw) : null; }catch(_e){ return null; } }
+  function isAdminLogged(){ try{ var s = readSession(); var u = txt(s && s.user).toLowerCase(); return !!(document.body.classList.contains('auth-ok') && u === 'admin'); }catch(_e){ return false; } }
+  function resolveActiveTab(){ try{ var activeBtn = document.querySelector('.tabBtn.active'); var tab = txt(activeBtn && activeBtn.getAttribute('data-tab')).toLowerCase(); if(tab) return tab; return txt(localStorage.getItem('ampm_tab')).toLowerCase() || 'resumen'; }catch(_e){ return 'resumen'; } }
+  function dashboardMode(){ try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month'; }catch(_e){} try{ if(document.body && document.body.classList.contains('report-mode-mensual')) return 'month'; }catch(_e){} return 'week'; }
+  function getSelectedValues(node){ try{ return Array.from(node && node.selectedOptions || []).map(function(opt){ return txt(opt && opt.value); }).filter(Boolean); }catch(_e){ return []; } }
+  function collectFilters(){ var storesNode = el('stores'); var prevNode = el('prevMonths'); var dowNode = el('dowFilter'); return { stores:getSelectedValues(storesNode), current_period:txt(el('currentMonth') && el('currentMonth').value), compare_periods:getSelectedValues(prevNode), ly_override:txt(el('lyWeekOverride') && el('lyWeekOverride').value), day_of_week:getSelectedValues(dowNode), active_tab:resolveActiveTab(), report_mode:dashboardMode(), topic:stateAi.topic }; }
+  function setText(id, value){ var n = el(id); if(n) n.textContent = value; }
+  function getTopicConfig(topic){ return TOPICS[topic] || TOPICS.chat; }
+  function hideKeyUi(){ ['ampmAiOpenKeyBtn','ampmAiHeaderKeyBtn'].forEach(function(id){ var n = el(id); if(n) n.style.display = 'none'; }); var modal = el('ampmAiKeyModal'); if(modal){ modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); } var navKeySection = document.querySelector('.ampm-ai-key-section'); if(navKeySection) navKeySection.style.display = 'none'; }
+  function updateStaticUi(){ hideKeyUi(); setText('ampmAiKeyStatusTxt','Motor JSON local'); var statusWrap = el('ampmAiKeyStatus'); if(statusWrap) statusWrap.classList.add('ok'); setText('ampmAiFooterHint','Resolución determinística: JSON local primero · sin depender del backend para cálculos.'); var input = el('ampmAiInput'); if(input) input.placeholder = 'Ejemplo: ventas marzo 2026 vs marzo 2025, pastel de licores marzo 2026, delivery por día, inventario por tienda.'; }
+  function ensurePlacement(){ try{ var panel = el('ampmAiSection'); var anchor = el('autoKeyPanel'); if(panel && anchor && anchor.parentNode && panel.previousElementSibling !== anchor){ anchor.insertAdjacentElement('afterend', panel); } }catch(_e){} }
+  function updateVisibility(){ ensurePlacement(); var panel = el('ampmAiSection'); if(!panel) return; var shouldShow = isAdminLogged() && resolveActiveTab() === 'resumen'; panel.hidden = !shouldShow; panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true'); panel.classList.toggle('ampm-ai-visible', shouldShow); panel.style.display = shouldShow ? 'flex' : 'none'; var input = el('ampmAiInput'), btn = el('ampmAiSendBtn'); if(input) input.disabled = !shouldShow || stateAi.loading; if(btn) btn.disabled = !shouldShow || stateAi.loading; }
+  function setTopic(topic, forcePrompt){ stateAi.topic = TOPICS[topic] ? topic : 'chat'; var cfg = getTopicConfig(stateAi.topic); Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){ btn.classList.toggle('active', txt(btn.getAttribute('data-topic')) === stateAi.topic); }); setText('ampmAiHeaderTitle', cfg.title); setText('ampmAiHeaderSub', cfg.sub); setText('ampmAiScopeBadge', cfg.scope || 'Contexto: motor JSON local'); if(forcePrompt){ var input = el('ampmAiInput'); if(input && !txt(input.value) && cfg.prompts && cfg.prompts[0]) input.value = cfg.prompts[0]; } }
+  function showEmpty(show){ var empty = el('ampmAiEmpty'); if(empty) empty.style.display = show ? '' : 'none'; }
+  function scrollMessages(){ var chat = el('ampmAiChat'); if(chat) chat.scrollTop = chat.scrollHeight; }
+  function formatParagraphs(text){ var clean = raw(text || '').trim(); if(!clean) return ''; return clean.split(/\n{2,}/).map(function(part){ return '<p>' + htmlEscape(part).replace(/\n/g,'<br>') + '</p>'; }).join(''); }
+  function addMessage(role, bodyHtml, meta, extraClass){ var host = el('ampmAiMessages'); if(!host) return null; showEmpty(false); var node = document.createElement('div'); node.className = 'ampm-ai-msg ' + (role === 'user' ? 'user' : 'assistant') + (extraClass ? ' ' + extraClass : ''); node.innerHTML = '<div class="ampm-ai-msg-top"><div class="ampm-ai-msg-role">' + (role === 'user' ? 'Usuario' : 'Copiloto local') + '</div><div class="ampm-ai-msg-meta">' + htmlEscape(meta || nowStamp()) + '</div></div><div class="ampm-ai-msg-body">' + (bodyHtml || '') + '</div>'; host.appendChild(node); scrollMessages(); return node; }
+  function nowStamp(){ try{ return new Intl.DateTimeFormat('es-SV', { hour:'2-digit', minute:'2-digit' }).format(new Date()); }catch(_e){ return new Date().toLocaleTimeString(); } }
+  function clearConversation(initial){ var host = el('ampmAiMessages'); if(host) host.innerHTML = ''; showEmpty(true); setText('ampmAiUsageMeta',''); hideChart(); setStageIdle(); if(initial){ var cfg = getTopicConfig(stateAi.topic); setText('ampmAiStageTitle','Visual dinámico'); setText('ampmAiStageSub','El panel visual usa solo datasets reales. Si no existe un grano soportado, no inventa cifras.'); setText('ampmAiStageNote','Sugerencia: ' + ((cfg.prompts && cfg.prompts[0]) || 'Haz una pregunta libre sobre el negocio.')); } }
+  function setLoading(flag){ stateAi.loading = !!flag; var input = el('ampmAiInput'), btn = el('ampmAiSendBtn'); if(input) input.disabled = flag || !isAdminLogged() || resolveActiveTab() !== 'resumen'; if(btn) btn.disabled = flag || !isAdminLogged() || resolveActiveTab() !== 'resumen'; setText('ampmAiSendLabel', flag ? '…' : '▶'); setText('ampmAiStageMode', flag ? 'Resolviendo localmente' : 'Motor JSON local'); }
+  function setStageNote(text){ setText('ampmAiStageNote', txt(text)); }
+  function hideChart(){ try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){} stateAi.chart = null; var card = el('ampmAiStageChartCard'), empty = el('ampmAiChartEmpty'); if(card) card.hidden = true; if(empty) empty.style.display = ''; }
+  function hideImage(){ var card = el('ampmAiImageCard'); if(card) card.hidden = true; var img = el('ampmAiImage'); if(img) img.removeAttribute('src'); }
+  function setStageIdle(){ hideImage(); var empty = el('ampmAiStageEmpty'); if(empty) empty.style.display = ''; setText('ampmAiStageMode','Motor JSON local'); }
+  function normalizeDatasets(chartSpec){ if(Array.isArray(chartSpec && chartSpec.datasets) && chartSpec.datasets.length) return chartSpec.datasets; if(Array.isArray(chartSpec && chartSpec.data)) return [{ label: txt(chartSpec.label || chartSpec.title || 'Serie'), data: chartSpec.data.slice() }]; return []; }
+  function renderChart(chartSpec){ hideImage(); var empty = el('ampmAiStageEmpty'), card = el('ampmAiStageChartCard'), chartEmpty = el('ampmAiChartEmpty'), canvas = el('ampmAiChart'); if(!canvas || !chartSpec || txt(chartSpec.type).toLowerCase() === 'none'){ hideChart(); if(empty) empty.style.display = ''; if(chartEmpty) chartEmpty.style.display = ''; return; } if(typeof window.Chart === 'undefined'){ hideChart(); if(empty) empty.style.display = 'none'; if(card) card.hidden = false; if(chartEmpty){ chartEmpty.style.display = ''; chartEmpty.textContent = 'Chart.js no está disponible para pintar el gráfico.'; } return; } var labels = Array.isArray(chartSpec.labels) ? chartSpec.labels.slice() : []; var datasets = normalizeDatasets(chartSpec).map(function(ds, idx){ var color = txt(ds.color) || chartPalette(12)[idx % 12]; var bgPalette = (txt(chartSpec.type).toLowerCase() === 'pie' || txt(chartSpec.type).toLowerCase() === 'doughnut') ? chartPalette(Math.max(labels.length,3)) : undefined; var out = { label: txt(ds.label || ('Serie ' + (idx + 1))), data: Array.isArray(ds.data) ? ds.data.slice() : [], type: txt(ds.type || chartSpec.type || 'bar').toLowerCase(), borderColor: color, backgroundColor: bgPalette || color, borderWidth: 2, pointRadius: 3, pointHoverRadius: 4, tension: 0.25, fill: false }; if(out.type === 'line') out.backgroundColor = color; return out; }); if(!labels.length || !datasets.length){ hideChart(); if(empty) empty.style.display = 'none'; if(card) card.hidden = false; if(chartEmpty){ chartEmpty.style.display = ''; chartEmpty.textContent = 'La respuesta local no dejó un dataset graficable.'; } return; } try{ if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy(); }catch(_e){} if(empty) empty.style.display = 'none'; if(card) card.hidden = false; if(chartEmpty) chartEmpty.style.display = 'none'; setText('ampmAiChartTitle', txt(chartSpec.title || 'Visual local')); setText('ampmAiChartSub', txt(chartSpec.subtitle || 'Resultado resuelto con JSON local')); setText('ampmAiChartTag', txt(chartSpec.tag || 'Local')); var chartType = txt(chartSpec.type || datasets[0].type || 'bar').toLowerCase(); if(!['bar','line','pie','doughnut','radar','polararea'].includes(chartType)) chartType = 'bar'; stateAi.chart = new window.Chart(canvas.getContext('2d'), { type: chartType, data: { labels: labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, indexAxis: chartSpec.horizontal ? 'y' : 'x', plugins: { legend: { display: true, position: 'bottom' }, title: { display: false } }, scales: (chartType === 'pie' || chartType === 'doughnut' || chartType === 'polararea') ? {} : { x: { ticks:{ color:'#11284A' }, grid:{ display:false } }, y: { ticks:{ color:'#11284A' }, grid:{ color:'rgba(15,23,42,.08)' }, beginAtZero:true } } } }); }
+  function detectDomain(question){ var q = norm(question); if(/hallazgo|senal|señal/.test(q)) return 'hallazgos'; if(/innovacion|innovation|combo|food service/.test(q)) return 'innovation'; if(/prd\s*cero|quiebre|agotad/.test(q)) return 'prd0'; if(/sbf|western union|puntoxpress|rapibac|smart ticket|n1co|aki pago|recarga/.test(q)) return 'sbf'; if(/cxc|cuentas por cobrar|faltante caja|batch|cashier/.test(q)) return 'cxc'; if(/merma|shrink|ajuste/.test(q)) return 'merma'; if(/inventario|doi|transfer|sobreinventario|shortage|faltante/.test(q)) return 'inventario'; if(/delivery|uber|pedidos ya|pedidoya|pya|share/.test(q)) return 'delivery'; return 'sales'; }
+  async function loadJson(path){ if(EXTRA_JSON_CACHE[path]) return EXTRA_JSON_CACHE[path]; if(EXTRA_JSON_LOADING[path]) return EXTRA_JSON_LOADING[path]; EXTRA_JSON_LOADING[path] = fetch(path, { cache:'no-store' }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status + ' · ' + path); return r.json(); }).then(function(data){ EXTRA_JSON_CACHE[path] = data; delete EXTRA_JSON_LOADING[path]; return data; }).catch(function(err){ delete EXTRA_JSON_LOADING[path]; throw err; }); return EXTRA_JSON_LOADING[path]; }
+  function latestPeriodFromRows(rows, field){ var vals = uniq(arr(rows).map(function(r){ return txt(r && r[field]); }).filter(Boolean)); vals.sort(function(a,b){ return a.localeCompare(b, undefined, { numeric:true }); }); return vals.length ? vals[vals.length - 1] : ''; }
+  function monthFromQuestion(question){ var q = norm(question); var map = { enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12' }; var direct = q.match(/\b(20\d{2})[-\/](0?[1-9]|1[0-2])\b/); if(direct) return direct[1] + '-' + String(direct[2]).padStart(2,'0'); var years = q.match(/\b20\d{2}\b/g) || []; if(years.length){ for(var k in map){ if(q.indexOf(k) >= 0) return years[0] + '-' + map[k]; } } return ''; }
+  function weekFromQuestion(question){ var q = norm(question); var m = q.match(/semana\s*(\d{1,2})(?:\s*de)?\s*(20\d{2})/); if(m) return m[2] + '-W' + String(m[1]).padStart(2,'0'); return ''; }
+  function groupSum(rows, keyGetter, valueGetter){ var map = new Map(); arr(rows).forEach(function(r){ var k = keyGetter(r); if(!k) return; map.set(k, (map.get(k) || 0) + num(valueGetter(r))); }); return map; }
+  function buildModelFromRows(opts){ var rows = arr(opts.rows); if(!rows.length) return null; var mapCur = groupSum(rows.filter(function(r){ return !opts.periodField || txt(r[opts.periodField]) === txt(opts.periodKey); }), function(r){ return txt(r[opts.groupField]); }, function(r){ return r[opts.metricField]; }); if(!mapCur.size) return null; var mapComp = new Map(); if(opts.compareField){ mapComp = groupSum(rows.filter(function(r){ return !opts.periodField || txt(r[opts.periodField]) === txt(opts.periodKey); }), function(r){ return txt(r[opts.groupField]); }, function(r){ return r[opts.compareField]; }); } var entries = Array.from(mapCur.entries()).map(function(pair){ return { label: pair[0], current: pair[1], compare: mapComp.get(pair[0]) || 0 }; }).sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); }).slice(0, opts.limit || 12); if(!entries.length) return null; return { title: opts.title, subtitle: opts.subtitle, tag: opts.tag || (opts.type === 'pie' ? 'Participación' : 'Breakdown'), type: opts.type || 'bar', horizontal: !!opts.horizontal, yFormat: opts.yFormat || 'currency', labels: entries.map(function(x){ return x.label; }), datasets: [{ label: opts.currentLabel || 'Actual', data: entries.map(function(x){ return x.current; }), type: opts.type || 'bar', color:'#0C4D8F' }].concat(opts.withCompare && entries.some(function(x){ return x.compare !== 0; }) ? [{ label: opts.compareLabel || 'Comparativo', data: entries.map(function(x){ return x.compare; }), type: opts.type === 'pie' ? 'bar' : (opts.compareType || 'bar'), color:'#F58320' }] : []), questionScopedContext: opts.context || '', sourceTruth: opts.sourceTruth || '' }; }
+  async function buildInventoryByStore(question){ if(!/inventario/.test(norm(question)) || !/tienda|store/.test(norm(question))) return null; var rows = await loadJson('./data_api/out/inventario/store_sku_snapshot.json').catch(function(){ return []; }); var stores = collectFilters().stores; rows = arr(rows).filter(function(r){ return !stores.length || stores.indexOf(txt(r.store_name || r.store).toUpperCase()) >= 0; }); if(!rows.length) return null; var agg = new Map(); rows.forEach(function(r){ var store = txt(r.store_name || r.store).toUpperCase(); if(!store) return; if(!agg.has(store)) agg.set(store, { stock_units:0, inventory_amount:0, doi_weight_num:0, doi_weight_den:0 }); var b = agg.get(store); var amt = num(r.inventory_amount), doi = num(r.doi), units = num(r.stock_units); b.stock_units += units; b.inventory_amount += amt; b.doi_weight_num += doi * Math.max(amt, 1); b.doi_weight_den += Math.max(amt, 1); }); var entries = Array.from(agg.entries()).map(function(pair){ return { label: pair[0], inventory_amount: pair[1].inventory_amount, stock_units: pair[1].stock_units, doi: pair[1].doi_weight_den ? pair[1].doi_weight_num / pair[1].doi_weight_den : 0 }; }).sort(function(a,b){ return b.inventory_amount - a.inventory_amount; }); return { title:'Inventario por tienda', subtitle:'Valor de inventario visible por tienda', tag:'Inventario', type:'bar', horizontal:true, yFormat:'currency', labels: entries.map(function(x){ return x.label; }), datasets:[{ label:'Valor inventario', data: entries.map(function(x){ return Number(x.inventory_amount.toFixed(2)); }), type:'bar', color:'#0C4D8F' }], sourceTruth:'inventario/store_sku_snapshot.json', customSummary:'Inventario concentrado por tienda. ' + entries.map(function(x){ return x.label + ': ' + compactMoney(x.inventory_amount) + ' · DOI ' + compactNum(x.doi); }).join(' | ') }; }
+  async function buildHallazgos(question){ if(!/hallazgo|senal|señal|lectura ejecutiva|prioridad|accion/.test(norm(question)) && !/ejecutivo|acciones/.test(stateAi.topic)) return null; var files=['./data_api/out/hallazgos/sales_signals.json','./data_api/out/hallazgos/delivery_signals.json','./data_api/out/hallazgos/inventory_signals.json','./data_api/out/hallazgos/shrink_signals.json']; var packs = await Promise.all(files.map(function(p){ return loadJson(p).catch(function(){ return []; }); })); var rows = packs.reduce(function(acc, x){ return acc.concat(arr(x)); }, []); if(!rows.length) return null; var filteredStores = collectFilters().stores; rows = rows.filter(function(r){ return !filteredStores.length || !txt(r.store_name) || filteredStores.indexOf(txt(r.store_name).toUpperCase()) >= 0; }); rows.sort(function(a,b){ return Math.abs(num(b.delta)) - Math.abs(num(a.delta)); }); rows = rows.slice(0,8); return { title:'Hallazgos priorizados', subtitle:'Top señales por materialidad visible', tag:'Top señales', type:'bar', horizontal:true, yFormat:'currency', labels: rows.map(function(r){ return txt(r.scope_label || r.scope_key || r.store_name || 'Señal'); }), datasets:[{ label:'Impacto', data: rows.map(function(r){ return num(r.delta); }), type:'bar', color:'#0C4D8F' }], sourceTruth:'hallazgos/*.json', rows:rows, customSummary:'Se priorizaron señales por impacto absoluto visible. Top: ' + rows.slice(0,3).map(function(r){ return txt(r.scope_label || r.scope_key) + ' (' + compactMoney(r.delta) + ')'; }).join(' | ') }; }
+  async function buildDaypartFallback(question){ var q = norm(question), domain = detectDomain(question); if(!/hora|horario/.test(q)) return null; if(domain !== 'delivery' && domain !== 'innovation') return null; var mode = dashboardMode(); var file = domain === 'delivery' ? './data_api/out/delivery/delivery_by_daypart.json' : './data_api/out/innovation/by_daypart.json'; var rows = await loadJson(file).catch(function(){ return []; }); if(!rows.length) return null; var periodKey = mode === 'month' ? monthFromQuestion(question) : weekFromQuestion(question); if(!periodKey) periodKey = latestPeriodFromRows(arr(rows).filter(function(r){ return txt(r.period_type) === mode; }), 'period_key'); var filteredStores = collectFilters().stores; rows = arr(rows).filter(function(r){ return txt(r.period_type) === mode && txt(r.period_key) === periodKey && (!filteredStores.length || filteredStores.indexOf(txt(r.store_name || r.store).toUpperCase()) >= 0); }); if(!rows.length) return null; var withCompare = rows.some(function(r){ return num(r.sales_ly) !== 0 || num(r.sales_lm) !== 0; }); var compareField = mode === 'month' ? 'sales_lm' : 'sales_ly'; return buildModelFromRows({ rows: rows, periodField:'period_key', periodKey:periodKey, groupField:'daypart', metricField:'sales', compareField:withCompare ? compareField : '', withCompare:withCompare, currentLabel: domain === 'delivery' ? 'Venta delivery' : 'Venta innovación', compareLabel: mode === 'month' ? 'LM' : 'LY', type:'bar', horizontal:false, yFormat:'currency', title: (domain === 'delivery' ? 'Delivery por horario' : 'Innovación por horario'), subtitle:'Se resolvió por horario operativo porque la fuente actual no trae hora 0-23', tag:'Horario / daypart', context:'La fuente actual no expone hora 0-23 para ' + domain + '. Se usó daypart operativo como fuente de verdad.', sourceTruth: file }); }
+  async function buildExecutiveBrief(question){ if(!/lectura ejecutiva|resumen ejecutivo|estado general/.test(norm(question)) && stateAi.topic !== 'ejecutivo') return null; var sales = await loadJson('./data_api/out/ventas/monthly_business.json').catch(function(){ return []; }); var delivery = await loadJson('./data_api/out/delivery/monthly_business.json').catch(function(){ return []; }); var sbf = await loadJson('./data_api/out/sbf/monthly_business.json').catch(function(){ return []; }); if(!arr(sales).length) return null; var latest = latestPeriodFromRows(sales, 'month_key'); var s = arr(sales).find(function(r){ return txt(r.month_key) === latest; }) || null; var d = arr(delivery).find(function(r){ return txt(r.month_key) === latest; }) || null; var b = arr(sbf).find(function(r){ return txt(r.month_key) === latest; }) || null; var deliveryShare = s && d && num(s.sales) ? (num(d.sales) / num(s.sales)) * 100 : 0; return { title:'Lectura ejecutiva · ' + latest, subtitle:'Resumen del último mes disponible', tag:'Ejecutivo', type:'none', horizontal:false, yFormat:'currency', labels:[], datasets:[], sourceTruth:'ventas/monthly_business.json + delivery/monthly_business.json + sbf/monthly_business.json', customSummary:'Ventas ' + compactMoney(s && s.sales) + ' vs LY ' + compactMoney(s && s.sales_ly) + ' (' + compactPct((num(s && s.sales_ly) ? ((num(s && s.sales) - num(s && s.sales_ly)) / num(s && s.sales_ly) * 100) : 0)) + '). Delivery ' + compactMoney(d && d.sales) + ' con share ' + compactPct(deliveryShare) + '. SBF ' + compactNum(b && b.tx) + ' TX vs LY ' + compactNum(b && b.tx_ly) + '.', executive:true }; }
+  function actionsFromModel(model, question){ var domain = detectDomain(question); var q = norm(question); if(model && model.rows && /hallazgo|senal|señal|lectura|accion/.test(q + ' ' + stateAi.topic)){ return model.rows.slice(0,3).map(function(r, idx){ var scope = txt(r.scope_label || r.scope_key || 'señal'); if(/inventory|inventario/.test(txt(r.metric))) return (idx+1) + '. Transferir o rebalancear ' + scope + ' donde el impacto visible es ' + compactMoney(r.delta) + '.'; if(/shrink|merma/.test(txt(r.metric))) return (idx+1) + '. Atacar merma en ' + scope + ' con conteo, merma controlada y ajuste de producción.'; if(/delivery/.test(txt(r.metric)) || /uber|pedido/.test(scope.toLowerCase())) return (idx+1) + '. Reforzar disponibilidad y ejecución en ' + scope + ' porque mueve ' + compactMoney(r.delta) + ' de brecha.'; return (idx+1) + '. Priorizar ' + scope + ' (' + compactMoney(r.delta) + ') con dueño, fecha y seguimiento en 7 días.'; }); } if(domain === 'sales') return ['Aterriza el seguimiento sobre la primera línea del gráfico; ahí está el mayor peso del resultado.','Si el comparativo es negativo, corrige disponibilidad, precio y mix antes de abrir una campaña.','Si el comparativo es positivo, replica la ejecución en las demás tiendas o categorías parecidas.']; if(domain === 'delivery') return ['Protege disponibilidad y velocidad en los horarios más pesados del canal.','Empuja la plataforma o día con mejor tracción antes de invertir presupuesto amplio.','Revisa surtido visible y cancelaciones en la línea con mayor brecha.']; if(domain === 'inventario') return ['Mueve primero el capital atrapado donde el DOI o el monto son más altos.','Frena compra en SKUs con exceso antes de transferir faltantes.','Usa la tienda con menor stock como destino prioritario cuando exista excedente real.']; if(domain === 'merma') return ['Ataca primero la descripción con mayor impacto en $.','Separa si la merma viene de producción, caducidad o manipulación.','Define un control corto de 7 días y verifica si baja el monto, no solo el %.']; if(domain === 'sbf') return ['Concentra entrenamiento y cobertura en los servicios y ventanas de mayor TX.','Si el comparativo cae, revisa disponibilidad del servicio y rutina del cajero.','Usa la tienda y servicio top como benchmark operativo.']; if(domain === 'innovation') return ['Protege la ejecución en el combo o bloque horario que sí vende.','No escales innovación donde no hay tracción real; primero valida repetición y margen.','Amarra la acción comercial al horario operativo visible.']; return ['Priorizá la línea con mayor impacto económico visible.','Asigná dueño, fecha y meta puntual.','Revisá el mismo indicador después del ajuste para confirmar que sí movió el resultado.']; }
+  function summaryFromModel(model){ if(model && model.customSummary) return model.customSummary; if(model && model.questionScopedContext) return model.questionScopedContext; if(model && model.labels && model.datasets && model.labels.length && model.datasets.length){ var first = model.labels[0], v1 = num(model.datasets[0].data[0]); return 'La respuesta se resolvió con data real. Primer foco visible: ' + first + ' con ' + compactNum(v1) + '.'; } return 'La respuesta se resolvió con la capa JSON local del dashboard.'; }
+  function formatResultHtml(pack){ var html=''; if(txt(pack && pack.title)) html += '<p><strong>' + htmlEscape(pack.title) + '</strong></p>'; if(txt(pack && pack.summary)) html += formatParagraphs(pack.summary); if(Array.isArray(pack && pack.actions) && pack.actions.length){ html += '<p><strong>Acciones recomendadas</strong></p><ul>' + pack.actions.map(function(item){ return '<li>' + htmlEscape(item) + '</li>'; }).join('') + '</ul>'; } if(txt(pack && pack.note)) html += '<p>' + htmlEscape(pack.note) + '</p>'; return html || '<p>No encontré un bloque legible para mostrar.</p>'; }
+  async function resolveDeterministic(question){ var broad = await buildExecutiveBrief(question); if(broad) return broad; var hall = await buildHallazgos(question); if(hall) return hall; var inv = await buildInventoryByStore(question); if(inv) return inv; var daypart = await buildDaypartFallback(question); if(daypart) return daypart; if(typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function'){ try{ await window.__ampmJsonRouteV2EnsureReadyForQuestion(question); }catch(_e){} } if(typeof window.__ampmAiDirectCuboBuild === 'function'){ var model = window.__ampmAiDirectCuboBuild(question); if(model) return model; } return null; }
+  async function sendQuestion(ev){ if(ev){ ev.preventDefault(); ev.stopImmediatePropagation(); } if(stateAi.loading) return false; var input = el('ampmAiInput'); var question = txt(input && input.value); if(!question){ var cfg = getTopicConfig(stateAi.topic); question = txt(cfg.prompts && cfg.prompts[0]); if(input && question) input.value = question; } question = txt(question); if(!question) return false; addMessage('user', '<p>' + htmlEscape(question) + '</p>', nowStamp()); if(input) input.value = ''; var thinking = addMessage('assistant', '<p>Resolviendo con la capa JSON local…</p>', 'analizando', 'analizando'); setLoading(true); setStageNote('Priorizando fuente de verdad local…'); setText('ampmAiUsageMeta', 'Motor: JSON local'); try{ var model = await resolveDeterministic(question); if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking); if(!model){ addMessage('assistant', '<p><strong>No encontré una resolución segura con la fuente actual.</strong></p><p>El copiloto no va a inventar cifras. Revisa si la consulta pide un grano no disponible en el JSON exportado actual.</p>', 'sin match', 'error'); hideChart(); setStageNote('Consulta no resuelta porque el grano no estaba disponible.'); return false; } var pack = { title: txt(model.title || 'Respuesta resuelta'), summary: summaryFromModel(model), actions: actionsFromModel(model, question), note: txt(model.sourceTruth ? ('Fuente de verdad: ' + model.sourceTruth) : '') }; addMessage('assistant', formatResultHtml(pack), 'local'); if(model.type && txt(model.type).toLowerCase() !== 'none' && arr(model.labels).length && arr(model.datasets).length){ renderChart(model); setText('ampmAiStageTitle', txt(model.title) || 'Visual local'); setText('ampmAiStageSub', txt(model.subtitle) || 'Resuelto desde la capa JSON local'); setStageNote(txt(model.sourceTruth || 'Respuesta resuelta con JSON local.')); } else { hideChart(); setText('ampmAiStageTitle', txt(model.title) || 'Lectura local'); setText('ampmAiStageSub', txt(model.subtitle) || 'Respuesta resuelta sin gráfico'); setStageNote(txt(model.sourceTruth || 'Respuesta ejecutiva resuelta con JSON local.')); } setText('ampmAiUsageMeta', 'Motor: JSON local · sin backend'); }catch(err){ if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking); addMessage('assistant', '<p><strong>Error local</strong></p><p>' + htmlEscape(txt(err && err.message) || 'No fue posible resolver la consulta localmente.') + '</p>', 'error', 'error'); hideChart(); setStageNote('Error local al resolver la consulta.'); }finally{ setLoading(false); updateStaticUi(); updateVisibility(); } return false; }
+  function bindEvents(){ Array.from(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){ btn.addEventListener('click', function(){ setTopic(txt(btn.getAttribute('data-topic')).toLowerCase(), true); }, true); }); var clearBtn = el('ampmAiClearBtn'); if(clearBtn) clearBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopImmediatePropagation(); clearConversation(true); }, true); var sendBtn = el('ampmAiSendBtn'); if(sendBtn) sendBtn.addEventListener('click', sendQuestion, true); var input = el('ampmAiInput'); if(input) input.addEventListener('keydown', function(ev){ if(ev.key === 'Enter' && !ev.shiftKey){ sendQuestion(ev); } }, true); document.addEventListener('click', function(ev){ var btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab]') : null; if(btn) setTimeout(updateVisibility, 40); }, true); try{ var observer = new MutationObserver(function(){ updateVisibility(); updateStaticUi(); }); observer.observe(document.body, { attributes:true, attributeFilter:['class'] }); }catch(_e){} window.addEventListener('focus', function(){ updateVisibility(); updateStaticUi(); }); }
+  function init(){ updateStaticUi(); setTopic('chat', false); clearConversation(true); bindEvents(); updateVisibility(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true }); else init();
 })();
 </script>
 

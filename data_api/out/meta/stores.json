@@ -1,14 +1,1 @@
-[
-  {
-    "store": "AMPM01",
-    "store_name": "AMPM01"
-  },
-  {
-    "store": "AMPM02",
-    "store_name": "AMPM02"
-  },
-  {
-    "store": "AMPM03",
-    "store_name": "AMPM03"
-  }
-]
+[{"store_name": "AMPM01", "store": "AMPM01"}, {"store_name": "AMPM02", "store": "AMPM02"}, {"store_name": "AMPM03", "store": "AMPM03"}]

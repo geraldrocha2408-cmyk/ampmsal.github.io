@@ -2,2136 +2,1220 @@ from __future__ import annotations
 
 import json
 import math
-import re
-import sys
-import traceback
-import unicodedata
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from openpyxl import load_workbook
 
-
-VERSION_EXPORTER = "1.0.0"
-SOURCE_FILENAME = "Cubo_Semanal_Compactado.xlsx"
-
-
-# -----------------------------
-# Logging
-# -----------------------------
-class Logger:
-    @staticmethod
-    def info(msg: str) -> None:
-        print(f"[INFO] {msg}")
-
-    @staticmethod
-    def warn(msg: str) -> None:
-        print(f"[WARN] {msg}")
-
-    @staticmethod
-    def error(msg: str) -> None:
-        print(f"[ERROR] {msg}")
+SCRIPT_PATH = Path(__file__).resolve()
+DATA_API_DIR = SCRIPT_PATH.parent
+REPO_ROOT = DATA_API_DIR.parent
+OUT_DIR = DATA_API_DIR / 'out'
 
 
-# -----------------------------
-# Context / helpers
-# -----------------------------
-@dataclass
-class ExportContext:
-    project_root: Path
-    source_file: Path
-    out_root: Path
-    warnings: List[str] = field(default_factory=list)
-    files_generated: List[str] = field(default_factory=list)
-    row_counts_by_file: Dict[str, int] = field(default_factory=dict)
-    detected_sheets: List[str] = field(default_factory=list)
-    months_available: List[str] = field(default_factory=list)
-    weeks_available: List[str] = field(default_factory=list)
-    stores_available: List[str] = field(default_factory=list)
-    modules_skipped: Dict[str, str] = field(default_factory=dict)
-
-    def warn(self, msg: str) -> None:
-        self.warnings.append(msg)
-        Logger.warn(msg)
-
-    def add_file(self, rel_path: str, row_count: int) -> None:
-        rel_path = rel_path.replace("\\", "/")
-        self.files_generated.append(rel_path)
-        self.row_counts_by_file[rel_path] = int(row_count)
-
-
-def normalize_text(value: Any) -> str:
-    if value is None:
-        return ""
-    text = str(value).strip().lower()
-    text = unicodedata.normalize("NFKD", text)
-    text = "".join(ch for ch in text if not unicodedata.combining(ch))
-    text = re.sub(r"[^a-z0-9]+", " ", text).strip()
-    return text
-
-
-def compact_key(value: Any) -> str:
-    return re.sub(r"\s+", "", normalize_text(value))
-
-
-def safe_float(value: Any, default: float = 0.0) -> float:
-    if value is None or value == "":
-        return default
-    if isinstance(value, bool):
-        return float(value)
-    try:
-        if isinstance(value, str):
-            value = value.replace(",", "").strip()
-        number = float(value)
-        if math.isnan(number) or math.isinf(number):
-            return default
-        return number
-    except Exception:
-        return default
-
-
-def safe_int(value: Any, default: int = 0) -> int:
-    return int(round(safe_float(value, default)))
-
-
-def safe_bool(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    text = normalize_text(value)
-    return text in {"1", "true", "si", "yes", "y", "verdadero", "x"}
-
-
-def nonempty_str(value: Any, default: Optional[str] = None) -> Optional[str]:
-    if value is None:
-        return default
-    text = str(value).strip()
-    return text if text else default
-
-
-def safe_div(num: float, den: float) -> float:
-    if den in (0, None):
-        return 0.0
-    try:
-        return num / den
-    except Exception:
-        return 0.0
-
-
-def round_value(value: Any) -> Any:
-    if isinstance(value, float):
-        if math.isnan(value) or math.isinf(value):
-            return 0.0
-        return round(value, 6)
-    if isinstance(value, (datetime, date)):
-        return value.isoformat()
-    return value
-
-
-def json_ready_records(records: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
-    for rec in records:
-        clean = {k: round_value(v) for k, v in rec.items()}
-        out.append(clean)
-    return out
-
-
-def ensure_dirs(base: Path) -> None:
-    folders = [
-        "meta",
-        "ventas",
-        "delivery",
-        "inventario",
-        "merma",
-        "sbf",
-        "cxc",
-        "prd0",
-        "hallazgos",
-        "innovation",
+def resolve_default_xlsx() -> Path:
+    """Find the workbook in the most likely project locations."""
+    candidates = [
+        REPO_ROOT / 'Cubo_Semanal_Compactado.xlsx',
+        DATA_API_DIR / 'Cubo_Semanal_Compactado.xlsx',
+        Path.cwd() / 'Cubo_Semanal_Compactado.xlsx',
+        Path.cwd() / 'data_api' / 'Cubo_Semanal_Compactado.xlsx',
     ]
-    for folder in folders:
-        (base / folder).mkdir(parents=True, exist_ok=True)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 
-def write_json(ctx: ExportContext, relative_path: str, payload: Any) -> None:
-    path = ctx.out_root / relative_path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
-    row_count = len(payload) if isinstance(payload, list) else len(payload) if isinstance(payload, dict) else 1
-    ctx.add_file(path.relative_to(ctx.project_root).as_posix(), row_count)
-    Logger.info(f"JSON exportado: {path.relative_to(ctx.project_root).as_posix()} ({row_count} registros)")
+DEFAULT_XLSX = resolve_default_xlsx()
 
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
 
-# -----------------------------
-# Date / period helpers
-# -----------------------------
-MONTH_RE = re.compile(r"^(\d{4})-(\d{2})$")
-WEEK_RE = re.compile(r"^(\d{4})-W(\d{2})$")
-
-
-def parse_month_key(month_key: str) -> Optional[date]:
-    if not month_key:
-        return None
-    m = MONTH_RE.match(str(month_key).strip())
-    if not m:
-        return None
-    return date(int(m.group(1)), int(m.group(2)), 1)
-
-
-def add_months(month_key: str, months: int) -> Optional[str]:
-    dt = parse_month_key(month_key)
-    if not dt:
-        return None
-    idx = (dt.year * 12 + dt.month - 1) + months
-    year = idx // 12
-    month = idx % 12 + 1
-    return f"{year:04d}-{month:02d}"
-
-
-def prev_month_key(month_key: str) -> Optional[str]:
-    return add_months(month_key, -1)
-
-
-def ly_month_key(month_key: str) -> Optional[str]:
-    return add_months(month_key, -12)
-
-
-def parse_week_key(week_key: str) -> Optional[Tuple[int, int]]:
-    if not week_key:
-        return None
-    m = WEEK_RE.match(str(week_key).strip())
-    if not m:
-        return None
-    return int(m.group(1)), int(m.group(2))
-
-
-def iso_week_to_monday(week_key: str) -> Optional[date]:
-    parsed = parse_week_key(week_key)
-    if not parsed:
-        return None
-    year, week = parsed
+def safe_float(v: Any) -> float:
+    if v is None or v == '':
+        return 0.0
     try:
-        return date.fromisocalendar(year, week, 1)
+        return float(v)
     except Exception:
-        return None
+        return 0.0
 
 
-def week_key_from_date(dt: date) -> str:
-    iso = dt.isocalendar()
-    return f"{iso.year:04d}-W{iso.week:02d}"
-
-
-def shift_week_key(week_key: str, weeks_delta: int) -> Optional[str]:
-    monday = iso_week_to_monday(week_key)
-    if not monday:
-        return None
-    return week_key_from_date(monday + timedelta(weeks=weeks_delta))
-
-
-def ly_week_key(week_key: str) -> Optional[str]:
-    return shift_week_key(week_key, -52)
-
-
-def make_dow_group(dow_name: Optional[str], dow_number: Optional[int]) -> Optional[str]:
-    if dow_number is not None and dow_number != 0:
-        return "Lun-Jue" if int(dow_number) <= 4 else "Vie-Dom"
-    norm = normalize_text(dow_name)
-    if norm in {"lunes", "martes", "miercoles", "jueves"}:
-        return "Lun-Jue"
-    if norm in {"viernes", "sabado", "domingo"}:
-        return "Vie-Dom"
-    return None
-
-
-# -----------------------------
-# Workbook reader
-# -----------------------------
-class WorkbookReader:
-    def __init__(self, workbook_path: Path) -> None:
-        self.workbook_path = workbook_path
-        self.wb = load_workbook(workbook_path, read_only=True, data_only=True)
-        self.sheetnames = list(self.wb.sheetnames)
-        self.sheet_key_map = {compact_key(name): name for name in self.sheetnames}
-        self._headers_cache: Dict[str, List[Any]] = {}
-
-    def find_sheet(self, *candidates: str) -> Optional[str]:
-        keys = {compact_key(c) for c in candidates if c}
-        for key, actual in self.sheet_key_map.items():
-            if key in keys:
-                return actual
-        # contains fallback
-        for candidate in candidates:
-            ckey = compact_key(candidate)
-            for key, actual in self.sheet_key_map.items():
-                if ckey and (ckey in key or key in ckey):
-                    return actual
-        return None
-
-    def has_sheet(self, *candidates: str) -> bool:
-        return self.find_sheet(*candidates) is not None
-
-    def get_headers(self, sheet_name: str) -> List[Any]:
-        if sheet_name not in self._headers_cache:
-            ws = self.wb[sheet_name]
-            first_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
-            self._headers_cache[sheet_name] = list(first_row)
-        return self._headers_cache[sheet_name]
-
-    def resolve_columns(
-        self,
-        sheet_name: str,
-        alias_map: Dict[str, Sequence[str]],
-    ) -> Dict[str, int]:
-        headers = self.get_headers(sheet_name)
-        normalized_headers = [normalize_text(h) for h in headers]
-        col_map: Dict[str, int] = {}
-        for canonical, aliases in alias_map.items():
-            found_idx: Optional[int] = None
-            alias_norms = [normalize_text(a) for a in aliases]
-            # exact match first
-            for idx, hnorm in enumerate(normalized_headers):
-                if hnorm in alias_norms:
-                    found_idx = idx
-                    break
-            # contains fallback
-            if found_idx is None:
-                for idx, hnorm in enumerate(normalized_headers):
-                    if any(alias and (alias in hnorm or hnorm in alias) for alias in alias_norms):
-                        found_idx = idx
-                        break
-            if found_idx is not None:
-                col_map[canonical] = found_idx
-        return col_map
-
-    def iter_rows(self, sheet_name: str, col_map: Dict[str, int]) -> Iterable[Dict[str, Any]]:
-        ws = self.wb[sheet_name]
-        for row_idx, row in enumerate(ws.iter_rows(values_only=True)):
-            if row_idx == 0:
-                continue
-            yield {canonical: row[idx] if idx < len(row) else None for canonical, idx in col_map.items()}
-
-
-# -----------------------------
-# Aggregation utilities
-# -----------------------------
-def metric_bucket_factory() -> Dict[str, float]:
-    return defaultdict(float)  # type: ignore[return-value]
-
-
-def add_metric(bucket: Dict[str, float], key: str, value: Any) -> None:
-    bucket[key] = bucket.get(key, 0.0) + safe_float(value)
-
-
-def finalize_metric_dict(d: Dict[Any, Dict[str, Any]], key_fields: Sequence[str]) -> List[Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
-    for key, metrics in d.items():
-        if not isinstance(key, tuple):
-            key = (key,)
-        row = {field: value for field, value in zip(key_fields, key)}
-        row.update(metrics)
-        rows.append(row)
-    return rows
-
-
-def apply_period_comparison(
-    records: List[Dict[str, Any]],
-    period_field: str,
-    grouping_fields: Sequence[str],
-    metric_fields: Sequence[str],
-    period_type: str,
-) -> List[Dict[str, Any]]:
-    idx: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
-    for rec in records:
-        key = tuple(rec.get(f) for f in (*grouping_fields, period_field))
-        idx[key] = rec
-
-    for rec in records:
-        period_key = rec.get(period_field)
-        if period_type == "month":
-            compare_period = ly_month_key(str(period_key)) if period_key else None
-            prev_period = prev_month_key(str(period_key)) if period_key else None
-        else:
-            compare_period = ly_week_key(str(period_key)) if period_key else None
-            prev_period = shift_week_key(str(period_key), -1) if period_key else None
-
-        compare_key = tuple(rec.get(f) for f in grouping_fields) + (compare_period,)
-        prev_key = tuple(rec.get(f) for f in grouping_fields) + (prev_period,)
-        compare_rec = idx.get(compare_key, {}) if compare_period else {}
-        prev_rec = idx.get(prev_key, {}) if prev_period else {}
-
-        for metric in metric_fields:
-            current_value = safe_float(rec.get(metric))
-            compare_value = safe_float(compare_rec.get(metric))
-            prev_value = safe_float(prev_rec.get(metric))
-            rec[f"{metric}_ly"] = compare_value
-            rec[f"{metric}_delta"] = current_value - compare_value
-            rec[f"{metric}_delta_pct"] = safe_div(current_value - compare_value, compare_value)
-            rec[f"{metric}_lm"] = prev_value
-            rec[f"{metric}_vs_lm"] = current_value - prev_value
-            rec[f"{metric}_vs_lm_pct"] = safe_div(current_value - prev_value, prev_value)
-    return records
-
-
-def sort_records(records: List[Dict[str, Any]], keys: Sequence[str]) -> List[Dict[str, Any]]:
-    return sorted(records, key=lambda x: tuple("" if x.get(k) is None else x.get(k) for k in keys))
-
-
-def enrich_sales_common(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    for rec in records:
-        sales = safe_float(rec.get("sales"))
-        margin = safe_float(rec.get("margin"))
-        tx = safe_float(rec.get("tx"))
-        rec["margin_pct"] = safe_div(margin, sales)
-        rec["avg_ticket"] = safe_div(sales, tx)
-        sales_ly = safe_float(rec.get("sales_ly"))
-        margin_ly = safe_float(rec.get("margin_ly"))
-        tx_ly = safe_float(rec.get("tx_ly"))
-        rec["margin_pct_ly"] = safe_div(margin_ly, sales_ly)
-        rec["avg_ticket_ly"] = safe_div(sales_ly, tx_ly)
-    return records
-
-
-def severity_from_pct(delta_pct: float, reverse: bool = False) -> str:
-    value = -delta_pct if reverse else delta_pct
-    abs_value = abs(delta_pct)
-    if value <= -0.20 or abs_value >= 0.35:
-        return "high"
-    if value <= -0.10 or abs_value >= 0.20:
-        return "medium"
-    return "low"
-
-
-# -----------------------------
-# Domain processors
-# -----------------------------
-def process_sales_and_delivery(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando ventas y delivery...")
-    sales_sheet = reader.find_sheet("Cubo_Sales_DetailHallazgos")
-    if not sales_sheet:
-        ctx.warn("No se encontró hoja de ventas detalle. Se omiten exportaciones de ventas y delivery basadas en ventas.")
-        return {}
-
-    alias_map = {
-        "date_sold": ["date sold", "date", "fecha"],
-        "week_key": ["yearweek", "week", "year month"],
-        "month_key": ["calmonth", "month", "mes", "calendar month"],
-        "store": ["store", "tienda", "store name"],
-        "department": ["department", "departamento"],
-        "category": ["category", "categoria", "categoría"],
-        "supplier": ["supplier", "proveedor"],
-        "brand": ["brand", "marca"],
-        "description": ["description", "descripcion", "descripción", "descripcion3"],
-        "daypart": ["daypart", "part of day", "turno"],
-        "dow": ["dow", "dayofweek", "dia", "día"],
-        "dow_name": ["dow name", "dow_name", "weekday", "nombre dia", "dia nombre", "day name"],
-        "is_delivery": ["is delivery", "delivery", "es delivery"],
-        "platform": ["delivery channel", "platform", "canal", "delivery platform"],
-        "qty": ["qty sold", "qty", "quantity", "qty ven", "unidades"],
-        "sales": ["sales", "total sales", "venta", "ventas"],
-        "margin": ["total gross margin", "gross margin", "margin", "margen"],
-    }
-    col_map = reader.resolve_columns(sales_sheet, alias_map)
-    critical = ["week_key", "month_key", "store", "department", "category", "description", "sales", "margin", "qty"]
-    missing = [c for c in critical if c not in col_map]
-    if missing:
-        ctx.warn(f"Hoja {sales_sheet}: faltan columnas críticas para ventas/delivery: {missing}. Se omite módulo.")
-        return {}
-
-    monthly_business: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    weekly_business: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    monthly_store: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    weekly_store: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    monthly_department: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    weekly_department: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    monthly_category: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    weekly_category: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    monthly_brand: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    weekly_brand: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    monthly_description: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    weekly_description: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    sales_by_dow: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-
-    delivery_monthly_business: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    delivery_weekly_business: Dict[Any, Dict[str, Any]] = defaultdict(metric_bucket_factory)
-    delivery_monthly_store_platform: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    delivery_weekly_store_platform: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    delivery_monthly_category: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    delivery_weekly_category: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-    delivery_by_dow: Dict[Any, Dict[str, Any]] = defaultdict(dict)
-
-    stores, months, weeks = set(), set(), set()
-    departments, categories, brands, descriptions, platforms, suppliers = set(), set(), set(), set(), set(), set()
-
-    def seed_dim_bucket(container: Dict[Any, Dict[str, Any]], key: Tuple[Any, ...], extra: Dict[str, Any]) -> Dict[str, Any]:
-        if key not in container or not container[key]:
-            container[key] = {**extra, "sales": 0.0, "margin": 0.0, "qty": 0.0}
-        return container[key]
-
-    row_count = 0
-    for row in reader.iter_rows(sales_sheet, col_map):
-        row_count += 1
-        month_key = nonempty_str(row.get("month_key"))
-        week_key = nonempty_str(row.get("week_key"))
-        store = nonempty_str(row.get("store"), "UNKNOWN")
-        department = nonempty_str(row.get("department"), "Sin departamento")
-        category = nonempty_str(row.get("category"), "Sin categoría")
-        brand = nonempty_str(row.get("brand"), "Sin marca")
-        description = nonempty_str(row.get("description"), "Sin descripción")
-        supplier = nonempty_str(row.get("supplier"), "Sin proveedor")
-        platform = nonempty_str(row.get("platform"), "No Delivery") if safe_bool(row.get("is_delivery")) or row.get("platform") else None
-        is_delivery = safe_bool(row.get("is_delivery")) or bool(platform)
-        dow = safe_int(row.get("dow"), 0)
-        dow_name = nonempty_str(row.get("dow_name"))
-        dow_group = make_dow_group(dow_name, dow)
-        sales = safe_float(row.get("sales"))
-        margin = safe_float(row.get("margin"))
-        qty = safe_float(row.get("qty"))
-
-        if month_key:
-            months.add(month_key)
-        if week_key:
-            weeks.add(week_key)
-        stores.add(store)
-        departments.add(department)
-        categories.add(category)
-        brands.add(brand)
-        descriptions.add(description)
-        suppliers.add(supplier)
-        if platform:
-            platforms.add(platform)
-
-        if month_key:
-            add_metric(monthly_business[month_key], "sales", sales)
-            add_metric(monthly_business[month_key], "margin", margin)
-            add_metric(monthly_business[month_key], "qty", qty)
-            add_metric(monthly_store[(month_key, store)], "sales", sales)
-            add_metric(monthly_store[(month_key, store)], "margin", margin)
-            add_metric(monthly_store[(month_key, store)], "qty", qty)
-            add_metric(monthly_department[(month_key, department)], "sales", sales)
-            add_metric(monthly_department[(month_key, department)], "margin", margin)
-            add_metric(monthly_department[(month_key, department)], "qty", qty)
-            add_metric(monthly_category[(month_key, department, category)], "sales", sales)
-            add_metric(monthly_category[(month_key, department, category)], "margin", margin)
-            add_metric(monthly_category[(month_key, department, category)], "qty", qty)
-            add_metric(monthly_brand[(month_key, department, category, brand)], "sales", sales)
-            add_metric(monthly_brand[(month_key, department, category, brand)], "margin", margin)
-            add_metric(monthly_brand[(month_key, department, category, brand)], "qty", qty)
-            mb = seed_dim_bucket(
-                monthly_description,
-                (month_key, store, description),
-                {
-                    "month_key": month_key,
-                    "store": store,
-                    "store_name": store,
-                    "department": department,
-                    "category": category,
-                    "brand": brand,
-                    "description": description,
-                    "supplier": supplier,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                },
-            )
-            mb["sales"] += sales
-            mb["margin"] += margin
-            mb["qty"] += qty
-
-        if week_key:
-            add_metric(weekly_business[week_key], "sales", sales)
-            add_metric(weekly_business[week_key], "margin", margin)
-            add_metric(weekly_business[week_key], "qty", qty)
-            add_metric(weekly_store[(week_key, store)], "sales", sales)
-            add_metric(weekly_store[(week_key, store)], "margin", margin)
-            add_metric(weekly_store[(week_key, store)], "qty", qty)
-            add_metric(weekly_department[(week_key, department)], "sales", sales)
-            add_metric(weekly_department[(week_key, department)], "margin", margin)
-            add_metric(weekly_department[(week_key, department)], "qty", qty)
-            add_metric(weekly_category[(week_key, department, category)], "sales", sales)
-            add_metric(weekly_category[(week_key, department, category)], "margin", margin)
-            add_metric(weekly_category[(week_key, department, category)], "qty", qty)
-            add_metric(weekly_brand[(week_key, department, category, brand)], "sales", sales)
-            add_metric(weekly_brand[(week_key, department, category, brand)], "margin", margin)
-            add_metric(weekly_brand[(week_key, department, category, brand)], "qty", qty)
-            wb_desc = seed_dim_bucket(
-                weekly_description,
-                (week_key, store, description),
-                {
-                    "week_key": week_key,
-                    "store": store,
-                    "store_name": store,
-                    "department": department,
-                    "category": category,
-                    "brand": brand,
-                    "description": description,
-                    "supplier": supplier,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                },
-            )
-            wb_desc["sales"] += sales
-            wb_desc["margin"] += margin
-            wb_desc["qty"] += qty
-
-        if month_key:
-            key = ("month", month_key, store, dow, dow_name or f"DOW {dow}")
-            bucket = sales_by_dow.get(key) or {
-                "period_type": "month",
-                "period_key": month_key,
-                "store": store,
-                "store_name": store,
-                "dow": dow,
-                "dow_name": dow_name,
-                "dow_group": dow_group,
-                "sales": 0.0,
-                "margin": 0.0,
-                "qty": 0.0,
-            }
-            bucket["sales"] += sales
-            bucket["margin"] += margin
-            bucket["qty"] += qty
-            sales_by_dow[key] = bucket
-        if week_key:
-            key = ("week", week_key, store, dow, dow_name or f"DOW {dow}")
-            bucket = sales_by_dow.get(key) or {
-                "period_type": "week",
-                "period_key": week_key,
-                "store": store,
-                "store_name": store,
-                "dow": dow,
-                "dow_name": dow_name,
-                "dow_group": dow_group,
-                "sales": 0.0,
-                "margin": 0.0,
-                "qty": 0.0,
-            }
-            bucket["sales"] += sales
-            bucket["margin"] += margin
-            bucket["qty"] += qty
-            sales_by_dow[key] = bucket
-
-        if is_delivery and platform:
-            if month_key:
-                add_metric(delivery_monthly_business[month_key], "sales", sales)
-                add_metric(delivery_monthly_business[month_key], "margin", margin)
-                add_metric(delivery_monthly_business[month_key], "qty", qty)
-                msp = delivery_monthly_store_platform.get((month_key, store, platform)) or {
-                    "month_key": month_key,
-                    "store": store,
-                    "store_name": store,
-                    "platform": platform,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                msp["sales"] += sales
-                msp["margin"] += margin
-                msp["qty"] += qty
-                delivery_monthly_store_platform[(month_key, store, platform)] = msp
-                mcat = delivery_monthly_category.get((month_key, platform, category)) or {
-                    "month_key": month_key,
-                    "platform": platform,
-                    "category": category,
-                    "department": department,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                mcat["sales"] += sales
-                mcat["margin"] += margin
-                mcat["qty"] += qty
-                delivery_monthly_category[(month_key, platform, category)] = mcat
-                mdow = delivery_by_dow.get(("month", month_key, store, platform, dow)) or {
-                    "period_type": "month",
-                    "period_key": month_key,
-                    "store": store,
-                    "store_name": store,
-                    "platform": platform,
-                    "dow": dow,
-                    "dow_name": dow_name,
-                    "dow_group": dow_group,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                mdow["sales"] += sales
-                mdow["margin"] += margin
-                mdow["qty"] += qty
-                delivery_by_dow[("month", month_key, store, platform, dow)] = mdow
-
-            if week_key:
-                add_metric(delivery_weekly_business[week_key], "sales", sales)
-                add_metric(delivery_weekly_business[week_key], "margin", margin)
-                add_metric(delivery_weekly_business[week_key], "qty", qty)
-                wsp = delivery_weekly_store_platform.get((week_key, store, platform)) or {
-                    "week_key": week_key,
-                    "store": store,
-                    "store_name": store,
-                    "platform": platform,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                wsp["sales"] += sales
-                wsp["margin"] += margin
-                wsp["qty"] += qty
-                delivery_weekly_store_platform[(week_key, store, platform)] = wsp
-                wcat = delivery_weekly_category.get((week_key, platform, category)) or {
-                    "week_key": week_key,
-                    "platform": platform,
-                    "category": category,
-                    "department": department,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                wcat["sales"] += sales
-                wcat["margin"] += margin
-                wcat["qty"] += qty
-                delivery_weekly_category[(week_key, platform, category)] = wcat
-                wdow = delivery_by_dow.get(("week", week_key, store, platform, dow)) or {
-                    "period_type": "week",
-                    "period_key": week_key,
-                    "store": store,
-                    "store_name": store,
-                    "platform": platform,
-                    "dow": dow,
-                    "dow_name": dow_name,
-                    "dow_group": dow_group,
-                    "sales": 0.0,
-                    "margin": 0.0,
-                    "qty": 0.0,
-                }
-                wdow["sales"] += sales
-                wdow["margin"] += margin
-                wdow["qty"] += qty
-                delivery_by_dow[("week", week_key, store, platform, dow)] = wdow
-
-    Logger.info(f"Ventas detalle procesadas: {row_count} filas")
-
-    sales_outputs = {
-        "monthly_business": sort_records(
-            apply_period_comparison(
-                [{"month_key": k, **v} for k, v in monthly_business.items()],
-                "month_key",
-                [],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key"],
-        ),
-        "weekly_business": sort_records(
-            apply_period_comparison(
-                [{"week_key": k, **v} for k, v in weekly_business.items()],
-                "week_key",
-                [],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key"],
-        ),
-        "monthly_store": sort_records(
-            apply_period_comparison(
-                [{"month_key": k[0], "store": k[1], "store_name": k[1], **v} for k, v in monthly_store.items()],
-                "month_key",
-                ["store"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "store"],
-        ),
-        "weekly_store": sort_records(
-            apply_period_comparison(
-                [{"week_key": k[0], "store": k[1], "store_name": k[1], **v} for k, v in weekly_store.items()],
-                "week_key",
-                ["store"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "store"],
-        ),
-        "monthly_department": sort_records(
-            apply_period_comparison(
-                [{"month_key": k[0], "department": k[1], **v} for k, v in monthly_department.items()],
-                "month_key",
-                ["department"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "department"],
-        ),
-        "weekly_department": sort_records(
-            apply_period_comparison(
-                [{"week_key": k[0], "department": k[1], **v} for k, v in weekly_department.items()],
-                "week_key",
-                ["department"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "department"],
-        ),
-        "monthly_category": sort_records(
-            apply_period_comparison(
-                [{"month_key": k[0], "department": k[1], "category": k[2], **v} for k, v in monthly_category.items()],
-                "month_key",
-                ["department", "category"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "department", "category"],
-        ),
-        "weekly_category": sort_records(
-            apply_period_comparison(
-                [{"week_key": k[0], "department": k[1], "category": k[2], **v} for k, v in weekly_category.items()],
-                "week_key",
-                ["department", "category"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "department", "category"],
-        ),
-        "monthly_brand": sort_records(
-            apply_period_comparison(
-                [{"month_key": k[0], "department": k[1], "category": k[2], "brand": k[3], **v} for k, v in monthly_brand.items()],
-                "month_key",
-                ["department", "category", "brand"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "department", "category", "brand"],
-        ),
-        "weekly_brand": sort_records(
-            apply_period_comparison(
-                [{"week_key": k[0], "department": k[1], "category": k[2], "brand": k[3], **v} for k, v in weekly_brand.items()],
-                "week_key",
-                ["department", "category", "brand"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "department", "category", "brand"],
-        ),
-        "monthly_description": sort_records(
-            apply_period_comparison(list(monthly_description.values()), "month_key", ["store", "description"], ["sales", "margin", "qty"], "month"),
-            ["month_key", "store", "description"],
-        ),
-        "weekly_description": sort_records(
-            apply_period_comparison(list(weekly_description.values()), "week_key", ["store", "description"], ["sales", "margin", "qty"], "week"),
-            ["week_key", "store", "description"],
-        ),
-        "sales_by_dow": sort_records(list(sales_by_dow.values()), ["period_type", "period_key", "store", "dow"]),
-    }
-
-    delivery_outputs = {
-        "monthly_business": sort_records(
-            apply_period_comparison(
-                [{"month_key": k, **v} for k, v in delivery_monthly_business.items()],
-                "month_key",
-                [],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key"],
-        ),
-        "weekly_business": sort_records(
-            apply_period_comparison(
-                [{"week_key": k, **v} for k, v in delivery_weekly_business.items()],
-                "week_key",
-                [],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key"],
-        ),
-        "monthly_store_platform": sort_records(
-            apply_period_comparison(
-                list(delivery_monthly_store_platform.values()),
-                "month_key",
-                ["store", "platform"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "store", "platform"],
-        ),
-        "weekly_store_platform": sort_records(
-            apply_period_comparison(
-                list(delivery_weekly_store_platform.values()),
-                "week_key",
-                ["store", "platform"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "store", "platform"],
-        ),
-        "monthly_category": sort_records(
-            apply_period_comparison(
-                list(delivery_monthly_category.values()),
-                "month_key",
-                ["platform", "category"],
-                ["sales", "margin", "qty"],
-                "month",
-            ),
-            ["month_key", "platform", "category"],
-        ),
-        "weekly_category": sort_records(
-            apply_period_comparison(
-                list(delivery_weekly_category.values()),
-                "week_key",
-                ["platform", "category"],
-                ["sales", "margin", "qty"],
-                "week",
-            ),
-            ["week_key", "platform", "category"],
-        ),
-        "delivery_by_dow": sort_records(list(delivery_by_dow.values()), ["period_type", "period_key", "store", "platform", "dow"]),
-    }
-
-    return {
-        "sales_outputs": sales_outputs,
-        "delivery_outputs": delivery_outputs,
-        "catalogs": {
-            "stores": sorted(stores),
-            "months": sorted(months),
-            "weeks": sorted(weeks),
-            "departments": sorted(departments),
-            "categories": sorted(categories),
-            "brands": sorted(brands),
-            "descriptions": sorted(descriptions),
-            "delivery_platforms": sorted(platforms),
-            "suppliers": sorted(suppliers),
-        },
-    }
-
-
-def merge_tx_into_sales_outputs(ctx: ExportContext, reader: WorkbookReader, results: Dict[str, Any]) -> None:
-    Logger.info("Procesando TX para enriquecer ventas y delivery...")
-    weekly_sheet = reader.find_sheet("Cubo_TX_Fact")
-    monthly_sheet = reader.find_sheet("Cubo_TX_Month_Fact")
-    if not weekly_sheet and not monthly_sheet:
-        ctx.warn("No se encontraron hojas TX. Los JSON de ventas/delivery quedarán sin transacciones.")
-        return
-
-    weekly_aliases = {
-        "week_key": ["yearweek", "yearmonth", "week"],
-        "store": ["store", "tienda"],
-        "is_delivery": ["is delivery", "delivery"],
-        "platform": ["delivery channel", "platform", "canal"],
-        "tx": ["transactions", "tx", "transacciones"],
-    }
-    monthly_aliases = {
-        "month_key": ["calmonth", "yearmonth", "month"],
-        "store": ["store", "tienda"],
-        "is_delivery": ["is delivery", "delivery"],
-        "platform": ["delivery channel", "platform", "canal"],
-        "tx": ["transactions", "tx", "transacciones"],
-    }
-
-    weekly_business_tx: Dict[str, float] = defaultdict(float)
-    weekly_store_tx: Dict[Tuple[str, str], float] = defaultdict(float)
-    weekly_delivery_business_tx: Dict[str, float] = defaultdict(float)
-    weekly_delivery_store_platform_tx: Dict[Tuple[str, str, str], float] = defaultdict(float)
-
-    monthly_business_tx: Dict[str, float] = defaultdict(float)
-    monthly_store_tx: Dict[Tuple[str, str], float] = defaultdict(float)
-    monthly_delivery_business_tx: Dict[str, float] = defaultdict(float)
-    monthly_delivery_store_platform_tx: Dict[Tuple[str, str, str], float] = defaultdict(float)
-
-    if weekly_sheet:
-        col_map = reader.resolve_columns(weekly_sheet, weekly_aliases)
-        if all(k in col_map for k in ["week_key", "store", "tx"]):
-            for row in reader.iter_rows(weekly_sheet, col_map):
-                week_key = nonempty_str(row.get("week_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                platform = nonempty_str(row.get("platform")) if row.get("platform") else None
-                is_delivery = safe_bool(row.get("is_delivery")) or bool(platform)
-                tx = safe_float(row.get("tx"))
-                if week_key:
-                    weekly_business_tx[week_key] += tx
-                    weekly_store_tx[(week_key, store)] += tx
-                    if is_delivery and platform:
-                        weekly_delivery_business_tx[week_key] += tx
-                        weekly_delivery_store_platform_tx[(week_key, store, platform)] += tx
-        else:
-            ctx.warn(f"Hoja {weekly_sheet}: faltan columnas para TX semanal.")
-
-    if monthly_sheet:
-        col_map = reader.resolve_columns(monthly_sheet, monthly_aliases)
-        if all(k in col_map for k in ["month_key", "store", "tx"]):
-            for row in reader.iter_rows(monthly_sheet, col_map):
-                month_key = nonempty_str(row.get("month_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                platform = nonempty_str(row.get("platform")) if row.get("platform") else None
-                is_delivery = safe_bool(row.get("is_delivery")) or bool(platform)
-                tx = safe_float(row.get("tx"))
-                if month_key:
-                    monthly_business_tx[month_key] += tx
-                    monthly_store_tx[(month_key, store)] += tx
-                    if is_delivery and platform:
-                        monthly_delivery_business_tx[month_key] += tx
-                        monthly_delivery_store_platform_tx[(month_key, store, platform)] += tx
-        else:
-            ctx.warn(f"Hoja {monthly_sheet}: faltan columnas para TX mensual.")
-
-    def merge_tx(records: List[Dict[str, Any]], period_field: str, tx_map: Dict[Any, float], key_fields: Sequence[str]) -> List[Dict[str, Any]]:
-        for rec in records:
-            key = tuple(rec.get(f) for f in [period_field, *key_fields])
-            if len(key) == 1:
-                key = key[0]
-            rec["tx"] = safe_float(tx_map.get(key, 0.0))
-        return records
-
-    sales_outputs = results.get("sales_outputs", {})
-    delivery_outputs = results.get("delivery_outputs", {})
-
-    sales_outputs["monthly_business"] = enrich_sales_common(merge_tx(sales_outputs.get("monthly_business", []), "month_key", monthly_business_tx, []))
-    sales_outputs["weekly_business"] = enrich_sales_common(merge_tx(sales_outputs.get("weekly_business", []), "week_key", weekly_business_tx, []))
-    sales_outputs["monthly_store"] = enrich_sales_common(merge_tx(sales_outputs.get("monthly_store", []), "month_key", monthly_store_tx, ["store"]))
-    sales_outputs["weekly_store"] = enrich_sales_common(merge_tx(sales_outputs.get("weekly_store", []), "week_key", weekly_store_tx, ["store"]))
-
-    delivery_outputs["monthly_business"] = enrich_sales_common(merge_tx(delivery_outputs.get("monthly_business", []), "month_key", monthly_delivery_business_tx, []))
-    delivery_outputs["weekly_business"] = enrich_sales_common(merge_tx(delivery_outputs.get("weekly_business", []), "week_key", weekly_delivery_business_tx, []))
-    delivery_outputs["monthly_store_platform"] = enrich_sales_common(merge_tx(delivery_outputs.get("monthly_store_platform", []), "month_key", monthly_delivery_store_platform_tx, ["store", "platform"]))
-    delivery_outputs["weekly_store_platform"] = enrich_sales_common(merge_tx(delivery_outputs.get("weekly_store_platform", []), "week_key", weekly_delivery_store_platform_tx, ["store", "platform"]))
-
-    # Add tx deltas after tx merge for required files
-    for key, period_field, group_fields, period_type in [
-        ("monthly_business", "month_key", [], "month"),
-        ("weekly_business", "week_key", [], "week"),
-        ("monthly_store", "month_key", ["store"], "month"),
-        ("weekly_store", "week_key", ["store"], "week"),
-    ]:
-        if key in sales_outputs:
-            apply_period_comparison(sales_outputs[key], period_field, group_fields, ["tx"], period_type)
-            enrich_sales_common(sales_outputs[key])
-    for key, period_field, group_fields, period_type in [
-        ("monthly_business", "month_key", [], "month"),
-        ("weekly_business", "week_key", [], "week"),
-        ("monthly_store_platform", "month_key", ["store", "platform"], "month"),
-        ("weekly_store_platform", "week_key", ["store", "platform"], "week"),
-    ]:
-        if key in delivery_outputs:
-            apply_period_comparison(delivery_outputs[key], period_field, group_fields, ["tx"], period_type)
-            enrich_sales_common(delivery_outputs[key])
-
-
-def process_inventory(ctx: ExportContext, reader: WorkbookReader, results: Dict[str, Any]) -> Dict[str, Any]:
-    Logger.info("Procesando inventario...")
-    sheet = reader.find_sheet("Inventario_Detail")
-    if not sheet:
-        ctx.warn("No se encontró hoja Inventario_Detail. Se omite módulo inventario.")
-        return {}
-
-    alias_map = {
-        "store": ["store", "tienda"],
-        "department": ["department", "departamento"],
-        "supplier": ["supplier", "proveedor"],
-        "category": ["category", "categoria", "categoría"],
-        "brand": ["brand", "marca"],
-        "description": ["description", "descripcion", "descripción"],
-        "cogs": ["cogs", "costo"],
-        "amount": ["amount", "monto", "inventario $"],
-        "quantity": ["quantity", "qty", "stock units", "cantidad"],
-        "doi": ["dias inv", "días inv", "doi", "dias inventario"],
-        "planimetria": ["planimetria", "planimetría"],
-        "qty_sold_s4": ["qty sold s4", "qty s4"],
-        "sales_s4": ["sales s4", "venta s4"],
-        "unit_cost": ["costo unitario inv", "unit cost"],
-        "ideal_qty": ["idealqty", "ideal qty"],
-        "target_qty": ["targetqty", "target qty"],
-        "ideal_amount": ["inv ideal $", "inv ideal", "ideal amount"],
-        "ideal_doi": ["dias inv ideal", "días inv ideal", "ideal doi"],
-    }
-    col_map = reader.resolve_columns(sheet, alias_map)
-    critical = ["store", "department", "supplier", "category", "brand", "description", "amount", "quantity", "doi"]
-    missing = [c for c in critical if c not in col_map]
-    if missing:
-        ctx.warn(f"Hoja {sheet}: faltan columnas críticas para inventario: {missing}. Se omite módulo.")
-        return {}
-
-    snapshot: List[Dict[str, Any]] = []
-    doi_rows: List[Dict[str, Any]] = []
-    shortage_rows: List[Dict[str, Any]] = []
-    excess_rows: List[Dict[str, Any]] = []
-    transfer_pool: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-
-    for row in reader.iter_rows(sheet, col_map):
-        store = nonempty_str(row.get("store"), "UNKNOWN")
-        department = nonempty_str(row.get("department"), "Sin departamento")
-        supplier = nonempty_str(row.get("supplier"), "Sin proveedor")
-        category = nonempty_str(row.get("category"), "Sin categoría")
-        brand = nonempty_str(row.get("brand"), "Sin marca")
-        description = nonempty_str(row.get("description"), "Sin descripción")
-        stock_units = safe_float(row.get("quantity"))
-        inventory_amount = safe_float(row.get("amount"))
-        cogs = safe_float(row.get("cogs"))
-        doi = safe_float(row.get("doi"))
-        planimetria = safe_float(row.get("planimetria"))
-        qty_sold_s4 = safe_float(row.get("qty_sold_s4"))
-        sales_s4 = safe_float(row.get("sales_s4"))
-        unit_cost = safe_float(row.get("unit_cost"))
-        ideal_qty = safe_float(row.get("ideal_qty"))
-        target_qty = safe_float(row.get("target_qty")) or ideal_qty or planimetria
-        ideal_amount = safe_float(row.get("ideal_amount"))
-        ideal_doi = safe_float(row.get("ideal_doi"))
-        avg_daily_qty = safe_div(qty_sold_s4, 28.0)
-        shortage_units = max(target_qty - stock_units, 0.0)
-        excess_units = max(stock_units - target_qty, 0.0)
-
-        base = {
-            "store": store,
-            "store_name": store,
-            "department": department,
-            "category": category,
-            "brand": brand,
-            "description": description,
-            "supplier": supplier,
-            "stock_units": stock_units,
-            "qty": stock_units,
-            "inventory_amount": inventory_amount,
-            "cogs": cogs,
-            "doi": doi,
-            "planimetria": planimetria,
-            "qty_sold_s4": qty_sold_s4,
-            "sales_s4": sales_s4,
-            "avg_daily_qty_s4": avg_daily_qty,
-            "unit_cost": unit_cost,
-            "ideal_qty": ideal_qty,
-            "target_qty": target_qty,
-            "inventory_ideal_amount": ideal_amount,
-            "doi_ideal": ideal_doi,
-        }
-        snapshot.append(base)
-        doi_rows.append({**base, "priority": "inventory", "severity": "high" if doi >= 28 or doi <= 7 else "medium" if doi >= 21 or doi <= 10 else "low"})
-
-        if (stock_units <= 0 and avg_daily_qty > 0) or (doi > 0 and doi < 7) or shortage_units >= max(1.0, target_qty * 0.35):
-            severity = "high" if stock_units <= 0 or doi < 4 or shortage_units >= max(2.0, target_qty * 0.6) else "medium"
-            shortage_rows.append(
-                {
-                    **base,
-                    "shortage_units": shortage_units,
-                    "share": safe_div(shortage_units, target_qty),
-                    "priority": "shortage",
-                    "severity": severity,
-                }
-            )
-
-        if doi >= 28 or excess_units >= max(1.0, target_qty * 0.5):
-            severity = "high" if doi >= 42 or excess_units >= max(3.0, target_qty) else "medium"
-            excess_rows.append(
-                {
-                    **base,
-                    "excess_units": excess_units,
-                    "share": safe_div(excess_units, target_qty if target_qty else stock_units or 1),
-                    "priority": "excess",
-                    "severity": severity,
-                }
-            )
-
-        transfer_pool[description].append(
-            {
-                **base,
-                "shortage_units": shortage_units,
-                "excess_units": excess_units,
-            }
-        )
-
-    transfer_rows: List[Dict[str, Any]] = []
-    for description, items in transfer_pool.items():
-        sources = [i for i in items if i.get("excess_units", 0) > 0.9]
-        sinks = [i for i in items if i.get("shortage_units", 0) > 0.9]
-        if not sources or not sinks:
-            continue
-        sources = sorted(sources, key=lambda x: (-safe_float(x.get("excess_units")), -safe_float(x.get("doi"))))
-        sinks = sorted(sinks, key=lambda x: (-safe_float(x.get("shortage_units")), safe_float(x.get("doi"))))
-        remaining_sources = [{**s} for s in sources]
-        for sink in sinks:
-            need = safe_float(sink.get("shortage_units"))
-            if need <= 0:
-                continue
-            for source in remaining_sources:
-                if source["store"] == sink["store"]:
-                    continue
-                available = safe_float(source.get("excess_units"))
-                if available <= 0:
-                    continue
-                move_units = min(available, need)
-                if move_units <= 0:
-                    continue
-                transfer_rows.append(
-                    {
-                        "description": description,
-                        "brand": sink.get("brand"),
-                        "category": sink.get("category"),
-                        "supplier": sink.get("supplier"),
-                        "from_store": source.get("store"),
-                        "to_store": sink.get("store"),
-                        "transfer_units": move_units,
-                        "from_doi": source.get("doi"),
-                        "to_doi": sink.get("doi"),
-                        "target_qty_to": sink.get("target_qty"),
-                        "stock_units_from": source.get("stock_units"),
-                        "stock_units_to": sink.get("stock_units"),
-                        "severity": "high" if move_units >= 3 else "medium",
-                        "priority": "transfer",
-                    }
-                )
-                source["excess_units"] = available - move_units
-                need -= move_units
-                if need <= 0:
-                    break
-
-    return {
-        "store_sku_snapshot": sort_records(snapshot, ["store", "department", "category", "brand", "description"]),
-        "doi_store_sku": sort_records(doi_rows, ["store", "description"]),
-        "shortage_alerts": sort_records(shortage_rows, ["severity", "store", "description"]),
-        "excess_alerts": sort_records(excess_rows, ["severity", "store", "description"]),
-        "transfer_candidates": sort_records(transfer_rows, ["to_store", "from_store", "description"]),
-    }
-
-
-def process_merma(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando merma...")
-    store_sheet = reader.find_sheet("Merma_StoreMonth")
-    detail_sheet = reader.find_sheet("Merma_Detail")
-    supplier_sheet = reader.find_sheet("Merma_SupplierMonth")
-
-    outputs: Dict[str, Any] = {
-        "monthly_business": [],
-        "monthly_store": [],
-        "detail_store_description": [],
-        "detail_supplier": [],
-    }
-
-    if store_sheet:
-        alias_map = {
-            "store": ["store", "tienda"],
-            "month_key": ["calmonth", "month", "mes"],
-            "shrink_total": ["merma total", "merma"],
-            "shrink_neg": ["merma neg", "negative shrink"],
-            "sales": ["total sales", "sales", "ventas"],
-            "shrink_pct_neg": ["% merma neg", "shrink pct neg"],
-            "shrink_pct": ["% merma total", "shrink pct total"],
-        }
-        col_map = reader.resolve_columns(store_sheet, alias_map)
-        month_business: Dict[str, Dict[str, float]] = defaultdict(metric_bucket_factory)
-        monthly_store_rows: List[Dict[str, Any]] = []
-        if all(k in col_map for k in ["store", "month_key", "shrink_total", "shrink_neg", "sales"]):
-            for row in reader.iter_rows(store_sheet, col_map):
-                month_key = nonempty_str(row.get("month_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                shrink_total = safe_float(row.get("shrink_total"))
-                shrink_neg = safe_float(row.get("shrink_neg"))
-                sales = safe_float(row.get("sales"))
-                month_business[month_key]["shrink_amount"] += shrink_total
-                month_business[month_key]["shrink_amount_neg"] += shrink_neg
-                month_business[month_key]["sales"] += sales
-                monthly_store_rows.append(
-                    {
-                        "month_key": month_key,
-                        "store": store,
-                        "store_name": store,
-                        "shrink_amount": shrink_total,
-                        "shrink_amount_neg": shrink_neg,
-                        "sales": sales,
-                        "shrink_pct": safe_div(shrink_total, sales),
-                        "shrink_pct_neg": safe_div(shrink_neg, sales),
-                    }
-                )
-            outputs["monthly_store"] = sort_records(monthly_store_rows, ["month_key", "store"])
-            outputs["monthly_business"] = sort_records(
-                [
-                    {
-                        "month_key": month_key,
-                        "shrink_amount": vals.get("shrink_amount", 0.0),
-                        "shrink_amount_neg": vals.get("shrink_amount_neg", 0.0),
-                        "sales": vals.get("sales", 0.0),
-                        "shrink_pct": safe_div(vals.get("shrink_amount", 0.0), vals.get("sales", 0.0)),
-                        "shrink_pct_neg": safe_div(vals.get("shrink_amount_neg", 0.0), vals.get("sales", 0.0)),
-                    }
-                    for month_key, vals in month_business.items()
-                ],
-                ["month_key"],
-            )
-        else:
-            ctx.warn(f"Hoja {store_sheet}: faltan columnas para merma mensual por tienda.")
-    else:
-        ctx.warn("No se encontró hoja Merma_StoreMonth.")
-
-    if detail_sheet:
-        alias_map = {
-            "store": ["store", "tienda"],
-            "month_key": ["calmonth", "month", "mes"],
-            "supplier": ["supplier", "proveedor"],
-            "category": ["category", "categoria"],
-            "brand": ["brand", "marca"],
-            "description": ["description", "descripcion"],
-            "sales": ["total sales", "sales"],
-            "shrink_amount": ["merma", "shrink"],
-            "qty": ["quantity packs", "quantity (packs)", "qty"],
-        }
-        col_map = reader.resolve_columns(detail_sheet, alias_map)
-        if all(k in col_map for k in ["store", "month_key", "description", "sales", "shrink_amount"]):
-            detail_rows: List[Dict[str, Any]] = []
-            for row in reader.iter_rows(detail_sheet, col_map):
-                sales = safe_float(row.get("sales"))
-                shrink_amount = safe_float(row.get("shrink_amount"))
-                detail_rows.append(
-                    {
-                        "month_key": nonempty_str(row.get("month_key")),
-                        "store": nonempty_str(row.get("store"), "UNKNOWN"),
-                        "store_name": nonempty_str(row.get("store"), "UNKNOWN"),
-                        "supplier": nonempty_str(row.get("supplier"), "Sin proveedor"),
-                        "category": nonempty_str(row.get("category"), "Sin categoría"),
-                        "brand": nonempty_str(row.get("brand"), "Sin marca"),
-                        "description": nonempty_str(row.get("description"), "Sin descripción"),
-                        "sales": sales,
-                        "shrink_amount": shrink_amount,
-                        "shrink_pct": safe_div(shrink_amount, sales),
-                        "qty": safe_float(row.get("qty")),
-                    }
-                )
-            outputs["detail_store_description"] = sort_records(detail_rows, ["month_key", "store", "description"])
-        else:
-            ctx.warn(f"Hoja {detail_sheet}: faltan columnas para merma detalle.")
-    else:
-        ctx.warn("No se encontró hoja Merma_Detail.")
-
-    if supplier_sheet:
-        alias_map = {
-            "store": ["store", "tienda"],
-            "month_key": ["calmonth", "month", "mes"],
-            "supplier": ["supplier", "proveedor"],
-            "sales": ["total sales", "sales"],
-            "shrink_amount": ["merma", "shrink"],
-            "shrink_neg": ["mermaneg", "merma neg", "negative shrink"],
-            "shrink_pct": ["% merma total", "shrink pct total"],
-            "shrink_pct_neg": ["% merma neg", "shrink pct neg"],
-        }
-        col_map = reader.resolve_columns(supplier_sheet, alias_map)
-        if all(k in col_map for k in ["month_key", "supplier", "sales", "shrink_amount"]):
-            agg: Dict[Tuple[str, str], Dict[str, Any]] = defaultdict(dict)
-            for row in reader.iter_rows(supplier_sheet, col_map):
-                month_key = nonempty_str(row.get("month_key"))
-                supplier = nonempty_str(row.get("supplier"), "Sin proveedor")
-                key = (month_key, supplier)
-                bucket = agg.get(key) or {
-                    "month_key": month_key,
-                    "supplier": supplier,
-                    "sales": 0.0,
-                    "shrink_amount": 0.0,
-                    "shrink_amount_neg": 0.0,
-                    "stores": set(),
-                }
-                bucket["sales"] += safe_float(row.get("sales"))
-                bucket["shrink_amount"] += safe_float(row.get("shrink_amount"))
-                bucket["shrink_amount_neg"] += safe_float(row.get("shrink_neg"))
-                bucket["stores"].add(nonempty_str(row.get("store"), "UNKNOWN"))
-                agg[key] = bucket
-            outputs["detail_supplier"] = sort_records(
-                [
-                    {
-                        "month_key": v["month_key"],
-                        "supplier": v["supplier"],
-                        "store_count": len(v["stores"]),
-                        "sales": v["sales"],
-                        "shrink_amount": v["shrink_amount"],
-                        "shrink_amount_neg": v["shrink_amount_neg"],
-                        "shrink_pct": safe_div(v["shrink_amount"], v["sales"]),
-                        "shrink_pct_neg": safe_div(v["shrink_amount_neg"], v["sales"]),
-                    }
-                    for v in agg.values()
-                ],
-                ["month_key", "supplier"],
-            )
-        else:
-            ctx.warn(f"Hoja {supplier_sheet}: faltan columnas para merma por proveedor.")
-    else:
-        ctx.warn("No se encontró hoja Merma_SupplierMonth.")
-
-    return outputs
-
-
-def process_sbf(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando SBF...")
-    weekly_sheet = reader.find_sheet("Cubo_SBF_Fact")
-    monthly_sheet = reader.find_sheet("Chart_SBF_Month_XF")
-
-    outputs = {
-        "monthly_business": [],
-        "weekly_business": [],
-        "monthly_service_store": [],
-        "weekly_service_store": [],
-    }
-
-    if weekly_sheet:
-        alias_map = {
-            "week_key": ["yearweek", "yearmonth", "week"],
-            "store": ["store", "tienda"],
-            "service": ["provider", "service", "servicio"],
-            "hour": ["hour", "hora"],
-            "tx": ["transactions", "tx", "transacciones"],
-        }
-        col_map = reader.resolve_columns(weekly_sheet, alias_map)
-        if all(k in col_map for k in ["week_key", "store", "service", "tx"]):
-            wbiz: Dict[str, float] = defaultdict(float)
-            wsvc: Dict[Tuple[str, str, str], float] = defaultdict(float)
-            for row in reader.iter_rows(weekly_sheet, col_map):
-                week_key = nonempty_str(row.get("week_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                service = nonempty_str(row.get("service"), "Sin servicio")
-                tx = safe_float(row.get("tx"))
-                wbiz[week_key] += tx
-                wsvc[(week_key, service, store)] += tx
-            outputs["weekly_business"] = sort_records(
-                apply_period_comparison(
-                    [{"week_key": k, "tx": v} for k, v in wbiz.items()],
-                    "week_key",
-                    [],
-                    ["tx"],
-                    "week",
-                ),
-                ["week_key"],
-            )
-            outputs["weekly_service_store"] = sort_records(
-                apply_period_comparison(
-                    [{"week_key": k[0], "service": k[1], "store": k[2], "store_name": k[2], "tx": v} for k, v in wsvc.items()],
-                    "week_key",
-                    ["service", "store"],
-                    ["tx"],
-                    "week",
-                ),
-                ["week_key", "service", "store"],
-            )
-        else:
-            ctx.warn(f"Hoja {weekly_sheet}: faltan columnas para SBF semanal.")
-    else:
-        ctx.warn("No se encontró hoja Cubo_SBF_Fact.")
-
-    if monthly_sheet:
-        alias_map = {
-            "month_key": ["calmonth", "month", "mes"],
-            "store": ["store", "tienda"],
-            "service": ["provider", "service", "servicio"],
-            "tx": ["tx", "transactions", "transacciones"],
-        }
-        col_map = reader.resolve_columns(monthly_sheet, alias_map)
-        if all(k in col_map for k in ["month_key", "store", "service", "tx"]):
-            mbiz: Dict[str, float] = defaultdict(float)
-            msvc: Dict[Tuple[str, str, str], float] = defaultdict(float)
-            for row in reader.iter_rows(monthly_sheet, col_map):
-                month_key = nonempty_str(row.get("month_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                service = nonempty_str(row.get("service"), "Sin servicio")
-                tx = safe_float(row.get("tx"))
-                mbiz[month_key] += tx
-                msvc[(month_key, service, store)] += tx
-            outputs["monthly_business"] = sort_records(
-                apply_period_comparison(
-                    [{"month_key": k, "tx": v} for k, v in mbiz.items()],
-                    "month_key",
-                    [],
-                    ["tx"],
-                    "month",
-                ),
-                ["month_key"],
-            )
-            outputs["monthly_service_store"] = sort_records(
-                apply_period_comparison(
-                    [{"month_key": k[0], "service": k[1], "store": k[2], "store_name": k[2], "tx": v} for k, v in msvc.items()],
-                    "month_key",
-                    ["service", "store"],
-                    ["tx"],
-                    "month",
-                ),
-                ["month_key", "service", "store"],
-            )
-        else:
-            ctx.warn(f"Hoja {monthly_sheet}: faltan columnas para SBF mensual.")
-    else:
-        ctx.warn("No se encontró hoja Chart_SBF_Month_XF.")
-
-    return outputs
-
-
-def process_cxc(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando CXC...")
-    sheet = reader.find_sheet("CXC_DETAIL")
-    if not sheet:
-        ctx.warn("No se encontró hoja CXC_DETAIL. Se omite módulo CXC.")
-        return {"summary": [], "detail": []}
-
-    alias_map = {
-        "store": ["store", "tienda"],
-        "batch": ["batchnumber", "batch", "lote"],
-        "time": ["time", "hora", "datetime"],
-        "week_key": ["yearmonth", "yearweek", "week"],
-        "week_num": ["yearweek", "weeknum", "semana"],
-        "month_key": ["month", "calmonth", "mes"],
-        "comment": ["comment", "comentario"],
-        "cashier": ["cashier", "cajero"],
-        "pos": ["pos"],
-        "id": ["id", "reference", "referencia"],
-        "amount": ["amount", "monto"],
-    }
-    col_map = reader.resolve_columns(sheet, alias_map)
-    critical = ["store", "month_key", "amount"]
-    missing = [c for c in critical if c not in col_map]
-    if missing:
-        ctx.warn(f"Hoja {sheet}: faltan columnas críticas para CXC: {missing}.")
-        return {"summary": [], "detail": []}
-
-    detail: List[Dict[str, Any]] = []
-    summary_agg: Dict[Tuple[str, str], Dict[str, Any]] = defaultdict(dict)
-    for row in reader.iter_rows(sheet, col_map):
-        store = nonempty_str(row.get("store"), "UNKNOWN")
-        month_key = nonempty_str(row.get("month_key"))
-        week_key = nonempty_str(row.get("week_key"))
-        amount = safe_float(row.get("amount"))
-        rec = {
-            "store": store,
-            "store_name": store,
-            "batch_number": nonempty_str(row.get("batch")),
-            "time": row.get("time").isoformat() if isinstance(row.get("time"), (datetime, date)) else nonempty_str(row.get("time")),
-            "month_key": month_key,
-            "week_key": week_key,
-            "comment": nonempty_str(row.get("comment")),
-            "cashier": nonempty_str(row.get("cashier")),
-            "pos": nonempty_str(row.get("pos")),
-            "reference_id": nonempty_str(row.get("id")),
-            "amount": amount,
-        }
-        detail.append(rec)
-        skey = (store, month_key)
-        bucket = summary_agg.get(skey) or {
-            "store": store,
-            "store_name": store,
-            "month_key": month_key,
-            "entry_count": 0,
-            "amount": 0.0,
-            "positive_amount": 0.0,
-            "negative_amount": 0.0,
-        }
-        bucket["entry_count"] += 1
-        bucket["amount"] += amount
-        if amount >= 0:
-            bucket["positive_amount"] += amount
-        else:
-            bucket["negative_amount"] += amount
-        summary_agg[skey] = bucket
-
-    summary = sort_records(list(summary_agg.values()), ["month_key", "store"])
-    return {"summary": summary, "detail": sort_records(detail, ["month_key", "store", "time"])}
-
-
-def process_prd0(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando PRD en cero...")
-    detail_sheet = reader.find_sheet("PRD_CERO_DETAIL")
-    if not detail_sheet:
-        ctx.warn("No se encontró hoja PRD_CERO_DETAIL. Se omite módulo PRD en cero.")
-        return {"supplier_summary": [], "supplier_detail": []}
-
-    alias_map = {
-        "store": ["store", "tienda"],
-        "supplier": ["supplier", "proveedor"],
-        "description": ["description", "descripcion"],
-        "department": ["department", "departamento"],
-        "category": ["category", "categoria"],
-        "brand": ["brand", "marca"],
-        "lookup_code": ["lookup code", "codigo", "sku"],
-        "quantity": ["quantity", "qty"],
-        "rop": ["rop"],
-        "inactive_purchase": ["inactive compra", "inactive purchase"],
-        "qty_sold_s4": ["qty sold s4", "qty s4"],
-        "sales_s4": ["sales s4", "ventas s4"],
-        "avg_daily_qty_s4": ["avg daily qty s4", "average daily qty s4"],
-        "avg_daily_sales_s4": ["avg daily sales s4", "average daily sales s4"],
-        "lost_units_3d": ["lost units 3d", "unidades perdidas 3d"],
-        "lost_sales_3d": ["lost sales 3d", "ventas perdidas 3d"],
-    }
-    col_map = reader.resolve_columns(detail_sheet, alias_map)
-    critical = ["store", "supplier", "description"]
-    missing = [c for c in critical if c not in col_map]
-    if missing:
-        ctx.warn(f"Hoja {detail_sheet}: faltan columnas críticas para PRD en cero: {missing}")
-        return {"supplier_summary": [], "supplier_detail": []}
-
-    details: List[Dict[str, Any]] = []
-    summary_agg: Dict[str, Dict[str, Any]] = defaultdict(dict)
-    for row in reader.iter_rows(detail_sheet, col_map):
-        supplier = nonempty_str(row.get("supplier"), "Sin proveedor")
-        store = nonempty_str(row.get("store"), "UNKNOWN")
-        quantity = safe_float(row.get("quantity"))
-        rop = safe_float(row.get("rop"))
-        lost_sales_3d = safe_float(row.get("lost_sales_3d"))
-        rec = {
-            "store": store,
-            "store_name": store,
-            "supplier": supplier,
-            "department": nonempty_str(row.get("department"), "Sin departamento"),
-            "category": nonempty_str(row.get("category"), "Sin categoría"),
-            "brand": nonempty_str(row.get("brand"), "Sin marca"),
-            "description": nonempty_str(row.get("description"), "Sin descripción"),
-            "lookup_code": nonempty_str(row.get("lookup_code")),
-            "stock_units": quantity,
-            "rop": rop,
-            "inactive_purchase": nonempty_str(row.get("inactive_purchase")),
-            "qty_sold_s4": safe_float(row.get("qty_sold_s4")),
-            "sales_s4": safe_float(row.get("sales_s4")),
-            "avg_daily_qty_s4": safe_float(row.get("avg_daily_qty_s4")),
-            "avg_daily_sales_s4": safe_float(row.get("avg_daily_sales_s4")),
-            "lost_units_3d": safe_float(row.get("lost_units_3d")),
-            "lost_sales_3d": lost_sales_3d,
-            "priority": "high" if lost_sales_3d >= 5 else "medium" if lost_sales_3d > 0 else "low",
-        }
-        details.append(rec)
-        bucket = summary_agg.get(supplier) or {
-            "supplier": supplier,
-            "item_count": 0,
-            "store_count": set(),
-            "qty_zero_count": 0,
-            "lost_sales_3d": 0.0,
-            "sales_s4": 0.0,
-        }
-        bucket["item_count"] += 1
-        if quantity <= 0:
-            bucket["qty_zero_count"] += 1
-        bucket["store_count"].add(store)
-        bucket["lost_sales_3d"] += lost_sales_3d
-        bucket["sales_s4"] += safe_float(row.get("sales_s4"))
-        summary_agg[supplier] = bucket
-
-    summary = []
-    for supplier, v in summary_agg.items():
-        summary.append(
-            {
-                "supplier": supplier,
-                "item_count": v["item_count"],
-                "store_count": len(v["store_count"]),
-                "qty_zero_count": v["qty_zero_count"],
-                "lost_sales_3d": v["lost_sales_3d"],
-                "sales_s4": v["sales_s4"],
-                "priority": "high" if v["lost_sales_3d"] >= 20 else "medium" if v["lost_sales_3d"] >= 5 else "low",
-            }
-        )
-
-    return {
-        "supplier_summary": sort_records(summary, ["priority", "supplier"]),
-        "supplier_detail": sort_records(details, ["supplier", "store", "description"]),
-    }
-
-
-def process_innovation(ctx: ExportContext, reader: WorkbookReader) -> Dict[str, Any]:
-    Logger.info("Procesando innovation...")
-    agg_sheet = reader.find_sheet("Innovation_Combos_Agg")
-    detail_sheet = reader.find_sheet("Innovation_Combos_Detail")
-    outputs = {
-        "monthly_summary": [],
-        "weekly_summary": [],
-        "by_hour": [],
-        "by_dow": [],
-        "by_store": [],
-    }
-
-    if agg_sheet:
-        alias_map = {
-            "period_type": ["periodtype", "period type"],
-            "period_key": ["periodkey", "period key", "month", "week"],
-            "store": ["store", "tienda"],
-            "combo_key": ["combokey", "combo key"],
-            "combo_label": ["combolabel", "combo label"],
-            "combo_short": ["comboshortlabel", "combo short label"],
-            "qty": ["qty sold", "qty"],
-            "sales": ["sales", "ventas"],
-        }
-        col_map = reader.resolve_columns(agg_sheet, alias_map)
-        if all(k in col_map for k in ["period_type", "period_key", "store", "combo_label", "qty", "sales"]):
-            monthly, weekly, store_agg = [], [], defaultdict(lambda: {"sales": 0.0, "qty": 0.0})
-            for row in reader.iter_rows(agg_sheet, col_map):
-                period_type = normalize_text(row.get("period_type"))
-                period_key = nonempty_str(row.get("period_key"))
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                combo_key = nonempty_str(row.get("combo_key"), nonempty_str(row.get("combo_label"), "combo"))
-                combo_label = nonempty_str(row.get("combo_label"), "Sin combo")
-                combo_short = nonempty_str(row.get("combo_short"), combo_label)
-                qty = safe_float(row.get("qty"))
-                sales = safe_float(row.get("sales"))
-                rec = {
-                    "period_key": period_key,
-                    "store": store,
-                    "store_name": store,
-                    "combo_key": combo_key,
-                    "combo_label": combo_label,
-                    "combo_short_label": combo_short,
-                    "qty": qty,
-                    "sales": sales,
-                }
-                store_agg[(period_type, period_key, store)]["sales"] += sales
-                store_agg[(period_type, period_key, store)]["qty"] += qty
-                if period_type == "month":
-                    monthly.append({"month_key": period_key, **rec})
-                elif period_type == "week":
-                    weekly.append({"week_key": period_key, **rec})
-            outputs["monthly_summary"] = sort_records(monthly, ["month_key", "store", "combo_label"])
-            outputs["weekly_summary"] = sort_records(weekly, ["week_key", "store", "combo_label"])
-            outputs["by_store"] = sort_records(
-                [
-                    {
-                        "period_type": ptype,
-                        "period_key": pkey,
-                        "store": store,
-                        "store_name": store,
-                        "sales": vals["sales"],
-                        "qty": vals["qty"],
-                    }
-                    for (ptype, pkey, store), vals in store_agg.items()
-                ],
-                ["period_type", "period_key", "store"],
-            )
-        else:
-            ctx.warn(f"Hoja {agg_sheet}: faltan columnas para innovation aggregate.")
-    else:
-        ctx.warn("No se encontró hoja Innovation_Combos_Agg.")
-
-    if detail_sheet:
-        alias_map = {
-            "week_key": ["yearweek", "week"],
-            "month_key": ["calmonth", "month", "mes"],
-            "store": ["store", "tienda"],
-            "combo_key": ["combokey", "combo key"],
-            "combo_label": ["combolabel", "combo label"],
-            "combo_short": ["comboshortlabel", "combo short label"],
-            "dow": ["dow", "dayofweek", "dia"],
-            "dow_name": ["dow name", "dow_name", "weekday"],
-            "qty": ["qty sold", "qty"],
-            "sales": ["sales", "ventas"],
-        }
-        col_map = reader.resolve_columns(detail_sheet, alias_map)
-        if all(k in col_map for k in ["store", "combo_label", "sales"]):
-            by_dow: Dict[Tuple[str, str, str, str, int], Dict[str, Any]] = defaultdict(dict)
-            for row in reader.iter_rows(detail_sheet, col_map):
-                store = nonempty_str(row.get("store"), "UNKNOWN")
-                combo_key = nonempty_str(row.get("combo_key"), nonempty_str(row.get("combo_label"), "combo"))
-                combo_label = nonempty_str(row.get("combo_label"), "Sin combo")
-                combo_short = nonempty_str(row.get("combo_short"), combo_label)
-                dow = safe_int(row.get("dow"), 0)
-                dow_name = nonempty_str(row.get("dow_name"), f"DOW {dow}")
-                dow_group = make_dow_group(dow_name, dow)
-                qty = safe_float(row.get("qty"))
-                sales = safe_float(row.get("sales"))
-                month_key = nonempty_str(row.get("month_key"))
-                week_key = nonempty_str(row.get("week_key"))
-                if month_key:
-                    key = ("month", month_key, store, combo_key, dow)
-                    bucket = by_dow.get(key) or {
-                        "period_type": "month",
-                        "period_key": month_key,
-                        "store": store,
-                        "store_name": store,
-                        "combo_key": combo_key,
-                        "combo_label": combo_label,
-                        "combo_short_label": combo_short,
-                        "dow": dow,
-                        "dow_name": dow_name,
-                        "dow_group": dow_group,
-                        "qty": 0.0,
-                        "sales": 0.0,
-                    }
-                    bucket["qty"] += qty
-                    bucket["sales"] += sales
-                    by_dow[key] = bucket
-                if week_key:
-                    key = ("week", week_key, store, combo_key, dow)
-                    bucket = by_dow.get(key) or {
-                        "period_type": "week",
-                        "period_key": week_key,
-                        "store": store,
-                        "store_name": store,
-                        "combo_key": combo_key,
-                        "combo_label": combo_label,
-                        "combo_short_label": combo_short,
-                        "dow": dow,
-                        "dow_name": dow_name,
-                        "dow_group": dow_group,
-                        "qty": 0.0,
-                        "sales": 0.0,
-                    }
-                    bucket["qty"] += qty
-                    bucket["sales"] += sales
-                    by_dow[key] = bucket
-            outputs["by_dow"] = sort_records(list(by_dow.values()), ["period_type", "period_key", "store", "combo_key", "dow"])
-        else:
-            ctx.warn(f"Hoja {detail_sheet}: faltan columnas para innovation by_dow.")
-    else:
-        ctx.warn("No se encontró hoja Innovation_Combos_Detail.")
-
-    ctx.warn("Innovation by_hour no pudo generarse: no se detectó columna horaria en la fuente de innovation.")
-    outputs["by_hour"] = []
-    return outputs
-
-
-# -----------------------------
-# Hallazgos signals
-# -----------------------------
-def build_sales_signals(sales_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
-    signals: List[Dict[str, Any]] = []
-    monthly_department = sales_outputs.get("monthly_department", [])
-    monthly_store = sales_outputs.get("monthly_store", [])
-    if monthly_department:
-        latest_month = max((r.get("month_key") for r in monthly_department if r.get("month_key")), default=None)
-        latest_rows = [r for r in monthly_department if r.get("month_key") == latest_month]
-        latest_rows = sorted(latest_rows, key=lambda x: safe_float(x.get("sales_delta_pct")))
-        for row in latest_rows[:12] + latest_rows[-12:]:
-            delta_pct = safe_float(row.get("sales_delta_pct"))
-            current = safe_float(row.get("sales"))
-            compare = safe_float(row.get("sales_ly"))
-            signals.append(
-                {
-                    "domain": "sales",
-                    "level": "department",
-                    "scope_key": row.get("department"),
-                    "period_key": latest_month,
-                    "metric": "sales",
-                    "current_value": current,
-                    "compare_value": compare,
-                    "delta": current - compare,
-                    "delta_pct": delta_pct,
-                    "severity": severity_from_pct(delta_pct, reverse=True),
-                    "suggested_focus": "Acelerar activaciones/combo y revisar mix" if delta_pct < 0 else "Escalar dinámica ganadora y asegurar abastecimiento",
-                }
-            )
-    if monthly_store:
-        latest_month = max((r.get("month_key") for r in monthly_store if r.get("month_key")), default=None)
-        for row in [r for r in monthly_store if r.get("month_key") == latest_month]:
-            delta_pct = safe_float(row.get("sales_delta_pct"))
-            current = safe_float(row.get("sales"))
-            compare = safe_float(row.get("sales_ly"))
-            signals.append(
-                {
-                    "domain": "sales",
-                    "level": "store",
-                    "scope_key": row.get("store"),
-                    "period_key": latest_month,
-                    "metric": "sales",
-                    "current_value": current,
-                    "compare_value": compare,
-                    "delta": current - compare,
-                    "delta_pct": delta_pct,
-                    "severity": severity_from_pct(delta_pct, reverse=True),
-                    "suggested_focus": "Profundizar revisión tienda y fricción operativa" if delta_pct < 0 else "Replicar ejecución comercial de tienda referente",
-                }
-            )
-    return sort_records(signals, ["period_key", "level", "scope_key"])
-
-
-def build_delivery_signals(delivery_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
-    signals: List[Dict[str, Any]] = []
-    rows = delivery_outputs.get("monthly_store_platform", [])
-    latest_month = max((r.get("month_key") for r in rows if r.get("month_key")), default=None)
-    latest_rows = [r for r in rows if r.get("month_key") == latest_month]
-    latest_rows = sorted(latest_rows, key=lambda x: safe_float(x.get("sales_delta_pct")))
-    for row in latest_rows[:10] + latest_rows[-10:]:
-        delta_pct = safe_float(row.get("sales_delta_pct"))
-        current = safe_float(row.get("sales"))
-        compare = safe_float(row.get("sales_ly"))
-        signals.append(
-            {
-                "domain": "delivery",
-                "level": "store_platform",
-                "scope_key": f"{row.get('store')}|{row.get('platform')}",
-                "period_key": latest_month,
-                "metric": "sales",
-                "current_value": current,
-                "compare_value": compare,
-                "delta": current - compare,
-                "delta_pct": delta_pct,
-                "severity": severity_from_pct(delta_pct, reverse=True),
-                "suggested_focus": "Revisar surtido, disponibilidad y ranking en app" if delta_pct < 0 else "Aumentar pauta y proteger fill-rate del canal",
-            }
-        )
-    return sort_records(signals, ["period_key", "scope_key"])
-
-
-def build_inventory_signals(inventory_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
-    signals: List[Dict[str, Any]] = []
-    for row in inventory_outputs.get("shortage_alerts", [])[:80]:
-        signals.append(
-            {
-                "domain": "inventory",
-                "level": "store_sku",
-                "scope_key": f"{row.get('store')}|{row.get('description')}",
-                "period_key": "snapshot",
-                "metric": "shortage_units",
-                "current_value": safe_float(row.get("stock_units")),
-                "compare_value": safe_float(row.get("target_qty")),
-                "delta": safe_float(row.get("stock_units")) - safe_float(row.get("target_qty")),
-                "delta_pct": safe_div(safe_float(row.get("stock_units")) - safe_float(row.get("target_qty")), safe_float(row.get("target_qty"))),
-                "severity": row.get("severity"),
-                "suggested_focus": "Reabastecer o transferir inventario de otra tienda",
-            }
-        )
-    for row in inventory_outputs.get("excess_alerts", [])[:80]:
-        signals.append(
-            {
-                "domain": "inventory",
-                "level": "store_sku",
-                "scope_key": f"{row.get('store')}|{row.get('description')}",
-                "period_key": "snapshot",
-                "metric": "doi",
-                "current_value": safe_float(row.get("doi")),
-                "compare_value": safe_float(row.get("doi_ideal")),
-                "delta": safe_float(row.get("doi")) - safe_float(row.get("doi_ideal")),
-                "delta_pct": safe_div(safe_float(row.get("doi")) - safe_float(row.get("doi_ideal")), safe_float(row.get("doi_ideal"))),
-                "severity": row.get("severity"),
-                "suggested_focus": "Reducir compra, promover salida o evaluar traslado",
-            }
-        )
-    return sort_records(signals, ["severity", "scope_key"])
-
-
-def build_shrink_signals(merma_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
-    signals: List[Dict[str, Any]] = []
-    rows = merma_outputs.get("detail_store_description", [])
-    if not rows:
-        return signals
-    latest_month = max((r.get("month_key") for r in rows if r.get("month_key")), default=None)
-    latest_rows = [r for r in rows if r.get("month_key") == latest_month]
-    latest_rows = sorted(latest_rows, key=lambda x: safe_float(x.get("shrink_amount")))
-    for row in latest_rows[:80]:
-        shrink_amount = safe_float(row.get("shrink_amount"))
-        signals.append(
-            {
-                "domain": "shrink",
-                "level": "store_description",
-                "scope_key": f"{row.get('store')}|{row.get('description')}",
-                "period_key": latest_month,
-                "metric": "shrink_amount",
-                "current_value": shrink_amount,
-                "compare_value": safe_float(row.get("sales")),
-                "delta": shrink_amount,
-                "delta_pct": safe_float(row.get("shrink_pct")),
-                "severity": "high" if shrink_amount <= -20 or safe_float(row.get("shrink_pct")) <= -0.03 else "medium",
-                "suggested_focus": "Auditar causa raíz, manipulación y merma operativa",
-            }
-        )
-    return sort_records(signals, ["period_key", "scope_key"])
-
-
-# -----------------------------
-# Meta builders
-# -----------------------------
-def build_calendars(months: Sequence[str], weeks: Sequence[str]) -> Dict[str, Any]:
-    return {
-        "months": [
-            {
-                "month_key": month,
-                "comparable_ly_month": ly_month_key(month),
-                "lm_month": prev_month_key(month),
-            }
-            for month in sorted(set(m for m in months if m))
-        ],
-        "weeks": [
-            {
-                "week_key": week,
-                "comparable_ly_week": ly_week_key(week),
-            }
-            for week in sorted(set(w for w in weeks if w))
-        ],
-    }
-
-
-def build_stores_json(stores: Sequence[str]) -> List[Dict[str, Any]]:
-    return [{"store": store, "store_name": store} for store in sorted(set(s for s in stores if s))]
-
-
-def merge_catalogs(*catalog_sets: Dict[str, Any]) -> Dict[str, Any]:
-    out = {
-        "departments": set(),
-        "categories": set(),
-        "brands": set(),
-        "descriptions": set(),
-        "delivery_platforms": set(),
-        "sbf_services": set(),
-        "suppliers": set(),
-    }
-    for cat in catalog_sets:
-        for key in out:
-            vals = cat.get(key, []) if isinstance(cat, dict) else []
-            out[key].update(v for v in vals if v)
-    return {k: sorted(v) for k, v in out.items()}
-
-
-def collect_sbf_services(reader: WorkbookReader) -> List[str]:
-    sheet = reader.find_sheet("Cubo_SBF_Fact") or reader.find_sheet("Chart_SBF_Month_XF")
-    if not sheet:
-        return []
-    alias_map = {"service": ["provider", "service", "servicio"]}
-    col_map = reader.resolve_columns(sheet, alias_map)
-    if "service" not in col_map:
-        return []
-    services = set()
-    for row in reader.iter_rows(sheet, col_map):
-        service = nonempty_str(row.get("service"))
-        if service:
-            services.add(service)
-    return sorted(services)
-
-
-# -----------------------------
-# Export orchestration
-# -----------------------------
-def export_empty_with_warning(ctx: ExportContext, relative_path: str, warning: str) -> None:
-    ctx.warn(warning)
-    write_json(ctx, relative_path, [])
-
-
-def main() -> int:
-    project_root = Path(__file__).resolve().parents[1]
-    source_file = project_root / SOURCE_FILENAME
-    out_root = project_root / "data_api" / "out"
-    ensure_dirs(out_root)
-    ctx = ExportContext(project_root=project_root, source_file=source_file, out_root=out_root)
-
-    Logger.info(f"Iniciando exportador maestro JSON v{VERSION_EXPORTER}")
-    Logger.info(f"Proyecto: {project_root}")
-    Logger.info(f"Fuente: {source_file}")
-
-    if not source_file.exists():
-        Logger.error(f"No se encontró el archivo fuente: {source_file}")
-        return 1
-
-    reader = WorkbookReader(source_file)
-    ctx.detected_sheets = list(reader.sheetnames)
-    Logger.info(f"Hojas detectadas: {len(ctx.detected_sheets)}")
-
-    sales_results = process_sales_and_delivery(ctx, reader)
-    merge_tx_into_sales_outputs(ctx, reader, sales_results)
-    inventory_results = process_inventory(ctx, reader, sales_results)
-    merma_results = process_merma(ctx, reader)
-    sbf_results = process_sbf(ctx, reader)
-    cxc_results = process_cxc(ctx, reader)
-    prd0_results = process_prd0(ctx, reader)
-    innovation_results = process_innovation(ctx, reader)
-
-    catalogs = merge_catalogs(
-        sales_results.get("catalogs", {}),
-        {
-            "suppliers": [r.get("supplier") for r in inventory_results.get("store_sku_snapshot", [])],
-            "descriptions": [r.get("description") for r in inventory_results.get("store_sku_snapshot", [])],
-            "brands": [r.get("brand") for r in inventory_results.get("store_sku_snapshot", [])],
-            "categories": [r.get("category") for r in inventory_results.get("store_sku_snapshot", [])],
-            "departments": [r.get("department") for r in inventory_results.get("store_sku_snapshot", [])],
-            "delivery_platforms": sales_results.get("catalogs", {}).get("delivery_platforms", []),
-            "sbf_services": collect_sbf_services(reader),
-        },
-    )
-    stores = sales_results.get("catalogs", {}).get("stores", []) or sorted({r.get("store") for r in inventory_results.get("store_sku_snapshot", []) if r.get("store")})
-    months = sales_results.get("catalogs", {}).get("months", []) or sorted({r.get("month_key") for r in merma_results.get("monthly_business", []) if r.get("month_key")})
-    weeks = sales_results.get("catalogs", {}).get("weeks", []) or sorted({r.get("week_key") for r in sbf_results.get("weekly_business", []) if r.get("week_key")})
-
-    ctx.stores_available = stores
-    ctx.months_available = months
-    ctx.weeks_available = weeks
-
-    # Meta
-    write_json(ctx, "meta/stores.json", build_stores_json(stores))
-    write_json(ctx, "meta/calendars.json", build_calendars(months, weeks))
-    write_json(ctx, "meta/catalogs.json", catalogs)
-
-    # Ventas
-    sales_outputs = sales_results.get("sales_outputs", {})
-    for name in [
-        "monthly_business",
-        "weekly_business",
-        "monthly_store",
-        "weekly_store",
-        "monthly_department",
-        "weekly_department",
-        "monthly_category",
-        "weekly_category",
-        "monthly_brand",
-        "weekly_brand",
-        "monthly_description",
-        "weekly_description",
-        "sales_by_dow",
-    ]:
-        write_json(ctx, f"ventas/{name}.json", json_ready_records(sales_outputs.get(name, [])))
-    export_empty_with_warning(ctx, "ventas/sales_by_hour.json", "Ventas por hora no pudo generarse: la fuente no incluye columna hora para ventas.")
-
-    # Delivery
-    delivery_outputs = sales_results.get("delivery_outputs", {})
-    for name in [
-        "monthly_business",
-        "weekly_business",
-        "monthly_store_platform",
-        "weekly_store_platform",
-        "monthly_category",
-        "weekly_category",
-        "delivery_by_dow",
-    ]:
-        write_json(ctx, f"delivery/{name}.json", json_ready_records(delivery_outputs.get(name, [])))
-    export_empty_with_warning(ctx, "delivery/delivery_by_hour.json", "Delivery por hora no pudo generarse: la fuente no incluye columna hora para delivery sales.")
-
-    # Inventario
-    for name in ["store_sku_snapshot", "doi_store_sku", "shortage_alerts", "excess_alerts", "transfer_candidates"]:
-        write_json(ctx, f"inventario/{name}.json", json_ready_records(inventory_results.get(name, [])))
-
-    # Merma
-    for name in ["monthly_business", "monthly_store", "detail_store_description", "detail_supplier"]:
-        write_json(ctx, f"merma/{name}.json", json_ready_records(merma_results.get(name, [])))
-
-    # SBF
-    for name in ["monthly_business", "weekly_business", "monthly_service_store", "weekly_service_store"]:
-        write_json(ctx, f"sbf/{name}.json", json_ready_records(sbf_results.get(name, [])))
-
-    # CXC
-    for name in ["summary", "detail"]:
-        write_json(ctx, f"cxc/{name}.json", json_ready_records(cxc_results.get(name, [])))
-
-    # PRD0
-    for name in ["supplier_summary", "supplier_detail"]:
-        write_json(ctx, f"prd0/{name}.json", json_ready_records(prd0_results.get(name, [])))
-
-    # Hallazgos signals
-    hallazgos = {
-        "sales_signals": build_sales_signals(sales_outputs),
-        "delivery_signals": build_delivery_signals(delivery_outputs),
-        "inventory_signals": build_inventory_signals(inventory_results),
-        "shrink_signals": build_shrink_signals(merma_results),
-    }
-    for name, payload in hallazgos.items():
-        write_json(ctx, f"hallazgos/{name}.json", json_ready_records(payload))
-
-    # Innovation
-    for name in ["monthly_summary", "weekly_summary", "by_hour", "by_dow", "by_store"]:
-        write_json(ctx, f"innovation/{name}.json", json_ready_records(innovation_results.get(name, [])))
-
-    manifest = {
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "source_file": ctx.source_file.name,
-        "detected_sheets": ctx.detected_sheets,
-        "months_available": ctx.months_available,
-        "weeks_available": ctx.weeks_available,
-        "files_generated": ctx.files_generated,
-        "row_counts_by_file": ctx.row_counts_by_file,
-        "warnings": ctx.warnings,
-        "version_exporter": VERSION_EXPORTER,
-    }
-    write_json(ctx, "meta/manifest.json", manifest)
-
-    Logger.info("Exportación completada con éxito.")
-    Logger.info(f"Archivos generados: {len(ctx.files_generated)}")
-    if ctx.warnings:
-        Logger.warn(f"Warnings detectados: {len(ctx.warnings)}. Revisar data_api/out/meta/manifest.json")
-    return 0
-
-
-if __name__ == "__main__":
+def safe_int(v: Any) -> int:
+    if v is None or v == '':
+        return 0
     try:
-        sys.exit(main())
-    except Exception as exc:
-        Logger.error(f"Fallo no controlado: {exc}")
-        traceback.print_exc()
-        sys.exit(1)
+        return int(round(float(v)))
+    except Exception:
+        return 0
+
+
+def safe_str(v: Any) -> str:
+    if v is None:
+        return ''
+    if isinstance(v, datetime):
+        return v.isoformat()
+    return str(v).strip()
+
+
+def norm_text(v: Any) -> str:
+    s = safe_str(v).upper()
+    return ' '.join(s.split())
+
+
+def key_text(v: Any) -> str:
+    return ''.join(ch for ch in norm_text(v) if ch.isalnum())
+
+
+def is_finite_number(v: Any) -> bool:
+    try:
+        return math.isfinite(float(v))
+    except Exception:
+        return False
+
+
+def month_prev(month_key: str) -> str:
+    if not month_key or '-' not in month_key:
+        return ''
+    y, m = month_key.split('-')
+    y_i = int(y)
+    m_i = int(m)
+    if m_i == 1:
+        return f"{y_i - 1}-12"
+    return f"{y_i}-{m_i - 1:02d}"
+
+
+def month_ly(month_key: str) -> str:
+    if not month_key or '-' not in month_key:
+        return ''
+    y, m = month_key.split('-')
+    return f"{int(y) - 1}-{m}"
+
+
+def week_ly(week_key: str) -> str:
+    # Expects YYYY-Www
+    if not week_key or '-W' not in week_key:
+        return ''
+    y, w = week_key.split('-W')
+    return f"{int(y) - 1}-W{int(w):02d}"
+
+
+def month_label(month_key: str) -> str:
+    names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    if not month_key or '-' not in month_key:
+        return month_key
+    y, m = month_key.split('-')
+    idx = max(1, min(12, int(m))) - 1
+    return f"{names[idx]} {y}"
+
+
+def ensure_parent(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def dump_json(path: Path, data: Any) -> None:
+    ensure_parent(path)
+    with path.open('w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+
+
+def week_sort_key(week_key: str) -> Tuple[int, int]:
+    if '-W' not in week_key:
+        return (0, 0)
+    y, w = week_key.split('-W')
+    return int(y), int(w)
+
+
+def severity_for_amount(v: float) -> str:
+    av = abs(v)
+    if av >= 500:
+        return 'high'
+    if av >= 150:
+        return 'medium'
+    return 'low'
+
+
+def priority_for_amount(v: float) -> str:
+    av = abs(v)
+    if av >= 500:
+        return 'P1'
+    if av >= 150:
+        return 'P2'
+    if av >= 50:
+        return 'P3'
+    return 'P4'
+
+
+@dataclass
+class Metrics:
+    sales: float = 0.0
+    margin: float = 0.0
+    qty: float = 0.0
+    tx: float = 0.0
+
+    def add(self, sales: float = 0.0, margin: float = 0.0, qty: float = 0.0, tx: float = 0.0) -> None:
+        self.sales += safe_float(sales)
+        self.margin += safe_float(margin)
+        self.qty += safe_float(qty)
+        self.tx += safe_float(tx)
+
+    def to_sales_payload(self) -> Dict[str, Any]:
+        avg_ticket = self.sales / self.tx if self.tx else 0.0
+        margin_pct = (self.margin / self.sales) * 100 if self.sales else 0.0
+        return {
+            'sales': round(self.sales, 2),
+            'margin': round(self.margin, 2),
+            'margin_pct': round(margin_pct, 2),
+            'qty': round(self.qty, 2),
+            'tx': safe_int(self.tx),
+            'avg_ticket': round(avg_ticket, 2),
+        }
+
+
+class Exporter:
+    def __init__(self, xlsx_path: Path, out_dir: Path):
+        self.xlsx_path = xlsx_path
+        self.out_dir = out_dir
+        self.wb = load_workbook(self.xlsx_path, read_only=True, data_only=True)
+
+        self.store_names: set[str] = set()
+        self.months: set[str] = set()
+        self.weeks: set[str] = set()
+        self.sales_catalogs = {
+            'departments': set(),
+            'categories': set(),
+            'brands': set(),
+            'suppliers': set(),
+            'descriptions': set(),
+            'sbf_services': set(),
+        }
+
+        # Sales + delivery aggregates
+        self.sales_month_business: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_business: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_month_store: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_store: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_month_dept: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_dept: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_month_cat: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_cat: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_month_brand: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_brand: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_month_desc: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_week_desc: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.sales_dow: dict[tuple, Metrics] = defaultdict(Metrics)  # (period_type, period_key, store, dow_name)
+        self.sales_daypart: dict[tuple, Metrics] = defaultdict(Metrics)
+
+        self.delivery_month_business: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_week_business: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_month_store_platform: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_week_store_platform: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_month_cat: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_week_cat: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_dow: dict[tuple, Metrics] = defaultdict(Metrics)
+        self.delivery_daypart: dict[tuple, Metrics] = defaultdict(Metrics)
+
+        self.tx_week: dict[tuple, float] = defaultdict(float)
+        self.tx_month: dict[tuple, float] = defaultdict(float)
+        self.delivery_tx_week: dict[tuple, float] = defaultdict(float)
+        self.delivery_tx_month: dict[tuple, float] = defaultdict(float)
+        self.delivery_tx_store_platform_week: dict[tuple, float] = defaultdict(float)
+        self.delivery_tx_store_platform_month: dict[tuple, float] = defaultdict(float)
+        self.delivery_tx_dow: dict[tuple, float] = defaultdict(float)
+
+        # SBF
+        self.sbf_week_business: dict[tuple, int] = defaultdict(int)
+        self.sbf_month_business: dict[tuple, int] = defaultdict(int)
+        self.sbf_week_service_store: dict[tuple, int] = defaultdict(int)
+        self.sbf_month_service_store: dict[tuple, int] = defaultdict(int)
+
+        # Inventory
+        self.inv_rows: list[dict[str, Any]] = []
+        self.shortage_rows: list[dict[str, Any]] = []
+        self.excess_rows: list[dict[str, Any]] = []
+        self.transfer_rows: list[dict[str, Any]] = []
+
+        # Shrink
+        self.shrink_month_business: dict[tuple, dict[str, float]] = defaultdict(lambda: {'total_sales': 0.0, 'shrink_amount': 0.0})
+        self.shrink_month_store: dict[tuple, dict[str, float]] = defaultdict(lambda: {'total_sales': 0.0, 'shrink_amount': 0.0})
+        self.shrink_detail_desc: dict[tuple, dict[str, Any]] = defaultdict(lambda: {'total_sales': 0.0, 'shrink_amount': 0.0, 'qty_packs': 0.0})
+        self.shrink_detail_supplier: dict[tuple, dict[str, Any]] = defaultdict(lambda: {'total_sales': 0.0, 'shrink_amount': 0.0, 'qty_packs': 0.0})
+
+        # CXC
+        self.cxc_detail_rows: list[dict[str, Any]] = []
+        self.cxc_summary: dict[tuple, dict[str, float]] = defaultdict(lambda: {'amount': 0.0, 'entry_count': 0.0})
+
+        # PRD0
+        self.prd0_detail_rows: list[dict[str, Any]] = []
+        self.prd0_summary: dict[tuple, dict[str, float]] = defaultdict(lambda: {'item_count': 0.0, 'lost_sales_3d': 0.0})
+
+        # Innovation
+        self.innov_month_summary: dict[tuple, dict[str, float]] = defaultdict(lambda: {'sales': 0.0, 'qty': 0.0})
+        self.innov_week_summary: dict[tuple, dict[str, float]] = defaultdict(lambda: {'sales': 0.0, 'qty': 0.0})
+        self.innov_by_store: dict[tuple, dict[str, float]] = defaultdict(lambda: {'sales': 0.0, 'qty': 0.0})
+        self.innov_by_dow: dict[tuple, dict[str, float]] = defaultdict(lambda: {'sales': 0.0, 'qty': 0.0})
+        self.innov_by_daypart: dict[tuple, dict[str, float]] = defaultdict(lambda: {'sales': 0.0, 'qty': 0.0})
+
+        # Signals
+        self.sales_signals: list[dict[str, Any]] = []
+        self.delivery_signals: list[dict[str, Any]] = []
+        self.inventory_signals: list[dict[str, Any]] = []
+        self.shrink_signals: list[dict[str, Any]] = []
+
+    # ------------------------------------------------------------------
+    # Sheet utilities
+    # ------------------------------------------------------------------
+    def iter_dicts(self, sheet_name: str) -> Iterable[dict[str, Any]]:
+        ws = self.wb[sheet_name]
+        rows = ws.iter_rows(values_only=True)
+        headers = [safe_str(v) for v in next(rows)]
+        for row in rows:
+            rec = {headers[i]: row[i] if i < len(row) else None for i in range(len(headers))}
+            yield rec
+
+    # ------------------------------------------------------------------
+    # Builders
+    # ------------------------------------------------------------------
+    def build_sales_and_delivery(self) -> None:
+        for r in self.iter_dicts('Cubo_Sales_DetailHallazgos'):
+            month_key = safe_str(r.get('CalMonth'))
+            week_key = safe_str(r.get('YearWeek'))
+            store = safe_str(r.get('Store')).upper()
+            dept = safe_str(r.get('Department'))
+            cat = safe_str(r.get('Category'))
+            supplier = safe_str(r.get('Supplier'))
+            brand = safe_str(r.get('Brand'))
+            desc = safe_str(r.get('Description'))
+            daypart = safe_str(r.get('Daypart'))
+            dow_name = safe_str(r.get('DOW_Name'))
+            is_delivery = bool(r.get('Is_Delivery'))
+            platform = safe_str(r.get('Delivery_Channel'))
+            qty = safe_float(r.get('Qty Sold'))
+            sales = safe_float(r.get('Sales'))
+            margin = safe_float(r.get('Total Gross Margin'))
+
+            if not month_key or not week_key or not store:
+                continue
+
+            self.store_names.add(store)
+            self.months.add(month_key)
+            self.weeks.add(week_key)
+            if dept:
+                self.sales_catalogs['departments'].add(dept)
+            if cat:
+                self.sales_catalogs['categories'].add(cat)
+            if brand:
+                self.sales_catalogs['brands'].add(brand)
+            if supplier:
+                self.sales_catalogs['suppliers'].add(supplier)
+            if desc:
+                self.sales_catalogs['descriptions'].add(desc)
+
+            # Sales aggs
+            self.sales_month_business[(month_key,)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_business[(week_key,)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_month_store[(month_key, store)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_store[(week_key, store)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_month_dept[(month_key, dept)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_dept[(week_key, dept)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_month_cat[(month_key, dept, cat)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_cat[(week_key, dept, cat)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_month_brand[(month_key, dept, cat, brand)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_brand[(week_key, dept, cat, brand)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_month_desc[(month_key, dept, cat, brand, desc, supplier)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_week_desc[(week_key, dept, cat, brand, desc, supplier)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_dow[('month', month_key, store, dow_name)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_dow[('week', week_key, store, dow_name)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_daypart[('month', month_key, store, daypart)].add(sales=sales, margin=margin, qty=qty)
+            self.sales_daypart[('week', week_key, store, daypart)].add(sales=sales, margin=margin, qty=qty)
+
+            if is_delivery:
+                platform = platform or 'Delivery'
+                self.delivery_month_business[(month_key,)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_week_business[(week_key,)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_month_store_platform[(month_key, store, platform)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_week_store_platform[(week_key, store, platform)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_month_cat[(month_key, dept, cat)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_week_cat[(week_key, dept, cat)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_dow[('month', month_key, store, dow_name, platform)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_dow[('week', week_key, store, dow_name, platform)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_daypart[('month', month_key, store, daypart, platform)].add(sales=sales, margin=margin, qty=qty)
+                self.delivery_daypart[('week', week_key, store, daypart, platform)].add(sales=sales, margin=margin, qty=qty)
+
+    def build_transactions(self) -> None:
+        for r in self.iter_dicts('Cubo_TX_Fact'):
+            week_key = safe_str(r.get('YearMonth'))
+            store = safe_str(r.get('Store')).upper()
+            daypart = safe_str(r.get('Daypart'))
+            dow_name = safe_str(r.get('DOW_Name'))
+            is_delivery = bool(r.get('Is_Delivery'))
+            platform = safe_str(r.get('Delivery_Channel')) or 'Delivery'
+            tx = safe_float(r.get('Transactions'))
+            if not week_key:
+                continue
+            self.tx_week[(week_key,)] += tx
+            self.tx_week[(week_key, store)] += tx
+            if is_delivery:
+                self.delivery_tx_week[(week_key,)] += tx
+                self.delivery_tx_store_platform_week[(week_key, store, platform)] += tx
+                self.delivery_tx_dow[('week', week_key, store, dow_name, platform)] += tx
+                self.sales_daypart[('week', week_key, store, daypart)].tx += tx
+                self.delivery_daypart[('week', week_key, store, daypart, platform)].tx += tx
+            else:
+                self.sales_daypart[('week', week_key, store, daypart)].tx += tx
+            self.sales_dow[('week', week_key, store, dow_name)].tx += tx
+
+        for r in self.iter_dicts('Cubo_TX_Month_Fact'):
+            month_key = safe_str(r.get('CalMonth'))
+            store = safe_str(r.get('Store')).upper()
+            daypart = safe_str(r.get('Daypart'))
+            dow_name = safe_str(r.get('DOW_Name'))
+            is_delivery = bool(r.get('Is_Delivery'))
+            platform = safe_str(r.get('Delivery_Channel')) or 'Delivery'
+            tx = safe_float(r.get('Transactions'))
+            if not month_key:
+                continue
+            self.tx_month[(month_key,)] += tx
+            self.tx_month[(month_key, store)] += tx
+            if is_delivery:
+                self.delivery_tx_month[(month_key,)] += tx
+                self.delivery_tx_store_platform_month[(month_key, store, platform)] += tx
+                self.delivery_tx_dow[('month', month_key, store, dow_name, platform)] += tx
+                self.sales_daypart[('month', month_key, store, daypart)].tx += tx
+                self.delivery_daypart[('month', month_key, store, daypart, platform)].tx += tx
+            else:
+                self.sales_daypart[('month', month_key, store, daypart)].tx += tx
+            self.sales_dow[('month', month_key, store, dow_name)].tx += tx
+
+    def build_sbf(self) -> None:
+        for r in self.iter_dicts('Cubo_SBF_Fact'):
+            period_key = safe_str(r.get('YearMonth'))
+            store = safe_str(r.get('Store')).upper()
+            service = safe_str(r.get('Provider'))
+            tx = safe_int(r.get('Transactions'))
+            if not period_key:
+                continue
+            self.sales_catalogs['sbf_services'].add(service)
+            if '-W' in period_key:
+                self.sbf_week_business[(period_key,)] += tx
+                self.sbf_week_service_store[(period_key, service, store)] += tx
+            else:
+                self.sbf_month_business[(period_key,)] += tx
+                self.sbf_month_service_store[(period_key, service, store)] += tx
+
+    def build_inventory(self) -> None:
+        by_desc: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for r in self.iter_dicts('Inventario_Detail'):
+            store = safe_str(r.get('Store')).upper()
+            dept = safe_str(r.get('Department'))
+            cat = safe_str(r.get('Category'))
+            brand = safe_str(r.get('Brand'))
+            supplier = safe_str(r.get('Supplier'))
+            desc = safe_str(r.get('Description'))
+            stock_units = safe_float(r.get('Quantity'))
+            inventory_amount = safe_float(r.get('Amount'))
+            doi = safe_float(r.get('Días Inv'))
+            target_qty = safe_float(r.get('TargetQty'))
+            ideal_qty = safe_float(r.get('IdealQty'))
+            unit_cost = safe_float(r.get('Costo Unitario Inv')) or (inventory_amount / stock_units if stock_units else 0.0)
+            sales_s4 = safe_float(r.get('Sales S4'))
+            qty_s4 = safe_float(r.get('Qty Sold S4'))
+            lookup = {
+                'store_name': store,
+                'store': store,
+                'department': dept,
+                'category': cat,
+                'brand': brand,
+                'supplier': supplier,
+                'description': desc,
+                'stock_units': round(stock_units, 2),
+                'inventory_amount': round(inventory_amount, 2),
+                'doi': round(doi, 2),
+                'target_qty': round(target_qty, 2),
+                'ideal_qty': round(ideal_qty, 2),
+                'unit_cost': round(unit_cost, 4),
+                'sales_s4': round(sales_s4, 2),
+                'qty_s4': round(qty_s4, 2),
+            }
+            self.inv_rows.append(lookup)
+            by_desc[desc].append(lookup)
+
+            shortage_units = max(target_qty - stock_units, 0.0)
+            excess_units = max(stock_units - target_qty, 0.0)
+            if shortage_units > 0:
+                shortage_amount = shortage_units * unit_cost
+                self.shortage_rows.append({
+                    **lookup,
+                    'shortage_units': round(shortage_units, 2),
+                    'shortage_amount': round(shortage_amount, 2),
+                    'severity': severity_for_amount(shortage_amount),
+                    'priority': priority_for_amount(shortage_amount),
+                })
+            if excess_units > 0:
+                excess_amount = excess_units * unit_cost
+                self.excess_rows.append({
+                    **lookup,
+                    'excess_units': round(excess_units, 2),
+                    'excess_amount': round(excess_amount, 2),
+                    'severity': severity_for_amount(excess_amount),
+                    'priority': priority_for_amount(excess_amount),
+                })
+
+        # transfer candidates by description
+        for desc, rows in by_desc.items():
+            shortages = [r for r in self.shortage_rows if r['description'] == desc and r['shortage_units'] > 0]
+            excesses = [r for r in self.excess_rows if r['description'] == desc and r['excess_units'] > 0]
+            shortages.sort(key=lambda x: x['shortage_amount'], reverse=True)
+            excesses.sort(key=lambda x: x['excess_amount'], reverse=True)
+            for s in shortages:
+                need = s['shortage_units']
+                if need <= 0:
+                    continue
+                for e in excesses:
+                    available = e.get('excess_units', 0.0)
+                    if available <= 0 or e['store_name'] == s['store_name']:
+                        continue
+                    move = min(need, available)
+                    if move <= 0:
+                        continue
+                    amount = move * (s.get('unit_cost') or e.get('unit_cost') or 0.0)
+                    self.transfer_rows.append({
+                        'description': desc,
+                        'department': s.get('department', ''),
+                        'category': s.get('category', ''),
+                        'brand': s.get('brand', ''),
+                        'supplier': s.get('supplier', ''),
+                        'from_store': e['store_name'],
+                        'to_store': s['store_name'],
+                        'store_name': s['store_name'],
+                        'transfer_units': round(move, 2),
+                        'transfer_amount': round(amount, 2),
+                        'severity': severity_for_amount(amount),
+                        'priority': priority_for_amount(amount),
+                    })
+                    e['excess_units'] = round(available - move, 2)
+                    need = round(need - move, 2)
+                    if need <= 0:
+                        break
+
+    def build_shrink(self) -> None:
+        for r in self.iter_dicts('Merma_Detail'):
+            store = safe_str(r.get('Store')).upper()
+            month_key = safe_str(r.get('CalMonth'))
+            supplier = safe_str(r.get('Supplier'))
+            category = safe_str(r.get('Category'))
+            brand = safe_str(r.get('Brand'))
+            desc = safe_str(r.get('Description'))
+            total_sales = safe_float(r.get('Total Sales'))
+            shrink_amount = safe_float(r.get('Merma'))
+            qty_packs = safe_float(r.get('Quantity (packs)'))
+            if not month_key:
+                continue
+            self.shrink_month_business[(month_key,)]['total_sales'] += total_sales
+            self.shrink_month_business[(month_key,)]['shrink_amount'] += shrink_amount
+            self.shrink_month_store[(month_key, store)]['total_sales'] += total_sales
+            self.shrink_month_store[(month_key, store)]['shrink_amount'] += shrink_amount
+
+            d1 = self.shrink_detail_desc[(month_key, store, desc)]
+            d1['month_key'] = month_key
+            d1['store_name'] = store
+            d1['store'] = store
+            d1['supplier'] = supplier
+            d1['category'] = category
+            d1['brand'] = brand
+            d1['description'] = desc
+            d1['total_sales'] += total_sales
+            d1['shrink_amount'] += shrink_amount
+            d1['qty_packs'] += qty_packs
+
+            d2 = self.shrink_detail_supplier[(month_key, supplier)]
+            d2['month_key'] = month_key
+            d2['supplier'] = supplier
+            d2['store_name'] = ''
+            d2['store'] = ''
+            d2['total_sales'] += total_sales
+            d2['shrink_amount'] += shrink_amount
+            d2['qty_packs'] += qty_packs
+
+    def build_cxc(self) -> None:
+        for r in self.iter_dicts('CXC_DETAIL'):
+            store = safe_str(r.get('Store')).upper()
+            month_key = safe_str(r.get('Month'))
+            week_key = safe_str(r.get('YearMonth')) if '-W' in safe_str(r.get('YearMonth')) else ''
+            comment = safe_str(r.get('Comment'))
+            cashier = safe_str(r.get('Cashier'))
+            batch = safe_str(r.get('BatchNumber'))
+            ref = safe_str(r.get('ID'))
+            amount = safe_float(r.get('Amount'))
+            tm = r.get('Time')
+            tm_iso = tm.isoformat() if isinstance(tm, datetime) else safe_str(tm)
+            row = {
+                'store_name': store,
+                'store': store,
+                'month_key': month_key,
+                'week_key': week_key,
+                'comment': comment,
+                'cashier': cashier,
+                'batch_number': batch,
+                'reference_id': ref,
+                'time': tm_iso,
+                'amount': round(amount, 2),
+                'entry_count': 1,
+            }
+            self.cxc_detail_rows.append(row)
+            self.cxc_summary[(month_key, store)]['amount'] += amount
+            self.cxc_summary[(month_key, store)]['entry_count'] += 1
+
+    def build_prd0(self) -> None:
+        for r in self.iter_dicts('PRD_CERO_DETAIL'):
+            store = safe_str(r.get('Store')).upper()
+            supplier = safe_str(r.get('Supplier'))
+            dept = safe_str(r.get('Department'))
+            cat = safe_str(r.get('Category'))
+            brand = safe_str(r.get('Brand'))
+            desc = safe_str(r.get('Description'))
+            lost = safe_float(r.get('Lost Sales 3d'))
+            item_row = {
+                'store_name': store,
+                'store': store,
+                'supplier': supplier,
+                'department': dept,
+                'category': cat,
+                'brand': brand,
+                'description': desc,
+                'item_count': 1,
+                'lost_sales_3d': round(lost, 2),
+                'quantity': round(safe_float(r.get('Quantity')), 2),
+                'rop': round(safe_float(r.get('ROP')), 2),
+                'qty_s4': round(safe_float(r.get('Qty Sold S4')), 2),
+                'sales_s4': round(safe_float(r.get('Sales S4')), 2),
+            }
+            self.prd0_detail_rows.append(item_row)
+            self.prd0_summary[(supplier,)]['item_count'] += 1
+            self.prd0_summary[(supplier,)]['lost_sales_3d'] += lost
+
+    def build_innovation(self) -> None:
+        for r in self.iter_dicts('Innovation_Combos_Agg'):
+            period_type = safe_str(r.get('PeriodType'))
+            period_key = safe_str(r.get('PeriodKey'))
+            store = safe_str(r.get('Store')).upper()
+            combo_label = safe_str(r.get('ComboLabel'))
+            qty = safe_float(r.get('Qty Sold'))
+            sales = safe_float(r.get('Sales'))
+            if period_type == 'month':
+                self.innov_month_summary[(period_key, combo_label)]['sales'] += sales
+                self.innov_month_summary[(period_key, combo_label)]['qty'] += qty
+            elif period_type == 'week':
+                self.innov_week_summary[(period_key, combo_label)]['sales'] += sales
+                self.innov_week_summary[(period_key, combo_label)]['qty'] += qty
+            self.innov_by_store[(period_type, period_key, store)]['sales'] += sales
+            self.innov_by_store[(period_type, period_key, store)]['qty'] += qty
+
+        for r in self.iter_dicts('Innovation_Combos_Detail'):
+            month_key = safe_str(r.get('CalMonth'))
+            week_key = safe_str(r.get('YearWeek'))
+            store = safe_str(r.get('Store')).upper()
+            combo_label = safe_str(r.get('ComboLabel'))
+            dow_name = safe_str(r.get('DOW_Name'))
+            daypart = safe_str(r.get('Daypart'))
+            qty = safe_float(r.get('Qty Sold'))
+            sales = safe_float(r.get('Sales'))
+            self.innov_by_dow[('month', month_key, store, dow_name, combo_label)]['sales'] += sales
+            self.innov_by_dow[('month', month_key, store, dow_name, combo_label)]['qty'] += qty
+            self.innov_by_dow[('week', week_key, store, dow_name, combo_label)]['sales'] += sales
+            self.innov_by_dow[('week', week_key, store, dow_name, combo_label)]['qty'] += qty
+            self.innov_by_daypart[('month', month_key, store, daypart, combo_label)]['sales'] += sales
+            self.innov_by_daypart[('month', month_key, store, daypart, combo_label)]['qty'] += qty
+            self.innov_by_daypart[('week', week_key, store, daypart, combo_label)]['sales'] += sales
+            self.innov_by_daypart[('week', week_key, store, daypart, combo_label)]['qty'] += qty
+
+    # ------------------------------------------------------------------
+    # Post processing / row builders
+    # ------------------------------------------------------------------
+    def attach_tx(self) -> None:
+        for (month_key,), m in self.sales_month_business.items():
+            m.tx += self.tx_month[(month_key,)]
+        for (week_key,), m in self.sales_week_business.items():
+            m.tx += self.tx_week[(week_key,)]
+        for (month_key, store), m in self.sales_month_store.items():
+            m.tx += self.tx_month[(month_key, store)]
+        for (week_key, store), m in self.sales_week_store.items():
+            m.tx += self.tx_week[(week_key, store)]
+        for (month_key,), m in self.delivery_month_business.items():
+            m.tx += self.delivery_tx_month[(month_key,)]
+        for (week_key,), m in self.delivery_week_business.items():
+            m.tx += self.delivery_tx_week[(week_key,)]
+        for (month_key, store, platform), m in self.delivery_month_store_platform.items():
+            m.tx += self.delivery_tx_store_platform_month[(month_key, store, platform)]
+        for (week_key, store, platform), m in self.delivery_week_store_platform.items():
+            m.tx += self.delivery_tx_store_platform_week[(week_key, store, platform)]
+        for key, tx in self.delivery_tx_dow.items():
+            if key in self.delivery_dow:
+                self.delivery_dow[key].tx += tx
+
+    def build_rows_from_metrics(self, aggs: dict, time_field: str, group_fields: list[str]) -> list[dict[str, Any]]:
+        rows = []
+        for key, metrics in aggs.items():
+            payload = metrics.to_sales_payload()
+            row = {time_field: key[0]}
+            for idx, gf in enumerate(group_fields, start=1):
+                row[gf] = key[idx]
+            row.update(payload)
+            if 'store_name' not in row and 'store' in row:
+                row['store_name'] = row['store']
+            rows.append(row)
+        return rows
+
+    def enrich_compare(self, rows: list[dict[str, Any]], time_field: str, group_fields: list[str], month_mode: bool) -> list[dict[str, Any]]:
+        metric_fields = ['sales', 'margin', 'margin_pct', 'qty', 'tx', 'avg_ticket']
+        index = {}
+        for row in rows:
+            key = (safe_str(row.get(time_field)),) + tuple(safe_str(row.get(g)) for g in group_fields)
+            index[key] = row
+        for row in rows:
+            period = safe_str(row.get(time_field))
+            ly_period = month_ly(period) if month_mode else week_ly(period)
+            lm_period = month_prev(period) if month_mode else ''
+            group_vals = tuple(safe_str(row.get(g)) for g in group_fields)
+            ly_row = index.get((ly_period,) + group_vals)
+            lm_row = index.get((lm_period,) + group_vals) if month_mode else None
+            for mf in metric_fields:
+                row[f'{mf}_ly'] = round(safe_float(ly_row.get(mf) if ly_row else 0), 2 if mf not in {'tx'} else 0)
+                if month_mode:
+                    row[f'{mf}_lm'] = round(safe_float(lm_row.get(mf) if lm_row else 0), 2 if mf not in {'tx'} else 0)
+        return rows
+
+    def sales_rows(self) -> dict[str, list[dict[str, Any]]]:
+        monthly_business = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_business, 'month_key', []), 'month_key', [], True)
+        weekly_business = self.enrich_compare(self.build_rows_from_metrics(self.sales_week_business, 'week_key', []), 'week_key', [], False)
+        monthly_store = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_store, 'month_key', ['store']), 'month_key', ['store'], True)
+        weekly_store = self.enrich_compare(self.build_rows_from_metrics(self.sales_week_store, 'week_key', ['store']), 'week_key', ['store'], False)
+        for row in monthly_store + weekly_store:
+            row['store_name'] = row.pop('store')
+        monthly_dept = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_dept, 'month_key', ['department']), 'month_key', ['department'], True)
+        weekly_dept = self.enrich_compare(self.build_rows_from_metrics(self.sales_week_dept, 'week_key', ['department']), 'week_key', ['department'], False)
+        monthly_cat = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_cat, 'month_key', ['department', 'category']), 'month_key', ['department', 'category'], True)
+        weekly_cat = self.enrich_compare(self.build_rows_from_metrics(self.sales_week_cat, 'week_key', ['department', 'category']), 'week_key', ['department', 'category'], False)
+        monthly_brand = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_brand, 'month_key', ['department', 'category', 'brand']), 'month_key', ['department', 'category', 'brand'], True)
+        weekly_brand = self.enrich_compare(self.build_rows_from_metrics(self.sales_week_brand, 'week_key', ['department', 'category', 'brand']), 'week_key', ['department', 'category', 'brand'], False)
+        monthly_desc = self.enrich_compare(self.build_rows_from_metrics(self.sales_month_desc, 'month_key', ['department', 'category', 'brand', 'description', 'supplier']), 'month_key', ['department', 'category', 'brand', 'description', 'supplier'], True)
+
+        sales_by_dow = []
+        for (ptype, pkey, store, dow_name), m in self.sales_dow.items():
+            row = {'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'dow_name': dow_name}
+            row.update(m.to_sales_payload())
+            sales_by_dow.append(row)
+
+        sales_by_daypart = []
+        for (ptype, pkey, store, daypart), m in self.sales_daypart.items():
+            row = {'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'daypart': daypart}
+            row.update(m.to_sales_payload())
+            sales_by_daypart.append(row)
+
+        return {
+            'monthly_business': monthly_business,
+            'weekly_business': weekly_business,
+            'monthly_store': monthly_store,
+            'weekly_store': weekly_store,
+            'monthly_department': monthly_dept,
+            'weekly_department': weekly_dept,
+            'monthly_category': monthly_cat,
+            'weekly_category': weekly_cat,
+            'monthly_brand': monthly_brand,
+            'weekly_brand': weekly_brand,
+            'monthly_description': monthly_desc,
+            'sales_by_dow': sales_by_dow,
+            'sales_by_daypart': sales_by_daypart,
+            'sales_by_hour': [],
+        }
+
+    def delivery_rows(self) -> dict[str, list[dict[str, Any]]]:
+        monthly_business = self.enrich_compare(self.build_rows_from_metrics(self.delivery_month_business, 'month_key', []), 'month_key', [], True)
+        weekly_business = self.enrich_compare(self.build_rows_from_metrics(self.delivery_week_business, 'week_key', []), 'week_key', [], False)
+        monthly_store_platform = self.enrich_compare(self.build_rows_from_metrics(self.delivery_month_store_platform, 'month_key', ['store', 'platform']), 'month_key', ['store', 'platform'], True)
+        weekly_store_platform = self.enrich_compare(self.build_rows_from_metrics(self.delivery_week_store_platform, 'week_key', ['store', 'platform']), 'week_key', ['store', 'platform'], False)
+        for row in monthly_store_platform + weekly_store_platform:
+            row['store_name'] = row.pop('store')
+        monthly_category = self.enrich_compare(self.build_rows_from_metrics(self.delivery_month_cat, 'month_key', ['department', 'category']), 'month_key', ['department', 'category'], True)
+        weekly_category = self.enrich_compare(self.build_rows_from_metrics(self.delivery_week_cat, 'week_key', ['department', 'category']), 'week_key', ['department', 'category'], False)
+
+        by_dow = []
+        for (ptype, pkey, store, dow_name, platform), m in self.delivery_dow.items():
+            row = {'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'dow_name': dow_name, 'platform': platform}
+            row.update(m.to_sales_payload())
+            by_dow.append(row)
+
+        by_daypart = []
+        for (ptype, pkey, store, daypart, platform), m in self.delivery_daypart.items():
+            row = {'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'daypart': daypart, 'platform': platform}
+            row.update(m.to_sales_payload())
+            by_daypart.append(row)
+
+        return {
+            'monthly_business': monthly_business,
+            'weekly_business': weekly_business,
+            'monthly_store_platform': monthly_store_platform,
+            'weekly_store_platform': weekly_store_platform,
+            'monthly_category': monthly_category,
+            'weekly_category': weekly_category,
+            'delivery_by_dow': by_dow,
+            'delivery_by_daypart': by_daypart,
+            'delivery_by_hour': [],
+        }
+
+    def sbf_rows(self) -> dict[str, list[dict[str, Any]]]:
+        monthly_business = [{'month_key': k[0], 'tx': v} for k, v in sorted(self.sbf_month_business.items())]
+        weekly_business = [{'week_key': k[0], 'tx': v} for k, v in sorted(self.sbf_week_business.items())]
+        # compare fields
+        self._attach_tx_compares(monthly_business, 'month_key', [], month_mode=True)
+        self._attach_tx_compares(weekly_business, 'week_key', [], month_mode=False)
+        monthly_service_store = [{'month_key': k[0], 'service': k[1], 'store_name': k[2], 'store': k[2], 'tx': v} for k, v in sorted(self.sbf_month_service_store.items())]
+        weekly_service_store = [{'week_key': k[0], 'service': k[1], 'store_name': k[2], 'store': k[2], 'tx': v} for k, v in sorted(self.sbf_week_service_store.items())]
+        self._attach_tx_compares(monthly_service_store, 'month_key', ['service', 'store_name'], month_mode=True)
+        self._attach_tx_compares(weekly_service_store, 'week_key', ['service', 'store_name'], month_mode=False)
+        return {
+            'monthly_business': monthly_business,
+            'weekly_business': weekly_business,
+            'monthly_service_store': monthly_service_store,
+            'weekly_service_store': weekly_service_store,
+        }
+
+    def _attach_tx_compares(self, rows: list[dict[str, Any]], time_field: str, group_fields: list[str], month_mode: bool) -> None:
+        idx = {}
+        for r in rows:
+            idx[(safe_str(r.get(time_field)),) + tuple(safe_str(r.get(g)) for g in group_fields)] = r
+        for r in rows:
+            pk = safe_str(r.get(time_field))
+            ly = month_ly(pk) if month_mode else week_ly(pk)
+            lm = month_prev(pk) if month_mode else ''
+            gv = tuple(safe_str(r.get(g)) for g in group_fields)
+            ly_row = idx.get((ly,) + gv)
+            lm_row = idx.get((lm,) + gv) if month_mode else None
+            r['tx_ly'] = safe_int(ly_row.get('tx') if ly_row else 0)
+            if month_mode:
+                r['tx_lm'] = safe_int(lm_row.get('tx') if lm_row else 0)
+
+    def inventory_rows(self) -> dict[str, list[dict[str, Any]]]:
+        return {
+            'store_sku_snapshot': self.inv_rows,
+            'doi_store_sku': self.inv_rows,
+            'shortage_alerts': sorted(self.shortage_rows, key=lambda x: x.get('shortage_amount', 0), reverse=True),
+            'excess_alerts': sorted(self.excess_rows, key=lambda x: x.get('excess_amount', 0), reverse=True),
+            'transfer_candidates': sorted(self.transfer_rows, key=lambda x: x.get('transfer_amount', 0), reverse=True),
+        }
+
+    def shrink_rows(self) -> dict[str, list[dict[str, Any]]]:
+        monthly_business = []
+        for (month_key,), v in sorted(self.shrink_month_business.items()):
+            total_sales = v['total_sales']
+            shrink_amount = v['shrink_amount']
+            monthly_business.append({
+                'month_key': month_key,
+                'shrink_amount': round(shrink_amount, 2),
+                'total_sales': round(total_sales, 2),
+                'shrink_pct': round((shrink_amount / total_sales) * 100, 2) if total_sales else 0.0,
+            })
+        self._attach_shrink_compares(monthly_business, 'month_key', [])
+
+        monthly_store = []
+        for (month_key, store), v in sorted(self.shrink_month_store.items()):
+            total_sales = v['total_sales']
+            shrink_amount = v['shrink_amount']
+            monthly_store.append({
+                'month_key': month_key,
+                'store_name': store,
+                'store': store,
+                'shrink_amount': round(shrink_amount, 2),
+                'total_sales': round(total_sales, 2),
+                'shrink_pct': round((shrink_amount / total_sales) * 100, 2) if total_sales else 0.0,
+            })
+        self._attach_shrink_compares(monthly_store, 'month_key', ['store_name'])
+
+        detail_desc = []
+        for (_m, _s, _d), v in self.shrink_detail_desc.items():
+            total_sales = v['total_sales']
+            shrink_amount = v['shrink_amount']
+            detail_desc.append({
+                **{k: v[k] for k in ['month_key', 'store_name', 'store', 'supplier', 'category', 'brand', 'description']},
+                'total_sales': round(total_sales, 2),
+                'shrink_amount': round(shrink_amount, 2),
+                'qty_packs': round(v['qty_packs'], 2),
+                'shrink_pct': round((shrink_amount / total_sales) * 100, 2) if total_sales else 0.0,
+            })
+        self._attach_shrink_compares(detail_desc, 'month_key', ['store_name', 'description'])
+
+        detail_supplier = []
+        for (_m, _sup), v in self.shrink_detail_supplier.items():
+            total_sales = v['total_sales']
+            shrink_amount = v['shrink_amount']
+            detail_supplier.append({
+                'month_key': v['month_key'],
+                'supplier': v['supplier'],
+                'total_sales': round(total_sales, 2),
+                'shrink_amount': round(shrink_amount, 2),
+                'qty_packs': round(v['qty_packs'], 2),
+                'shrink_pct': round((shrink_amount / total_sales) * 100, 2) if total_sales else 0.0,
+            })
+        self._attach_shrink_compares(detail_supplier, 'month_key', ['supplier'])
+
+        return {
+            'monthly_business': monthly_business,
+            'monthly_store': monthly_store,
+            'detail_store_description': detail_desc,
+            'detail_supplier': detail_supplier,
+        }
+
+    def _attach_shrink_compares(self, rows: list[dict[str, Any]], time_field: str, group_fields: list[str]) -> None:
+        idx = {}
+        for r in rows:
+            idx[(safe_str(r.get(time_field)),) + tuple(safe_str(r.get(g)) for g in group_fields)] = r
+        for r in rows:
+            pk = safe_str(r.get(time_field))
+            ly = month_ly(pk)
+            lm = month_prev(pk)
+            gv = tuple(safe_str(r.get(g)) for g in group_fields)
+            ly_row = idx.get((ly,) + gv)
+            lm_row = idx.get((lm,) + gv)
+            for f in ['shrink_amount', 'shrink_pct', 'total_sales']:
+                r[f'{f}_ly'] = round(safe_float(ly_row.get(f) if ly_row else 0), 2)
+                r[f'{f}_lm'] = round(safe_float(lm_row.get(f) if lm_row else 0), 2)
+
+    def cxc_rows(self) -> dict[str, list[dict[str, Any]]]:
+        summary = []
+        for (month_key, store), v in sorted(self.cxc_summary.items()):
+            summary.append({
+                'month_key': month_key,
+                'store_name': store,
+                'store': store,
+                'amount': round(v['amount'], 2),
+                'entry_count': safe_int(v['entry_count']),
+            })
+        self._attach_cxc_compares(summary)
+        return {'summary': summary, 'detail': self.cxc_detail_rows}
+
+    def _attach_cxc_compares(self, rows: list[dict[str, Any]]) -> None:
+        idx = {(safe_str(r['month_key']), safe_str(r['store_name'])): r for r in rows}
+        for r in rows:
+            pk = safe_str(r['month_key'])
+            store = safe_str(r['store_name'])
+            ly_row = idx.get((month_ly(pk), store))
+            lm_row = idx.get((month_prev(pk), store))
+            for f in ['amount', 'entry_count']:
+                r[f'{f}_ly'] = round(safe_float(ly_row.get(f) if ly_row else 0), 2 if f == 'amount' else 0)
+                r[f'{f}_lm'] = round(safe_float(lm_row.get(f) if lm_row else 0), 2 if f == 'amount' else 0)
+
+    def prd0_rows(self) -> dict[str, list[dict[str, Any]]]:
+        summary = []
+        for (supplier,), v in sorted(self.prd0_summary.items(), key=lambda kv: kv[1]['lost_sales_3d'], reverse=True):
+            summary.append({
+                'supplier': supplier,
+                'item_count': safe_int(v['item_count']),
+                'lost_sales_3d': round(v['lost_sales_3d'], 2),
+            })
+        return {'supplier_summary': summary, 'supplier_detail': self.prd0_detail_rows}
+
+    def innovation_rows(self) -> dict[str, list[dict[str, Any]]]:
+        monthly_summary = []
+        for (period_key, combo_label), v in sorted(self.innov_month_summary.items()):
+            monthly_summary.append({'period_key': period_key, 'period_type': 'month', 'combo_label': combo_label, 'sales': round(v['sales'], 2), 'qty': round(v['qty'], 2)})
+        self._attach_innov_compares(monthly_summary, 'month')
+        weekly_summary = []
+        for (period_key, combo_label), v in sorted(self.innov_week_summary.items(), key=lambda kv: week_sort_key(kv[0][0])):
+            weekly_summary.append({'period_key': period_key, 'period_type': 'week', 'combo_label': combo_label, 'sales': round(v['sales'], 2), 'qty': round(v['qty'], 2)})
+        self._attach_innov_compares(weekly_summary, 'week')
+
+        by_store = []
+        for (ptype, pkey, store), v in sorted(self.innov_by_store.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
+            by_store.append({'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'sales': round(v['sales'], 2), 'qty': round(v['qty'], 2)})
+        self._attach_innov_compares_mixed(by_store, ['store_name'])
+
+        by_dow = []
+        for (ptype, pkey, store, dow_name, combo_label), v in sorted(self.innov_by_dow.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2], kv[0][3], kv[0][4])):
+            by_dow.append({'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'dow_name': dow_name, 'combo_label': combo_label, 'sales': round(v['sales'], 2), 'qty': round(v['qty'], 2)})
+        self._attach_innov_compares_mixed(by_dow, ['store_name', 'dow_name', 'combo_label'])
+
+        by_daypart = []
+        for (ptype, pkey, store, daypart, combo_label), v in sorted(self.innov_by_daypart.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2], kv[0][3], kv[0][4])):
+            by_daypart.append({'period_type': ptype, 'period_key': pkey, 'store_name': store, 'store': store, 'daypart': daypart, 'combo_label': combo_label, 'sales': round(v['sales'], 2), 'qty': round(v['qty'], 2)})
+        self._attach_innov_compares_mixed(by_daypart, ['store_name', 'daypart', 'combo_label'])
+
+        return {
+            'monthly_summary': monthly_summary,
+            'weekly_summary': weekly_summary,
+            'by_store': by_store,
+            'by_dow': by_dow,
+            'by_daypart': by_daypart,
+            'by_hour': [],
+        }
+
+    def _attach_innov_compares(self, rows: list[dict[str, Any]], mode: str) -> None:
+        idx = {(safe_str(r['period_key']), safe_str(r['combo_label'])): r for r in rows}
+        for r in rows:
+            pk = safe_str(r['period_key'])
+            comp = month_ly(pk) if mode == 'month' else week_ly(pk)
+            prev = month_prev(pk) if mode == 'month' else ''
+            ly_row = idx.get((comp, safe_str(r['combo_label'])))
+            lm_row = idx.get((prev, safe_str(r['combo_label']))) if prev else None
+            for f in ['sales', 'qty']:
+                r[f'{f}_ly'] = round(safe_float(ly_row.get(f) if ly_row else 0), 2)
+                if mode == 'month':
+                    r[f'{f}_lm'] = round(safe_float(lm_row.get(f) if lm_row else 0), 2)
+
+    def _attach_innov_compares_mixed(self, rows: list[dict[str, Any]], group_fields: list[str]) -> None:
+        idx = {(safe_str(r['period_type']), safe_str(r['period_key'])) + tuple(safe_str(r.get(g)) for g in group_fields): r for r in rows}
+        for r in rows:
+            ptype = safe_str(r['period_type'])
+            pk = safe_str(r['period_key'])
+            comp = month_ly(pk) if ptype == 'month' else week_ly(pk)
+            prev = month_prev(pk) if ptype == 'month' else ''
+            gv = tuple(safe_str(r.get(g)) for g in group_fields)
+            ly_row = idx.get((ptype, comp) + gv)
+            lm_row = idx.get((ptype, prev) + gv) if prev else None
+            for f in ['sales', 'qty']:
+                r[f'{f}_ly'] = round(safe_float(ly_row.get(f) if ly_row else 0), 2)
+                if ptype == 'month':
+                    r[f'{f}_lm'] = round(safe_float(lm_row.get(f) if lm_row else 0), 2)
+
+    def build_signals(self, sales_rows: dict[str, list[dict[str, Any]]], delivery_rows: dict[str, list[dict[str, Any]]], inv_rows: dict[str, list[dict[str, Any]]], shrink_rows: dict[str, list[dict[str, Any]]]) -> None:
+        # Sales signals from monthly categories and weekly categories
+        for src_name in ['monthly_category', 'weekly_category']:
+            tf = 'month_key' if src_name.startswith('monthly') else 'week_key'
+            for r in sales_rows[src_name]:
+                cur = safe_float(r.get('sales'))
+                ly = safe_float(r.get('sales_ly'))
+                delta = cur - ly
+                if abs(delta) < 50:
+                    continue
+                delta_pct = (delta / ly * 100) if ly else 0.0
+                self.sales_signals.append({
+                    'period_key': safe_str(r.get(tf)),
+                    'metric': 'sales',
+                    'scope_key': safe_str(r.get('category')),
+                    'scope_label': safe_str(r.get('category')),
+                    'department': safe_str(r.get('department')),
+                    'delta': round(delta, 2),
+                    'delta_pct': round(delta_pct, 2),
+                    'current_value': round(cur, 2),
+                    'compare_value': round(ly, 2),
+                    'severity': severity_for_amount(delta),
+                    'priority': priority_for_amount(delta),
+                })
+        self.sales_signals.sort(key=lambda x: abs(x['delta']), reverse=True)
+        self.sales_signals = self.sales_signals[:400]
+
+        for src_name in ['monthly_store_platform', 'weekly_store_platform']:
+            tf = 'month_key' if src_name.startswith('monthly') else 'week_key'
+            for r in delivery_rows[src_name]:
+                cur = safe_float(r.get('sales'))
+                ly = safe_float(r.get('sales_ly'))
+                delta = cur - ly
+                if abs(delta) < 25:
+                    continue
+                delta_pct = (delta / ly * 100) if ly else 0.0
+                self.delivery_signals.append({
+                    'period_key': safe_str(r.get(tf)),
+                    'metric': 'sales',
+                    'scope_key': f"{safe_str(r.get('store_name'))} | {safe_str(r.get('platform'))}",
+                    'scope_label': f"{safe_str(r.get('store_name'))} · {safe_str(r.get('platform'))}",
+                    'store_name': safe_str(r.get('store_name')),
+                    'platform': safe_str(r.get('platform')),
+                    'delta': round(delta, 2),
+                    'delta_pct': round(delta_pct, 2),
+                    'current_value': round(cur, 2),
+                    'compare_value': round(ly, 2),
+                    'severity': severity_for_amount(delta),
+                    'priority': priority_for_amount(delta),
+                })
+        self.delivery_signals.sort(key=lambda x: abs(x['delta']), reverse=True)
+        self.delivery_signals = self.delivery_signals[:300]
+
+        for r in inv_rows['shortage_alerts'][:250]:
+            self.inventory_signals.append({
+                'period_key': max(self.months) if self.months else '',
+                'metric': 'inventory',
+                'scope_key': safe_str(r['description']),
+                'scope_label': safe_str(r['description']),
+                'store_name': safe_str(r['store_name']),
+                'delta': round(safe_float(r.get('shortage_amount')), 2),
+                'delta_pct': 0,
+                'current_value': round(safe_float(r.get('shortage_units')), 2),
+                'compare_value': 0,
+                'severity': r['severity'],
+                'priority': r['priority'],
+            })
+        self.inventory_signals.sort(key=lambda x: abs(x['delta']), reverse=True)
+
+        for r in shrink_rows['detail_store_description'][:300]:
+            amt = safe_float(r.get('shrink_amount'))
+            if abs(amt) < 10:
+                continue
+            self.shrink_signals.append({
+                'period_key': safe_str(r.get('month_key')),
+                'metric': 'shrink',
+                'scope_key': safe_str(r.get('description')),
+                'scope_label': safe_str(r.get('description')),
+                'store_name': safe_str(r.get('store_name')),
+                'delta': round(amt, 2),
+                'delta_pct': round(safe_float(r.get('shrink_pct')), 2),
+                'current_value': round(amt, 2),
+                'compare_value': round(safe_float(r.get('shrink_amount_ly')), 2),
+                'severity': severity_for_amount(amt),
+                'priority': priority_for_amount(amt),
+            })
+        self.shrink_signals.sort(key=lambda x: abs(x['delta']), reverse=True)
+        self.shrink_signals = self.shrink_signals[:300]
+
+    def meta_rows(self) -> dict[str, Any]:
+        months = sorted(self.months)
+        weeks = sorted(self.weeks, key=week_sort_key)
+        manifest = {
+            'generated_at': datetime.utcnow().isoformat() + 'Z',
+            'months_available': months,
+            'weeks_available': weeks,
+            'stores_available': sorted(self.store_names),
+            'data_quality': {
+                'delivery_by_hour_available': False,
+                'innovation_by_hour_available': False,
+                'delivery_by_daypart_available': True,
+                'innovation_by_daypart_available': True,
+            },
+        }
+        calendars = {
+            'months': [
+                {
+                    'month_key': m,
+                    'label': month_label(m),
+                    'comparable_ly_month': month_ly(m),
+                    'lm_month': month_prev(m),
+                }
+                for m in months
+            ],
+            'weeks': [
+                {
+                    'week_key': w,
+                    'label': w,
+                    'comparable_ly_week': week_ly(w),
+                }
+                for w in weeks
+            ],
+        }
+        catalogs = {
+            'departments': sorted(self.sales_catalogs['departments']),
+            'categories': sorted(self.sales_catalogs['categories']),
+            'brands': sorted(self.sales_catalogs['brands']),
+            'suppliers': sorted(self.sales_catalogs['suppliers']),
+            'descriptions': sorted(self.sales_catalogs['descriptions']),
+            'sbf_services': sorted(self.sales_catalogs['sbf_services']),
+        }
+        stores = [{'store_name': s, 'store': s} for s in sorted(self.store_names)]
+        return {'manifest': manifest, 'calendars': calendars, 'catalogs': catalogs, 'stores': stores}
+
+    # ------------------------------------------------------------------
+    def write_all(self) -> None:
+        print('1/7 Reading sales + delivery…')
+        self.build_sales_and_delivery()
+        print('2/7 Reading transactions…')
+        self.build_transactions()
+        self.attach_tx()
+        print('3/7 Reading SBF…')
+        self.build_sbf()
+        print('4/7 Reading inventory…')
+        self.build_inventory()
+        print('5/7 Reading shrink + CXC + PRD0…')
+        self.build_shrink()
+        self.build_cxc()
+        self.build_prd0()
+        print('6/7 Reading innovation…')
+        self.build_innovation()
+
+        meta = self.meta_rows()
+        sales = self.sales_rows()
+        delivery = self.delivery_rows()
+        sbf = self.sbf_rows()
+        inventory = self.inventory_rows()
+        shrink = self.shrink_rows()
+        cxc = self.cxc_rows()
+        prd0 = self.prd0_rows()
+        innovation = self.innovation_rows()
+        self.build_signals(sales, delivery, inventory, shrink)
+
+        print('7/7 Writing JSON files…')
+        dump_json(self.out_dir / 'meta/manifest.json', meta['manifest'])
+        dump_json(self.out_dir / 'meta/calendars.json', meta['calendars'])
+        dump_json(self.out_dir / 'meta/catalogs.json', meta['catalogs'])
+        dump_json(self.out_dir / 'meta/stores.json', meta['stores'])
+
+        dump_json(self.out_dir / 'ventas/monthly_business.json', sales['monthly_business'])
+        dump_json(self.out_dir / 'ventas/weekly_business.json', sales['weekly_business'])
+        dump_json(self.out_dir / 'ventas/monthly_store.json', sales['monthly_store'])
+        dump_json(self.out_dir / 'ventas/weekly_store.json', sales['weekly_store'])
+        dump_json(self.out_dir / 'ventas/monthly_department.json', sales['monthly_department'])
+        dump_json(self.out_dir / 'ventas/weekly_department.json', sales['weekly_department'])
+        dump_json(self.out_dir / 'ventas/monthly_category.json', sales['monthly_category'])
+        dump_json(self.out_dir / 'ventas/weekly_category.json', sales['weekly_category'])
+        dump_json(self.out_dir / 'ventas/monthly_brand.json', sales['monthly_brand'])
+        dump_json(self.out_dir / 'ventas/weekly_brand.json', sales['weekly_brand'])
+        dump_json(self.out_dir / 'ventas/monthly_description.json', sales['monthly_description'])
+        dump_json(self.out_dir / 'ventas/sales_by_dow.json', sales['sales_by_dow'])
+        dump_json(self.out_dir / 'ventas/sales_by_daypart.json', sales['sales_by_daypart'])
+        dump_json(self.out_dir / 'ventas/sales_by_hour.json', sales['sales_by_hour'])
+
+        dump_json(self.out_dir / 'delivery/monthly_business.json', delivery['monthly_business'])
+        dump_json(self.out_dir / 'delivery/weekly_business.json', delivery['weekly_business'])
+        dump_json(self.out_dir / 'delivery/monthly_store_platform.json', delivery['monthly_store_platform'])
+        dump_json(self.out_dir / 'delivery/weekly_store_platform.json', delivery['weekly_store_platform'])
+        dump_json(self.out_dir / 'delivery/monthly_category.json', delivery['monthly_category'])
+        dump_json(self.out_dir / 'delivery/weekly_category.json', delivery['weekly_category'])
+        dump_json(self.out_dir / 'delivery/delivery_by_dow.json', delivery['delivery_by_dow'])
+        dump_json(self.out_dir / 'delivery/delivery_by_daypart.json', delivery['delivery_by_daypart'])
+        dump_json(self.out_dir / 'delivery/delivery_by_hour.json', delivery['delivery_by_hour'])
+
+        dump_json(self.out_dir / 'inventario/store_sku_snapshot.json', inventory['store_sku_snapshot'])
+        dump_json(self.out_dir / 'inventario/doi_store_sku.json', inventory['doi_store_sku'])
+        dump_json(self.out_dir / 'inventario/shortage_alerts.json', inventory['shortage_alerts'])
+        dump_json(self.out_dir / 'inventario/excess_alerts.json', inventory['excess_alerts'])
+        dump_json(self.out_dir / 'inventario/transfer_candidates.json', inventory['transfer_candidates'])
+
+        dump_json(self.out_dir / 'merma/monthly_business.json', shrink['monthly_business'])
+        dump_json(self.out_dir / 'merma/monthly_store.json', shrink['monthly_store'])
+        dump_json(self.out_dir / 'merma/detail_store_description.json', shrink['detail_store_description'])
+        dump_json(self.out_dir / 'merma/detail_supplier.json', shrink['detail_supplier'])
+
+        dump_json(self.out_dir / 'sbf/monthly_business.json', sbf['monthly_business'])
+        dump_json(self.out_dir / 'sbf/weekly_business.json', sbf['weekly_business'])
+        dump_json(self.out_dir / 'sbf/monthly_service_store.json', sbf['monthly_service_store'])
+        dump_json(self.out_dir / 'sbf/weekly_service_store.json', sbf['weekly_service_store'])
+
+        dump_json(self.out_dir / 'cxc/summary.json', cxc['summary'])
+        dump_json(self.out_dir / 'cxc/detail.json', cxc['detail'])
+
+        dump_json(self.out_dir / 'prd0/supplier_summary.json', prd0['supplier_summary'])
+        dump_json(self.out_dir / 'prd0/supplier_detail.json', prd0['supplier_detail'])
+
+        dump_json(self.out_dir / 'hallazgos/sales_signals.json', self.sales_signals)
+        dump_json(self.out_dir / 'hallazgos/delivery_signals.json', self.delivery_signals)
+        dump_json(self.out_dir / 'hallazgos/inventory_signals.json', self.inventory_signals)
+        dump_json(self.out_dir / 'hallazgos/shrink_signals.json', self.shrink_signals)
+
+        dump_json(self.out_dir / 'innovation/monthly_summary.json', innovation['monthly_summary'])
+        dump_json(self.out_dir / 'innovation/weekly_summary.json', innovation['weekly_summary'])
+        dump_json(self.out_dir / 'innovation/by_store.json', innovation['by_store'])
+        dump_json(self.out_dir / 'innovation/by_dow.json', innovation['by_dow'])
+        dump_json(self.out_dir / 'innovation/by_daypart.json', innovation['by_daypart'])
+        dump_json(self.out_dir / 'innovation/by_hour.json', innovation['by_hour'])
+
+        print('Done:', self.out_dir)
+
+
+def main() -> None:
+    print(f'Workbook source: {DEFAULT_XLSX}')
+    exporter = Exporter(DEFAULT_XLSX, OUT_DIR)
+    exporter.write_all()
+
+
+if __name__ == '__main__':
+    main()
