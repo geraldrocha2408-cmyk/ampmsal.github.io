@@ -1,0 +1,482 @@
+[
+  {
+    "month_key": "2025-01",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -172.563623,
+    "shrink_amount_neg": -264.616629,
+    "sales": 25281.39,
+    "shrink_pct": -0.006826,
+    "shrink_pct_neg": -0.010467
+  },
+  {
+    "month_key": "2025-01",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -130.272811,
+    "shrink_amount_neg": -270.039123,
+    "sales": 25315.4,
+    "shrink_pct": -0.005146,
+    "shrink_pct_neg": -0.010667
+  },
+  {
+    "month_key": "2025-01",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -19.772912,
+    "shrink_amount_neg": -208.846295,
+    "sales": 24792.62,
+    "shrink_pct": -0.000798,
+    "shrink_pct_neg": -0.008424
+  },
+  {
+    "month_key": "2025-02",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -213.77617,
+    "shrink_amount_neg": -303.196852,
+    "sales": 25061.33,
+    "shrink_pct": -0.00853,
+    "shrink_pct_neg": -0.012098
+  },
+  {
+    "month_key": "2025-02",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -10.458108,
+    "shrink_amount_neg": -232.002983,
+    "sales": 23476.45,
+    "shrink_pct": -0.000445,
+    "shrink_pct_neg": -0.009882
+  },
+  {
+    "month_key": "2025-02",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": 15.730136,
+    "shrink_amount_neg": -134.681656,
+    "sales": 24675.92,
+    "shrink_pct": 0.000637,
+    "shrink_pct_neg": -0.005458
+  },
+  {
+    "month_key": "2025-03",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -119.581514,
+    "shrink_amount_neg": -262.723288,
+    "sales": 27809.04,
+    "shrink_pct": -0.0043,
+    "shrink_pct_neg": -0.009447
+  },
+  {
+    "month_key": "2025-03",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -57.472199,
+    "shrink_amount_neg": -161.678938,
+    "sales": 25498.49,
+    "shrink_pct": -0.002254,
+    "shrink_pct_neg": -0.006341
+  },
+  {
+    "month_key": "2025-03",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -71.165839,
+    "shrink_amount_neg": -218.560905,
+    "sales": 27649.99,
+    "shrink_pct": -0.002574,
+    "shrink_pct_neg": -0.007905
+  },
+  {
+    "month_key": "2025-04",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -193.154432,
+    "shrink_amount_neg": -248.228062,
+    "sales": 26376.36,
+    "shrink_pct": -0.007323,
+    "shrink_pct_neg": -0.009411
+  },
+  {
+    "month_key": "2025-04",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -46.749896,
+    "shrink_amount_neg": -108.590974,
+    "sales": 24488.43,
+    "shrink_pct": -0.001909,
+    "shrink_pct_neg": -0.004434
+  },
+  {
+    "month_key": "2025-04",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -78.907515,
+    "shrink_amount_neg": -174.621398,
+    "sales": 25367.58,
+    "shrink_pct": -0.003111,
+    "shrink_pct_neg": -0.006884
+  },
+  {
+    "month_key": "2025-05",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -144.403064,
+    "shrink_amount_neg": -204.24021,
+    "sales": 29028.66,
+    "shrink_pct": -0.004974,
+    "shrink_pct_neg": -0.007036
+  },
+  {
+    "month_key": "2025-05",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -18.094449,
+    "shrink_amount_neg": -128.858852,
+    "sales": 32998.03,
+    "shrink_pct": -0.000548,
+    "shrink_pct_neg": -0.003905
+  },
+  {
+    "month_key": "2025-05",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -98.379986,
+    "shrink_amount_neg": -184.211003,
+    "sales": 29415.93,
+    "shrink_pct": -0.003344,
+    "shrink_pct_neg": -0.006262
+  },
+  {
+    "month_key": "2025-06",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -100.536725,
+    "shrink_amount_neg": -154.423649,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-06",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -42.334278,
+    "shrink_amount_neg": -129.983605,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-06",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -64.36289,
+    "shrink_amount_neg": -202.901498,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-07",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -120.949407,
+    "shrink_amount_neg": -191.412019,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-07",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -50.012603,
+    "shrink_amount_neg": -151.547396,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-07",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -72.05398,
+    "shrink_amount_neg": -206.707682,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-08",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": 68.267582,
+    "shrink_amount_neg": -197.673679,
+    "sales": 35779.83,
+    "shrink_pct": 0.001908,
+    "shrink_pct_neg": -0.005525
+  },
+  {
+    "month_key": "2025-08",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": 58.776621,
+    "shrink_amount_neg": -157.826895,
+    "sales": 30305.31,
+    "shrink_pct": 0.001939,
+    "shrink_pct_neg": -0.005208
+  },
+  {
+    "month_key": "2025-08",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -57.392122,
+    "shrink_amount_neg": -141.753357,
+    "sales": 33306.73,
+    "shrink_pct": -0.001723,
+    "shrink_pct_neg": -0.004256
+  },
+  {
+    "month_key": "2025-09",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -152.566877,
+    "shrink_amount_neg": -201.619039,
+    "sales": 34015.4,
+    "shrink_pct": -0.004485,
+    "shrink_pct_neg": -0.005927
+  },
+  {
+    "month_key": "2025-09",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -44.260021,
+    "shrink_amount_neg": -112.469368,
+    "sales": 30335.76,
+    "shrink_pct": -0.001459,
+    "shrink_pct_neg": -0.003707
+  },
+  {
+    "month_key": "2025-09",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -138.15099,
+    "shrink_amount_neg": -191.996012,
+    "sales": 28770.87,
+    "shrink_pct": -0.004802,
+    "shrink_pct_neg": -0.006673
+  },
+  {
+    "month_key": "2025-10",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -255.209188,
+    "shrink_amount_neg": -340.875585,
+    "sales": 35435.48,
+    "shrink_pct": -0.007202,
+    "shrink_pct_neg": -0.00962
+  },
+  {
+    "month_key": "2025-10",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -147.33409,
+    "shrink_amount_neg": -183.759623,
+    "sales": 28459.42,
+    "shrink_pct": -0.005177,
+    "shrink_pct_neg": -0.006457
+  },
+  {
+    "month_key": "2025-10",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -121.498034,
+    "shrink_amount_neg": -184.339176,
+    "sales": 33281.75,
+    "shrink_pct": -0.003651,
+    "shrink_pct_neg": -0.005539
+  },
+  {
+    "month_key": "2025-11",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -83.603157,
+    "shrink_amount_neg": -206.845247,
+    "sales": 36356.06,
+    "shrink_pct": -0.0023,
+    "shrink_pct_neg": -0.005689
+  },
+  {
+    "month_key": "2025-11",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -62.040478,
+    "shrink_amount_neg": -219.384283,
+    "sales": 37923.33,
+    "shrink_pct": -0.001636,
+    "shrink_pct_neg": -0.005785
+  },
+  {
+    "month_key": "2025-11",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -69.488344,
+    "shrink_amount_neg": -201.350289,
+    "sales": 33489.52,
+    "shrink_pct": -0.002075,
+    "shrink_pct_neg": -0.006012
+  },
+  {
+    "month_key": "2025-12",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -52.223576,
+    "shrink_amount_neg": -120.429856,
+    "sales": 46066.4,
+    "shrink_pct": -0.001134,
+    "shrink_pct_neg": -0.002614
+  },
+  {
+    "month_key": "2025-12",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": -98.009288,
+    "shrink_amount_neg": -213.9504,
+    "sales": 44374.33,
+    "shrink_pct": -0.002209,
+    "shrink_pct_neg": -0.004821
+  },
+  {
+    "month_key": "2025-12",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -95.656677,
+    "shrink_amount_neg": -187.269298,
+    "sales": 40451.36,
+    "shrink_pct": -0.002365,
+    "shrink_pct_neg": -0.004629
+  },
+  {
+    "month_key": "2026-01",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -73.550181,
+    "shrink_amount_neg": -271.110698,
+    "sales": 40140.46,
+    "shrink_pct": -0.001832,
+    "shrink_pct_neg": -0.006754
+  },
+  {
+    "month_key": "2026-01",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": 120.778585,
+    "shrink_amount_neg": -350.910109,
+    "sales": 43537.36,
+    "shrink_pct": 0.002774,
+    "shrink_pct_neg": -0.00806
+  },
+  {
+    "month_key": "2026-01",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -162.588446,
+    "shrink_amount_neg": -261.017154,
+    "sales": 35726.56,
+    "shrink_pct": -0.004551,
+    "shrink_pct_neg": -0.007306
+  },
+  {
+    "month_key": "2026-02",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": 181.970151,
+    "shrink_amount_neg": -139.00846,
+    "sales": 37041.44,
+    "shrink_pct": 0.004913,
+    "shrink_pct_neg": -0.003753
+  },
+  {
+    "month_key": "2026-02",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": 9.523097,
+    "shrink_amount_neg": -175.892223,
+    "sales": 40195.84,
+    "shrink_pct": 0.000237,
+    "shrink_pct_neg": -0.004376
+  },
+  {
+    "month_key": "2026-02",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": 132.47866,
+    "shrink_amount_neg": -200.66413,
+    "sales": 35029.56,
+    "shrink_pct": 0.003782,
+    "shrink_pct_neg": -0.005728
+  },
+  {
+    "month_key": "2026-03",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": 93.614274,
+    "shrink_amount_neg": -59.83859,
+    "sales": 44510.77,
+    "shrink_pct": 0.002103,
+    "shrink_pct_neg": -0.001344
+  },
+  {
+    "month_key": "2026-03",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": 175.909652,
+    "shrink_amount_neg": -184.978889,
+    "sales": 44689.79,
+    "shrink_pct": 0.003936,
+    "shrink_pct_neg": -0.004139
+  },
+  {
+    "month_key": "2026-03",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -42.350571,
+    "shrink_amount_neg": -144.436994,
+    "sales": 38887.95,
+    "shrink_pct": -0.001089,
+    "shrink_pct_neg": -0.003714
+  },
+  {
+    "month_key": "2026-04",
+    "store": "AMPM01",
+    "store_name": "AMPM01",
+    "shrink_amount": -3.195978,
+    "shrink_amount_neg": -71.914869,
+    "sales": 25524.73,
+    "shrink_pct": -0.000125,
+    "shrink_pct_neg": -0.002817
+  },
+  {
+    "month_key": "2026-04",
+    "store": "AMPM02",
+    "store_name": "AMPM02",
+    "shrink_amount": 44.064194,
+    "shrink_amount_neg": -239.382401,
+    "sales": 22759.89,
+    "shrink_pct": 0.001936,
+    "shrink_pct_neg": -0.010518
+  },
+  {
+    "month_key": "2026-04",
+    "store": "AMPM03",
+    "store_name": "AMPM03",
+    "shrink_amount": -0.855797,
+    "shrink_amount_neg": -44.821951,
+    "sales": 22668.81,
+    "shrink_pct": -3.8e-05,
+    "shrink_pct_neg": -0.001977
+  }
+]

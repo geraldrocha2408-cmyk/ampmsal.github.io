@@ -1,0 +1,130 @@
+[
+  {
+    "month_key": "2025-01",
+    "shrink_amount": -322.609346,
+    "shrink_amount_neg": -743.502047,
+    "sales": 75389.41,
+    "shrink_pct": -0.004279,
+    "shrink_pct_neg": -0.009862
+  },
+  {
+    "month_key": "2025-02",
+    "shrink_amount": -208.504142,
+    "shrink_amount_neg": -669.881491,
+    "sales": 73213.7,
+    "shrink_pct": -0.002848,
+    "shrink_pct_neg": -0.00915
+  },
+  {
+    "month_key": "2025-03",
+    "shrink_amount": -248.219552,
+    "shrink_amount_neg": -642.963131,
+    "sales": 80957.52,
+    "shrink_pct": -0.003066,
+    "shrink_pct_neg": -0.007942
+  },
+  {
+    "month_key": "2025-04",
+    "shrink_amount": -318.811843,
+    "shrink_amount_neg": -531.440434,
+    "sales": 76232.37,
+    "shrink_pct": -0.004182,
+    "shrink_pct_neg": -0.006971
+  },
+  {
+    "month_key": "2025-05",
+    "shrink_amount": -260.8775,
+    "shrink_amount_neg": -517.310066,
+    "sales": 91442.62,
+    "shrink_pct": -0.002853,
+    "shrink_pct_neg": -0.005657
+  },
+  {
+    "month_key": "2025-06",
+    "shrink_amount": -207.233893,
+    "shrink_amount_neg": -487.308752,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-07",
+    "shrink_amount": -243.015991,
+    "shrink_amount_neg": -549.667098,
+    "sales": 0.0,
+    "shrink_pct": 0.0,
+    "shrink_pct_neg": 0.0
+  },
+  {
+    "month_key": "2025-08",
+    "shrink_amount": 69.65208,
+    "shrink_amount_neg": -497.253931,
+    "sales": 99391.87,
+    "shrink_pct": 0.000701,
+    "shrink_pct_neg": -0.005003
+  },
+  {
+    "month_key": "2025-09",
+    "shrink_amount": -334.977888,
+    "shrink_amount_neg": -506.084419,
+    "sales": 93122.03,
+    "shrink_pct": -0.003597,
+    "shrink_pct_neg": -0.005435
+  },
+  {
+    "month_key": "2025-10",
+    "shrink_amount": -524.041312,
+    "shrink_amount_neg": -708.974384,
+    "sales": 97176.65,
+    "shrink_pct": -0.005393,
+    "shrink_pct_neg": -0.007296
+  },
+  {
+    "month_key": "2025-11",
+    "shrink_amount": -215.131979,
+    "shrink_amount_neg": -627.579819,
+    "sales": 107768.91,
+    "shrink_pct": -0.001996,
+    "shrink_pct_neg": -0.005823
+  },
+  {
+    "month_key": "2025-12",
+    "shrink_amount": -245.88954,
+    "shrink_amount_neg": -521.649554,
+    "sales": 130892.09,
+    "shrink_pct": -0.001879,
+    "shrink_pct_neg": -0.003985
+  },
+  {
+    "month_key": "2026-01",
+    "shrink_amount": -115.360042,
+    "shrink_amount_neg": -883.037961,
+    "sales": 119404.38,
+    "shrink_pct": -0.000966,
+    "shrink_pct_neg": -0.007395
+  },
+  {
+    "month_key": "2026-02",
+    "shrink_amount": 323.971908,
+    "shrink_amount_neg": -515.564813,
+    "sales": 112266.84,
+    "shrink_pct": 0.002886,
+    "shrink_pct_neg": -0.004592
+  },
+  {
+    "month_key": "2026-03",
+    "shrink_amount": 227.173354,
+    "shrink_amount_neg": -389.254474,
+    "sales": 128088.51,
+    "shrink_pct": 0.001774,
+    "shrink_pct_neg": -0.003039
+  },
+  {
+    "month_key": "2026-04",
+    "shrink_amount": 40.01242,
+    "shrink_amount_neg": -356.119221,
+    "sales": 70953.43,
+    "shrink_pct": 0.000564,
+    "shrink_pct_neg": -0.005019
+  }
+]
