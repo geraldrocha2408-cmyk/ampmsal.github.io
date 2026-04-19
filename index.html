@@ -31458,487 +31458,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 
-
-<script id="ampm-json-hotfix-v3">
-(function(){
-  if(window.__AMPM_JSON_HOTFIX_V3__) return;
-  window.__AMPM_JSON_HOTFIX_V3__ = true;
-
-  var prevBuild = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
-  var prevEnsure = typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function' ? window.__ampmJsonRouteV2EnsureReadyForQuestion : null;
-  var BASE = './data_api/out';
-  var HOT_FILES = {
-    calendars: BASE + '/meta/calendars.json',
-    manifest: BASE + '/meta/manifest.json',
-    catalogs: BASE + '/meta/catalogs.json',
-    salesMonthlyDescription: BASE + '/ventas/monthly_description.json',
-    salesWeeklyDescription: BASE + '/ventas/weekly_description.json',
-    salesMonthlyStore: BASE + '/ventas/monthly_store.json',
-    salesWeeklyStore: BASE + '/ventas/weekly_store.json',
-    deliveryMonthlyCategory: BASE + '/delivery/monthly_category.json',
-    deliveryWeeklyCategory: BASE + '/delivery/weekly_category.json',
-    deliveryMonthlyStorePlatform: BASE + '/delivery/monthly_store_platform.json',
-    deliveryWeeklyStorePlatform: BASE + '/delivery/weekly_store_platform.json',
-    sbfMonthlyServiceStore: BASE + '/sbf/monthly_service_store.json',
-    sbfWeeklyServiceStore: BASE + '/sbf/weekly_service_store.json'
-  };
-  var HOT_CACHE = { data:{}, loading:{}, loaded:{}, failed:{} };
-
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function arr(v){ return Array.isArray(v) ? v : []; }
-  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
-  function norm(v){
-    var s = txt(v);
-    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
-    return s.toLowerCase().trim();
-  }
-  function pad2(v){ v = Number(v || 0); return (v < 10 ? '0' : '') + String(v); }
-
-  function getStateData(name){
-    try{
-      var state = window.__ampmJsonRouteV2State;
-      if(state && state.data && typeof state.data === 'object' && state.data[name]) return state.data[name];
-    }catch(_e){}
-    return null;
-  }
-
-  function loadHot(name){
-    if(HOT_CACHE.loaded[name] || HOT_CACHE.loading[name] || HOT_CACHE.failed[name] || !HOT_FILES[name]) return HOT_CACHE.loading[name] || Promise.resolve(HOT_CACHE.data[name] || getStateData(name) || null);
-    HOT_CACHE.loading[name] = fetch(HOT_FILES[name], { cache:'no-store' })
-      .then(function(res){
-        if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + name);
-        return res.json();
-      })
-      .then(function(data){
-        HOT_CACHE.data[name] = data;
-        HOT_CACHE.loaded[name] = true;
-        return data;
-      })
-      .catch(function(err){
-        HOT_CACHE.failed[name] = true;
-        try{ console.warn('AMPM hotfix v3 · no pude cargar ' + name, err); }catch(_e){}
-        return null;
-      })
-      .finally(function(){ delete HOT_CACHE.loading[name]; });
-    return HOT_CACHE.loading[name];
-  }
-
-  function getHot(name){
-    var stateData = getStateData(name);
-    if(stateData) return stateData;
-    if(HOT_CACHE.loaded[name]) return HOT_CACHE.data[name];
-    return null;
-  }
-
-  function selectedStores(){
-    try{
-      if(typeof getSelectedStoresOrAll === 'function'){
-        return uniq((getSelectedStoresOrAll() || []).map(function(v){ return txt(v).toUpperCase(); }));
-      }
-    }catch(_e){}
-    return [];
-  }
-
-  function dashboardMode(){
-    try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month'; }catch(_e){}
-    try{ if(document.body && document.body.classList.contains('report-mode-mensual')) return 'month'; }catch(_e){}
-    return 'week';
-  }
-
-  function monthFromQuestion(question){
-    var q = norm(question);
-    var direct = q.match(/\b(20\d{2})[-\/](\d{1,2})\b/);
-    if(direct){
-      var mo = Number(direct[2]);
-      if(mo >= 1 && mo <= 12) return direct[1] + '-' + pad2(mo);
-    }
-    var monthMap = { enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12' };
-    var yearMatch = q.match(/\b20\d{2}\b/);
-    if(yearMatch){
-      var year = yearMatch[0];
-      var keys = Object.keys(monthMap);
-      for(var i=0;i<keys.length;i+=1){
-        if(q.indexOf(keys[i]) >= 0) return year + '-' + monthMap[keys[i]];
-      }
-    }
-    return '';
-  }
-
-  function weekFromQuestion(question){
-    var q = norm(question);
-    var m = q.match(/\b(20\d{2})\s*[- ]?w\s*(\d{1,2})\b/);
-    if(m) return m[1] + '-W' + pad2(m[2]);
-    m = q.match(/\bsemana\s+(\d{1,2})(?:\s+de)?\s+(20\d{2})\b/);
-    if(m) return m[2] + '-W' + pad2(m[1]);
-    return '';
-  }
-
-  function latestMonthKey(){
-    var cal = getHot('calendars') || {};
-    var months = arr(cal.months).map(function(x){ return txt(x && x.month_key); }).filter(Boolean);
-    if(months.length) return months[months.length - 1];
-    var man = getHot('manifest') || {};
-    var ma = arr(man.months_available).map(txt).filter(Boolean);
-    return ma.length ? ma[ma.length - 1] : '';
-  }
-
-  function latestWeekKey(){
-    var cal = getHot('calendars') || {};
-    var weeks = arr(cal.weeks).map(function(x){ return txt(x && x.week_key); }).filter(Boolean);
-    if(weeks.length) return weeks[weeks.length - 1];
-    var man = getHot('manifest') || {};
-    var wa = arr(man.weeks_available).map(txt).filter(Boolean);
-    return wa.length ? wa[wa.length - 1] : '';
-  }
-
-  function periodLabel(pk, mode){
-    pk = txt(pk);
-    if(mode === 'month'){
-      var m = pk.match(/^(\d{4})-(\d{2})$/);
-      if(!m) return pk;
-      var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      return names[Math.max(0, Number(m[2]) - 1)] + ' ' + m[1];
-    }
-    return pk;
-  }
-
-  function detectDomain(question){
-    var q = norm(question);
-    if(/delivery|uber|pedidos ya|pedidoya|pya/.test(q)) return 'delivery';
-    if(/sbf|smart ticket|western union|puntoxpress|rapibac|loto|n1co|aki pago|recarga/.test(q)) return 'sbf';
-    return 'sales';
-  }
-
-  function detectChartType(question){
-    var q = norm(question);
-    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
-    if(/linea|línea|trend|tendencia|serie|evolucion|evolución/.test(q)) return 'line';
-    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
-    if(/barra|barras|ranking|top|grafica|gráfico|grafico/.test(q)) return 'bar';
-    return 'auto';
-  }
-
-  function detectMetric(question, domain){
-    var q = norm(question);
-    if(domain === 'sbf') return 'tx';
-    if(/qty|unidades|cantidad/.test(q)) return 'qty';
-    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
-    if(/margen|margin|gm/.test(q)) return 'margin';
-    if(/ticket/.test(q)) return 'avg_ticket';
-    return 'sales';
-  }
-
-  function detectDimension(question, domain){
-    var q = norm(question);
-    if(/por tienda|tiendas|store/.test(q)) return 'store_name';
-    if(/por marca|marcas|brand/.test(q)) return 'brand';
-    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
-    if(/subcategor|categoria|categoría|segmento|mix/.test(q)) return 'category';
-    if(domain === 'delivery' && /plataforma|uber|pedidos ya|pedidoya|pya/.test(q)) return 'platform';
-    if(domain === 'sbf') return /por tienda|tiendas|store/.test(q) ? 'store_name' : 'service';
-    return 'category';
-  }
-
-  function detectEntity(question){
-    var q = norm(question);
-    var catalogs = getHot('catalogs') || {};
-    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores', label:'Licores' };
-    if(/cerveza|cervezas|beer/.test(q)) return { field:'department', value:'Cervezas y RTD', label:'Cervezas y RTD' };
-    if(/food service|hot dog|pizza|hamburguesa|cafe|café|nacho|burrito/.test(q)) return { field:'department', value:'Food Service', label:'Food Service' };
-    if(/snack|boquita/.test(q)) return { field:'category', value:'Boquitas', label:'Boquitas' };
-
-    var services = arr(catalogs.sbf_services).map(txt);
-    for(var i=0;i<services.length;i+=1){
-      if(q.indexOf(norm(services[i])) >= 0) return { field:'service', value:services[i], label:services[i] };
-    }
-    return null;
-  }
-
-  function compareKind(question){
-    var q = norm(question);
-    if(/\blm\b|last month|mes anterior|mes pasado|vs mes pasado/.test(q)) return 'lm';
-    if(/\bly\b|año pasado|ano pasado|last year|\bvs\b|compar/.test(q)) return 'ly';
-    return '';
-  }
-
-  function metricLabel(metric, domain){
-    var map = {
-      sales:'Venta', tx:'TX', qty:'Unidades', margin:'Margen', margin_pct:'Margen %', avg_ticket:'Ticket promedio'
-    };
-    if(domain === 'delivery' && metric === 'sales') return 'Venta delivery';
-    if(domain === 'sbf' && metric === 'tx') return 'TX SBF';
-    return map[metric] || metric;
-  }
-
-  function yFormat(metric){
-    if(/pct|share/.test(metric)) return 'percent';
-    if(/sales|margin|ticket/.test(metric)) return 'currency';
-    return 'number';
-  }
-
-  function fmtNumber(v, kind){
-    if(v == null || !Number.isFinite(Number(v))) return 'N/D';
-    var n = Number(v);
-    if(kind === 'percent') return n.toLocaleString('es-SV', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
-    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', { minimumFractionDigits:2, maximumFractionDigits:2 });
-    return n.toLocaleString('es-SV', { maximumFractionDigits:2 });
-  }
-
-  function aggregateRows(rows, groupField, metric, compare){
-    var map = new Map();
-    arr(rows).forEach(function(r){
-      var label = txt(r[groupField] || 'Sin dato');
-      if(!label) label = 'Sin dato';
-      if(!map.has(label)) map.set(label, { current:0, compare:0 });
-      var bucket = map.get(label);
-      if(metric === 'margin_pct'){
-        bucket.current += num(r.margin);
-        bucket.currentSales = (bucket.currentSales || 0) + Math.max(0, num(r.sales));
-        if(compare === 'ly'){ bucket.compare += num(r.margin_ly); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.margin_lm); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_lm)); }
-      }else if(metric === 'avg_ticket'){
-        bucket.current += num(r.sales);
-        bucket.currentTx = (bucket.currentTx || 0) + Math.max(0, num(r.tx));
-        if(compare === 'ly'){ bucket.compare += num(r.sales_ly); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.sales_lm); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_lm)); }
-      }else{
-        bucket.current += num(r[metric]);
-        if(compare === 'ly') bucket.compare += num(r[metric + '_ly']);
-        if(compare === 'lm') bucket.compare += num(r[metric + '_lm']);
-      }
-    });
-    var out = [];
-    map.forEach(function(v, label){
-      var current = v.current;
-      var comp = v.compare;
-      if(metric === 'margin_pct'){
-        current = v.currentSales ? (v.current / v.currentSales) * 100 : 0;
-        comp = compare ? ((v.compareSales ? (v.compare / v.compareSales) * 100 : 0)) : 0;
-      }else if(metric === 'avg_ticket'){
-        current = v.currentTx ? (v.current / v.currentTx) : 0;
-        comp = compare ? ((v.compareTx ? (v.compare / v.compareTx) : 0)) : 0;
-      }
-      out.push({ label:label, current:current, compare:comp });
-    });
-    out.sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); });
-    return out;
-  }
-
-  function filterStores(rows){
-    var stores = selectedStores();
-    if(!stores.length) return rows;
-    return arr(rows).filter(function(r){
-      var st = txt(r.store_name || r.store).toUpperCase();
-      return !st || stores.indexOf(st) >= 0;
-    });
-  }
-
-  function buildSalesModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-
-    var entity = detectEntity(question);
-    if(entity){
-      rows = rows.filter(function(r){ return norm(r[entity.field]) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sales');
-    var compare = compareKind(question);
-    var groupField = detectDimension(question, 'sales');
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var entries = aggregateRows(rows, groupField, metric, compare);
-
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-    var labels = entries.map(function(x){ return x.label; });
-    var datasets = [
-      { label: metricLabel(metric, 'sales'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-    ];
-    if(compare && chartType !== 'pie' && entries.some(function(x){ return Math.abs(x.compare) > 0; })){
-      datasets.push({ label: metricLabel(metric, 'sales') + ' ' + compare.toUpperCase(), data: entries.map(function(x){ return x.compare; }), type:'bar', color:'#F58320' });
-    }
-    var total = entries.reduce(function(acc, x){ return acc + x.current; }, 0);
-    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ');
-
-    return {
-      labels: labels,
-      datasets: datasets,
-      title: metricLabel(metric, 'sales') + ' por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode) + (entity ? (' · ' + entity.label) : ''),
-      tag: chartType === 'pie' ? 'Participación' : (compare ? 'Actual vs ' + compare.toUpperCase() : 'Breakdown'),
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && labels.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        (entity ? ('Foco detectado: ' + entity.label + '. ') : '') +
-        'Breakdown por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField) + '. ' +
-        'Total visible: ' + fmtNumber(total, yFormat(metric)) + '. ' +
-        'Top líneas: ' + topText + '.'
-    };
-  }
-
-  function buildDeliveryModel(question, mode, periodKey){
-    var groupField = detectDimension(question, 'delivery');
-    var datasetName = (groupField === 'platform' || groupField === 'store_name')
-      ? (mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform')
-      : (mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'delivery');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-
-    if(groupField === 'platform'){
-      // keep platform only
-    }else if(groupField === 'store_name'){
-      // aggregate by store
-    }else{
-      groupField = 'category';
-    }
-    var entries = aggregateRows(rows, groupField, metric === 'sales' ? 'sales' : metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'delivery'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'delivery') + ' por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric === 'sales' ? 'sales' : metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'Delivery por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric === 'sales' ? 'sales' : metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildSbfModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var entity = detectEntity(question);
-    if(entity && entity.field === 'service'){
-      rows = rows.filter(function(r){ return norm(r.service) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sbf');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var groupField = detectDimension(question, 'sbf');
-
-    var entries = aggregateRows(rows, groupField, metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'sbf'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'sbf') + ' por ' + (groupField === 'store_name' ? 'tienda' : 'servicio'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'SBF por ' + (groupField === 'store_name' ? 'tienda' : 'servicio') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildHotfixModel(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var periodKey = mode === 'month' ? (monthFromQuestion(question) || latestMonthKey()) : (weekFromQuestion(question) || latestWeekKey());
-    if(!periodKey) return null;
-
-    if(domain === 'sales') return buildSalesModel(question, mode, periodKey);
-    if(domain === 'delivery') return buildDeliveryModel(question, mode, periodKey);
-    if(domain === 'sbf') return buildSbfModel(question, mode, periodKey);
-    return null;
-  }
-
-  function neededFiles(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var files = ['calendars','manifest','catalogs'];
-    if(domain === 'sales'){
-      files.push(mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription');
-      var q = norm(question);
-      if(/por tienda|tiendas|store/.test(q)) files.push(mode === 'month' ? 'salesMonthlyStore' : 'salesWeeklyStore');
-    }else if(domain === 'delivery'){
-      files.push(mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-      files.push(mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform');
-    }else if(domain === 'sbf'){
-      files.push(mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore');
-    }
-    return uniq(files);
-  }
-
-  window.__ampmJsonRouteV2EnsureReadyForQuestion = function(question){
-    var first = prevEnsure ? Promise.resolve(prevEnsure(question)) : Promise.resolve();
-    return first.then(function(){
-      var needs = neededFiles(question);
-      return Promise.all(needs.map(loadHot));
-    }).then(function(){ return { ok:true }; });
-  };
-
-  function hotfixBuild(question){
-    try{
-      var model = buildHotfixModel(question);
-      if(model && model.labels && model.labels.length && model.datasets && model.datasets.length){
-        return model;
-      }
-    }catch(err){
-      try{ console.warn('AMPM hotfix v3 · build failed', err); }catch(_e){}
-    }
-    return prevBuild ? prevBuild(question) : null;
-  }
-
-  window.__ampmAiDirectCuboBuild = hotfixBuild;
-  aiBuildLocalIntentModel = hotfixBuild;
-  aiBuildSeries = hotfixBuild;
-  buildAiQuestionScopedContext = function(question){
-    var model = hotfixBuild(question);
-    return model && model.questionScopedContext ? model.questionScopedContext : null;
-  };
-})();
-</script>
-
 </html>`;
 
           const baseName = `Reporte_${slugifyExportName(activeExport.label)}_graficas_${ym || 'NA'}`;
@@ -32097,487 +31616,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
-
-
-<script id="ampm-json-hotfix-v3">
-(function(){
-  if(window.__AMPM_JSON_HOTFIX_V3__) return;
-  window.__AMPM_JSON_HOTFIX_V3__ = true;
-
-  var prevBuild = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
-  var prevEnsure = typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function' ? window.__ampmJsonRouteV2EnsureReadyForQuestion : null;
-  var BASE = './data_api/out';
-  var HOT_FILES = {
-    calendars: BASE + '/meta/calendars.json',
-    manifest: BASE + '/meta/manifest.json',
-    catalogs: BASE + '/meta/catalogs.json',
-    salesMonthlyDescription: BASE + '/ventas/monthly_description.json',
-    salesWeeklyDescription: BASE + '/ventas/weekly_description.json',
-    salesMonthlyStore: BASE + '/ventas/monthly_store.json',
-    salesWeeklyStore: BASE + '/ventas/weekly_store.json',
-    deliveryMonthlyCategory: BASE + '/delivery/monthly_category.json',
-    deliveryWeeklyCategory: BASE + '/delivery/weekly_category.json',
-    deliveryMonthlyStorePlatform: BASE + '/delivery/monthly_store_platform.json',
-    deliveryWeeklyStorePlatform: BASE + '/delivery/weekly_store_platform.json',
-    sbfMonthlyServiceStore: BASE + '/sbf/monthly_service_store.json',
-    sbfWeeklyServiceStore: BASE + '/sbf/weekly_service_store.json'
-  };
-  var HOT_CACHE = { data:{}, loading:{}, loaded:{}, failed:{} };
-
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function arr(v){ return Array.isArray(v) ? v : []; }
-  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
-  function norm(v){
-    var s = txt(v);
-    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
-    return s.toLowerCase().trim();
-  }
-  function pad2(v){ v = Number(v || 0); return (v < 10 ? '0' : '') + String(v); }
-
-  function getStateData(name){
-    try{
-      var state = window.__ampmJsonRouteV2State;
-      if(state && state.data && typeof state.data === 'object' && state.data[name]) return state.data[name];
-    }catch(_e){}
-    return null;
-  }
-
-  function loadHot(name){
-    if(HOT_CACHE.loaded[name] || HOT_CACHE.loading[name] || HOT_CACHE.failed[name] || !HOT_FILES[name]) return HOT_CACHE.loading[name] || Promise.resolve(HOT_CACHE.data[name] || getStateData(name) || null);
-    HOT_CACHE.loading[name] = fetch(HOT_FILES[name], { cache:'no-store' })
-      .then(function(res){
-        if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + name);
-        return res.json();
-      })
-      .then(function(data){
-        HOT_CACHE.data[name] = data;
-        HOT_CACHE.loaded[name] = true;
-        return data;
-      })
-      .catch(function(err){
-        HOT_CACHE.failed[name] = true;
-        try{ console.warn('AMPM hotfix v3 · no pude cargar ' + name, err); }catch(_e){}
-        return null;
-      })
-      .finally(function(){ delete HOT_CACHE.loading[name]; });
-    return HOT_CACHE.loading[name];
-  }
-
-  function getHot(name){
-    var stateData = getStateData(name);
-    if(stateData) return stateData;
-    if(HOT_CACHE.loaded[name]) return HOT_CACHE.data[name];
-    return null;
-  }
-
-  function selectedStores(){
-    try{
-      if(typeof getSelectedStoresOrAll === 'function'){
-        return uniq((getSelectedStoresOrAll() || []).map(function(v){ return txt(v).toUpperCase(); }));
-      }
-    }catch(_e){}
-    return [];
-  }
-
-  function dashboardMode(){
-    try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month'; }catch(_e){}
-    try{ if(document.body && document.body.classList.contains('report-mode-mensual')) return 'month'; }catch(_e){}
-    return 'week';
-  }
-
-  function monthFromQuestion(question){
-    var q = norm(question);
-    var direct = q.match(/\b(20\d{2})[-\/](\d{1,2})\b/);
-    if(direct){
-      var mo = Number(direct[2]);
-      if(mo >= 1 && mo <= 12) return direct[1] + '-' + pad2(mo);
-    }
-    var monthMap = { enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12' };
-    var yearMatch = q.match(/\b20\d{2}\b/);
-    if(yearMatch){
-      var year = yearMatch[0];
-      var keys = Object.keys(monthMap);
-      for(var i=0;i<keys.length;i+=1){
-        if(q.indexOf(keys[i]) >= 0) return year + '-' + monthMap[keys[i]];
-      }
-    }
-    return '';
-  }
-
-  function weekFromQuestion(question){
-    var q = norm(question);
-    var m = q.match(/\b(20\d{2})\s*[- ]?w\s*(\d{1,2})\b/);
-    if(m) return m[1] + '-W' + pad2(m[2]);
-    m = q.match(/\bsemana\s+(\d{1,2})(?:\s+de)?\s+(20\d{2})\b/);
-    if(m) return m[2] + '-W' + pad2(m[1]);
-    return '';
-  }
-
-  function latestMonthKey(){
-    var cal = getHot('calendars') || {};
-    var months = arr(cal.months).map(function(x){ return txt(x && x.month_key); }).filter(Boolean);
-    if(months.length) return months[months.length - 1];
-    var man = getHot('manifest') || {};
-    var ma = arr(man.months_available).map(txt).filter(Boolean);
-    return ma.length ? ma[ma.length - 1] : '';
-  }
-
-  function latestWeekKey(){
-    var cal = getHot('calendars') || {};
-    var weeks = arr(cal.weeks).map(function(x){ return txt(x && x.week_key); }).filter(Boolean);
-    if(weeks.length) return weeks[weeks.length - 1];
-    var man = getHot('manifest') || {};
-    var wa = arr(man.weeks_available).map(txt).filter(Boolean);
-    return wa.length ? wa[wa.length - 1] : '';
-  }
-
-  function periodLabel(pk, mode){
-    pk = txt(pk);
-    if(mode === 'month'){
-      var m = pk.match(/^(\d{4})-(\d{2})$/);
-      if(!m) return pk;
-      var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      return names[Math.max(0, Number(m[2]) - 1)] + ' ' + m[1];
-    }
-    return pk;
-  }
-
-  function detectDomain(question){
-    var q = norm(question);
-    if(/delivery|uber|pedidos ya|pedidoya|pya/.test(q)) return 'delivery';
-    if(/sbf|smart ticket|western union|puntoxpress|rapibac|loto|n1co|aki pago|recarga/.test(q)) return 'sbf';
-    return 'sales';
-  }
-
-  function detectChartType(question){
-    var q = norm(question);
-    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
-    if(/linea|línea|trend|tendencia|serie|evolucion|evolución/.test(q)) return 'line';
-    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
-    if(/barra|barras|ranking|top|grafica|gráfico|grafico/.test(q)) return 'bar';
-    return 'auto';
-  }
-
-  function detectMetric(question, domain){
-    var q = norm(question);
-    if(domain === 'sbf') return 'tx';
-    if(/qty|unidades|cantidad/.test(q)) return 'qty';
-    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
-    if(/margen|margin|gm/.test(q)) return 'margin';
-    if(/ticket/.test(q)) return 'avg_ticket';
-    return 'sales';
-  }
-
-  function detectDimension(question, domain){
-    var q = norm(question);
-    if(/por tienda|tiendas|store/.test(q)) return 'store_name';
-    if(/por marca|marcas|brand/.test(q)) return 'brand';
-    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
-    if(/subcategor|categoria|categoría|segmento|mix/.test(q)) return 'category';
-    if(domain === 'delivery' && /plataforma|uber|pedidos ya|pedidoya|pya/.test(q)) return 'platform';
-    if(domain === 'sbf') return /por tienda|tiendas|store/.test(q) ? 'store_name' : 'service';
-    return 'category';
-  }
-
-  function detectEntity(question){
-    var q = norm(question);
-    var catalogs = getHot('catalogs') || {};
-    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores', label:'Licores' };
-    if(/cerveza|cervezas|beer/.test(q)) return { field:'department', value:'Cervezas y RTD', label:'Cervezas y RTD' };
-    if(/food service|hot dog|pizza|hamburguesa|cafe|café|nacho|burrito/.test(q)) return { field:'department', value:'Food Service', label:'Food Service' };
-    if(/snack|boquita/.test(q)) return { field:'category', value:'Boquitas', label:'Boquitas' };
-
-    var services = arr(catalogs.sbf_services).map(txt);
-    for(var i=0;i<services.length;i+=1){
-      if(q.indexOf(norm(services[i])) >= 0) return { field:'service', value:services[i], label:services[i] };
-    }
-    return null;
-  }
-
-  function compareKind(question){
-    var q = norm(question);
-    if(/\blm\b|last month|mes anterior|mes pasado|vs mes pasado/.test(q)) return 'lm';
-    if(/\bly\b|año pasado|ano pasado|last year|\bvs\b|compar/.test(q)) return 'ly';
-    return '';
-  }
-
-  function metricLabel(metric, domain){
-    var map = {
-      sales:'Venta', tx:'TX', qty:'Unidades', margin:'Margen', margin_pct:'Margen %', avg_ticket:'Ticket promedio'
-    };
-    if(domain === 'delivery' && metric === 'sales') return 'Venta delivery';
-    if(domain === 'sbf' && metric === 'tx') return 'TX SBF';
-    return map[metric] || metric;
-  }
-
-  function yFormat(metric){
-    if(/pct|share/.test(metric)) return 'percent';
-    if(/sales|margin|ticket/.test(metric)) return 'currency';
-    return 'number';
-  }
-
-  function fmtNumber(v, kind){
-    if(v == null || !Number.isFinite(Number(v))) return 'N/D';
-    var n = Number(v);
-    if(kind === 'percent') return n.toLocaleString('es-SV', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
-    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', { minimumFractionDigits:2, maximumFractionDigits:2 });
-    return n.toLocaleString('es-SV', { maximumFractionDigits:2 });
-  }
-
-  function aggregateRows(rows, groupField, metric, compare){
-    var map = new Map();
-    arr(rows).forEach(function(r){
-      var label = txt(r[groupField] || 'Sin dato');
-      if(!label) label = 'Sin dato';
-      if(!map.has(label)) map.set(label, { current:0, compare:0 });
-      var bucket = map.get(label);
-      if(metric === 'margin_pct'){
-        bucket.current += num(r.margin);
-        bucket.currentSales = (bucket.currentSales || 0) + Math.max(0, num(r.sales));
-        if(compare === 'ly'){ bucket.compare += num(r.margin_ly); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.margin_lm); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_lm)); }
-      }else if(metric === 'avg_ticket'){
-        bucket.current += num(r.sales);
-        bucket.currentTx = (bucket.currentTx || 0) + Math.max(0, num(r.tx));
-        if(compare === 'ly'){ bucket.compare += num(r.sales_ly); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.sales_lm); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_lm)); }
-      }else{
-        bucket.current += num(r[metric]);
-        if(compare === 'ly') bucket.compare += num(r[metric + '_ly']);
-        if(compare === 'lm') bucket.compare += num(r[metric + '_lm']);
-      }
-    });
-    var out = [];
-    map.forEach(function(v, label){
-      var current = v.current;
-      var comp = v.compare;
-      if(metric === 'margin_pct'){
-        current = v.currentSales ? (v.current / v.currentSales) * 100 : 0;
-        comp = compare ? ((v.compareSales ? (v.compare / v.compareSales) * 100 : 0)) : 0;
-      }else if(metric === 'avg_ticket'){
-        current = v.currentTx ? (v.current / v.currentTx) : 0;
-        comp = compare ? ((v.compareTx ? (v.compare / v.compareTx) : 0)) : 0;
-      }
-      out.push({ label:label, current:current, compare:comp });
-    });
-    out.sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); });
-    return out;
-  }
-
-  function filterStores(rows){
-    var stores = selectedStores();
-    if(!stores.length) return rows;
-    return arr(rows).filter(function(r){
-      var st = txt(r.store_name || r.store).toUpperCase();
-      return !st || stores.indexOf(st) >= 0;
-    });
-  }
-
-  function buildSalesModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-
-    var entity = detectEntity(question);
-    if(entity){
-      rows = rows.filter(function(r){ return norm(r[entity.field]) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sales');
-    var compare = compareKind(question);
-    var groupField = detectDimension(question, 'sales');
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var entries = aggregateRows(rows, groupField, metric, compare);
-
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-    var labels = entries.map(function(x){ return x.label; });
-    var datasets = [
-      { label: metricLabel(metric, 'sales'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-    ];
-    if(compare && chartType !== 'pie' && entries.some(function(x){ return Math.abs(x.compare) > 0; })){
-      datasets.push({ label: metricLabel(metric, 'sales') + ' ' + compare.toUpperCase(), data: entries.map(function(x){ return x.compare; }), type:'bar', color:'#F58320' });
-    }
-    var total = entries.reduce(function(acc, x){ return acc + x.current; }, 0);
-    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ');
-
-    return {
-      labels: labels,
-      datasets: datasets,
-      title: metricLabel(metric, 'sales') + ' por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode) + (entity ? (' · ' + entity.label) : ''),
-      tag: chartType === 'pie' ? 'Participación' : (compare ? 'Actual vs ' + compare.toUpperCase() : 'Breakdown'),
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && labels.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        (entity ? ('Foco detectado: ' + entity.label + '. ') : '') +
-        'Breakdown por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField) + '. ' +
-        'Total visible: ' + fmtNumber(total, yFormat(metric)) + '. ' +
-        'Top líneas: ' + topText + '.'
-    };
-  }
-
-  function buildDeliveryModel(question, mode, periodKey){
-    var groupField = detectDimension(question, 'delivery');
-    var datasetName = (groupField === 'platform' || groupField === 'store_name')
-      ? (mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform')
-      : (mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'delivery');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-
-    if(groupField === 'platform'){
-      // keep platform only
-    }else if(groupField === 'store_name'){
-      // aggregate by store
-    }else{
-      groupField = 'category';
-    }
-    var entries = aggregateRows(rows, groupField, metric === 'sales' ? 'sales' : metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'delivery'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'delivery') + ' por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric === 'sales' ? 'sales' : metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'Delivery por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric === 'sales' ? 'sales' : metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildSbfModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var entity = detectEntity(question);
-    if(entity && entity.field === 'service'){
-      rows = rows.filter(function(r){ return norm(r.service) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sbf');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var groupField = detectDimension(question, 'sbf');
-
-    var entries = aggregateRows(rows, groupField, metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'sbf'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'sbf') + ' por ' + (groupField === 'store_name' ? 'tienda' : 'servicio'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'SBF por ' + (groupField === 'store_name' ? 'tienda' : 'servicio') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildHotfixModel(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var periodKey = mode === 'month' ? (monthFromQuestion(question) || latestMonthKey()) : (weekFromQuestion(question) || latestWeekKey());
-    if(!periodKey) return null;
-
-    if(domain === 'sales') return buildSalesModel(question, mode, periodKey);
-    if(domain === 'delivery') return buildDeliveryModel(question, mode, periodKey);
-    if(domain === 'sbf') return buildSbfModel(question, mode, periodKey);
-    return null;
-  }
-
-  function neededFiles(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var files = ['calendars','manifest','catalogs'];
-    if(domain === 'sales'){
-      files.push(mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription');
-      var q = norm(question);
-      if(/por tienda|tiendas|store/.test(q)) files.push(mode === 'month' ? 'salesMonthlyStore' : 'salesWeeklyStore');
-    }else if(domain === 'delivery'){
-      files.push(mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-      files.push(mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform');
-    }else if(domain === 'sbf'){
-      files.push(mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore');
-    }
-    return uniq(files);
-  }
-
-  window.__ampmJsonRouteV2EnsureReadyForQuestion = function(question){
-    var first = prevEnsure ? Promise.resolve(prevEnsure(question)) : Promise.resolve();
-    return first.then(function(){
-      var needs = neededFiles(question);
-      return Promise.all(needs.map(loadHot));
-    }).then(function(){ return { ok:true }; });
-  };
-
-  function hotfixBuild(question){
-    try{
-      var model = buildHotfixModel(question);
-      if(model && model.labels && model.labels.length && model.datasets && model.datasets.length){
-        return model;
-      }
-    }catch(err){
-      try{ console.warn('AMPM hotfix v3 · build failed', err); }catch(_e){}
-    }
-    return prevBuild ? prevBuild(question) : null;
-  }
-
-  window.__ampmAiDirectCuboBuild = hotfixBuild;
-  aiBuildLocalIntentModel = hotfixBuild;
-  aiBuildSeries = hotfixBuild;
-  buildAiQuestionScopedContext = function(question){
-    var model = hotfixBuild(question);
-    return model && model.questionScopedContext ? model.questionScopedContext : null;
-  };
-})();
-</script>
 
 </html>`;
         const ym = (document.getElementById('currentMonth')?.value || 'NA');
@@ -62201,6 +61239,291 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-json-fastpath-v4">
+(function(){
+  if(window.__AMPM_JSON_FASTPATH_V4__) return;
+  window.__AMPM_JSON_FASTPATH_V4__ = true;
+
+  var BASE = './data_api/out/';
+  var CACHE = Object.create(null);
+  var LOADING = Object.create(null);
+  var PRELOAD = [
+    'meta/manifest.json',
+    'ventas/monthly_business.json',
+    'ventas/weekly_business.json',
+    'ventas/monthly_department.json',
+    'ventas/weekly_department.json',
+    'ventas/monthly_category.json',
+    'ventas/weekly_category.json',
+    'ventas/monthly_brand.json',
+    'ventas/weekly_brand.json',
+    'ventas/monthly_description.json',
+    'ventas/weekly_description.json'
+  ];
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function arr(v){ return Array.isArray(v) ? v : []; }
+  function norm(v){
+    var s = txt(v);
+    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
+    return s.toLowerCase().trim();
+  }
+  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
+  function monthNameMap(){
+    return {
+      enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12'
+    };
+  }
+  function detectMetric(question){
+    var q = norm(question);
+    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
+    if(/margen|margin|gm/.test(q)) return 'margin';
+    if(/qty|unidades|cantidad/.test(q)) return 'qty';
+    return 'sales';
+  }
+  function metricLabel(metric){
+    return ({sales:'Venta', margin:'Margen', margin_pct:'Margen %', qty:'Unidades'})[metric] || metric;
+  }
+  function yFormat(metric){
+    if(metric === 'margin_pct') return 'percent';
+    if(metric === 'sales' || metric === 'margin') return 'currency';
+    return 'number';
+  }
+  function fmt(v, kind){
+    var n = Number(v || 0);
+    if(kind === 'percent') return n.toLocaleString('es-SV', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return n.toLocaleString('es-SV', {maximumFractionDigits:2});
+  }
+  function detectChart(question){
+    var q = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/linea|linea|línea|tendencia|trend|serie|evolucion|evolución/.test(q)) return 'line';
+    if(/barra|barras|graf|gráfico|grafico|chart|top|ranking/.test(q)) return 'bar';
+    return '';
+  }
+  function detectMode(question){
+    return /semana|week/.test(norm(question)) ? 'week' : 'month';
+  }
+  function detectDimension(question, chartType){
+    var q = norm(question);
+    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
+    if(/marca/.test(q)) return 'brand';
+    if(/departamento|depto/.test(q)) return 'department';
+    if(/categor|subcategor/.test(q)) return 'category';
+    if(chartType === 'pie') return 'category';
+    return 'category';
+  }
+  function detectAlias(question){
+    var q = norm(question);
+    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores', label:'Licores' };
+    if(/cerveza|beer|rtd/.test(q)) return { field:'department', value:'Cervezas y RTD', label:'Cervezas y RTD' };
+    if(/food service|hot dog|hamburguesa|pizza|burrito|nacho|cafe|café/.test(q)) return { field:'department', value:'Food Service', label:'Food Service' };
+    return null;
+  }
+  function detectPeriod(question, mode){
+    var q = norm(question);
+    if(mode === 'month'){
+      var map = monthNameMap();
+      var m = q.match(/\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+(20\d{2})\b/);
+      if(m) return m[2] + '-' + map[m[1]];
+      m = q.match(/\b(20\d{2})[-\/](0[1-9]|1[0-2])\b/);
+      if(m) return m[1] + '-' + m[2];
+      var manifest = CACHE['meta/manifest.json'];
+      if(manifest && Array.isArray(manifest.months_available) && manifest.months_available.length) return manifest.months_available[manifest.months_available.length - 1];
+      var mb = CACHE['ventas/monthly_business.json'];
+      if(Array.isArray(mb) && mb.length) return String(mb[mb.length - 1].month_key || '');
+      return '';
+    }
+    var w = q.match(/semana\s*(\d{1,2})(?:\s*de)?\s*(20\d{2})/);
+    if(w) return w[2] + '-W' + String(w[1]).padStart(2,'0');
+    var manifest2 = CACHE['meta/manifest.json'];
+    if(manifest2 && Array.isArray(manifest2.weeks_available) && manifest2.weeks_available.length) return manifest2.weeks_available[manifest2.weeks_available.length - 1];
+    var wb = CACHE['ventas/weekly_business.json'];
+    if(Array.isArray(wb) && wb.length) return String(wb[wb.length - 1].week_key || '');
+    return '';
+  }
+  function selectedStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function'){
+        return uniq(arr(getSelectedStoresOrAll()).map(function(v){ return txt(v).toUpperCase(); }));
+      }
+    }catch(_e){}
+    return [];
+  }
+  function loadJson(rel){
+    if(CACHE[rel]) return Promise.resolve(CACHE[rel]);
+    if(LOADING[rel]) return LOADING[rel];
+    LOADING[rel] = fetch(BASE + rel, { cache:'no-store' })
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status + ' · ' + rel); return res.json(); })
+      .then(function(data){ CACHE[rel] = data; delete LOADING[rel]; return data; })
+      .catch(function(err){ delete LOADING[rel]; throw err; });
+    return LOADING[rel];
+  }
+  function preload(){ PRELOAD.forEach(function(rel){ loadJson(rel).catch(function(){}); }); }
+
+  function salesDatasetRel(mode, dimension){
+    var prefix = mode === 'week' ? 'ventas/weekly_' : 'ventas/monthly_';
+    if(dimension === 'brand') return prefix + 'brand.json';
+    if(dimension === 'description') return prefix + 'description.json';
+    if(dimension === 'department') return prefix + 'department.json';
+    return prefix + 'category.json';
+  }
+  function timeField(mode){ return mode === 'week' ? 'week_key' : 'month_key'; }
+  function groupField(dimension){
+    if(dimension === 'brand') return 'brand';
+    if(dimension === 'description') return 'description';
+    if(dimension === 'department') return 'department';
+    return 'category';
+  }
+  function rowText(row){
+    return [row.department, row.category, row.brand, row.description, row.supplier].map(function(v){ return norm(v); }).join(' | ');
+  }
+  function filterSalesRows(rows, cfg){
+    var tf = timeField(cfg.mode);
+    var scopeStores = selectedStores();
+    var alias = cfg.alias;
+    return arr(rows).filter(function(row){
+      if(txt(row[tf]) !== txt(cfg.periodKey)) return false;
+      if(scopeStores.length){
+        var st = txt(row.store_name || row.store).toUpperCase();
+        if(st && scopeStores.indexOf(st) < 0) return false;
+      }
+      if(alias){
+        var fieldVal = norm(row[alias.field]);
+        if(fieldVal.indexOf(norm(alias.value)) < 0) return false;
+      }
+      return true;
+    });
+  }
+  function aggregateRows(rows, dimension, metric){
+    var gf = groupField(dimension);
+    var mf = metric === 'margin_pct' ? 'margin_pct' : metric;
+    var map = new Map();
+    arr(rows).forEach(function(row){
+      var label = txt(row[gf] || row.category || row.brand || row.description || row.department || 'Sin dato');
+      if(!label) return;
+      if(!map.has(label)) map.set(label, { label:label, value:0, sales:0, margin:0 });
+      var bucket = map.get(label);
+      if(metric === 'margin_pct'){
+        bucket.sales += num(row.sales);
+        bucket.margin += num(row.margin);
+      }else{
+        bucket.value += num(row[mf]);
+      }
+    });
+    var entries = Array.from(map.values()).map(function(x){
+      if(metric === 'margin_pct') x.value = x.sales ? (x.margin / x.sales) * 100 : 0;
+      return { label:x.label, value:x.value };
+    }).filter(function(x){ return Math.abs(num(x.value)) > 0; })
+      .sort(function(a,b){ return Math.abs(b.value) - Math.abs(a.value); });
+    return entries;
+  }
+  function buildSalesModelSync(question){
+    var chartType = detectChart(question);
+    if(!chartType) return null;
+    var mode = detectMode(question);
+    var dimension = detectDimension(question, chartType);
+    var metric = detectMetric(question);
+    var alias = detectAlias(question);
+    var periodKey = detectPeriod(question, mode);
+    var rel = salesDatasetRel(mode, dimension);
+    var rows = CACHE[rel];
+    if(!Array.isArray(rows) || !rows.length) return null;
+    var cfg = { mode:mode, periodKey:periodKey, alias:alias };
+    var scoped = filterSalesRows(rows, cfg);
+    if(!scoped.length && dimension === 'category'){
+      var fallbackRows = CACHE[salesDatasetRel(mode, 'description')];
+      if(Array.isArray(fallbackRows) && fallbackRows.length){
+        scoped = filterSalesRows(fallbackRows, cfg);
+      }
+    }
+    if(!scoped.length) return null;
+    var aggDimension = dimension;
+    if(aggDimension === 'category' && scoped[0] && scoped[0].category == null){ aggDimension = 'description'; }
+    var entries = aggregateRows(scoped, aggDimension, metric).slice(0, chartType === 'pie' ? 12 : 15);
+    if(!entries.length) return null;
+    var total = entries.reduce(function(acc, x){ return acc + num(x.value); }, 0);
+    var labels = entries.map(function(x){ return x.label; });
+    var datasetLabel = metricLabel(metric);
+    var titleParts = [datasetLabel, 'de', alias && alias.label ? alias.label : 'Ventas'];
+    var title = titleParts.join(' ') + ' · ' + (aggDimension === 'category' ? 'categoría' : (aggDimension === 'brand' ? 'marca' : (aggDimension === 'department' ? 'departamento' : 'descripción')));
+    var subtitle = mode === 'month' ? ('Corte ' + periodKey) : ('Corte ' + periodKey);
+    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmt(x.value, yFormat(metric)); }).join(' | ');
+    return {
+      title: title,
+      subtitle: subtitle,
+      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
+      labels: labels,
+      datasets: [{ label: datasetLabel, data: entries.map(function(x){ return x.value; }), type: chartType === 'pie' ? 'pie' : (chartType === 'line' ? 'line' : 'bar'), color:'#0C4D8F' }],
+      note: 'Fuente JSON fast-path · ' + rel,
+      type: chartType === 'pie' ? 'pie' : (chartType === 'line' ? 'line' : 'bar'),
+      horizontal: chartType !== 'pie' && labels.length > 6,
+      yFormat: yFormat(metric),
+      questionScopedContext: 'Periodo ' + periodKey + '. ' + (alias ? ('Foco: ' + alias.label + '. ') : '') + 'Breakdown por ' + aggDimension + '. Total visible: ' + fmt(total, yFormat(metric)) + '. Top: ' + topText + '. Fuente JSON: ' + rel + '.'
+    };
+  }
+
+  function buildFastModelSync(question){
+    try{ return buildSalesModelSync(question); }catch(_e){ return null; }
+  }
+  async function ensureFastModel(question){
+    var mode = detectMode(question);
+    var dimension = detectDimension(question, detectChart(question));
+    var rel = salesDatasetRel(mode, dimension);
+    var fallback = salesDatasetRel(mode, 'description');
+    await Promise.all([loadJson('meta/manifest.json').catch(function(){}), loadJson(rel).catch(function(){}), loadJson(fallback).catch(function(){})]);
+    return buildFastModelSync(question);
+  }
+
+  preload();
+
+  var oldDirect = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
+  var oldScoped = typeof window.buildAiQuestionScopedContext === 'function' ? window.buildAiQuestionScopedContext : null;
+  var oldRender = typeof window.renderRequestedLocalVisual === 'function' ? window.renderRequestedLocalVisual : null;
+
+  window.__ampmAiDirectCuboBuild = function(question){
+    var fast = buildFastModelSync(question);
+    return fast || (oldDirect ? oldDirect(question) : null);
+  };
+  try{ aiBuildLocalIntentModel = window.__ampmAiDirectCuboBuild; }catch(_e){}
+  try{ aiBuildSeries = window.__ampmAiDirectCuboBuild; }catch(_e){}
+  window.buildAiQuestionScopedContext = function(question){
+    var fast = buildFastModelSync(question);
+    if(fast && fast.questionScopedContext) return fast.questionScopedContext;
+    return oldScoped ? oldScoped(question) : null;
+  };
+
+  window.renderRequestedLocalVisual = function(question, pack, options){
+    var qn = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca|graf|gráfico|grafico|chart|barra|linea|línea|trend|tendencia/.test(qn)){
+      try{ if(typeof setStageLoading === 'function') setStageLoading('Preparando visual analítico…'); }catch(_e){}
+      var syncModel = buildFastModelSync(question);
+      if(syncModel && typeof showStageChart === 'function'){
+        showStageChart(syncModel, syncModel.note || 'Fuente JSON fast-path');
+        return true;
+      }
+      ensureFastModel(question).then(function(model){
+        if(model && typeof showStageChart === 'function'){
+          showStageChart(model, model.note || 'Fuente JSON fast-path');
+          return;
+        }
+        if(oldRender){ oldRender(question, pack, options); return; }
+        if(typeof resetStage === 'function') resetStage('No encontré una estructura local suficiente para esa solicitud.');
+      }).catch(function(err){
+        console.error('AMPM fast-path v4', err);
+        if(oldRender){ oldRender(question, pack, options); return; }
+        if(typeof resetStage === 'function') resetStage('No pude preparar el visual analítico: ' + txt(err && err.message || err));
+      });
+      return true;
+    }
+    return oldRender ? oldRender(question, pack, options) : false;
+  };
+})();
+</script>
+
 </body>
 
 
@@ -62237,486 +61560,5 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
-
-
-<script id="ampm-json-hotfix-v3">
-(function(){
-  if(window.__AMPM_JSON_HOTFIX_V3__) return;
-  window.__AMPM_JSON_HOTFIX_V3__ = true;
-
-  var prevBuild = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
-  var prevEnsure = typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function' ? window.__ampmJsonRouteV2EnsureReadyForQuestion : null;
-  var BASE = './data_api/out';
-  var HOT_FILES = {
-    calendars: BASE + '/meta/calendars.json',
-    manifest: BASE + '/meta/manifest.json',
-    catalogs: BASE + '/meta/catalogs.json',
-    salesMonthlyDescription: BASE + '/ventas/monthly_description.json',
-    salesWeeklyDescription: BASE + '/ventas/weekly_description.json',
-    salesMonthlyStore: BASE + '/ventas/monthly_store.json',
-    salesWeeklyStore: BASE + '/ventas/weekly_store.json',
-    deliveryMonthlyCategory: BASE + '/delivery/monthly_category.json',
-    deliveryWeeklyCategory: BASE + '/delivery/weekly_category.json',
-    deliveryMonthlyStorePlatform: BASE + '/delivery/monthly_store_platform.json',
-    deliveryWeeklyStorePlatform: BASE + '/delivery/weekly_store_platform.json',
-    sbfMonthlyServiceStore: BASE + '/sbf/monthly_service_store.json',
-    sbfWeeklyServiceStore: BASE + '/sbf/weekly_service_store.json'
-  };
-  var HOT_CACHE = { data:{}, loading:{}, loaded:{}, failed:{} };
-
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function arr(v){ return Array.isArray(v) ? v : []; }
-  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
-  function norm(v){
-    var s = txt(v);
-    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
-    return s.toLowerCase().trim();
-  }
-  function pad2(v){ v = Number(v || 0); return (v < 10 ? '0' : '') + String(v); }
-
-  function getStateData(name){
-    try{
-      var state = window.__ampmJsonRouteV2State;
-      if(state && state.data && typeof state.data === 'object' && state.data[name]) return state.data[name];
-    }catch(_e){}
-    return null;
-  }
-
-  function loadHot(name){
-    if(HOT_CACHE.loaded[name] || HOT_CACHE.loading[name] || HOT_CACHE.failed[name] || !HOT_FILES[name]) return HOT_CACHE.loading[name] || Promise.resolve(HOT_CACHE.data[name] || getStateData(name) || null);
-    HOT_CACHE.loading[name] = fetch(HOT_FILES[name], { cache:'no-store' })
-      .then(function(res){
-        if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + name);
-        return res.json();
-      })
-      .then(function(data){
-        HOT_CACHE.data[name] = data;
-        HOT_CACHE.loaded[name] = true;
-        return data;
-      })
-      .catch(function(err){
-        HOT_CACHE.failed[name] = true;
-        try{ console.warn('AMPM hotfix v3 · no pude cargar ' + name, err); }catch(_e){}
-        return null;
-      })
-      .finally(function(){ delete HOT_CACHE.loading[name]; });
-    return HOT_CACHE.loading[name];
-  }
-
-  function getHot(name){
-    var stateData = getStateData(name);
-    if(stateData) return stateData;
-    if(HOT_CACHE.loaded[name]) return HOT_CACHE.data[name];
-    return null;
-  }
-
-  function selectedStores(){
-    try{
-      if(typeof getSelectedStoresOrAll === 'function'){
-        return uniq((getSelectedStoresOrAll() || []).map(function(v){ return txt(v).toUpperCase(); }));
-      }
-    }catch(_e){}
-    return [];
-  }
-
-  function dashboardMode(){
-    try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month'; }catch(_e){}
-    try{ if(document.body && document.body.classList.contains('report-mode-mensual')) return 'month'; }catch(_e){}
-    return 'week';
-  }
-
-  function monthFromQuestion(question){
-    var q = norm(question);
-    var direct = q.match(/\b(20\d{2})[-\/](\d{1,2})\b/);
-    if(direct){
-      var mo = Number(direct[2]);
-      if(mo >= 1 && mo <= 12) return direct[1] + '-' + pad2(mo);
-    }
-    var monthMap = { enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12' };
-    var yearMatch = q.match(/\b20\d{2}\b/);
-    if(yearMatch){
-      var year = yearMatch[0];
-      var keys = Object.keys(monthMap);
-      for(var i=0;i<keys.length;i+=1){
-        if(q.indexOf(keys[i]) >= 0) return year + '-' + monthMap[keys[i]];
-      }
-    }
-    return '';
-  }
-
-  function weekFromQuestion(question){
-    var q = norm(question);
-    var m = q.match(/\b(20\d{2})\s*[- ]?w\s*(\d{1,2})\b/);
-    if(m) return m[1] + '-W' + pad2(m[2]);
-    m = q.match(/\bsemana\s+(\d{1,2})(?:\s+de)?\s+(20\d{2})\b/);
-    if(m) return m[2] + '-W' + pad2(m[1]);
-    return '';
-  }
-
-  function latestMonthKey(){
-    var cal = getHot('calendars') || {};
-    var months = arr(cal.months).map(function(x){ return txt(x && x.month_key); }).filter(Boolean);
-    if(months.length) return months[months.length - 1];
-    var man = getHot('manifest') || {};
-    var ma = arr(man.months_available).map(txt).filter(Boolean);
-    return ma.length ? ma[ma.length - 1] : '';
-  }
-
-  function latestWeekKey(){
-    var cal = getHot('calendars') || {};
-    var weeks = arr(cal.weeks).map(function(x){ return txt(x && x.week_key); }).filter(Boolean);
-    if(weeks.length) return weeks[weeks.length - 1];
-    var man = getHot('manifest') || {};
-    var wa = arr(man.weeks_available).map(txt).filter(Boolean);
-    return wa.length ? wa[wa.length - 1] : '';
-  }
-
-  function periodLabel(pk, mode){
-    pk = txt(pk);
-    if(mode === 'month'){
-      var m = pk.match(/^(\d{4})-(\d{2})$/);
-      if(!m) return pk;
-      var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      return names[Math.max(0, Number(m[2]) - 1)] + ' ' + m[1];
-    }
-    return pk;
-  }
-
-  function detectDomain(question){
-    var q = norm(question);
-    if(/delivery|uber|pedidos ya|pedidoya|pya/.test(q)) return 'delivery';
-    if(/sbf|smart ticket|western union|puntoxpress|rapibac|loto|n1co|aki pago|recarga/.test(q)) return 'sbf';
-    return 'sales';
-  }
-
-  function detectChartType(question){
-    var q = norm(question);
-    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
-    if(/linea|línea|trend|tendencia|serie|evolucion|evolución/.test(q)) return 'line';
-    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
-    if(/barra|barras|ranking|top|grafica|gráfico|grafico/.test(q)) return 'bar';
-    return 'auto';
-  }
-
-  function detectMetric(question, domain){
-    var q = norm(question);
-    if(domain === 'sbf') return 'tx';
-    if(/qty|unidades|cantidad/.test(q)) return 'qty';
-    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
-    if(/margen|margin|gm/.test(q)) return 'margin';
-    if(/ticket/.test(q)) return 'avg_ticket';
-    return 'sales';
-  }
-
-  function detectDimension(question, domain){
-    var q = norm(question);
-    if(/por tienda|tiendas|store/.test(q)) return 'store_name';
-    if(/por marca|marcas|brand/.test(q)) return 'brand';
-    if(/sku|descripcion|descripción|producto|articulo|artículo/.test(q)) return 'description';
-    if(/subcategor|categoria|categoría|segmento|mix/.test(q)) return 'category';
-    if(domain === 'delivery' && /plataforma|uber|pedidos ya|pedidoya|pya/.test(q)) return 'platform';
-    if(domain === 'sbf') return /por tienda|tiendas|store/.test(q) ? 'store_name' : 'service';
-    return 'category';
-  }
-
-  function detectEntity(question){
-    var q = norm(question);
-    var catalogs = getHot('catalogs') || {};
-    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores', label:'Licores' };
-    if(/cerveza|cervezas|beer/.test(q)) return { field:'department', value:'Cervezas y RTD', label:'Cervezas y RTD' };
-    if(/food service|hot dog|pizza|hamburguesa|cafe|café|nacho|burrito/.test(q)) return { field:'department', value:'Food Service', label:'Food Service' };
-    if(/snack|boquita/.test(q)) return { field:'category', value:'Boquitas', label:'Boquitas' };
-
-    var services = arr(catalogs.sbf_services).map(txt);
-    for(var i=0;i<services.length;i+=1){
-      if(q.indexOf(norm(services[i])) >= 0) return { field:'service', value:services[i], label:services[i] };
-    }
-    return null;
-  }
-
-  function compareKind(question){
-    var q = norm(question);
-    if(/\blm\b|last month|mes anterior|mes pasado|vs mes pasado/.test(q)) return 'lm';
-    if(/\bly\b|año pasado|ano pasado|last year|\bvs\b|compar/.test(q)) return 'ly';
-    return '';
-  }
-
-  function metricLabel(metric, domain){
-    var map = {
-      sales:'Venta', tx:'TX', qty:'Unidades', margin:'Margen', margin_pct:'Margen %', avg_ticket:'Ticket promedio'
-    };
-    if(domain === 'delivery' && metric === 'sales') return 'Venta delivery';
-    if(domain === 'sbf' && metric === 'tx') return 'TX SBF';
-    return map[metric] || metric;
-  }
-
-  function yFormat(metric){
-    if(/pct|share/.test(metric)) return 'percent';
-    if(/sales|margin|ticket/.test(metric)) return 'currency';
-    return 'number';
-  }
-
-  function fmtNumber(v, kind){
-    if(v == null || !Number.isFinite(Number(v))) return 'N/D';
-    var n = Number(v);
-    if(kind === 'percent') return n.toLocaleString('es-SV', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
-    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', { minimumFractionDigits:2, maximumFractionDigits:2 });
-    return n.toLocaleString('es-SV', { maximumFractionDigits:2 });
-  }
-
-  function aggregateRows(rows, groupField, metric, compare){
-    var map = new Map();
-    arr(rows).forEach(function(r){
-      var label = txt(r[groupField] || 'Sin dato');
-      if(!label) label = 'Sin dato';
-      if(!map.has(label)) map.set(label, { current:0, compare:0 });
-      var bucket = map.get(label);
-      if(metric === 'margin_pct'){
-        bucket.current += num(r.margin);
-        bucket.currentSales = (bucket.currentSales || 0) + Math.max(0, num(r.sales));
-        if(compare === 'ly'){ bucket.compare += num(r.margin_ly); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.margin_lm); bucket.compareSales = (bucket.compareSales || 0) + Math.max(0, num(r.sales_lm)); }
-      }else if(metric === 'avg_ticket'){
-        bucket.current += num(r.sales);
-        bucket.currentTx = (bucket.currentTx || 0) + Math.max(0, num(r.tx));
-        if(compare === 'ly'){ bucket.compare += num(r.sales_ly); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_ly)); }
-        if(compare === 'lm'){ bucket.compare += num(r.sales_lm); bucket.compareTx = (bucket.compareTx || 0) + Math.max(0, num(r.tx_lm)); }
-      }else{
-        bucket.current += num(r[metric]);
-        if(compare === 'ly') bucket.compare += num(r[metric + '_ly']);
-        if(compare === 'lm') bucket.compare += num(r[metric + '_lm']);
-      }
-    });
-    var out = [];
-    map.forEach(function(v, label){
-      var current = v.current;
-      var comp = v.compare;
-      if(metric === 'margin_pct'){
-        current = v.currentSales ? (v.current / v.currentSales) * 100 : 0;
-        comp = compare ? ((v.compareSales ? (v.compare / v.compareSales) * 100 : 0)) : 0;
-      }else if(metric === 'avg_ticket'){
-        current = v.currentTx ? (v.current / v.currentTx) : 0;
-        comp = compare ? ((v.compareTx ? (v.compare / v.compareTx) : 0)) : 0;
-      }
-      out.push({ label:label, current:current, compare:comp });
-    });
-    out.sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); });
-    return out;
-  }
-
-  function filterStores(rows){
-    var stores = selectedStores();
-    if(!stores.length) return rows;
-    return arr(rows).filter(function(r){
-      var st = txt(r.store_name || r.store).toUpperCase();
-      return !st || stores.indexOf(st) >= 0;
-    });
-  }
-
-  function buildSalesModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-
-    var entity = detectEntity(question);
-    if(entity){
-      rows = rows.filter(function(r){ return norm(r[entity.field]) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sales');
-    var compare = compareKind(question);
-    var groupField = detectDimension(question, 'sales');
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var entries = aggregateRows(rows, groupField, metric, compare);
-
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-    var labels = entries.map(function(x){ return x.label; });
-    var datasets = [
-      { label: metricLabel(metric, 'sales'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-    ];
-    if(compare && chartType !== 'pie' && entries.some(function(x){ return Math.abs(x.compare) > 0; })){
-      datasets.push({ label: metricLabel(metric, 'sales') + ' ' + compare.toUpperCase(), data: entries.map(function(x){ return x.compare; }), type:'bar', color:'#F58320' });
-    }
-    var total = entries.reduce(function(acc, x){ return acc + x.current; }, 0);
-    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ');
-
-    return {
-      labels: labels,
-      datasets: datasets,
-      title: metricLabel(metric, 'sales') + ' por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode) + (entity ? (' · ' + entity.label) : ''),
-      tag: chartType === 'pie' ? 'Participación' : (compare ? 'Actual vs ' + compare.toUpperCase() : 'Breakdown'),
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && labels.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        (entity ? ('Foco detectado: ' + entity.label + '. ') : '') +
-        'Breakdown por ' + (groupField === 'category' ? 'categoría' : groupField === 'brand' ? 'marca' : groupField === 'description' ? 'descripción' : groupField === 'store_name' ? 'tienda' : groupField) + '. ' +
-        'Total visible: ' + fmtNumber(total, yFormat(metric)) + '. ' +
-        'Top líneas: ' + topText + '.'
-    };
-  }
-
-  function buildDeliveryModel(question, mode, periodKey){
-    var groupField = detectDimension(question, 'delivery');
-    var datasetName = (groupField === 'platform' || groupField === 'store_name')
-      ? (mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform')
-      : (mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'delivery');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-
-    if(groupField === 'platform'){
-      // keep platform only
-    }else if(groupField === 'store_name'){
-      // aggregate by store
-    }else{
-      groupField = 'category';
-    }
-    var entries = aggregateRows(rows, groupField, metric === 'sales' ? 'sales' : metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'delivery'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'delivery') + ' por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric === 'sales' ? 'sales' : metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'Delivery por ' + (groupField === 'platform' ? 'plataforma' : groupField === 'store_name' ? 'tienda' : 'categoría') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric === 'sales' ? 'sales' : metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildSbfModel(question, mode, periodKey){
-    var datasetName = mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore';
-    var rows = arr(getHot(datasetName));
-    if(!rows.length) return null;
-    var timeField = mode === 'month' ? 'month_key' : 'week_key';
-    rows = rows.filter(function(r){ return txt(r[timeField]) === txt(periodKey); });
-    rows = filterStores(rows);
-    if(!rows.length) return null;
-
-    var entity = detectEntity(question);
-    if(entity && entity.field === 'service'){
-      rows = rows.filter(function(r){ return norm(r.service) === norm(entity.value); });
-    }
-    if(!rows.length) return null;
-
-    var metric = detectMetric(question, 'sbf');
-    var compare = compareKind(question);
-    var chartType = detectChartType(question);
-    if(chartType === 'auto') chartType = 'bar';
-    var groupField = detectDimension(question, 'sbf');
-
-    var entries = aggregateRows(rows, groupField, metric, compare);
-    if(!entries.length) return null;
-    entries = entries.slice(0, chartType === 'pie' ? 10 : 14);
-
-    return {
-      labels: entries.map(function(x){ return x.label; }),
-      datasets: [
-        { label: metricLabel(metric, 'sbf'), data: entries.map(function(x){ return x.current; }), type: chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
-      ],
-      title: metricLabel(metric, 'sbf') + ' por ' + (groupField === 'store_name' ? 'tienda' : 'servicio'),
-      subtitle: 'Corte ' + periodLabel(periodKey, mode),
-      tag: chartType === 'pie' ? 'Participación' : 'Breakdown',
-      yFormat: yFormat(metric),
-      type: chartType === 'pie' ? 'pie' : 'bar',
-      horizontal: chartType !== 'pie' && entries.length > 6,
-      note: 'Fuente JSON analítico · ' + datasetName,
-      periods: [periodKey],
-      questionScopedContext:
-        'Periodo: ' + periodLabel(periodKey, mode) + '. ' +
-        'SBF por ' + (groupField === 'store_name' ? 'tienda' : 'servicio') + '. ' +
-        'Top líneas: ' + entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(metric)); }).join(' | ') + '.'
-    };
-  }
-
-  function buildHotfixModel(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var periodKey = mode === 'month' ? (monthFromQuestion(question) || latestMonthKey()) : (weekFromQuestion(question) || latestWeekKey());
-    if(!periodKey) return null;
-
-    if(domain === 'sales') return buildSalesModel(question, mode, periodKey);
-    if(domain === 'delivery') return buildDeliveryModel(question, mode, periodKey);
-    if(domain === 'sbf') return buildSbfModel(question, mode, periodKey);
-    return null;
-  }
-
-  function neededFiles(question){
-    var domain = detectDomain(question);
-    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
-    var files = ['calendars','manifest','catalogs'];
-    if(domain === 'sales'){
-      files.push(mode === 'month' ? 'salesMonthlyDescription' : 'salesWeeklyDescription');
-      var q = norm(question);
-      if(/por tienda|tiendas|store/.test(q)) files.push(mode === 'month' ? 'salesMonthlyStore' : 'salesWeeklyStore');
-    }else if(domain === 'delivery'){
-      files.push(mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory');
-      files.push(mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform');
-    }else if(domain === 'sbf'){
-      files.push(mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore');
-    }
-    return uniq(files);
-  }
-
-  window.__ampmJsonRouteV2EnsureReadyForQuestion = function(question){
-    var first = prevEnsure ? Promise.resolve(prevEnsure(question)) : Promise.resolve();
-    return first.then(function(){
-      var needs = neededFiles(question);
-      return Promise.all(needs.map(loadHot));
-    }).then(function(){ return { ok:true }; });
-  };
-
-  function hotfixBuild(question){
-    try{
-      var model = buildHotfixModel(question);
-      if(model && model.labels && model.labels.length && model.datasets && model.datasets.length){
-        return model;
-      }
-    }catch(err){
-      try{ console.warn('AMPM hotfix v3 · build failed', err); }catch(_e){}
-    }
-    return prevBuild ? prevBuild(question) : null;
-  }
-
-  window.__ampmAiDirectCuboBuild = hotfixBuild;
-  aiBuildLocalIntentModel = hotfixBuild;
-  aiBuildSeries = hotfixBuild;
-  buildAiQuestionScopedContext = function(question){
-    var model = hotfixBuild(question);
-    return model && model.questionScopedContext ? model.questionScopedContext : null;
-  };
-})();
-</script>
 
 </html>
