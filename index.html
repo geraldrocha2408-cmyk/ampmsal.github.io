@@ -4921,6 +4921,26 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }
     return await response.json();
   }
+  function tryLocalAnalytics(question){
+    try{
+      if(typeof window.__ampmAiDirectCuboBuild !== 'function') return null;
+      var local = window.__ampmAiDirectCuboBuild(question);
+      if(!local) return null;
+      var hasSeries = Array.isArray(local.labels) && local.labels.length && Array.isArray(local.datasets) && local.datasets.length;
+      if(!hasSeries) return null;
+      return local;
+    }catch(_e){
+      return null;
+    }
+  }
+  function formatLocalHtml(result){
+    var html = '';
+    if(txt(result && result.title)) html += '<p><strong>' + htmlEscape(result.title) + '</strong></p>';
+    if(txt(result && result.questionScopedContext)) html += formatParagraphs(result.questionScopedContext);
+    else if(txt(result && result.note)) html += formatParagraphs(result.note);
+    else html += '<p>Consulta resuelta desde el JSON preprocesado del dashboard.</p>';
+    return html;
+  }
   async function sendQuestion(){
     if(stateAi.loading) return;
     var input = el('ampmAiInput');
@@ -4937,9 +4957,23 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     if(input) input.value = '';
     var thinking = addThinking();
     setLoading(true);
-    setStageNote('Resolviendo consulta desde Railway…');
+    setStageNote('Intentando resolver primero con JSON local…');
 
     try{
+      var localResult = tryLocalAnalytics(question);
+      if(localResult){
+        if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
+        addMessage('assistant', formatLocalHtml(localResult), 'local');
+        renderChart(localResult);
+        setText('ampmAiStageTitle', txt(localResult.title) || 'Visual local');
+        setText('ampmAiStageSub', txt(localResult.subtitle) || txt(localResult.note) || 'Respuesta resuelta desde el JSON local del dashboard');
+        setStageNote('Consulta resuelta localmente con JSON preprocesado.');
+        setText('ampmAiUsageMeta', 'Motor local JSON · sin llamada al backend');
+        updateStaticUi();
+        return;
+      }
+
+      setStageNote('JSON local sin match claro. Consultando Railway…');
       var data = await callBackend(question);
       if(thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
       var result = data && data.result ? data.result : data;
