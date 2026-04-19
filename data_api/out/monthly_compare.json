@@ -1,0 +1,98 @@
+[
+  {
+    "_month_key": "2025-01",
+    "_sales": 75389.41,
+    "_margin": 27004.85,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-02",
+    "_sales": 73213.7,
+    "_margin": 24990.33,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-03",
+    "_sales": 80957.52,
+    "_margin": 26652.21,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-04",
+    "_sales": 76232.37,
+    "_margin": 25537.07,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-05",
+    "_sales": 91442.62,
+    "_margin": 30926.5,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-06",
+    "_sales": 4970.53,
+    "_margin": 1723.6467,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-07",
+    "_sales": 1048.21,
+    "_margin": 327.9969,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-08",
+    "_sales": 99391.87,
+    "_margin": 33438.04,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-09",
+    "_sales": 93122.03,
+    "_margin": 32282.42,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-10",
+    "_sales": 97176.65,
+    "_margin": 34372.48,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-11",
+    "_sales": 107768.91,
+    "_margin": 38492.01,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2025-12",
+    "_sales": 130892.09,
+    "_margin": 46475.45,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2026-01",
+    "_sales": 119404.38,
+    "_margin": 43909.28,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2026-02",
+    "_sales": 112266.84,
+    "_margin": 40558.69,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2026-03",
+    "_sales": 128088.51,
+    "_margin": 43841.02,
+    "_tx": NaN
+  },
+  {
+    "_month_key": "2026-04",
+    "_sales": 70953.43,
+    "_margin": 25767.26,
+    "_tx": NaN
+  }
+]
