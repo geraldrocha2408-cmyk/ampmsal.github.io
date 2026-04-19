@@ -3405,7 +3405,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
 <h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-<p class="sub" id="reportSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+<p class="sub" id="reportSub">Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.</p>
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
 <span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
@@ -3419,21 +3419,21 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="controlSectionHead">
 <div>
 <h3 class="controlSectionTitle">Base del reporte</h3>
-<p class="controlSectionSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+<p class="controlSectionSub">Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.</p>
 </div>
 <span class="controlSectionAccent">Carga + vista</span>
 </div>
 <div class="grid gridHero">
 <div class="fieldCard primary">
 <label>1) Cargar cubo publicado</label>
-<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="./Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;"/>
+<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="./Cubo_Semanal_Compactado.xlsx o https://raw.githubusercontent.com/USUARIO/REPO/main/Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;"/>
 <div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
 <div class="loading" id="loading">
 <div class="loadingTop"><span class="loadingText" id="loadingText">Preparando carga…</span><span class="loadingPct" id="loadingPct">0%</span></div>
 <div class="loadingBar"><div class="loadingFill" id="loadingFill"></div></div>
 <div class="loadingHint" id="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
 </div>
-<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta.</div>
+<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta. También acepta links de GitHub y convierte automáticamente links <strong>blob</strong> a formato <strong>raw</strong>.</div>
 </div>
 <div class="fieldCard primary">
 <label>0) Vista del dashboard</label>
@@ -3668,7 +3668,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     <div class="ampm-ai-header">
       <div class="ampm-ai-header-left">
         <div class="ampm-ai-header-title" id="ampmAiHeaderTitle">Chat libre</div>
-        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con contexto compacto y foco en negocio.</div>
+        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con foco en data directa del cubo y criterio de negocio.</div>
       </div>
       <div class="ampm-ai-header-right">
         <span class="ampm-ai-badge" id="ampmAiScopeBadge">Contexto: ejecutivo</span>
@@ -3683,7 +3683,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
           <div class="ampm-ai-empty" id="ampmAiEmpty">
             <div class="ampm-ai-empty-icon">✦</div>
             <div class="ampm-ai-empty-title">Copiloto libre listo</div>
-            <div class="ampm-ai-empty-text">Haz preguntas abiertas, pide gráficos, infografías o imágenes para campañas. La IA usa la data del dashboard cuando aplica y responde con más libertad según lo que pidas.</div>
+            <div class="ampm-ai-empty-text">Haz preguntas abiertas, pide gráficos, infografías o imágenes para campañas. La IA ahora prioriza la data directa del cubo cuando detecta una consulta específica.</div>
           </div>
           <div class="ampm-ai-messages" id="ampmAiMessages"></div>
         </div>
@@ -4184,8 +4184,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   color:#9A3412;
 }
 .ampm-ai-chat{
-  flex:1;
-  min-height:220px;
+  flex:1 1 0;
+  min-height:0;
+  height:0;
   position:relative;
   overflow:auto;
   padding:16px 18px;
@@ -4225,6 +4226,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   display:flex;
   flex-direction:column;
   gap:12px;
+  min-height:min-content;
+  padding-bottom:4px;
 }
 .ampm-ai-msg{
   max-width:min(920px, 100%);
@@ -4268,11 +4271,19 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   opacity:.7;
 }
 .ampm-ai-msg-body{
-  font-size:12.5px;
-  line-height:1.55;
+  font-size:13px;
+  line-height:1.66;
   white-space:pre-wrap;
   word-break:break-word;
+  color:#0b1f3a;
 }
+.ampm-ai-msg.assistant{overflow:hidden;}
+.ampm-ai-msg.assistant .ampm-ai-msg-body,
+.ampm-ai-msg.assistant .ampm-ai-msg-body p,
+.ampm-ai-msg.assistant .ampm-ai-msg-body li{color:#102a43;}
+.ampm-ai-msg.user .ampm-ai-msg-body,
+.ampm-ai-msg.user .ampm-ai-msg-body p,
+.ampm-ai-msg.user .ampm-ai-msg-body li{color:#ffffff;}
 .ampm-ai-msg-body ul,
 .ampm-ai-msg-body ol{margin:8px 0 8px 18px; padding:0;}
 .ampm-ai-msg-body li{margin:4px 0;}
@@ -4434,13 +4445,13 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 .ampm-ai-wrap.ampm-ai-visible{display:flex !important;}
 .ampm-ai-main{width:100%;}
 .ampm-ai-header-right{align-items:center;}
-.ampm-ai-workspace{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(360px,.92fr);min-height:580px;background:linear-gradient(180deg,#fbfdff 0%, #f6f9fc 100%);}
-.ampm-ai-conversation-panel{min-width:0;display:flex;flex-direction:column;border-right:1px solid #e6edf5;background:transparent;}
-.ampm-ai-stage-panel{min-width:0;display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,251,255,.95));}
+.ampm-ai-workspace{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(360px,.92fr);min-height:0;height:clamp(640px,74vh,880px);max-height:880px;background:linear-gradient(180deg,#fbfdff 0%, #f6f9fc 100%);overflow:hidden;}
+.ampm-ai-conversation-panel{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;border-right:1px solid #e6edf5;background:transparent;overflow:hidden;}
+.ampm-ai-stage-panel{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,251,255,.95));overflow:hidden;}
 .ampm-ai-stage-head{padding:14px 16px 12px;border-bottom:1px solid #e6edf5;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .ampm-ai-stage-title{font-size:15px;line-height:1.15;font-weight:1000;color:#11284A;}
 .ampm-ai-stage-sub{margin-top:4px;font-size:11.5px;line-height:1.45;color:#5B6B82;font-weight:700;}
-.ampm-ai-stage-body{flex:1;min-height:0;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;overflow:auto;}
+.ampm-ai-stage-body{flex:1 1 0;min-height:0;height:0;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;overflow:auto;}
 .ampm-ai-stage-empty{flex:1;min-height:220px;border:1px dashed rgba(148,163,184,.30);border-radius:18px;background:#fff;color:#64748b;font-size:12px;line-height:1.55;font-weight:800;padding:18px;display:flex;align-items:center;justify-content:center;text-align:center;}
 .ampm-ai-stage-chart-card,.ampm-ai-stage-image-card{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;box-shadow:0 8px 20px rgba(15,23,42,.04);overflow:hidden;}
 .ampm-ai-stage-image-wrap{padding:12px 12px 8px;}
@@ -4453,7 +4464,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 .ampm-ai-msg{max-width:100%;}
 .ampm-ai-chat .ampm-ai-empty{min-height:200px;display:flex;flex-direction:column;justify-content:center;}
 @media (max-width: 1180px){.ampm-ai-workspace{grid-template-columns:1fr;}.ampm-ai-conversation-panel{border-right:0;border-bottom:1px solid #e6edf5;}}
-@media (max-width: 720px){.ampm-ai-workspace{min-height:auto;}.ampm-ai-stage-head,.ampm-ai-stage-body{padding-left:12px;padding-right:12px;}}
+@media (max-width: 720px){.ampm-ai-workspace{min-height:620px;height:78vh;max-height:none;}.ampm-ai-stage-head,.ampm-ai-stage-body{padding-left:12px;padding-right:12px;}}
 </style>
 <style id="ampm-ai-readable-v2">
 .ampm-ai-msg.assistant{background:#ffffff;color:#11284A;}
@@ -4477,7 +4488,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   var AUTH_KEY = 'ampm_report_auth_v1';
   var OPENAI_MODEL = 'gpt-5.4';
   var OPENAI_FALLBACK_MODEL = 'gpt-5.4-mini';
-  var OPENAI_MAX_OUTPUT_TOKENS = 1800;
+  var OPENAI_MAX_OUTPUT_TOKENS = 6800;
   var stateAi = {
     topic: 'chat',
     lastResponseId: '',
@@ -5321,10 +5332,20 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }
     if(empty) empty.classList.remove('show');
 
-    var palette = ['#0C4D8F','#F58320','#16A34A','#64748B','#7C3AED'];
+    var palette = ['#0C4D8F','#F58320','#16A34A','#64748B','#7C3AED','#DC2626','#059669','#F59E0B','#334155','#0EA5E9','#9333EA','#E11D48'];
     var type = txt(chartModel && chartModel.type) || (datasets.length > 1 ? 'line' : 'bar');
-    var horizontal = !!(chartModel && chartModel.horizontal);
+    var isCircular = /^(pie|doughnut)$/i.test(type);
+    var horizontal = !isCircular && !!(chartModel && chartModel.horizontal);
     var yFormat = txt(chartModel && chartModel.yFormat) || 'number';
+
+    function fmtValue(value){
+      if(!isFinite(value)) return '—';
+      if(yFormat === 'money') return (typeof money === 'function') ? money(value) : ('$' + Number(value).toLocaleString('es-SV'));
+      if(yFormat === 'percent') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 }) + '%';
+      if(yFormat === 'ratio') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
+      if(yFormat === 'int') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 0 });
+      return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
+    }
 
     var normalizedSets = datasets.map(function(ds, idx){
       var color = ds.color || palette[idx % palette.length];
@@ -5350,45 +5371,46 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
         base.barPercentage = 0.72;
         base.categoryPercentage = 0.72;
       }
+      if(/^(pie|doughnut)$/i.test(dsType)){
+        base.backgroundColor = labels.map(function(_x, j){ return palette[j % palette.length]; });
+        base.borderColor = '#ffffff';
+        base.borderWidth = 2;
+      }
       return Object.assign(base, ds);
     });
 
-    function fmtValue(value){
-      if(!isFinite(value)) return '—';
-      if(yFormat === 'money') return (typeof money === 'function') ? money(value) : ('$' + Number(value).toLocaleString('es-SV'));
-      if(yFormat === 'percent') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 }) + '%';
-      if(yFormat === 'ratio') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
-      if(yFormat === 'int') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 0 });
-      return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
+    var options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      layout: { padding: { left: 8, right: 12, top: 6, bottom: 0 } },
+      interaction: { mode: isCircular ? 'nearest' : 'index', intersect: isCircular },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels:{ color:'#1f2937', font:{ weight:'800' }, boxWidth: 14, boxHeight: 14 } },
+        tooltip: { callbacks: { label: function(ctx){ var parsed = isCircular ? ctx.raw : (horizontal ? (ctx.parsed && ctx.parsed.x) : (ctx.parsed && ctx.parsed.y)); return ' ' + (ctx.dataset && ctx.dataset.label ? ctx.dataset.label + ': ' : '') + fmtValue(parsed != null ? parsed : ctx.raw); } } }
+      }
+    };
+
+    if(!isCircular){
+      options.indexAxis = horizontal ? 'y' : 'x';
+      options.scales = {
+        x: {
+          beginAtZero: !horizontal,
+          grid: { color:'rgba(148,163,184,.18)', display: !horizontal },
+          ticks: { color:'#334155', font:{ weight:'800' }, callback:function(v){ return horizontal ? String(v) : fmtValue(v); } }
+        },
+        y: {
+          beginAtZero: horizontal,
+          grid: { color:'rgba(148,163,184,.18)', display: horizontal ? false : true },
+          ticks: { color:'#0f172a', font:{ weight:'900' }, callback:function(v){ return horizontal ? fmtValue(v) : String(labels[v] || v); } }
+        }
+      };
     }
 
     stateAi.chart = new Chart(canvas.getContext('2d'), {
       type: type,
       data: { labels: labels, datasets: normalizedSets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        indexAxis: horizontal ? 'y' : 'x',
-        layout: { padding: { left: 8, right: 12, top: 6, bottom: 0 } },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: normalizedSets.length > 1, position: 'bottom', labels:{ color:'#1f2937', font:{ weight:'800' } } },
-          tooltip: { callbacks: { label: function(ctx){ var parsed = horizontal ? (ctx.parsed && ctx.parsed.x) : (ctx.parsed && ctx.parsed.y); return ' ' + (ctx.dataset && ctx.dataset.label ? ctx.dataset.label + ': ' : '') + fmtValue(parsed != null ? parsed : ctx.raw); } } }
-        },
-        scales: {
-          x: {
-            beginAtZero: !horizontal,
-            grid: { color:'rgba(148,163,184,.18)', display: !horizontal },
-            ticks: { color:'#334155', font:{ weight:'800' }, callback:function(v){ return horizontal ? String(v) : fmtValue(v); } }
-          },
-          y: {
-            beginAtZero: horizontal,
-            grid: { color:'rgba(148,163,184,.18)', display: horizontal ? false : true },
-            ticks: { color:'#0f172a', font:{ weight:'900' }, callback:function(v){ return horizontal ? fmtValue(v) : String(labels[v] || v); } }
-          }
-        }
-      }
+      options: options
     });
   }
 
@@ -5516,6 +5538,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
   function aiScopedSalesRows(){
     var rows = Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows.slice() : [];
+    try{
+      if(typeof getDowScopedRows === 'function') rows = getDowScopedRows(rows);
+    }catch(_e){}
     var storeSet = new Set(aiSelectedStores());
     if(storeSet.size){
       rows = rows.filter(function(r){ return r && storeSet.has(String(r.store || '').trim().toUpperCase()); });
@@ -5542,12 +5567,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     return mode === 'month' ? 6 : 8;
   }
 
-  function aiMetricMode(question){
-    var q = stripAccents(txt(question)).toLowerCase();
-    if(/share/.test(q) && /delivery|uber|pedidos ya|pedidoya/.test(q)) return 'delivery_share';
-    if(/delivery|uber|pedidos ya|pedidoya/.test(q)) return 'delivery_sales';
-    return 'sales';
-  }
+
 
   function aiFindEntity(rows, question){
     var q = aiNormCompact(question);
@@ -5557,9 +5577,12 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       { prop:'category', value:'Whisky', label:'Whisky', norm:'WHISKY' },
       { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZAS' },
       { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZA' },
+      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'RTD' },
       { prop:'department', value:'Licores', label:'Licores', norm:'LICORES' },
+      { prop:'department', value:'Licores', label:'Licores', norm:'LICOR' },
       { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
-      { prop:'category', value:'Ready to Drink', label:'Ready to Drink', norm:'RTD' }
+      { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
+      { prop:'category', value:'Ready to Drink', label:'Ready to Drink', norm:'READYTODRINK' }
     ];
     for(var i=0;i<aliases.length;i+=1){
       if(q.indexOf(aliases[i].norm) >= 0) return aliases[i];
@@ -5596,76 +5619,275 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     return !!rowValue && (rowValue === entity.norm || rowValue.indexOf(entity.norm) >= 0 || entity.norm.indexOf(rowValue) >= 0);
   }
 
-  function aiPeriodKey(row, mode){
-    if(mode === 'month'){
-      var cm = txt(row && row.calMonth);
-      if(cm) return cm;
-      var yw = txt(row && row.yearweek);
-      if(yw && typeof weekToMonthKey === 'function') return txt(weekToMonthKey(yw));
-      return (typeof normalizeCalMonth === 'function') ? txt(normalizeCalMonth(row && row.ym)) : txt(row && row.ym);
-    }
-    return txt(row && row.yearweek) || txt(row && row.ym);
+  function aiMetricMode(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/sin delivery|no delivery|nondelivery/.test(q)) return 'non_delivery_sales';
+    if(/margen bruto|gross margin|\bgm\b|margen/.test(q)) return 'gross_margin';
+    if(/share|participacion|participacion/.test(q) && /delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_share';
+    if(/delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_sales';
+    return 'sales';
   }
 
-  function aiPeriodLabel(key, mode){
-    if(mode === 'month') return (typeof monthDisplay === 'function') ? monthDisplay(key) : key;
-    return (typeof weekKeyDisplay === 'function') ? weekKeyDisplay(key) : key;
+  function aiDetectChartType(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
+    if(/barra|barras|ranking|top/.test(q)) return 'bar';
+    if(/linea|lineas|tendencia|evolucion|serie|ultim/.test(q)) return 'line';
+    return 'auto';
   }
 
-  function aiSortPeriods(periods, mode){
-    return (periods || []).slice().sort(function(a,b){
-      if(mode === 'month') return String(a).localeCompare(String(b));
-      return (typeof isoWeekNum === 'function') ? (isoWeekNum(a) - isoWeekNum(b)) : String(a).localeCompare(String(b));
-    });
-  }
-
-  function aiLyPeriod(periodKey, mode){
-    if(!periodKey) return '';
-    if(mode === 'month') return (typeof shiftMonthKey === 'function') ? txt(shiftMonthKey(periodKey, -12)) : '';
-    if(typeof lyIsoWeekKey === 'function') return txt(lyIsoWeekKey(periodKey));
-    if(typeof shiftIsoWeekKey === 'function') return txt(shiftIsoWeekKey(periodKey, -52));
+  function aiDetectBreakdownDimension(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/categor/i.test(q) || /categoria|categorias/.test(q)) return 'category';
+    if(/marca|marcas/.test(q)) return 'brand';
+    if(/departamento|departamentos|depto/.test(q)) return 'department';
+    if(/tienda|tiendas|store|stores/.test(q)) return 'store';
+    if(/turno|turnos|horario|horarios|daypart/.test(q)) return 'daypart';
+    if(/dia de semana|dow|dia |dias /.test(q)) return 'dow';
     return '';
   }
 
-  function aiBuildSeries(question){
+  function aiDetectChannelFilter(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/uber/.test(q)) return 'UBER';
+    if(/pedidos ya|pedidoya|pya|peya/.test(q)) return 'PYA';
+    return '';
+  }
+
+  function aiMetricLabel(metric){
+    if(metric === 'delivery_share') return 'Share delivery';
+    if(metric === 'delivery_sales') return 'Venta delivery';
+    if(metric === 'non_delivery_sales') return 'Venta sin delivery';
+    if(metric === 'gross_margin') return 'Margen bruto';
+    return 'Venta';
+  }
+
+  function aiMetricYFormat(metric){
+    if(metric === 'delivery_share') return 'percent';
+    return 'money';
+  }
+
+  function aiBucketAdd(bucket, row){
+    if(!bucket || !row) return;
+    var sales = Number(row.sales || 0) || 0;
+    bucket.total += sales;
+    bucket.delivery += row.is_delivery ? sales : 0;
+    bucket.non_delivery += row.is_delivery ? 0 : sales;
+    bucket.margin += Number(row.gross_margin || 0) || 0;
+  }
+
+  function aiMetricValueFromBucket(bucket, metric){
+    var b = bucket || { total:0, delivery:0, non_delivery:0, margin:0 };
+    if(metric === 'delivery_share') return b.total ? Number(((b.delivery / b.total) * 100).toFixed(2)) : 0;
+    if(metric === 'delivery_sales') return Number(b.delivery || 0);
+    if(metric === 'non_delivery_sales') return Number(b.non_delivery || 0);
+    if(metric === 'gross_margin') return Number(b.margin || 0);
+    return Number(b.total || 0);
+  }
+
+  function aiSortEntries(entries){
+    return (entries || []).slice().sort(function(a,b){
+      var av = Math.abs(Number(a && a.value || 0));
+      var bv = Math.abs(Number(b && b.value || 0));
+      if(bv !== av) return bv - av;
+      return String(a && a.label || '').localeCompare(String(b && b.label || ''));
+    });
+  }
+
+  function aiWantsBreakdown(question, chartType, dimension){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(chartType === 'pie') return true;
+    if(dimension && !/ultim|seman|mensual|mtd|serie|tendencia|evolucion/.test(q)) return true;
+    if(/participacion|share|mix|top|ranking/.test(q) && dimension) return true;
+    return false;
+  }
+
+  function aiFilterRowsByQuestion(rows, entity, channelFilter){
+    var scoped = Array.isArray(rows) ? rows.slice() : [];
+    if(entity){
+      scoped = scoped.filter(function(r){ return aiRowMatchesEntity(r, entity); });
+    }
+    if(channelFilter){
+      scoped = scoped.filter(function(r){
+        var ch = stripAccents(txt(r && r.delivery_channel)).toUpperCase();
+        if(channelFilter === 'UBER') return ch.indexOf('UBER') >= 0;
+        if(channelFilter === 'PYA') return ch.indexOf('PEDIDOS') >= 0 || ch.indexOf('PYA') >= 0 || ch.indexOf('PEYA') >= 0;
+        return true;
+      });
+    }
+    return scoped;
+  }
+
+  function aiGroupLabel(row, dimension){
+    if(!row) return '';
+    if(dimension === 'store') return txt(row.store).toUpperCase();
+    if(dimension === 'department') return txt(row.department);
+    if(dimension === 'category') return txt(row.category);
+    if(dimension === 'brand') return txt(row.brand);
+    if(dimension === 'daypart') return txt(row.daypart);
+    if(dimension === 'dow') return txt(row.dow_name || row.dow || row.dowLabel);
+    return '';
+  }
+
+  function aiBuildBreakdownContext(entries, metric, dimension, usePeriods, compareLy, entity){
+    var total = entries.reduce(function(acc, item){ return acc + (Number(item.value || 0) || 0); }, 0);
+    var topItems = entries.slice(0, 10).map(function(item, idx){
+      var share = total ? Number((((Number(item.value || 0) || 0) / total) * 100).toFixed(2)) : 0;
+      var ly = Number(item.lyValue || 0) || 0;
+      return {
+        rank: idx + 1,
+        label: item.label,
+        current_value: Number(item.value || 0) || 0,
+        ly_value: compareLy ? ly : null,
+        delta_vs_ly: compareLy ? Number(((Number(item.value || 0) || 0) - ly).toFixed(2)) : null,
+        share_pct: share
+      };
+    });
+    return {
+      analysis_type: 'breakdown',
+      dimension: dimension,
+      metric: metric,
+      metric_label: aiMetricLabel(metric),
+      compare_vs_ly: !!compareLy,
+      filters_detected: entity ? { focus: entity.label, focus_prop: entity.prop } : null,
+      periods_used: (usePeriods || []).slice(),
+      totals: {
+        visible_total: Number(total.toFixed(2))
+      },
+      top_items: topItems
+    };
+  }
+
+  function aiBuildTimeSeriesContext(labels, currentValues, lyValues, metric, entity, mode){
+    return {
+      analysis_type: 'time_series',
+      period_mode: mode,
+      metric: metric,
+      metric_label: aiMetricLabel(metric),
+      entity: entity ? entity.label : 'Total',
+      labels: labels.slice(),
+      current_series: currentValues.slice(),
+      ly_series: Array.isArray(lyValues) && lyValues.length ? lyValues.slice() : []
+    };
+  }
+
+  function aiBuildLocalIntentModel(question){
     var rows = aiScopedSalesRows();
     if(!rows.length) return null;
 
+    var q = stripAccents(txt(question)).toLowerCase();
     var mode = aiRequestedMode(question);
     var metric = aiMetricMode(question);
     var count = aiRequestedCount(question, mode);
-    var compareLy = /\bly\b|ano pasado|año pasado|compar/i.test(stripAccents(txt(question)).toLowerCase());
+    var compareLy = /\bly\b|ano pasado|año pasado|vs ly|contra ly|compar/i.test(q);
+    var chartType = aiDetectChartType(question);
+    var dimension = aiDetectBreakdownDimension(question);
+    var breakdown = aiWantsBreakdown(question, chartType, dimension);
+    var explicitTemporal = /ultim|seman|mensual|semanal|mtd|mes|month|week|serie|tendencia|evolucion|histor/.test(q);
     var entity = aiFindEntity(rows, question);
+    var channelFilter = aiDetectChannelFilter(question);
 
-    var scoped = rows.filter(function(r){ return aiRowMatchesEntity(r, entity); });
+    var scoped = aiFilterRowsByQuestion(rows, entity, channelFilter);
     if(!scoped.length && entity) scoped = rows.slice();
     if(!scoped.length) return null;
+
+    var allPeriods = aiSortPeriods(Array.from(new Set(scoped.map(function(r){ return aiPeriodKey(r, mode); }).filter(Boolean))), mode);
+    if(!allPeriods.length) return null;
+
+    var usePeriods = explicitTemporal ? allPeriods.slice(-count) : (breakdown ? allPeriods.slice(-1) : allPeriods.slice(-count));
+    if(!usePeriods.length) usePeriods = allPeriods.slice(-1);
+    var periodSet = new Set(usePeriods);
+    var currentRows = scoped.filter(function(r){ return periodSet.has(aiPeriodKey(r, mode)); });
+    if(!currentRows.length) currentRows = scoped.slice();
+
+    if(breakdown){
+      var dim = dimension || 'category';
+      var currentMap = new Map();
+      currentRows.forEach(function(r){
+        var label = aiGroupLabel(r, dim);
+        if(!label) return;
+        if(!currentMap.has(label)) currentMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
+        aiBucketAdd(currentMap.get(label), r);
+      });
+
+      var lyMap = new Map();
+      if(compareLy){
+        var lyPeriods = usePeriods.map(function(pk){ return aiLyPeriod(pk, mode); }).filter(Boolean);
+        var lySet = new Set(lyPeriods);
+        scoped.forEach(function(r){
+          var rpk = aiPeriodKey(r, mode);
+          if(!lySet.has(rpk)) return;
+          var label = aiGroupLabel(r, dim);
+          if(!label) return;
+          if(!lyMap.has(label)) lyMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
+          aiBucketAdd(lyMap.get(label), r);
+        });
+      }
+
+      var labelsAll = Array.from(new Set([].concat(Array.from(currentMap.keys()), Array.from(lyMap.keys()))));
+      var entries = labelsAll.map(function(label){
+        var value = aiMetricValueFromBucket(currentMap.get(label), metric);
+        var lyValue = aiMetricValueFromBucket(lyMap.get(label), metric);
+        return { label: label, value: value, lyValue: lyValue };
+      }).filter(function(item){ return Number(item.value || 0) !== 0 || Number(item.lyValue || 0) !== 0; });
+
+      entries = aiSortEntries(entries).slice(0, chartType === 'pie' ? 10 : 12);
+      if(!entries.length) return null;
+
+      var labels = entries.map(function(item){ return item.label; });
+      var values = entries.map(function(item){ return Number(item.value || 0) || 0; });
+      var lyValues = entries.map(function(item){ return Number(item.lyValue || 0) || 0; });
+      var dimLabelMap = { category:'categoría', brand:'marca', department:'departamento', store:'tienda', daypart:'turno', dow:'día' };
+      var dimLabel = dimLabelMap[dim] || dim;
+      var focusLabel = entity ? (' de ' + entity.label) : '';
+      var effectiveType = chartType === 'pie' ? 'pie' : ((chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)) ? 'bar' : 'bar');
+      var datasets = compareLy && chartType !== 'pie'
+        ? [
+            { label: aiMetricLabel(metric) + ' actual', data: values, type:'bar', color:'#0C4D8F' },
+            { label: aiMetricLabel(metric) + ' LY', data: lyValues, type:'bar', color:'#F58320' }
+          ]
+        : [
+            { label: aiMetricLabel(metric), data: values, type: effectiveType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
+          ];
+
+      return {
+        mode: mode,
+        metric: metric,
+        entity: entity,
+        chartType: effectiveType,
+        periods: usePeriods,
+        labels: labels,
+        datasets: datasets,
+        title: aiMetricLabel(metric) + ' por ' + dimLabel + focusLabel,
+        subtitle: breakdown && explicitTemporal
+          ? ('Breakdown acumulado de los últimos ' + usePeriods.length + ' ' + (mode === 'month' ? 'meses' : 'periodos'))
+          : ('Breakdown del último ' + (mode === 'month' ? 'mes' : 'periodo') + ' disponible en el cubo'),
+        tag: compareLy && chartType !== 'pie' ? 'Actual vs LY' : (effectiveType === 'pie' ? 'Participación' : 'Breakdown'),
+        yFormat: aiMetricYFormat(metric),
+        type: effectiveType === 'pie' ? 'pie' : 'bar',
+        horizontal: effectiveType !== 'pie' && (chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)),
+        note: 'Fuente directa: Cubo_Sales_DetailHallazgos',
+        questionScopedContext: aiBuildBreakdownContext(entries, metric, dim, usePeriods, compareLy, entity)
+      };
+    }
 
     var periodAgg = new Map();
     scoped.forEach(function(r){
       var key = aiPeriodKey(r, mode);
       if(!key) return;
-      if(!periodAgg.has(key)) periodAgg.set(key, { total:0, delivery:0 });
-      var bucket = periodAgg.get(key);
-      var sales = Number(r && r.sales || 0) || 0;
-      bucket.total += sales;
-      if(r && r.is_delivery) bucket.delivery += sales;
+      if(!periodAgg.has(key)) periodAgg.set(key, { total:0, delivery:0, non_delivery:0, margin:0 });
+      aiBucketAdd(periodAgg.get(key), r);
     });
 
     var periods = aiSortPeriods(Array.from(periodAgg.keys()), mode).slice(-count);
     if(!periods.length) return null;
 
-    var currentValues = periods.map(function(pk){
-      var rec = periodAgg.get(pk) || { total:0, delivery:0 };
-      if(metric === 'delivery_share') return rec.total ? Number(((rec.delivery / rec.total) * 100).toFixed(2)) : 0;
-      if(metric === 'delivery_sales') return Number(rec.delivery || 0);
-      return Number(rec.total || 0);
-    });
-
-    var datasets = [{
-      label: metric === 'delivery_share' ? 'Share delivery' : (metric === 'delivery_sales' ? 'Venta delivery' : 'Venta actual'),
+    var currentValues = periods.map(function(pk){ return aiMetricValueFromBucket(periodAgg.get(pk), metric); });
+    var datasetsTs = [{
+      label: aiMetricLabel(metric) + ' actual',
       data: currentValues,
-      type: 'line',
+      type: chartType === 'bar' ? 'bar' : 'line',
       color: '#0C4D8F'
     }];
 
@@ -5674,50 +5896,40 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       lyValues = periods.map(function(pk){
         var lyKey = aiLyPeriod(pk, mode);
         if(!lyKey) return 0;
-        var rec = periodAgg.get(lyKey) || { total:0, delivery:0 };
-        if(metric === 'delivery_share') return rec.total ? Number(((rec.delivery / rec.total) * 100).toFixed(2)) : 0;
-        if(metric === 'delivery_sales') return Number(rec.delivery || 0);
-        return Number(rec.total || 0);
+        return aiMetricValueFromBucket(periodAgg.get(lyKey), metric);
       });
-      datasets.push({
-        label: metric === 'delivery_share' ? 'Share delivery LY' : (metric === 'delivery_sales' ? 'Venta delivery LY' : 'Venta LY'),
+      datasetsTs.push({
+        label: aiMetricLabel(metric) + ' LY',
         data: lyValues,
-        type: 'line',
+        type: chartType === 'bar' ? 'bar' : 'line',
         color: '#F58320'
       });
     }
 
-    var baseLabel = entity ? entity.label : (metric === 'delivery_share' ? 'total seleccionado' : 'venta total');
-    var titleCore = metric === 'delivery_share'
-      ? ('Share delivery de ' + baseLabel)
-      : (metric === 'delivery_sales' ? ('Venta delivery de ' + baseLabel) : ('Venta de ' + baseLabel));
-
+    var baseLabel = entity ? entity.label : 'total seleccionado';
     return {
       mode: mode,
       metric: metric,
       entity: entity,
       periods: periods,
       labels: periods.map(function(pk){ return aiPeriodLabel(pk, mode); }),
-      datasets: datasets,
-      title: titleCore,
-      subtitle: mode === 'month' ? 'Serie mensual conectada al cubo publicado' : 'Serie semanal conectada al cubo publicado',
+      datasets: datasetsTs,
+      title: aiMetricLabel(metric) + ' de ' + baseLabel,
+      subtitle: mode === 'month' ? 'Serie mensual directa desde el cubo' : 'Serie semanal directa desde el cubo',
       tag: compareLy ? 'Actual vs LY' : (mode === 'month' ? 'Mensual' : 'Semanal'),
-      yFormat: metric === 'delivery_share' ? 'percent' : 'money',
-      note: 'Fuente: Cubo_Sales_DetailHallazgos / Cubo_Sales',
-      questionScopedContext: {
-        metric: metric,
-        entity: entity ? entity.label : 'Total',
-        period_mode: mode,
-        labels: periods.map(function(pk){ return aiPeriodLabel(pk, mode); }),
-        current_series: currentValues,
-        ly_series: lyValues
-      }
+      yFormat: aiMetricYFormat(metric),
+      note: 'Fuente directa: Cubo_Sales_DetailHallazgos / Cubo_Sales',
+      questionScopedContext: aiBuildTimeSeriesContext(periods.map(function(pk){ return aiPeriodLabel(pk, mode); }), currentValues, lyValues, metric, entity, mode)
     };
+  }
+
+  function aiBuildSeries(question){
+    return aiBuildLocalIntentModel(question);
   }
 
   function buildAiQuestionScopedContext(question){
     try{
-      var localSeries = aiBuildSeries(question);
+      var localSeries = aiBuildLocalIntentModel(question);
       return localSeries ? localSeries.questionScopedContext : null;
     }catch(_e){
       return null;
@@ -5726,7 +5938,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
   function renderRequestedLocalVisual(question, pack){
     var smart = null;
-    try{ smart = aiBuildSeries(question); }catch(_e){ smart = null; }
+    try{ smart = aiBuildLocalIntentModel(question); }catch(_e){ smart = null; }
 
     var model = smart ? {
       title: buildVisualTitleFromQuestion(question, smart.title),
@@ -5735,8 +5947,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       labels: smart.labels,
       datasets: smart.datasets,
       note: smart.note,
-      type: 'line',
-      horizontal: false,
+      type: smart.type || 'line',
+      horizontal: !!smart.horizontal,
       yFormat: smart.yFormat
     } : {
       title: buildVisualTitleFromQuestion(question, pack && pack.chart && pack.chart.title),
@@ -5761,7 +5973,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }
 
     var note = smart
-      ? ('Fuentes usadas: Cubo_Sales_DetailHallazgos / Cubo_Sales · ' + (smart.entity ? ('foco detectado: ' + smart.entity.label) : 'foco general'))
+      ? ('Fuentes usadas: Cubo_Sales_DetailHallazgos / Cubo_Sales · periodos usados: ' + ((smart.periods || []).join(', ') || 'actual') + (smart.entity ? (' · foco detectado: ' + smart.entity.label) : ' · foco general'))
       : ('Fuentes usadas: ' + ((pack && pack.sourceLabels && pack.sourceLabels.length) ? pack.sourceLabels.join(', ') : 'dashboard actual'));
     showStageChart(model, note);
     return true;
@@ -5985,6 +6197,26 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }catch(_e){ return ''; }
   }
 
+  function normalizeAssistantReply(raw){
+    var text = String(raw == null ? '' : raw).replace(/\r/g,'').trim();
+    if(!text) return '';
+    text = text.replace(/```(?:mermaid)?[\s\S]*?```/gi, function(block){
+      return block.replace(/```(?:mermaid)?/gi,'').replace(/```/g,'').trim();
+    });
+    if(/\n\n/.test(text)) return text;
+    if(/^[-•*]\s+/m.test(text) || /^\d+[\.)]\s+/m.test(text)) return text;
+    text = text.replace(/([.!?])\s+(?=(Si quer[eé]s|Si quieres|Adem[aá]s|Importante|En resumen|Conclusi[oó]n|Por otro lado|Ahora bien))/gi, '$1\n\n');
+    if(/\n\n/.test(text)) return text;
+    var sentences = text.match(/[^.!?\n]+(?:[.!?]+|$)/g) || [text];
+    sentences = sentences.map(function(s){ return s.replace(/\s+/g,' ').trim(); }).filter(Boolean);
+    if(sentences.length <= 2) return text;
+    var chunks = [];
+    for(var i=0;i<sentences.length;i+=2){
+      chunks.push(sentences.slice(i, i+2).join(' '));
+    }
+    return chunks.join('\n\n');
+  }
+
   function buildSystemPrompt(topic, pack){
     return [
       'Sos un copiloto ejecutivo y comercial para AMPM EL SALVADOR.',
@@ -6000,10 +6232,13 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       'Si el usuario pide campañas, copies, conceptos, piezas o creatividad, puedes proponer ideas comerciales sólidas; separa claramente lo que viene de data y lo que es propuesta.',
       'Si el usuario pide un gráfico, una infografía o una imagen, asumí que el visual se está generando aparte y usá el texto solo para complementar, contextualizar o recomendar qué leer de ese visual.',
       'Si el contexto local dice explícitamente que una métrica sí existe, no respondás que no hay data.',
-      'Si existe contexto específico de la pregunta con series del cubo, úsalo como fuente principal antes que los KPIs generales.',
+      'Si existe contexto específico de la pregunta o question_scoped_context del cubo, úsalo como fuente principal antes que los KPIs generales.',
+      'Si question_scoped_context trae series, breakdown, ranking o comparativos exactos, responde con esos números de forma directa y ejecutiva.',
       'No expliques el modelo, no uses texto académico y no metas relleno.',
+      'No devuelvas mermaid, JSON, tablas técnicas ni pseudo-código salvo que el usuario lo pida explícitamente.',
+      'Si puedes responder con data del cubo, hazlo directo y sin decir que falta data cuando sí existe una estructura razonable para resolver la consulta.',
       'Tema actual: ' + (TOPICS[topic] ? TOPICS[topic].title : topic) + '.',
-      'Contexto ampliado del dashboard (JSON): ' + pack.context
+      'Contexto ampliado del dashboard (JSON, prioriza question_scoped_context cuando exista): ' + pack.context
     ].join('\n');
   }
 
@@ -6031,7 +6266,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     var body = {
       model: OPENAI_MODEL,
       store: true,
-      reasoning: { effort: 'medium' },
+      reasoning: { effort: 'high' },
       text: { verbosity: 'high' },
       max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
       input: [
@@ -6074,7 +6309,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       removeThinking();
       disableInput(false);
 
-      var reply = extractResponseText(data);
+      var reply = normalizeAssistantReply(extractResponseText(data));
       if(!reply){
         appendMessage('assistant', 'No vino una respuesta utilizable del modelo.', 'error');
         return;
@@ -8838,7 +9073,7 @@ function applyUnifiedModeUI(){
       };
       const titleEl = el('reportTitle'); if(titleEl) titleEl.textContent = titleMap[mode];
       try{ document.title = titleMap[mode]; }catch(e){}
-      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.';
+      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.';
       const lCur = el('labelCurrentPeriod'); if(lCur) lCur.textContent = `2) ${getModePeriodNoun()} actual (${getCurrentPeriodFormatHint()})`;
       const lyWrap = el('lyWeekOverrideWrap'); if(lyWrap) lyWrap.style.display = isMonthlyReport() ? 'none' : '';
       const lLy = el('labelLyWeekOverride'); if(lLy) lLy.textContent = isMonthlyReport() ? '2b) Comparativo LY (oculto en mensual)' : '2b) Semana comparativa LY (opcional)';
@@ -28959,6 +29194,15 @@ renderShareTable({
           const fileMatch = u.pathname.match(/\/file\/d\/([^/]+)/i);
           const directId = fileMatch ? fileMatch[1] : (u.searchParams.get('id') || '');
           if(directId) return `https://drive.google.com/uc?export=download&id=${directId}`;
+        }
+        if(/github\.com$/i.test(u.hostname)){
+          const blobMatch = u.pathname.match(/^\/([^/]+)\/([^/]+)\/(?:blob|raw)\/([^/]+)\/(.+)$/i);
+          if(blobMatch){
+            return `https://raw.githubusercontent.com/${blobMatch[1]}/${blobMatch[2]}/${blobMatch[3]}/${blobMatch[4]}`;
+          }
+        }
+        if(/raw\.githubusercontent\.com$/i.test(u.hostname)){
+          return raw.replace(/[?].*$/, '');
         }
       }catch(_e){}
       return raw;
