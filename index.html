@@ -3405,7 +3405,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
 <h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-<p class="sub" id="reportSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+<p class="sub" id="reportSub">Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.</p>
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
 <span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
@@ -3419,21 +3419,21 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="controlSectionHead">
 <div>
 <h3 class="controlSectionTitle">Base del reporte</h3>
-<p class="controlSectionSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+<p class="controlSectionSub">Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.</p>
 </div>
 <span class="controlSectionAccent">Carga + vista</span>
 </div>
 <div class="grid gridHero">
 <div class="fieldCard primary">
 <label>1) Cargar cubo publicado</label>
-<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="./Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;"/>
+<input class="textInput mini" id="remoteDataUrl" type="text" value="./Cubo_Semanal_Compactado.xlsx" placeholder="./Cubo_Semanal_Compactado.xlsx o https://raw.githubusercontent.com/USUARIO/REPO/main/Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;"/>
 <div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" type="button" style="max-width:none">Cargar cubo publicado</button></div>
 <div class="loading" id="loading">
 <div class="loadingTop"><span class="loadingText" id="loadingText">Preparando carga…</span><span class="loadingPct" id="loadingPct">0%</span></div>
 <div class="loadingBar"><div class="loadingFill" id="loadingFill"></div></div>
 <div class="loadingHint" id="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
 </div>
-<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta.</div>
+<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta. También acepta links de GitHub y convierte automáticamente links <strong>blob</strong> a formato <strong>raw</strong>.</div>
 </div>
 <div class="fieldCard primary">
 <label>0) Vista del dashboard</label>
@@ -3668,70 +3668,90 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     <div class="ampm-ai-header">
       <div class="ampm-ai-header-left">
         <div class="ampm-ai-header-title" id="ampmAiHeaderTitle">Chat libre</div>
-        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con contexto compacto y foco en negocio.</div>
+        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con foco en data directa del cubo y criterio de negocio.</div>
       </div>
       <div class="ampm-ai-header-right">
         <span class="ampm-ai-badge" id="ampmAiScopeBadge">Contexto: ejecutivo</span>
+        <button class="ampm-ai-btn-icon" id="ampmAiHeaderKeyBtn" type="button">⚙ Key</button>
         <button class="ampm-ai-btn-icon" id="ampmAiClearBtn" type="button">↺ Limpiar</button>
       </div>
     </div>
 
-    <div class="ampm-ai-visual-shell" id="ampmAiVisualShell">
-      <div class="ampm-ai-visual-top">
-        <div class="ampm-ai-section-title">Lectura rápida</div>
-        <div class="ampm-ai-source-chips" id="ampmAiSourceChips"></div>
+    <div class="ampm-ai-workspace">
+      <div class="ampm-ai-conversation-panel">
+        <div class="ampm-ai-chat" id="ampmAiChat">
+          <div class="ampm-ai-empty" id="ampmAiEmpty">
+            <div class="ampm-ai-empty-icon">✦</div>
+            <div class="ampm-ai-empty-title">Copiloto libre listo</div>
+            <div class="ampm-ai-empty-text">Haz preguntas abiertas, pide gráficos, infografías o imágenes para campañas. La IA ahora prioriza la data directa del cubo cuando detecta una consulta específica.</div>
+          </div>
+          <div class="ampm-ai-messages" id="ampmAiMessages"></div>
+        </div>
+
+        <div class="ampm-ai-input-row">
+          <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Ejemplo: grafícame delivery vs LY, o dame una imagen de campaña para food service." rows="2"></textarea>
+          <button class="ampm-ai-send-btn" id="ampmAiSendBtn" type="button">
+            <span id="ampmAiSendLabel">▶</span>
+          </button>
+        </div>
+        <div class="ampm-ai-footer-note">
+          <span id="ampmAiFooterHint">Preguntas abiertas · visuales bajo demanda · contexto conectado al dashboard actual.</span>
+          <span id="ampmAiUsageMeta"></span>
+        </div>
       </div>
 
+      <aside class="ampm-ai-stage-panel" id="ampmAiStagePanel" aria-label="Visual dinámico">
+        <div class="ampm-ai-stage-head">
+          <div>
+            <div class="ampm-ai-stage-title" id="ampmAiStageTitle">Visual dinámico</div>
+            <div class="ampm-ai-stage-sub" id="ampmAiStageSub">Aquí se muestran gráficos locales del dashboard o imágenes generadas por IA según tu solicitud.</div>
+          </div>
+          <div class="ampm-ai-stage-actions">
+            <span class="ampm-ai-badge" id="ampmAiStageMode">Esperando solicitud</span>
+          </div>
+        </div>
+
+        <div class="ampm-ai-stage-body" id="ampmAiStageBody">
+          <div class="ampm-ai-stage-empty" id="ampmAiStageEmpty">Pide un gráfico, una infografía o una imagen de campaña para mostrarla aquí.</div>
+
+          <div class="ampm-ai-stage-chart-card" id="ampmAiStageChartCard" hidden>
+            <div class="ampm-ai-card-head">
+              <div>
+                <div class="ampm-ai-card-title" id="ampmAiChartTitle">Visual local</div>
+                <div class="ampm-ai-card-sub" id="ampmAiChartSub">Conectado a la data actualmente cargada en el dashboard</div>
+              </div>
+              <span class="ampm-ai-mini-tag" id="ampmAiChartTag">Local</span>
+            </div>
+            <div class="ampm-ai-chart-wrap">
+              <canvas id="ampmAiChart"></canvas>
+              <div class="ampm-ai-chart-empty" id="ampmAiChartEmpty">No hay suficiente data estructurada para graficar esta solicitud.</div>
+            </div>
+          </div>
+
+          <div class="ampm-ai-stage-image-card" id="ampmAiImageCard" hidden>
+            <div class="ampm-ai-card-head">
+              <div>
+                <div class="ampm-ai-card-title" id="ampmAiImageTitle">Imagen IA</div>
+                <div class="ampm-ai-card-sub" id="ampmAiImageSub">Generada a partir del prompt y del contexto comercial disponible</div>
+              </div>
+              <span class="ampm-ai-mini-tag" id="ampmAiImageTag">IA</span>
+            </div>
+            <div class="ampm-ai-stage-image-wrap">
+              <img class="ampm-ai-stage-image" id="ampmAiImage" alt="Visual generado por IA"/>
+            </div>
+            <div class="ampm-ai-stage-image-note" id="ampmAiImageNote"></div>
+          </div>
+
+          <div class="ampm-ai-stage-note" id="ampmAiStageNote"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="ampm-ai-hidden-assets" aria-hidden="true">
+      <div class="ampm-ai-source-chips" id="ampmAiSourceChips"></div>
       <div class="ampm-ai-scorecards" id="ampmAiScorecards"></div>
-
-      <div class="ampm-ai-visual-grid">
-        <div class="ampm-ai-chart-card">
-          <div class="ampm-ai-card-head">
-            <div>
-              <div class="ampm-ai-card-title" id="ampmAiChartTitle">Top drivers</div>
-              <div class="ampm-ai-card-sub" id="ampmAiChartSub">Priorizado con data disponible del dashboard</div>
-            </div>
-            <span class="ampm-ai-mini-tag" id="ampmAiChartTag">Local</span>
-          </div>
-          <div class="ampm-ai-chart-wrap">
-            <canvas id="ampmAiChart"></canvas>
-            <div class="ampm-ai-chart-empty" id="ampmAiChartEmpty">No hay suficiente data estructurada para graficar este foco.</div>
-          </div>
-        </div>
-
-        <div class="ampm-ai-action-card">
-          <div class="ampm-ai-card-head">
-            <div>
-              <div class="ampm-ai-card-title">Oportunidades priorizadas</div>
-              <div class="ampm-ai-card-sub">Impacto, causa probable, acción y KPI sugerido</div>
-            </div>
-            <span class="ampm-ai-mini-tag" id="ampmAiActionTag">Top 3</span>
-          </div>
-          <div class="ampm-ai-opps" id="ampmAiOpps"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="ampm-ai-prompts" id="ampmAiPrompts"></div>
-
-    <div class="ampm-ai-chat" id="ampmAiChat">
-      <div class="ampm-ai-empty" id="ampmAiEmpty">
-        <div class="ampm-ai-empty-icon">✦</div>
-        <div class="ampm-ai-empty-title">Copiloto ejecutivo listo</div>
-        <div class="ampm-ai-empty-text">Selecciona un frente o escribe una consulta. La respuesta se alimenta con la data del dashboard y un contexto reducido al tema relevante.</div>
-      </div>
-      <div class="ampm-ai-messages" id="ampmAiMessages"></div>
-    </div>
-
-    <div class="ampm-ai-input-row">
-      <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Ejemplo: ¿Qué está frenando SBF y qué harías esta semana?" rows="2"></textarea>
-      <button class="ampm-ai-send-btn" id="ampmAiSendBtn" type="button">
-        <span id="ampmAiSendLabel">▶</span>
-      </button>
-    </div>
-    <div class="ampm-ai-footer-note">
-      <span id="ampmAiFooterHint">Solo contexto relevante · sin enviar todo el dashboard · enfoque en impacto, causa, acción, prioridad y KPI.</span>
-      <span id="ampmAiUsageMeta"></span>
+      <div class="ampm-ai-opps" id="ampmAiOpps"></div>
+      <div class="ampm-ai-prompts" id="ampmAiPrompts"></div>
     </div>
   </section>
 </div>
@@ -4164,8 +4184,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   color:#9A3412;
 }
 .ampm-ai-chat{
-  flex:1;
-  min-height:220px;
+  flex:1 1 0;
+  min-height:0;
+  height:0;
   position:relative;
   overflow:auto;
   padding:16px 18px;
@@ -4205,6 +4226,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   display:flex;
   flex-direction:column;
   gap:12px;
+  min-height:min-content;
+  padding-bottom:4px;
 }
 .ampm-ai-msg{
   max-width:min(920px, 100%);
@@ -4248,11 +4271,19 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   opacity:.7;
 }
 .ampm-ai-msg-body{
-  font-size:12.5px;
-  line-height:1.55;
+  font-size:13px;
+  line-height:1.66;
   white-space:pre-wrap;
   word-break:break-word;
+  color:#0b1f3a;
 }
+.ampm-ai-msg.assistant{overflow:hidden;}
+.ampm-ai-msg.assistant .ampm-ai-msg-body,
+.ampm-ai-msg.assistant .ampm-ai-msg-body p,
+.ampm-ai-msg.assistant .ampm-ai-msg-body li{color:#102a43;}
+.ampm-ai-msg.user .ampm-ai-msg-body,
+.ampm-ai-msg.user .ampm-ai-msg-body p,
+.ampm-ai-msg.user .ampm-ai-msg-body li{color:#ffffff;}
 .ampm-ai-msg-body ul,
 .ampm-ai-msg-body ol{margin:8px 0 8px 18px; padding:0;}
 .ampm-ai-msg-body li{margin:4px 0;}
@@ -4409,6 +4440,44 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   .ampm-ai-scorecards{grid-template-columns:1fr;}
 }
 </style>
+<style id="ampm-ai-open-workspace-v4">
+.ampm-ai-nav{display:none !important;}
+.ampm-ai-wrap.ampm-ai-visible{display:flex !important;}
+.ampm-ai-main{width:100%;}
+.ampm-ai-header-right{align-items:center;}
+.ampm-ai-workspace{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(360px,.92fr);min-height:0;height:clamp(640px,74vh,880px);max-height:880px;background:linear-gradient(180deg,#fbfdff 0%, #f6f9fc 100%);overflow:hidden;}
+.ampm-ai-conversation-panel{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;border-right:1px solid #e6edf5;background:transparent;overflow:hidden;}
+.ampm-ai-stage-panel{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,251,255,.95));overflow:hidden;}
+.ampm-ai-stage-head{padding:14px 16px 12px;border-bottom:1px solid #e6edf5;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.ampm-ai-stage-title{font-size:15px;line-height:1.15;font-weight:1000;color:#11284A;}
+.ampm-ai-stage-sub{margin-top:4px;font-size:11.5px;line-height:1.45;color:#5B6B82;font-weight:700;}
+.ampm-ai-stage-body{flex:1 1 0;min-height:0;height:0;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;overflow:auto;}
+.ampm-ai-stage-empty{flex:1;min-height:220px;border:1px dashed rgba(148,163,184,.30);border-radius:18px;background:#fff;color:#64748b;font-size:12px;line-height:1.55;font-weight:800;padding:18px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.ampm-ai-stage-chart-card,.ampm-ai-stage-image-card{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:18px;box-shadow:0 8px 20px rgba(15,23,42,.04);overflow:hidden;}
+.ampm-ai-stage-image-wrap{padding:12px 12px 8px;}
+.ampm-ai-stage-image{width:100%;display:block;border-radius:14px;background:#f8fafc;border:1px solid rgba(148,163,184,.18);object-fit:contain;}
+.ampm-ai-stage-image-note,.ampm-ai-stage-note{font-size:11.5px;line-height:1.5;color:#5B6B82;font-weight:700;}
+.ampm-ai-stage-image-note{padding:0 12px 12px;}
+.ampm-ai-stage-note{padding:0 2px;display:none;}
+.ampm-ai-hidden-assets{display:none !important;}
+.ampm-ai-chat{padding:16px 18px;}
+.ampm-ai-msg{max-width:100%;}
+.ampm-ai-chat .ampm-ai-empty{min-height:200px;display:flex;flex-direction:column;justify-content:center;}
+@media (max-width: 1180px){.ampm-ai-workspace{grid-template-columns:1fr;}.ampm-ai-conversation-panel{border-right:0;border-bottom:1px solid #e6edf5;}}
+@media (max-width: 720px){.ampm-ai-workspace{min-height:620px;height:78vh;max-height:none;}.ampm-ai-stage-head,.ampm-ai-stage-body{padding-left:12px;padding-right:12px;}}
+</style>
+<style id="ampm-ai-readable-v2">
+.ampm-ai-msg.assistant{background:#ffffff;color:#11284A;}
+.ampm-ai-msg-role{color:#11284A;opacity:1;}
+.ampm-ai-msg-meta{color:#526581;opacity:1;}
+.ampm-ai-msg-body{font-size:13.5px;line-height:1.75;white-space:normal;word-break:break-word;color:#11284A;}
+.ampm-ai-msg-body p{margin:0 0 12px;}
+.ampm-ai-msg-body p:last-child{margin-bottom:0;}
+.ampm-ai-msg-body strong{color:#0C4D8F;}
+.ampm-ai-empty-text,.ampm-ai-footer-note,.ampm-ai-stage-sub,.ampm-ai-stage-note,.ampm-ai-stage-image-note{color:#334155 !important;}
+.ampm-ai-stage-empty{color:#334155 !important;font-size:13px;}
+.ampm-ai-scorecard-note,.ampm-ai-opp-line,.ampm-ai-source-chip{color:#334155;}
+</style>
 
 <script id="ampm-ai-script-v3">
 (function(){
@@ -4417,8 +4486,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
   var LS_KEY = 'ampm_openai_key_v1';
   var AUTH_KEY = 'ampm_report_auth_v1';
-  var OPENAI_MODEL = 'gpt-5.4-mini';
-  var OPENAI_MAX_OUTPUT_TOKENS = 620;
+  var OPENAI_MODEL = 'gpt-5.4';
+  var OPENAI_FALLBACK_MODEL = 'gpt-5.4-mini';
+  var OPENAI_MAX_OUTPUT_TOKENS = 6800;
   var stateAi = {
     topic: 'chat',
     lastResponseId: '',
@@ -4426,13 +4496,15 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     chart: null,
     activePack: null,
     lastTopicForResponse: '',
-    lastUsage: ''
+    lastUsage: '',
+    visualMode: 'idle',
+    imageObjectUrl: ''
   };
 
   var TOPICS = {
     chat: {
       title: 'Chat libre',
-      sub: 'Detecta automáticamente el frente más relevante según tu pregunta y reduce el contexto al mínimo útil.',
+      sub: 'Haz preguntas abiertas, pide gráficos, infografías o imágenes. La IA detecta el frente útil y se adapta al formato que necesites.',
       prompts: [
         '¿Cuál es el principal riesgo del negocio con los filtros actuales?',
         '¿Dónde está el mayor impacto económico hoy?',
@@ -5156,11 +5228,11 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     pack.opps = pack.opps.slice(0, 3);
     pack.scorecards = pack.scorecards.slice(0, 4);
 
-    var compactTables = pack.tables.slice(0, 3).map(function(t){
+    var compactTables = pack.tables.slice(0, 5).map(function(t){
       return {
         label: t.label,
         headers: t.headers,
-        rows: t.rows.slice(0, 4)
+        rows: t.rows.slice(0, 8)
       };
     });
 
@@ -5168,15 +5240,16 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       topic: pack.resolvedTopic || pack.topic,
       question: pack.question || '',
       filters: pack.filters,
-      facts: pack.facts.slice(0, 12),
-      source_labels: pack.sourceLabels.slice(0, 8),
+      facts: pack.facts.slice(0, 24),
+      source_labels: pack.sourceLabels.slice(0, 12),
       scorecards: pack.scorecards.map(function(item){
         return { title:item.title, value:item.value, note:item.note, status:item.status };
       }),
       top_local_opportunities: pack.opps.map(function(item){
         return { title:item.title, priority:item.priority, impact:item.impact, cause:item.cause, action:item.action, kpi:item.kpi };
       }),
-      tables: compactTables
+      tables: compactTables,
+      question_scoped_context: buildAiQuestionScopedContext(pack.question)
     };
     pack.context = JSON.stringify(promptPayload);
     return pack;
@@ -5238,8 +5311,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     var canvas = el('ampmAiChart');
     var empty = el('ampmAiChartEmpty');
 
-    if(titleEl) titleEl.textContent = txt(chartModel && chartModel.title) || 'Top drivers';
-    if(subEl) subEl.textContent = txt(chartModel && chartModel.subtitle) || 'Priorizado con data disponible del dashboard';
+    if(titleEl) titleEl.textContent = txt(chartModel && chartModel.title) || 'Visual local';
+    if(subEl) subEl.textContent = txt(chartModel && chartModel.subtitle) || 'Serie construida con data estructurada del cubo';
     if(tagEl) tagEl.textContent = txt(chartModel && chartModel.tag) || 'Local';
 
     destroyChart();
@@ -5249,52 +5322,720 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }
 
     var labels = (chartModel && chartModel.labels) || [];
-    var values = (chartModel && chartModel.values) || [];
-    if(!labels.length || !values.length){
+    var datasets = (chartModel && Array.isArray(chartModel.datasets) && chartModel.datasets.length)
+      ? chartModel.datasets.slice()
+      : [{ label: txt(chartModel && chartModel.note) || 'Valor', data: (chartModel && chartModel.values) || [] }];
+
+    if(!labels.length || !datasets.length || !datasets.some(function(ds){ return Array.isArray(ds && ds.data) && ds.data.length; })){
       if(empty){ empty.classList.add('show'); empty.textContent = 'No hay suficiente data estructurada para graficar este foco.'; }
       return;
     }
     if(empty) empty.classList.remove('show');
 
-    stateAi.chart = new Chart(canvas.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: txt(chartModel.note) || 'Valor',
-          data: values
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        animation: false,
-        layout: { padding: { left: 4, right: 10, top: 6, bottom: 0 } },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(ctx){
-                var value = ctx.parsed && typeof ctx.parsed.x !== 'undefined' ? ctx.parsed.x : ctx.raw;
-                if(!isFinite(value)) return '—';
-                if(chartModel && chartModel.note && /%|ratio/i.test(chartModel.note)) return ' ' + Number(value).toLocaleString('es-SV');
-                return ' ' + Number(value).toLocaleString('es-SV');
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color:'rgba(148,163,184,.18)' },
-            ticks: { color:'#334155', font:{ weight:'800' } }
-          },
-          y: {
-            grid: { display:false },
-            ticks: { color:'#0f172a', font:{ weight:'900' } }
-          }
-        }
+    var palette = ['#0C4D8F','#F58320','#16A34A','#64748B','#7C3AED','#DC2626','#059669','#F59E0B','#334155','#0EA5E9','#9333EA','#E11D48'];
+    var type = txt(chartModel && chartModel.type) || (datasets.length > 1 ? 'line' : 'bar');
+    var isCircular = /^(pie|doughnut)$/i.test(type);
+    var horizontal = !isCircular && !!(chartModel && chartModel.horizontal);
+    var yFormat = txt(chartModel && chartModel.yFormat) || 'number';
+
+    function fmtValue(value){
+      if(!isFinite(value)) return '—';
+      if(yFormat === 'money') return (typeof money === 'function') ? money(value) : ('$' + Number(value).toLocaleString('es-SV'));
+      if(yFormat === 'percent') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 }) + '%';
+      if(yFormat === 'ratio') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
+      if(yFormat === 'int') return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 0 });
+      return Number(value).toLocaleString('es-SV', { maximumFractionDigits: 2 });
+    }
+
+    var normalizedSets = datasets.map(function(ds, idx){
+      var color = ds.color || palette[idx % palette.length];
+      var dsType = ds.type || type;
+      var base = {
+        type: dsType,
+        label: txt(ds.label) || ('Serie ' + (idx + 1)),
+        data: Array.isArray(ds.data) ? ds.data : [],
+        borderColor: color,
+        backgroundColor: color,
+        tension: dsType === 'line' ? 0.28 : 0,
+        pointRadius: dsType === 'line' ? 4 : 0,
+        pointHoverRadius: dsType === 'line' ? 5 : 0,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: color,
+        pointBorderWidth: dsType === 'line' ? 2 : 0,
+        borderWidth: dsType === 'line' ? 3 : 1,
+        fill: false
+      };
+      if(dsType === 'bar'){
+        base.borderRadius = 10;
+        base.borderSkipped = false;
+        base.barPercentage = 0.72;
+        base.categoryPercentage = 0.72;
       }
+      if(/^(pie|doughnut)$/i.test(dsType)){
+        base.backgroundColor = labels.map(function(_x, j){ return palette[j % palette.length]; });
+        base.borderColor = '#ffffff';
+        base.borderWidth = 2;
+      }
+      return Object.assign(base, ds);
+    });
+
+    var options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      layout: { padding: { left: 8, right: 12, top: 6, bottom: 0 } },
+      interaction: { mode: isCircular ? 'nearest' : 'index', intersect: isCircular },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels:{ color:'#1f2937', font:{ weight:'800' }, boxWidth: 14, boxHeight: 14 } },
+        tooltip: { callbacks: { label: function(ctx){ var parsed = isCircular ? ctx.raw : (horizontal ? (ctx.parsed && ctx.parsed.x) : (ctx.parsed && ctx.parsed.y)); return ' ' + (ctx.dataset && ctx.dataset.label ? ctx.dataset.label + ': ' : '') + fmtValue(parsed != null ? parsed : ctx.raw); } } }
+      }
+    };
+
+    if(!isCircular){
+      options.indexAxis = horizontal ? 'y' : 'x';
+      options.scales = {
+        x: {
+          beginAtZero: !horizontal,
+          grid: { color:'rgba(148,163,184,.18)', display: !horizontal },
+          ticks: { color:'#334155', font:{ weight:'800' }, callback:function(v){ return horizontal ? String(v) : fmtValue(v); } }
+        },
+        y: {
+          beginAtZero: horizontal,
+          grid: { color:'rgba(148,163,184,.18)', display: horizontal ? false : true },
+          ticks: { color:'#0f172a', font:{ weight:'900' }, callback:function(v){ return horizontal ? fmtValue(v) : String(labels[v] || v); } }
+        }
+      };
+    }
+
+    stateAi.chart = new Chart(canvas.getContext('2d'), {
+      type: type,
+      data: { labels: labels, datasets: normalizedSets },
+      options: options
+    });
+  }
+
+  function truncateMiddle(text, max){
+    text = txt(text);
+    max = max || 72;
+    if(text.length <= max) return text;
+    return text.slice(0, max - 1) + '…';
+  }
+
+  function clearStageImage(){
+    var img = el('ampmAiImage');
+    if(img) img.removeAttribute('src');
+    stateAi.imageObjectUrl = '';
+  }
+
+  function setStageMode(label){
+    var mode = el('ampmAiStageMode');
+    if(mode) mode.textContent = txt(label) || 'Esperando solicitud';
+  }
+
+  function setStageNote(note){
+    var node = el('ampmAiStageNote');
+    if(!node) return;
+    note = txt(note);
+    node.textContent = note;
+    node.style.display = note ? '' : 'none';
+  }
+
+  function resetStage(message){
+    destroyChart();
+    clearStageImage();
+    var empty = el('ampmAiStageEmpty');
+    var chartCard = el('ampmAiStageChartCard');
+    var imageCard = el('ampmAiImageCard');
+    if(chartCard) chartCard.hidden = true;
+    if(imageCard) imageCard.hidden = true;
+    if(empty){
+      empty.textContent = txt(message) || 'Pide un gráfico, una infografía o una imagen de campaña para mostrarla aquí.';
+      empty.style.display = '';
+    }
+    setStageNote('');
+    setStageMode('Esperando solicitud');
+    stateAi.visualMode = 'idle';
+  }
+
+  function setStageLoading(message){
+    destroyChart();
+    clearStageImage();
+    var empty = el('ampmAiStageEmpty');
+    var chartCard = el('ampmAiStageChartCard');
+    var imageCard = el('ampmAiImageCard');
+    if(chartCard) chartCard.hidden = true;
+    if(imageCard) imageCard.hidden = true;
+    if(empty){
+      empty.textContent = txt(message) || 'Preparando visual…';
+      empty.style.display = '';
+    }
+    setStageMode('Generando visual');
+    stateAi.visualMode = 'loading';
+  }
+
+  function showStageChart(chartModel, note){
+    var empty = el('ampmAiStageEmpty');
+    var chartCard = el('ampmAiStageChartCard');
+    var imageCard = el('ampmAiImageCard');
+    if(imageCard) imageCard.hidden = true;
+    clearStageImage();
+    if(chartCard) chartCard.hidden = false;
+    if(empty) empty.style.display = 'none';
+    renderChart(chartModel);
+    setStageNote(note || '');
+    setStageMode('Gráfico local');
+    stateAi.visualMode = 'chart';
+  }
+
+  function showStageImage(src, title, subtitle, note){
+    var empty = el('ampmAiStageEmpty');
+    var chartCard = el('ampmAiStageChartCard');
+    var imageCard = el('ampmAiImageCard');
+    var img = el('ampmAiImage');
+    var titleEl = el('ampmAiImageTitle');
+    var subEl = el('ampmAiImageSub');
+    var noteEl = el('ampmAiImageNote');
+    destroyChart();
+    if(chartCard) chartCard.hidden = true;
+    if(imageCard) imageCard.hidden = false;
+    if(empty) empty.style.display = 'none';
+    if(img) img.src = src || '';
+    if(titleEl) titleEl.textContent = txt(title) || 'Imagen IA';
+    if(subEl) subEl.textContent = txt(subtitle) || 'Generada con la solicitud actual';
+    if(noteEl) noteEl.textContent = txt(note) || '';
+    setStageNote('');
+    setStageMode('Imagen IA');
+    stateAi.visualMode = 'image';
+  }
+
+  function detectVisualIntent(question){
+    var q = txt(question).toLowerCase();
+    if(!q) return { type:'none' };
+    var has = function(words){
+      return words.some(function(word){ return q.indexOf(word) >= 0; });
+    };
+    if(has(['imagen','image','key visual','campaña','campana','post','story','banner','afiche','flyer','pieza','creativ','arte','mockup','foto'])) return { type:'image' };
+    if(has(['infografia','infografía','infographic','one pager visual','visual ejecutivo'])) return { type:'infographic' };
+    if(has(['graf','gráf','grafica','gráfica','grafico','gráfico','chart','barra','barras','linea','línea','tendencia','evolucion','evolución','comparativo','share','mix','participacion','participación','ranking','top','delta','vs '])) return { type:'chart' };
+    return { type:'text' };
+  }
+
+  function buildVisualTitleFromQuestion(question, fallback){
+    var q = truncateMiddle(question || '', 68);
+    if(!q) return txt(fallback) || 'Visual local';
+    q = q.replace(/[?]+$/,'');
+    return q.charAt(0).toUpperCase() + q.slice(1);
+  }
+
+  function aiNormCompact(value){
+    return stripAccents(txt(value)).toUpperCase().replace(/[^A-Z0-9]+/g,'');
+  }
+
+  function aiSelectedStores(){
+    var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []);
+    return (Array.isArray(stores) ? stores : [stores]).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean);
+  }
+
+  function aiScopedSalesRows(){
+    var rows = Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows.slice() : [];
+    try{
+      if(typeof getDowScopedRows === 'function') rows = getDowScopedRows(rows);
+    }catch(_e){}
+    var storeSet = new Set(aiSelectedStores());
+    if(storeSet.size){
+      rows = rows.filter(function(r){ return r && storeSet.has(String(r.store || '').trim().toUpperCase()); });
+    }
+    return rows.filter(Boolean);
+  }
+
+  function aiRequestedMode(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    var asksMonth = /mensual|mtd|mes|meses|month/.test(q);
+    var asksWeek = /semanal|semana|semanas|week|weeks/.test(q);
+    if(asksMonth && !asksWeek) return 'month';
+    if(asksWeek && !asksMonth) return 'week';
+    return (typeof isMonthlyReport === 'function' && isMonthlyReport()) ? 'month' : 'week';
+  }
+
+  function aiRequestedCount(question, mode){
+    var q = stripAccents(txt(question)).toLowerCase();
+    var match = q.match(/ultim(?:a|as|o|os)?\s+(\d+)\s+(semanas?|meses?)/i) || q.match(/(\d+)\s+(semanas?|meses?)/i);
+    var value = match ? parseInt(match[1], 10) : NaN;
+    if(Number.isFinite(value) && value > 0){
+      return Math.min(value, mode === 'month' ? 18 : 16);
+    }
+    return mode === 'month' ? 6 : 8;
+  }
+
+
+
+  function aiFindEntity(rows, question){
+    var q = aiNormCompact(question);
+    if(!q) return null;
+
+    var aliases = [
+      { prop:'category', value:'Whisky', label:'Whisky', norm:'WHISKY' },
+      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZAS' },
+      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'CERVEZA' },
+      { prop:'department', value:'Cervezas y RTD', label:'Cervezas y RTD', norm:'RTD' },
+      { prop:'department', value:'Licores', label:'Licores', norm:'LICORES' },
+      { prop:'department', value:'Licores', label:'Licores', norm:'LICOR' },
+      { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
+      { prop:'department', value:'Food Service', label:'Food Service', norm:'FOODSERVICE' },
+      { prop:'category', value:'Ready to Drink', label:'Ready to Drink', norm:'READYTODRINK' }
+    ];
+    for(var i=0;i<aliases.length;i+=1){
+      if(q.indexOf(aliases[i].norm) >= 0) return aliases[i];
+    }
+
+    var pools = [
+      { prop:'description', priority:4 },
+      { prop:'brand', priority:3 },
+      { prop:'category', priority:2 },
+      { prop:'department', priority:1 }
+    ];
+    var best = null;
+    pools.forEach(function(pool){
+      var map = new Map();
+      rows.forEach(function(r){
+        var raw = txt(r && r[pool.prop]);
+        if(!raw || raw.length < 3) return;
+        var norm = aiNormCompact(raw);
+        if(norm.length < 3) return;
+        if(!map.has(norm)) map.set(norm, { prop:pool.prop, value:raw, label:raw, norm:norm, priority:pool.priority });
+      });
+      map.forEach(function(item){
+        if(q.indexOf(item.norm) >= 0){
+          if(!best || item.priority > best.priority || (item.priority === best.priority && item.norm.length > best.norm.length)) best = item;
+        }
+      });
+    });
+    return best;
+  }
+
+  function aiRowMatchesEntity(row, entity){
+    if(!entity) return true;
+    var rowValue = aiNormCompact(row && row[entity.prop]);
+    return !!rowValue && (rowValue === entity.norm || rowValue.indexOf(entity.norm) >= 0 || entity.norm.indexOf(rowValue) >= 0);
+  }
+
+  function aiMetricMode(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/sin delivery|no delivery|nondelivery/.test(q)) return 'non_delivery_sales';
+    if(/margen bruto|gross margin|\bgm\b|margen/.test(q)) return 'gross_margin';
+    if(/share|participacion|participacion/.test(q) && /delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_share';
+    if(/delivery|uber|pedidos ya|pedidoya|pya|peya/.test(q)) return 'delivery_sales';
+    return 'sales';
+  }
+
+  function aiDetectChartType(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
+    if(/barra|barras|ranking|top/.test(q)) return 'bar';
+    if(/linea|lineas|tendencia|evolucion|serie|ultim/.test(q)) return 'line';
+    return 'auto';
+  }
+
+  function aiDetectBreakdownDimension(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/categor/i.test(q) || /categoria|categorias/.test(q)) return 'category';
+    if(/marca|marcas/.test(q)) return 'brand';
+    if(/departamento|departamentos|depto/.test(q)) return 'department';
+    if(/tienda|tiendas|store|stores/.test(q)) return 'store';
+    if(/turno|turnos|horario|horarios|daypart/.test(q)) return 'daypart';
+    if(/dia de semana|dow|dia |dias /.test(q)) return 'dow';
+    return '';
+  }
+
+  function aiDetectChannelFilter(question){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(/uber/.test(q)) return 'UBER';
+    if(/pedidos ya|pedidoya|pya|peya/.test(q)) return 'PYA';
+    return '';
+  }
+
+  function aiMetricLabel(metric){
+    if(metric === 'delivery_share') return 'Share delivery';
+    if(metric === 'delivery_sales') return 'Venta delivery';
+    if(metric === 'non_delivery_sales') return 'Venta sin delivery';
+    if(metric === 'gross_margin') return 'Margen bruto';
+    return 'Venta';
+  }
+
+  function aiMetricYFormat(metric){
+    if(metric === 'delivery_share') return 'percent';
+    return 'money';
+  }
+
+  function aiBucketAdd(bucket, row){
+    if(!bucket || !row) return;
+    var sales = Number(row.sales || 0) || 0;
+    bucket.total += sales;
+    bucket.delivery += row.is_delivery ? sales : 0;
+    bucket.non_delivery += row.is_delivery ? 0 : sales;
+    bucket.margin += Number(row.gross_margin || 0) || 0;
+  }
+
+  function aiMetricValueFromBucket(bucket, metric){
+    var b = bucket || { total:0, delivery:0, non_delivery:0, margin:0 };
+    if(metric === 'delivery_share') return b.total ? Number(((b.delivery / b.total) * 100).toFixed(2)) : 0;
+    if(metric === 'delivery_sales') return Number(b.delivery || 0);
+    if(metric === 'non_delivery_sales') return Number(b.non_delivery || 0);
+    if(metric === 'gross_margin') return Number(b.margin || 0);
+    return Number(b.total || 0);
+  }
+
+  function aiSortEntries(entries){
+    return (entries || []).slice().sort(function(a,b){
+      var av = Math.abs(Number(a && a.value || 0));
+      var bv = Math.abs(Number(b && b.value || 0));
+      if(bv !== av) return bv - av;
+      return String(a && a.label || '').localeCompare(String(b && b.label || ''));
+    });
+  }
+
+  function aiWantsBreakdown(question, chartType, dimension){
+    var q = stripAccents(txt(question)).toLowerCase();
+    if(chartType === 'pie') return true;
+    if(dimension && !/ultim|seman|mensual|mtd|serie|tendencia|evolucion/.test(q)) return true;
+    if(/participacion|share|mix|top|ranking/.test(q) && dimension) return true;
+    return false;
+  }
+
+  function aiFilterRowsByQuestion(rows, entity, channelFilter){
+    var scoped = Array.isArray(rows) ? rows.slice() : [];
+    if(entity){
+      scoped = scoped.filter(function(r){ return aiRowMatchesEntity(r, entity); });
+    }
+    if(channelFilter){
+      scoped = scoped.filter(function(r){
+        var ch = stripAccents(txt(r && r.delivery_channel)).toUpperCase();
+        if(channelFilter === 'UBER') return ch.indexOf('UBER') >= 0;
+        if(channelFilter === 'PYA') return ch.indexOf('PEDIDOS') >= 0 || ch.indexOf('PYA') >= 0 || ch.indexOf('PEYA') >= 0;
+        return true;
+      });
+    }
+    return scoped;
+  }
+
+  function aiGroupLabel(row, dimension){
+    if(!row) return '';
+    if(dimension === 'store') return txt(row.store).toUpperCase();
+    if(dimension === 'department') return txt(row.department);
+    if(dimension === 'category') return txt(row.category);
+    if(dimension === 'brand') return txt(row.brand);
+    if(dimension === 'daypart') return txt(row.daypart);
+    if(dimension === 'dow') return txt(row.dow_name || row.dow || row.dowLabel);
+    return '';
+  }
+
+  function aiBuildBreakdownContext(entries, metric, dimension, usePeriods, compareLy, entity){
+    var total = entries.reduce(function(acc, item){ return acc + (Number(item.value || 0) || 0); }, 0);
+    var topItems = entries.slice(0, 10).map(function(item, idx){
+      var share = total ? Number((((Number(item.value || 0) || 0) / total) * 100).toFixed(2)) : 0;
+      var ly = Number(item.lyValue || 0) || 0;
+      return {
+        rank: idx + 1,
+        label: item.label,
+        current_value: Number(item.value || 0) || 0,
+        ly_value: compareLy ? ly : null,
+        delta_vs_ly: compareLy ? Number(((Number(item.value || 0) || 0) - ly).toFixed(2)) : null,
+        share_pct: share
+      };
+    });
+    return {
+      analysis_type: 'breakdown',
+      dimension: dimension,
+      metric: metric,
+      metric_label: aiMetricLabel(metric),
+      compare_vs_ly: !!compareLy,
+      filters_detected: entity ? { focus: entity.label, focus_prop: entity.prop } : null,
+      periods_used: (usePeriods || []).slice(),
+      totals: {
+        visible_total: Number(total.toFixed(2))
+      },
+      top_items: topItems
+    };
+  }
+
+  function aiBuildTimeSeriesContext(labels, currentValues, lyValues, metric, entity, mode){
+    return {
+      analysis_type: 'time_series',
+      period_mode: mode,
+      metric: metric,
+      metric_label: aiMetricLabel(metric),
+      entity: entity ? entity.label : 'Total',
+      labels: labels.slice(),
+      current_series: currentValues.slice(),
+      ly_series: Array.isArray(lyValues) && lyValues.length ? lyValues.slice() : []
+    };
+  }
+
+  function aiBuildLocalIntentModel(question){
+    var rows = aiScopedSalesRows();
+    if(!rows.length) return null;
+
+    var q = stripAccents(txt(question)).toLowerCase();
+    var mode = aiRequestedMode(question);
+    var metric = aiMetricMode(question);
+    var count = aiRequestedCount(question, mode);
+    var compareLy = /\bly\b|ano pasado|año pasado|vs ly|contra ly|compar/i.test(q);
+    var chartType = aiDetectChartType(question);
+    var dimension = aiDetectBreakdownDimension(question);
+    var breakdown = aiWantsBreakdown(question, chartType, dimension);
+    var explicitTemporal = /ultim|seman|mensual|semanal|mtd|mes|month|week|serie|tendencia|evolucion|histor/.test(q);
+    var entity = aiFindEntity(rows, question);
+    var channelFilter = aiDetectChannelFilter(question);
+
+    var scoped = aiFilterRowsByQuestion(rows, entity, channelFilter);
+    if(!scoped.length && entity) scoped = rows.slice();
+    if(!scoped.length) return null;
+
+    var allPeriods = aiSortPeriods(Array.from(new Set(scoped.map(function(r){ return aiPeriodKey(r, mode); }).filter(Boolean))), mode);
+    if(!allPeriods.length) return null;
+
+    var usePeriods = explicitTemporal ? allPeriods.slice(-count) : (breakdown ? allPeriods.slice(-1) : allPeriods.slice(-count));
+    if(!usePeriods.length) usePeriods = allPeriods.slice(-1);
+    var periodSet = new Set(usePeriods);
+    var currentRows = scoped.filter(function(r){ return periodSet.has(aiPeriodKey(r, mode)); });
+    if(!currentRows.length) currentRows = scoped.slice();
+
+    if(breakdown){
+      var dim = dimension || 'category';
+      var currentMap = new Map();
+      currentRows.forEach(function(r){
+        var label = aiGroupLabel(r, dim);
+        if(!label) return;
+        if(!currentMap.has(label)) currentMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
+        aiBucketAdd(currentMap.get(label), r);
+      });
+
+      var lyMap = new Map();
+      if(compareLy){
+        var lyPeriods = usePeriods.map(function(pk){ return aiLyPeriod(pk, mode); }).filter(Boolean);
+        var lySet = new Set(lyPeriods);
+        scoped.forEach(function(r){
+          var rpk = aiPeriodKey(r, mode);
+          if(!lySet.has(rpk)) return;
+          var label = aiGroupLabel(r, dim);
+          if(!label) return;
+          if(!lyMap.has(label)) lyMap.set(label, { total:0, delivery:0, non_delivery:0, margin:0 });
+          aiBucketAdd(lyMap.get(label), r);
+        });
+      }
+
+      var labelsAll = Array.from(new Set([].concat(Array.from(currentMap.keys()), Array.from(lyMap.keys()))));
+      var entries = labelsAll.map(function(label){
+        var value = aiMetricValueFromBucket(currentMap.get(label), metric);
+        var lyValue = aiMetricValueFromBucket(lyMap.get(label), metric);
+        return { label: label, value: value, lyValue: lyValue };
+      }).filter(function(item){ return Number(item.value || 0) !== 0 || Number(item.lyValue || 0) !== 0; });
+
+      entries = aiSortEntries(entries).slice(0, chartType === 'pie' ? 10 : 12);
+      if(!entries.length) return null;
+
+      var labels = entries.map(function(item){ return item.label; });
+      var values = entries.map(function(item){ return Number(item.value || 0) || 0; });
+      var lyValues = entries.map(function(item){ return Number(item.lyValue || 0) || 0; });
+      var dimLabelMap = { category:'categoría', brand:'marca', department:'departamento', store:'tienda', daypart:'turno', dow:'día' };
+      var dimLabel = dimLabelMap[dim] || dim;
+      var focusLabel = entity ? (' de ' + entity.label) : '';
+      var effectiveType = chartType === 'pie' ? 'pie' : ((chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)) ? 'bar' : 'bar');
+      var datasets = compareLy && chartType !== 'pie'
+        ? [
+            { label: aiMetricLabel(metric) + ' actual', data: values, type:'bar', color:'#0C4D8F' },
+            { label: aiMetricLabel(metric) + ' LY', data: lyValues, type:'bar', color:'#F58320' }
+          ]
+        : [
+            { label: aiMetricLabel(metric), data: values, type: effectiveType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }
+          ];
+
+      return {
+        mode: mode,
+        metric: metric,
+        entity: entity,
+        chartType: effectiveType,
+        periods: usePeriods,
+        labels: labels,
+        datasets: datasets,
+        title: aiMetricLabel(metric) + ' por ' + dimLabel + focusLabel,
+        subtitle: breakdown && explicitTemporal
+          ? ('Breakdown acumulado de los últimos ' + usePeriods.length + ' ' + (mode === 'month' ? 'meses' : 'periodos'))
+          : ('Breakdown del último ' + (mode === 'month' ? 'mes' : 'periodo') + ' disponible en el cubo'),
+        tag: compareLy && chartType !== 'pie' ? 'Actual vs LY' : (effectiveType === 'pie' ? 'Participación' : 'Breakdown'),
+        yFormat: aiMetricYFormat(metric),
+        type: effectiveType === 'pie' ? 'pie' : 'bar',
+        horizontal: effectiveType !== 'pie' && (chartType === 'bar-horizontal' || /horizontal|ranking|top/.test(q)),
+        note: 'Fuente directa: Cubo_Sales_DetailHallazgos',
+        questionScopedContext: aiBuildBreakdownContext(entries, metric, dim, usePeriods, compareLy, entity)
+      };
+    }
+
+    var periodAgg = new Map();
+    scoped.forEach(function(r){
+      var key = aiPeriodKey(r, mode);
+      if(!key) return;
+      if(!periodAgg.has(key)) periodAgg.set(key, { total:0, delivery:0, non_delivery:0, margin:0 });
+      aiBucketAdd(periodAgg.get(key), r);
+    });
+
+    var periods = aiSortPeriods(Array.from(periodAgg.keys()), mode).slice(-count);
+    if(!periods.length) return null;
+
+    var currentValues = periods.map(function(pk){ return aiMetricValueFromBucket(periodAgg.get(pk), metric); });
+    var datasetsTs = [{
+      label: aiMetricLabel(metric) + ' actual',
+      data: currentValues,
+      type: chartType === 'bar' ? 'bar' : 'line',
+      color: '#0C4D8F'
+    }];
+
+    var lyValues = [];
+    if(compareLy){
+      lyValues = periods.map(function(pk){
+        var lyKey = aiLyPeriod(pk, mode);
+        if(!lyKey) return 0;
+        return aiMetricValueFromBucket(periodAgg.get(lyKey), metric);
+      });
+      datasetsTs.push({
+        label: aiMetricLabel(metric) + ' LY',
+        data: lyValues,
+        type: chartType === 'bar' ? 'bar' : 'line',
+        color: '#F58320'
+      });
+    }
+
+    var baseLabel = entity ? entity.label : 'total seleccionado';
+    return {
+      mode: mode,
+      metric: metric,
+      entity: entity,
+      periods: periods,
+      labels: periods.map(function(pk){ return aiPeriodLabel(pk, mode); }),
+      datasets: datasetsTs,
+      title: aiMetricLabel(metric) + ' de ' + baseLabel,
+      subtitle: mode === 'month' ? 'Serie mensual directa desde el cubo' : 'Serie semanal directa desde el cubo',
+      tag: compareLy ? 'Actual vs LY' : (mode === 'month' ? 'Mensual' : 'Semanal'),
+      yFormat: aiMetricYFormat(metric),
+      note: 'Fuente directa: Cubo_Sales_DetailHallazgos / Cubo_Sales',
+      questionScopedContext: aiBuildTimeSeriesContext(periods.map(function(pk){ return aiPeriodLabel(pk, mode); }), currentValues, lyValues, metric, entity, mode)
+    };
+  }
+
+  function aiBuildSeries(question){
+    return aiBuildLocalIntentModel(question);
+  }
+
+  function buildAiQuestionScopedContext(question){
+    try{
+      var localSeries = aiBuildLocalIntentModel(question);
+      return localSeries ? localSeries.questionScopedContext : null;
+    }catch(_e){
+      return null;
+    }
+  }
+
+  function renderRequestedLocalVisual(question, pack){
+    var smart = null;
+    try{ smart = aiBuildLocalIntentModel(question); }catch(_e){ smart = null; }
+
+    var model = smart ? {
+      title: buildVisualTitleFromQuestion(question, smart.title),
+      subtitle: smart.subtitle,
+      tag: smart.tag,
+      labels: smart.labels,
+      datasets: smart.datasets,
+      note: smart.note,
+      type: smart.type || 'line',
+      horizontal: !!smart.horizontal,
+      yFormat: smart.yFormat
+    } : {
+      title: buildVisualTitleFromQuestion(question, pack && pack.chart && pack.chart.title),
+      subtitle: 'Visual local generado con la mejor data estructurada disponible del dashboard',
+      tag: (pack && pack.resolvedTopic && TOPICS[pack.resolvedTopic] ? TOPICS[pack.resolvedTopic].title : 'Local'),
+      labels: pack && pack.chart && Array.isArray(pack.chart.labels) ? pack.chart.labels.slice() : [],
+      values: pack && pack.chart && Array.isArray(pack.chart.values) ? pack.chart.values.slice() : [],
+      note: pack && pack.chart ? pack.chart.note : '',
+      type: 'bar',
+      horizontal: true,
+      yFormat: (pack && pack.chart && /%|ratio/i.test(pack.chart.note || '')) ? 'ratio' : 'number'
+    };
+
+    var hasData = (model.labels && model.labels.length) && (
+      (Array.isArray(model.datasets) && model.datasets.some(function(ds){ return Array.isArray(ds && ds.data) && ds.data.some(function(v){ return Number(v || 0) !== 0; }); }))
+      || (Array.isArray(model.values) && model.values.length)
+    );
+
+    if(!hasData){
+      resetStage('No encontré una estructura local suficiente para graficar exactamente esa solicitud con la data disponible.');
+      return false;
+    }
+
+    var note = smart
+      ? ('Fuentes usadas: Cubo_Sales_DetailHallazgos / Cubo_Sales · periodos usados: ' + ((smart.periods || []).join(', ') || 'actual') + (smart.entity ? (' · foco detectado: ' + smart.entity.label) : ' · foco general'))
+      : ('Fuentes usadas: ' + ((pack && pack.sourceLabels && pack.sourceLabels.length) ? pack.sourceLabels.join(', ') : 'dashboard actual'));
+    showStageChart(model, note);
+    return true;
+  }
+
+  function buildImagePrompt(question, pack, kind){
+    var facts = (pack && Array.isArray(pack.facts) ? pack.facts : []).slice(0, 6).join(' ');
+    var filters = '';
+    try{ filters = JSON.stringify(pack && pack.filters ? pack.filters : {}); }catch(_e){ filters = ''; }
+    var base = [
+      'Crear una pieza visual premium para AMPM El Salvador.',
+      kind === 'infographic'
+        ? 'El estilo debe ser una infografía ejecutiva moderna, limpia, corporativa, con módulos visuales claros, look premium y estética retail/convenience 24/7.'
+        : 'El estilo debe ser publicitario, fotorealista, comercial, premium y listo para campaña de tienda de conveniencia 24/7.',
+      'Brief principal del usuario: ' + txt(question) + '.',
+      facts ? ('Contexto validado del dashboard: ' + facts) : '',
+      filters ? ('Filtros activos del dashboard: ' + filters) : '',
+      'Usar una composición profesional, moderna y brand-safe.',
+      'No inventar precios, promociones ni claims no confirmados en el brief.',
+      'Mantener texto mínimo dentro de la imagen, salvo que el usuario lo haya pedido explícitamente.'
+    ].filter(Boolean);
+    return base.join('\n');
+  }
+
+  function requestImageVisual(question, pack, kind){
+    var apiKey = getApiKey();
+    if(!/^sk-/.test(apiKey)){
+      resetStage(kind === 'infographic' ? 'Para generar infografías o imágenes IA, primero configura la API Key.' : 'Para generar imágenes IA, primero configura la API Key.');
+      return Promise.resolve(false);
+    }
+    setStageLoading(kind === 'infographic' ? 'Generando infografía IA…' : 'Generando imagen IA…');
+    return fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        size: '1536x1024',
+        prompt: buildImagePrompt(question, pack, kind)
+      })
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data && data.error) throw new Error(data.error.message || 'No se pudo generar la imagen.');
+      var item = data && Array.isArray(data.data) ? data.data[0] : null;
+      var src = '';
+      if(item && item.b64_json) src = 'data:image/png;base64,' + item.b64_json;
+      else if(item && item.url) src = item.url;
+      if(!src) throw new Error('No vino una imagen utilizable.');
+      showStageImage(
+        src,
+        kind === 'infographic' ? 'Infografía IA' : 'Imagen IA',
+        buildVisualTitleFromQuestion(question, kind === 'infographic' ? 'Infografía ejecutiva' : 'Visual de campaña'),
+        'Visual generado desde la solicitud actual. Recomendación: valida copy final y claims antes de publicar.'
+      );
+      return true;
+    })
+    .catch(function(err){
+      resetStage('No se pudo generar el visual IA: ' + txt(err && err.message || err));
+      return false;
     });
   }
 
@@ -5305,13 +6046,26 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     renderSourceChips(pack.sourceLabels);
     renderScorecards(pack.scorecards);
     renderOpps(pack.opps);
-    renderChart(pack.chart);
+
     var footer = el('ampmAiFooterHint');
     if(footer){
-      footer.textContent = 'Tema: ' + TOPICS[topic].title + ' · fuentes usadas: ' + (pack.sourceLabels.join(', ') || 'KPIs') + ' · contexto compacto listo.';
+      footer.textContent = 'Contexto activo: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo') + ' · fuentes: ' + (pack.sourceLabels.join(', ') || 'dashboard actual') + '.';
     }
     var scopeBadge = el('ampmAiScopeBadge');
     if(scopeBadge) scopeBadge.textContent = 'Contexto: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo');
+
+    var stageSub = el('ampmAiStageSub');
+    if(stageSub){
+      stageSub.textContent = 'Base analítica activa: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo') + '. Pide un gráfico local o una imagen IA y se mostrará aquí.';
+    }
+
+    var visualIntent = detectVisualIntent(question);
+    if(!txt(question)){
+      resetStage();
+      return pack;
+    }
+    if(visualIntent.type === 'chart') renderRequestedLocalVisual(question, pack);
+    return pack;
   }
 
   function syncTopicUi(){
@@ -5350,7 +6104,38 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     if(messages) messages.innerHTML = '';
     if(empty) empty.style.display = '';
     setUsageMeta('');
-    if(fullReset) renderVisuals(stateAi.topic, '');
+    if(fullReset){
+      renderVisuals(stateAi.topic, '');
+      resetStage();
+    }
+  }
+
+  function formatMessageHtml(body, role){
+    var raw = txt(body);
+    if(!raw) return '';
+    var blocks = raw.replace(/\r/g,'').split(/\n{2,}/).map(function(block){ return txt(block); }).filter(Boolean);
+    if(!blocks.length) blocks = [raw];
+
+    function formatInline(text){
+      var safe = htmlEscape(txt(text));
+      safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      safe = safe.replace(/__(.+?)__/g, '<strong>$1</strong>');
+      safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+      return safe;
+    }
+
+    return blocks.map(function(block){
+      var lines = block.split(/\n+/).map(function(line){ return txt(line); }).filter(Boolean);
+      if(lines.length > 1 && lines.every(function(line){ return /^[-•*]\s+/.test(line) || /^\d+[\.)]\s+/.test(line); })){
+        var ordered = lines.every(function(line){ return /^\d+[\.)]\s+/.test(line); });
+        var tag = ordered ? 'ol' : 'ul';
+        var items = lines.map(function(line){
+          return '<li>' + formatInline(line.replace(/^([-•*]|\d+[\.)])\s+/, '')) + '</li>';
+        }).join('');
+        return '<' + tag + '>' + items + '</' + tag + '>';
+      }
+      return '<p>' + lines.map(formatInline).join('<br>') + '</p>';
+    }).join('');
   }
 
   function appendMessage(role, body, kind, meta){
@@ -5367,7 +6152,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       +   '<div class="ampm-ai-msg-meta">' + htmlEscape(meta || nowStamp()) + '</div>'
       + '</div>'
       + '<div class="ampm-ai-msg-body"></div>';
-    node.querySelector('.ampm-ai-msg-body').textContent = body || '';
+    node.querySelector('.ampm-ai-msg-body').innerHTML = formatMessageHtml(body || '', role);
     messages.appendChild(node);
     messages.scrollTop = messages.scrollHeight + 200;
     return node;
@@ -5412,44 +6197,77 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }catch(_e){ return ''; }
   }
 
+  function normalizeAssistantReply(raw){
+    var text = String(raw == null ? '' : raw).replace(/\r/g,'').trim();
+    if(!text) return '';
+    text = text.replace(/```(?:mermaid)?[\s\S]*?```/gi, function(block){
+      return block.replace(/```(?:mermaid)?/gi,'').replace(/```/g,'').trim();
+    });
+    if(/\n\n/.test(text)) return text;
+    if(/^[-•*]\s+/m.test(text) || /^\d+[\.)]\s+/m.test(text)) return text;
+    text = text.replace(/([.!?])\s+(?=(Si quer[eé]s|Si quieres|Adem[aá]s|Importante|En resumen|Conclusi[oó]n|Por otro lado|Ahora bien))/gi, '$1\n\n');
+    if(/\n\n/.test(text)) return text;
+    var sentences = text.match(/[^.!?\n]+(?:[.!?]+|$)/g) || [text];
+    sentences = sentences.map(function(s){ return s.replace(/\s+/g,' ').trim(); }).filter(Boolean);
+    if(sentences.length <= 2) return text;
+    var chunks = [];
+    for(var i=0;i<sentences.length;i+=2){
+      chunks.push(sentences.slice(i, i+2).join(' '));
+    }
+    return chunks.join('\n\n');
+  }
+
   function buildSystemPrompt(topic, pack){
     return [
-      'Sos un copiloto ejecutivo para AMPM EL SALVADOR.',
-      'Respondé siempre en español, de forma directa y aterrizada.',
-      'Usá únicamente la data del contexto entregado. No inventés datos, causas ni tendencias que no estén en el contexto.',
-      'Cuando una razón no esté probada por la data, presentala como causa probable, no como hecho.',
+      'Sos un copiloto ejecutivo y comercial para AMPM EL SALVADOR.',
+      'Respondé siempre en español, con criterio de negocio, claridad y lenguaje ejecutivo natural.',
+      'Usá únicamente la data confirmada del contexto entregado cuando hables de números, tendencias o hallazgos.',
+      'No inventés datos, causas ni tendencias que no estén en el contexto.',
+      'Cuando una razón no esté probada por la data, presentala como hipótesis o causa probable, no como hecho.',
       'Leé correctamente las métricas: ratio > 1 = crecimiento; ratio < 1 = caída; pp = puntos porcentuales; share y mix no son venta absoluta.',
-      'Priorizá siempre impacto real, causa probable, acción concreta, prioridad y KPI sugerido.',
-      'No uses plantillas rígidas ni texto académico.',
+      'Adaptá la forma de responder a cada consulta: puede ser una respuesta breve, una lectura ejecutiva, un plan, una explicación, ideas creativas, o una recomendación puntual.',
+      'No uses siempre la misma estructura. Variá profundidad y formato según lo que el usuario pida.',
+      'Usá punto y aparte. Nunca entregués toda la respuesta en un solo párrafo.',
+      'Usá párrafos cortos de una a tres líneas. Si conviene, podés usar subtítulos breves o viñetas cortas.',
+      'Si el usuario pide campañas, copies, conceptos, piezas o creatividad, puedes proponer ideas comerciales sólidas; separa claramente lo que viene de data y lo que es propuesta.',
+      'Si el usuario pide un gráfico, una infografía o una imagen, asumí que el visual se está generando aparte y usá el texto solo para complementar, contextualizar o recomendar qué leer de ese visual.',
       'Si el contexto local dice explícitamente que una métrica sí existe, no respondás que no hay data.',
-      'Estructura recomendada según aplique: respuesta directa, qué significa, acción, prioridad, KPI.',
-      'No repitas los datos innecesariamente y no expliques el modelo.',
+      'Si existe contexto específico de la pregunta o question_scoped_context del cubo, úsalo como fuente principal antes que los KPIs generales.',
+      'Si question_scoped_context trae series, breakdown, ranking o comparativos exactos, responde con esos números de forma directa y ejecutiva.',
+      'No expliques el modelo, no uses texto académico y no metas relleno.',
+      'No devuelvas mermaid, JSON, tablas técnicas ni pseudo-código salvo que el usuario lo pida explícitamente.',
+      'Si puedes responder con data del cubo, hazlo directo y sin decir que falta data cuando sí existe una estructura razonable para resolver la consulta.',
       'Tema actual: ' + (TOPICS[topic] ? TOPICS[topic].title : topic) + '.',
-      'Contexto compacto del dashboard (JSON): ' + pack.context
+      'Contexto ampliado del dashboard (JSON, prioriza question_scoped_context cuando exista): ' + pack.context
     ].join('\n');
   }
 
   function requestOpenAI(userQuestion){
     var apiKey = getApiKey();
+    var effectiveTopic = stateAi.topic === 'chat' ? inferTopicFromQuestion(userQuestion) : stateAi.topic;
+    var pack = renderVisuals(stateAi.topic, userQuestion) || buildTopicPack(effectiveTopic, userQuestion);
+    stateAi.activePack = pack;
+    var visualIntent = detectVisualIntent(userQuestion);
+
+    if(visualIntent.type === 'image' || visualIntent.type === 'infographic'){
+      requestImageVisual(userQuestion, pack, visualIntent.type === 'infographic' ? 'infographic' : 'image');
+    }
+
     if(!/^sk-/.test(apiKey)){
-      appendMessage('assistant', 'Primero configura la API Key para habilitar las respuestas del copiloto. Los visuales locales ya están conectados a la data del dashboard.', 'error');
+      if(visualIntent.type === 'chart'){
+        appendMessage('assistant', 'Te dejé el gráfico local en el panel derecho.\n\nYa quedó conectado a la data del dashboard actual.\n\nPara respuestas conversacionales más profundas o para generar imágenes, configura la API Key.');
+        return;
+      }
+      appendMessage('assistant', 'Primero configura la API Key para habilitar las respuestas del copiloto y la generación de imágenes. Los gráficos locales del dashboard seguirán funcionando cuando la solicitud lo permita.', 'error');
       openKeyModal();
       return;
     }
 
-    var effectiveTopic = stateAi.topic === 'chat' ? inferTopicFromQuestion(userQuestion) : stateAi.topic;
-    var pack = buildTopicPack(effectiveTopic, userQuestion);
-    stateAi.activePack = pack;
-    renderSourceChips(pack.sourceLabels);
-    renderScorecards(pack.scorecards);
-    renderOpps(pack.opps);
-    renderChart(pack.chart);
-
     var body = {
       model: OPENAI_MODEL,
       store: true,
-      reasoning: { effort: 'none' },
-      text: { verbosity: 'low' },
+      reasoning: { effort: 'high' },
+      text: { verbosity: 'high' },
       max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
       input: [
         { role:'system', content:[{ type:'input_text', text: buildSystemPrompt(effectiveTopic, pack) }] },
@@ -5463,25 +6281,35 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     disableInput(true);
     setAssistantThinking();
 
-    fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify(body)
-    })
-    .then(function(res){ return res.json(); })
+    function runResponseRequest(requestBody, allowFallback){
+      return fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify(requestBody)
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(data && data.error){
+          var msg = txt(data.error.message || JSON.stringify(data.error));
+          if(allowFallback && requestBody.model === OPENAI_MODEL && OPENAI_FALLBACK_MODEL && /model|permission|access|not found|unsupported/i.test(msg)){
+            var retryBody = Object.assign({}, requestBody, { model: OPENAI_FALLBACK_MODEL });
+            return runResponseRequest(retryBody, false);
+          }
+          throw new Error(msg || 'No se pudo completar la solicitud al modelo.');
+        }
+        return data;
+      });
+    }
+
+    runResponseRequest(body, true)
     .then(function(data){
       removeThinking();
       disableInput(false);
 
-      if(data && data.error){
-        appendMessage('assistant', 'Error OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error');
-        return;
-      }
-
-      var reply = extractResponseText(data);
+      var reply = normalizeAssistantReply(extractResponseText(data));
       if(!reply){
         appendMessage('assistant', 'No vino una respuesta utilizable del modelo.', 'error');
         return;
@@ -5493,14 +6321,14 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       var total = usage && usage.total_tokens ? Number(usage.total_tokens) : 0;
       var inputTokens = usage && usage.input_tokens ? Number(usage.input_tokens) : 0;
       var outputTokens = usage && usage.output_tokens ? Number(usage.output_tokens) : 0;
-      setUsageMeta(total ? ('Uso tokens · in ' + inputTokens.toLocaleString('es-SV') + ' · out ' + outputTokens.toLocaleString('es-SV') + ' · total ' + total.toLocaleString('es-SV')) : 'Contexto compacto enviado');
+      setUsageMeta(total ? ('Uso tokens · in ' + inputTokens.toLocaleString('es-SV') + ' · out ' + outputTokens.toLocaleString('es-SV') + ' · total ' + total.toLocaleString('es-SV')) : 'Contexto ampliado enviado');
 
       appendMessage('assistant', reply, '', effectiveTopic === stateAi.topic ? nowStamp() : (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : nowStamp()));
     })
     .catch(function(err){
       removeThinking();
       disableInput(false);
-      appendMessage('assistant', 'Error de conexión: ' + String(err), 'error');
+      appendMessage('assistant', 'Error de conexión o modelo: ' + String(err), 'error');
     });
   }
 
@@ -5549,7 +6377,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
         clearConversation(true);
         return;
       }
-      if(ev.target.id === 'ampmAiOpenKeyBtn'){
+      if(ev.target.id === 'ampmAiOpenKeyBtn' || ev.target.id === 'ampmAiHeaderKeyBtn'){
         openKeyModal();
         return;
       }
@@ -8245,7 +9073,7 @@ function applyUnifiedModeUI(){
       };
       const titleEl = el('reportTitle'); if(titleEl) titleEl.textContent = titleMap[mode];
       try{ document.title = titleMap[mode]; }catch(e){}
-      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.';
+      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja con un cubo <b>.xlsx</b> publicado. Puedes usar <b>./Cubo_Semanal_Compactado.xlsx</b>, un link <b>raw</b> de GitHub o un link público directo al archivo.';
       const lCur = el('labelCurrentPeriod'); if(lCur) lCur.textContent = `2) ${getModePeriodNoun()} actual (${getCurrentPeriodFormatHint()})`;
       const lyWrap = el('lyWeekOverrideWrap'); if(lyWrap) lyWrap.style.display = isMonthlyReport() ? 'none' : '';
       const lLy = el('labelLyWeekOverride'); if(lLy) lLy.textContent = isMonthlyReport() ? '2b) Comparativo LY (oculto en mensual)' : '2b) Semana comparativa LY (opcional)';
@@ -9882,6 +10710,9 @@ parseMetricDateRangesSheet(wb);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
+            const cDesc = pickCol(k, ['Description','Descripcion','Descripción','Item','Producto']);
+            const cYearWeek = pickCol(k, ['YearWeek','Year Month','Week','Semana','YearMonth','YM']);
+            const cCalMonth = pickCol(k, ['CalMonth','Month','Mes']);
             const cDow = pickCol(k, ['DOW','Dow','Dia','Día','Weekday','Day','dayofweek']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
             const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','DeliveryChannel','DelivChannel','DeliveryChannelName','Channel','delivery_channel']);
@@ -9896,13 +10727,16 @@ parseMetricDateRangesSheet(wb);
                 const category = cCat ? String(r[cCat] ?? '').trim() : '';
                 const daypart = cDay ? String(r[cDay] ?? '').trim() : '';
                 const brand = cBrand ? String(r[cBrand] ?? '').trim() : '';
+                const description = cDesc ? String(r[cDesc] ?? '').trim() : '';
+                const yearweek = cYearWeek ? normalizeYm(r[cYearWeek]) : (/^\d{4}-W\d{2}$/i.test(ym) ? ym : '');
+                const calMonth = cCalMonth ? normalizeCalMonth(r[cCalMonth]) : ((typeof weekToMonthKey === 'function' && yearweek) ? weekToMonthKey(yearweek) : normalizeCalMonth(ym));
                 const dow = cDow ? String(r[cDow] ?? '').trim() : '';
                 const is_delivery = cDel ? toBool(r[cDel]) : false;
                 const delivery_channel = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
 
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                return (store && ym) ? {store, ym, department, category, brand, daypart, dow, is_delivery, delivery_channel, sales, gross_margin} : null;
+                return (store && ym) ? {store, ym, yearweek, calMonth, department, category, brand, description, daypart, dow, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
 
               if (cGM){
@@ -9928,6 +10762,9 @@ parseMetricDateRangesSheet(wb);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
+            const cDesc = pickCol(k, ['Description','Descripcion','Descripción','Item','Producto']);
+            const cYearWeek = pickCol(k, ['YearWeek','Year Month','Week','Semana','YearMonth','YM']);
+            const cCalMonth = pickCol(k, ['CalMonth','Month','Mes']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
             const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','DeliveryChannel','DelivChannel','DeliveryChannelName']);
             const cSales = pickCol(k, ['Sales','Total Sales','TotalSales','sales']);
@@ -9940,11 +10777,14 @@ parseMetricDateRangesSheet(wb);
                 const category = cCat ? String(r[cCat] ?? '').trim() : '';
                 const daypart = cDay ? String(r[cDay] ?? '').trim() : '';
                 const brand = cBrand ? String(r[cBrand] ?? '').trim() : '';
+                const description = cDesc ? String(r[cDesc] ?? '').trim() : '';
+                const yearweek = cYearWeek ? normalizeYm(r[cYearWeek]) : (/^\d{4}-W\d{2}$/i.test(ym) ? ym : '');
+                const calMonth = cCalMonth ? normalizeCalMonth(r[cCalMonth]) : ((typeof weekToMonthKey === 'function' && yearweek) ? weekToMonthKey(yearweek) : normalizeCalMonth(ym));
                 const is_delivery = cDel ? toBool(r[cDel]) : false;
                 const delivery_channel = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                return (store && ym) ? {store, ym, department, category, brand, daypart, is_delivery, delivery_channel, sales, gross_margin} : null;
+                return (store && ym) ? {store, ym, yearweek, calMonth, department, category, brand, description, daypart, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
               if (cGM){
                 state.cuboSalesRows.forEach(row => {
@@ -28355,6 +29195,15 @@ renderShareTable({
           const directId = fileMatch ? fileMatch[1] : (u.searchParams.get('id') || '');
           if(directId) return `https://drive.google.com/uc?export=download&id=${directId}`;
         }
+        if(/github\.com$/i.test(u.hostname)){
+          const blobMatch = u.pathname.match(/^\/([^/]+)\/([^/]+)\/(?:blob|raw)\/([^/]+)\/(.+)$/i);
+          if(blobMatch){
+            return `https://raw.githubusercontent.com/${blobMatch[1]}/${blobMatch[2]}/${blobMatch[3]}/${blobMatch[4]}`;
+          }
+        }
+        if(/raw\.githubusercontent\.com$/i.test(u.hostname)){
+          return raw.replace(/[?].*$/, '');
+        }
       }catch(_e){}
       return raw;
     }
@@ -30592,215 +31441,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 
-
-<style id="ampm-ai-compact-chat-v1">
-#ampmAiSection.ampm-ai-visible{display:block !important;}
-#ampmAiSection{
-  margin:0 0 14px !important;
-  min-height:0 !important;
-  border-radius:16px !important;
-  box-shadow:0 12px 28px rgba(15,23,42,.06) !important;
-}
-#ampmAiSection .ampm-ai-nav,
-#ampmAiSection .ampm-ai-visual-shell,
-#ampmAiSection .ampm-ai-prompts{
-  display:none !important;
-}
-#ampmAiSection .ampm-ai-main{
-  background:#fff !important;
-}
-#ampmAiSection .ampm-ai-header{
-  padding:10px 14px 8px !important;
-  min-height:0 !important;
-}
-#ampmAiSection .ampm-ai-header-title{
-  font-size:14px !important;
-}
-#ampmAiSection .ampm-ai-header-sub{
-  margin-top:2px !important;
-  font-size:11.5px !important;
-  line-height:1.35 !important;
-}
-#ampmAiSection .ampm-ai-header-right{
-  gap:6px !important;
-}
-#ampmAiSection .ampm-ai-badge,
-#ampmAiSection .ampm-ai-btn-icon,
-#ampmAiSection .ampm-ai-key-status,
-#ampmAiSection .ampm-ai-key-btn{
-  padding:6px 10px !important;
-  font-size:11px !important;
-  border-radius:999px !important;
-}
-#ampmAiSection .ampm-ai-key-status.compact-inline{
-  display:inline-flex !important;
-  background:#f8fafc !important;
-  border:1px solid rgba(15,23,42,.08) !important;
-  color:#11284A !important;
-}
-#ampmAiSection .ampm-ai-key-btn.compact-inline{
-  width:auto !important;
-  background:#fff !important;
-  color:#334155 !important;
-  border:1px solid rgba(15,23,42,.10) !important;
-}
-#ampmAiSection .ampm-ai-chat{
-  height:320px !important;
-  min-height:320px !important;
-  max-height:320px !important;
-  overflow:auto !important;
-  padding:12px 14px !important;
-  background:linear-gradient(180deg,#fbfdff 0%, #f8fafc 100%) !important;
-}
-#ampmAiSection .ampm-ai-empty{
-  padding:16px 14px !important;
-  border-radius:14px !important;
-}
-#ampmAiSection .ampm-ai-empty-icon{
-  width:40px !important;
-  height:40px !important;
-  border-radius:12px !important;
-  margin-bottom:8px !important;
-  font-size:16px !important;
-}
-#ampmAiSection .ampm-ai-empty-title{
-  font-size:13px !important;
-}
-#ampmAiSection .ampm-ai-empty-text{
-  margin-top:4px !important;
-  font-size:11.5px !important;
-}
-#ampmAiSection .ampm-ai-messages{
-  gap:10px !important;
-  padding-right:2px !important;
-}
-#ampmAiSection .ampm-ai-msg{
-  max-width:min(860px, 92%) !important;
-  border-radius:16px !important;
-  padding:10px 12px !important;
-}
-#ampmAiSection .ampm-ai-msg-top{
-  margin-bottom:4px !important;
-}
-#ampmAiSection .ampm-ai-msg-role,
-#ampmAiSection .ampm-ai-msg-meta{
-  font-size:10px !important;
-}
-#ampmAiSection .ampm-ai-msg-body{
-  font-size:12px !important;
-  line-height:1.5 !important;
-}
-#ampmAiSection .ampm-ai-input-row{
-  gap:8px !important;
-  padding:10px 14px 10px !important;
-}
-#ampmAiSection .ampm-ai-textarea{
-  min-height:46px !important;
-  max-height:90px !important;
-  border-radius:14px !important;
-  padding:11px 13px !important;
-  font-size:12.5px !important;
-}
-#ampmAiSection .ampm-ai-send-btn{
-  width:48px !important;
-  min-width:48px !important;
-  border-radius:14px !important;
-  box-shadow:0 10px 20px rgba(245,131,32,.18) !important;
-}
-#ampmAiSection .ampm-ai-footer-note{
-  padding:0 14px 10px !important;
-  font-size:10px !important;
-}
-@media (max-width: 720px){
-  #ampmAiSection .ampm-ai-header,
-  #ampmAiSection .ampm-ai-chat,
-  #ampmAiSection .ampm-ai-input-row,
-  #ampmAiSection .ampm-ai-footer-note{padding-left:10px !important; padding-right:10px !important;}
-  #ampmAiSection .ampm-ai-chat{height:300px !important; min-height:300px !important; max-height:300px !important;}
-  #ampmAiSection .ampm-ai-msg{max-width:96% !important;}
-}
-</style>
-
-<script id="ampm-ai-compact-chat-v1-script">
-(function(){
-  if(window.__AMPM_AI_COMPACT_CHAT_V1__) return;
-  window.__AMPM_AI_COMPACT_CHAT_V1__ = true;
-
-  function compactAiPanel(){
-    var panel = document.getElementById('ampmAiSection');
-    if(!panel) return;
-
-    var nav = panel.querySelector('.ampm-ai-nav');
-    if(nav) nav.style.display = 'none';
-
-    var visual = document.getElementById('ampmAiVisualShell');
-    if(visual && visual.parentNode) visual.parentNode.removeChild(visual);
-
-    var prompts = document.getElementById('ampmAiPrompts');
-    if(prompts && prompts.parentNode) prompts.parentNode.removeChild(prompts);
-
-    var title = document.getElementById('ampmAiHeaderTitle');
-    var sub = document.getElementById('ampmAiHeaderSub');
-    var badge = document.getElementById('ampmAiScopeBadge');
-    var emptyTitle = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-title');
-    var emptyText = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-text');
-    var input = document.getElementById('ampmAiInput');
-    var footer = document.getElementById('ampmAiFooterHint');
-    var headerRight = panel.querySelector('.ampm-ai-header-right');
-    var keyStatus = document.getElementById('ampmAiKeyStatus');
-    var keyBtn = document.getElementById('ampmAiOpenKeyBtn');
-    var clearBtn = document.getElementById('ampmAiClearBtn');
-
-    if(title) title.textContent = 'Asistente de datos';
-    if(sub) sub.textContent = 'Preguntá sobre la data del dashboard y te respondo con hallazgos, impacto y acciones concretas.';
-    if(badge) badge.textContent = 'Solo data del dashboard';
-    if(emptyTitle) emptyTitle.textContent = 'Listo para responder';
-    if(emptyText) emptyText.textContent = 'Preguntá por ventas, ticket, TX, margen, delivery, SBF, merma, inventario o productos en cero.';
-    if(input){
-      input.rows = 1;
-      input.placeholder = 'Ejemplo: ¿Qué está frenando SBF y qué acción harías esta semana?';
-    }
-    if(footer) footer.textContent = 'Responde con base en la data visible del dashboard y prioriza acciones útiles.';
-
-    if(headerRight && keyStatus && !headerRight.contains(keyStatus)){
-      headerRight.insertBefore(keyStatus, clearBtn || badge || null);
-      keyStatus.classList.add('compact-inline');
-    }
-    if(headerRight && keyBtn && !headerRight.contains(keyBtn)){
-      headerRight.insertBefore(keyBtn, clearBtn || null);
-      keyBtn.classList.add('compact-inline');
-      keyBtn.textContent = 'Configurar Key';
-    }
-  }
-
-  function bindCompactScroll(){
-    var messages = document.getElementById('ampmAiMessages');
-    var chat = document.getElementById('ampmAiChat');
-    if(!messages || !chat || messages.__compactScrollBound) return;
-    messages.__compactScrollBound = true;
-    var obs = new MutationObserver(function(){
-      chat.scrollTop = chat.scrollHeight + 300;
-    });
-    obs.observe(messages, { childList:true, subtree:true, characterData:true });
-  }
-
-  function runCompactAi(){
-    compactAiPanel();
-    bindCompactScroll();
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(runCompactAi, 120); });
-  }else{
-    setTimeout(runCompactAi, 120);
-  }
-
-  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
-    window.addEventListener(evt, function(){ setTimeout(runCompactAi, 80); });
-  });
-})();
-</script>
-
 </html>`;
 
           const baseName = `Reporte_${slugifyExportName(activeExport.label)}_graficas_${ym || 'NA'}`;
@@ -30959,215 +31599,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
-
-
-<style id="ampm-ai-compact-chat-v1">
-#ampmAiSection.ampm-ai-visible{display:block !important;}
-#ampmAiSection{
-  margin:0 0 14px !important;
-  min-height:0 !important;
-  border-radius:16px !important;
-  box-shadow:0 12px 28px rgba(15,23,42,.06) !important;
-}
-#ampmAiSection .ampm-ai-nav,
-#ampmAiSection .ampm-ai-visual-shell,
-#ampmAiSection .ampm-ai-prompts{
-  display:none !important;
-}
-#ampmAiSection .ampm-ai-main{
-  background:#fff !important;
-}
-#ampmAiSection .ampm-ai-header{
-  padding:10px 14px 8px !important;
-  min-height:0 !important;
-}
-#ampmAiSection .ampm-ai-header-title{
-  font-size:14px !important;
-}
-#ampmAiSection .ampm-ai-header-sub{
-  margin-top:2px !important;
-  font-size:11.5px !important;
-  line-height:1.35 !important;
-}
-#ampmAiSection .ampm-ai-header-right{
-  gap:6px !important;
-}
-#ampmAiSection .ampm-ai-badge,
-#ampmAiSection .ampm-ai-btn-icon,
-#ampmAiSection .ampm-ai-key-status,
-#ampmAiSection .ampm-ai-key-btn{
-  padding:6px 10px !important;
-  font-size:11px !important;
-  border-radius:999px !important;
-}
-#ampmAiSection .ampm-ai-key-status.compact-inline{
-  display:inline-flex !important;
-  background:#f8fafc !important;
-  border:1px solid rgba(15,23,42,.08) !important;
-  color:#11284A !important;
-}
-#ampmAiSection .ampm-ai-key-btn.compact-inline{
-  width:auto !important;
-  background:#fff !important;
-  color:#334155 !important;
-  border:1px solid rgba(15,23,42,.10) !important;
-}
-#ampmAiSection .ampm-ai-chat{
-  height:320px !important;
-  min-height:320px !important;
-  max-height:320px !important;
-  overflow:auto !important;
-  padding:12px 14px !important;
-  background:linear-gradient(180deg,#fbfdff 0%, #f8fafc 100%) !important;
-}
-#ampmAiSection .ampm-ai-empty{
-  padding:16px 14px !important;
-  border-radius:14px !important;
-}
-#ampmAiSection .ampm-ai-empty-icon{
-  width:40px !important;
-  height:40px !important;
-  border-radius:12px !important;
-  margin-bottom:8px !important;
-  font-size:16px !important;
-}
-#ampmAiSection .ampm-ai-empty-title{
-  font-size:13px !important;
-}
-#ampmAiSection .ampm-ai-empty-text{
-  margin-top:4px !important;
-  font-size:11.5px !important;
-}
-#ampmAiSection .ampm-ai-messages{
-  gap:10px !important;
-  padding-right:2px !important;
-}
-#ampmAiSection .ampm-ai-msg{
-  max-width:min(860px, 92%) !important;
-  border-radius:16px !important;
-  padding:10px 12px !important;
-}
-#ampmAiSection .ampm-ai-msg-top{
-  margin-bottom:4px !important;
-}
-#ampmAiSection .ampm-ai-msg-role,
-#ampmAiSection .ampm-ai-msg-meta{
-  font-size:10px !important;
-}
-#ampmAiSection .ampm-ai-msg-body{
-  font-size:12px !important;
-  line-height:1.5 !important;
-}
-#ampmAiSection .ampm-ai-input-row{
-  gap:8px !important;
-  padding:10px 14px 10px !important;
-}
-#ampmAiSection .ampm-ai-textarea{
-  min-height:46px !important;
-  max-height:90px !important;
-  border-radius:14px !important;
-  padding:11px 13px !important;
-  font-size:12.5px !important;
-}
-#ampmAiSection .ampm-ai-send-btn{
-  width:48px !important;
-  min-width:48px !important;
-  border-radius:14px !important;
-  box-shadow:0 10px 20px rgba(245,131,32,.18) !important;
-}
-#ampmAiSection .ampm-ai-footer-note{
-  padding:0 14px 10px !important;
-  font-size:10px !important;
-}
-@media (max-width: 720px){
-  #ampmAiSection .ampm-ai-header,
-  #ampmAiSection .ampm-ai-chat,
-  #ampmAiSection .ampm-ai-input-row,
-  #ampmAiSection .ampm-ai-footer-note{padding-left:10px !important; padding-right:10px !important;}
-  #ampmAiSection .ampm-ai-chat{height:300px !important; min-height:300px !important; max-height:300px !important;}
-  #ampmAiSection .ampm-ai-msg{max-width:96% !important;}
-}
-</style>
-
-<script id="ampm-ai-compact-chat-v1-script">
-(function(){
-  if(window.__AMPM_AI_COMPACT_CHAT_V1__) return;
-  window.__AMPM_AI_COMPACT_CHAT_V1__ = true;
-
-  function compactAiPanel(){
-    var panel = document.getElementById('ampmAiSection');
-    if(!panel) return;
-
-    var nav = panel.querySelector('.ampm-ai-nav');
-    if(nav) nav.style.display = 'none';
-
-    var visual = document.getElementById('ampmAiVisualShell');
-    if(visual && visual.parentNode) visual.parentNode.removeChild(visual);
-
-    var prompts = document.getElementById('ampmAiPrompts');
-    if(prompts && prompts.parentNode) prompts.parentNode.removeChild(prompts);
-
-    var title = document.getElementById('ampmAiHeaderTitle');
-    var sub = document.getElementById('ampmAiHeaderSub');
-    var badge = document.getElementById('ampmAiScopeBadge');
-    var emptyTitle = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-title');
-    var emptyText = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-text');
-    var input = document.getElementById('ampmAiInput');
-    var footer = document.getElementById('ampmAiFooterHint');
-    var headerRight = panel.querySelector('.ampm-ai-header-right');
-    var keyStatus = document.getElementById('ampmAiKeyStatus');
-    var keyBtn = document.getElementById('ampmAiOpenKeyBtn');
-    var clearBtn = document.getElementById('ampmAiClearBtn');
-
-    if(title) title.textContent = 'Asistente de datos';
-    if(sub) sub.textContent = 'Preguntá sobre la data del dashboard y te respondo con hallazgos, impacto y acciones concretas.';
-    if(badge) badge.textContent = 'Solo data del dashboard';
-    if(emptyTitle) emptyTitle.textContent = 'Listo para responder';
-    if(emptyText) emptyText.textContent = 'Preguntá por ventas, ticket, TX, margen, delivery, SBF, merma, inventario o productos en cero.';
-    if(input){
-      input.rows = 1;
-      input.placeholder = 'Ejemplo: ¿Qué está frenando SBF y qué acción harías esta semana?';
-    }
-    if(footer) footer.textContent = 'Responde con base en la data visible del dashboard y prioriza acciones útiles.';
-
-    if(headerRight && keyStatus && !headerRight.contains(keyStatus)){
-      headerRight.insertBefore(keyStatus, clearBtn || badge || null);
-      keyStatus.classList.add('compact-inline');
-    }
-    if(headerRight && keyBtn && !headerRight.contains(keyBtn)){
-      headerRight.insertBefore(keyBtn, clearBtn || null);
-      keyBtn.classList.add('compact-inline');
-      keyBtn.textContent = 'Configurar Key';
-    }
-  }
-
-  function bindCompactScroll(){
-    var messages = document.getElementById('ampmAiMessages');
-    var chat = document.getElementById('ampmAiChat');
-    if(!messages || !chat || messages.__compactScrollBound) return;
-    messages.__compactScrollBound = true;
-    var obs = new MutationObserver(function(){
-      chat.scrollTop = chat.scrollHeight + 300;
-    });
-    obs.observe(messages, { childList:true, subtree:true, characterData:true });
-  }
-
-  function runCompactAi(){
-    compactAiPanel();
-    bindCompactScroll();
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(runCompactAi, 120); });
-  }else{
-    setTimeout(runCompactAi, 120);
-  }
-
-  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
-    window.addEventListener(evt, function(){ setTimeout(runCompactAi, 80); });
-  });
-})();
-</script>
 
 </html>`;
         const ym = (document.getElementById('currentMonth')?.value || 'NA');
@@ -59175,6 +59606,505 @@ function innovationOnePagerCreateBrandedShell(){
 }
 </style>
 
+
+<style id="ampm-ai-v6-scroll-fix">
+.ampm-ai-workspace{
+  height:clamp(680px,76vh,900px) !important;
+  max-height:900px !important;
+  min-height:680px !important;
+}
+.ampm-ai-conversation-panel,
+.ampm-ai-stage-panel{
+  height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+.ampm-ai-chat,
+.ampm-ai-stage-body{
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain;
+}
+.ampm-ai-messages{
+  padding-bottom:18px !important;
+}
+.ampm-ai-msg-body,
+.ampm-ai-msg-body p,
+.ampm-ai-msg-body li{
+  color:#0f172a !important;
+}
+.ampm-ai-msg.user .ampm-ai-msg-body,
+.ampm-ai-msg.user .ampm-ai-msg-body p,
+.ampm-ai-msg.user .ampm-ai-msg-body li{
+  color:#ffffff !important;
+}
+@media (max-width: 720px){
+  .ampm-ai-workspace{
+    height:80vh !important;
+    min-height:620px !important;
+  }
+}
+</style>
+
+<script id="ampm-ai-v6-direct-cubo-fix">
+(function(){
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function _num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function _norm(v){
+    try{ return stripAccents(_txt(v)).toUpperCase().replace(/[^A-Z0-9]+/g,''); }
+    catch(_e){ return _txt(v).toUpperCase().replace(/[^A-Z0-9]+/g,''); }
+  }
+  function _pad2(v){ v = Number(v || 0); return (v < 10 ? '0' : '') + String(v); }
+  function _safeMonthNameMap(){
+    return {
+      ENERO:'01', FEBRERO:'02', MARZO:'03', ABRIL:'04', MAYO:'05', JUNIO:'06',
+      JULIO:'07', AGOSTO:'08', SEPTIEMBRE:'09', SETIEMBRE:'09', OCTUBRE:'10',
+      NOVIEMBRE:'11', DICIEMBRE:'12',
+      JANUARY:'01', FEBRUARY:'02', MARCH:'03', APRIL:'04', JUNE:'06', JULY:'07',
+      AUGUST:'08', SEPTEMBER:'09', OCTOBER:'10', NOVEMBER:'11', DECEMBER:'12'
+    };
+  }
+  function _questionNorm(q){
+    try{ return stripAccents(_txt(q)).toLowerCase(); }catch(_e){ return _txt(q).toLowerCase(); }
+  }
+  function _monthFromQuestion(question){
+    var q = _questionNorm(question);
+    var direct = q.match(/\b(20\d{2})[-\/](\d{1,2})\b/);
+    if(direct){
+      var mo = Number(direct[2]);
+      if(mo >= 1 && mo <= 12) return direct[1] + '-' + _pad2(mo);
+    }
+    var map = _safeMonthNameMap();
+    var keys = Object.keys(map);
+    for(var i=0;i<keys.length;i+=1){
+      var k = keys[i].toLowerCase();
+      var rx = new RegExp('\\b' + k + '\\b(?:\\s+de)?\\s+(20\\d{2})');
+      var m = q.match(rx);
+      if(m) return m[1] + '-' + map[keys[i]];
+    }
+    return '';
+  }
+  function _weekFromQuestion(question){
+    var q = _questionNorm(question);
+    var m = q.match(/\b(20\d{2})\s*[- ]?\s*w\s*(\d{1,2})\b/);
+    if(m) return m[1] + '-W' + _pad2(m[2]);
+    m = q.match(/\bsemana\s+(\d{1,2})(?:\s+de)?\s+(20\d{2})\b/);
+    if(m) return m[2] + '-W' + _pad2(m[1]);
+    return '';
+  }
+  function _inferMode(question){
+    var q = _questionNorm(question);
+    if(_monthFromQuestion(question)) return 'month';
+    if(_weekFromQuestion(question)) return 'week';
+    if(/mensual|mtd|\bmes\b|\bmeses\b|month|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|enero|febrero/.test(q)) return 'month';
+    if(/semanal|semana|semanas|week|weeks/.test(q)) return 'week';
+    try{
+      if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month';
+    }catch(_e){}
+    return 'week';
+  }
+  function _availableRows(){
+    var rows = [];
+    try{
+      if(Array.isArray(state && state.cuboSalesRows) && state.cuboSalesRows.length){
+        rows = state.cuboSalesRows.slice();
+      }
+    }catch(_e){}
+    if(!rows.length){
+      try{
+        if(typeof readSheetRows === 'function'){
+          var raw = readSheetRows('Cubo_Sales_DetailHallazgos');
+          if(Array.isArray(raw) && raw.length){
+            rows = raw.map(function(r){
+              var store = _txt(r.Store || r['Store Name'] || r.Tienda).toUpperCase();
+              var yearweek = _txt(r.YearWeek || r.Week || r.Semana);
+              var calMonth = _txt(r.CalMonth || r.Month || r.Mes);
+              return store ? {
+                store: store,
+                ym: yearweek || calMonth,
+                yearweek: yearweek,
+                calMonth: calMonth,
+                department: _txt(r.Department || r.Departamento),
+                category: _txt(r.Category || r.Categoria || r['Categoría']),
+                brand: _txt(r.Brand || r.Marca),
+                description: _txt(r.Description || r.Producto),
+                daypart: _txt(r.Daypart || r.Turno || r.Horario),
+                dow: _txt(r.DOW || r.Dia || r['Día']),
+                dow_name: _txt(r.DOW_Name || r['Día Semana'] || r['Dia Semana']),
+                is_delivery: !!(r.Is_Delivery || r.is_delivery || r.Delivery_Channel || r['Delivery Channel']),
+                delivery_channel: _txt(r.Delivery_Channel || r['Delivery Channel']),
+                sales: _num(r.Sales || r.Ventas),
+                gross_margin: _num(r['Total Gross Margin'] || r['Gross Margin'] || r.Margen)
+              } : null;
+            }).filter(Boolean);
+          }
+        }
+      }catch(_e){}
+    }
+    try{
+      var selected = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : [];
+      var set = new Set((Array.isArray(selected) ? selected : [selected]).map(function(v){ return _txt(v).toUpperCase(); }).filter(Boolean));
+      if(set.size){
+        rows = rows.filter(function(r){ return set.has(_txt(r && r.store).toUpperCase()); });
+      }
+    }catch(_e){}
+    return rows.filter(Boolean);
+  }
+  function _sortPeriods(periods, mode){
+    return (periods || []).slice().filter(Boolean).sort(function(a,b){
+      a = _txt(a); b = _txt(b);
+      if(mode === 'month'){
+        return a.localeCompare(b);
+      }
+      var ma = a.match(/^(\d{4})-W(\d{2})$/), mb = b.match(/^(\d{4})-W(\d{2})$/);
+      if(ma && mb){
+        if(ma[1] !== mb[1]) return Number(ma[1]) - Number(mb[1]);
+        return Number(ma[2]) - Number(mb[2]);
+      }
+      return a.localeCompare(b);
+    });
+  }
+  function _periodKey(row, mode){
+    if(!row) return '';
+    return mode === 'month'
+      ? _txt(row.calMonth || row.CalMonth || row.month)
+      : _txt(row.yearweek || row.YearWeek || row.ym);
+  }
+  function _periodLabel(pk, mode){
+    pk = _txt(pk);
+    if(mode === 'month'){
+      var m = pk.match(/^(\d{4})-(\d{2})$/);
+      if(m){
+        var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return names[Number(m[2]) - 1] + ' ' + m[1];
+      }
+    }
+    return pk;
+  }
+  function _lyPeriod(pk, mode){
+    pk = _txt(pk);
+    if(mode === 'month'){
+      var m = pk.match(/^(\d{4})-(\d{2})$/);
+      return m ? (String(Number(m[1]) - 1) + '-' + m[2]) : '';
+    }
+    var w = pk.match(/^(\d{4})-W(\d{2})$/);
+    return w ? (String(Number(w[1]) - 1) + '-W' + w[2]) : '';
+  }
+  function _metricMode(question){
+    try{ if(typeof aiMetricMode === 'function') return aiMetricMode(question); }catch(_e){}
+    var q = _questionNorm(question);
+    if(/margen|gross margin/.test(q)) return 'gross_margin';
+    if(/share|participacion|participación/.test(q) && /delivery|uber|pedidos ya|pedidoya|pya/.test(q)) return 'delivery_share';
+    if(/delivery|uber|pedidos ya|pedidoya|pya/.test(q)) return 'delivery_sales';
+    return 'sales';
+  }
+  function _metricLabel(metric){
+    if(metric === 'gross_margin') return 'Margen bruto';
+    if(metric === 'delivery_share') return 'Share delivery';
+    if(metric === 'delivery_sales') return 'Venta delivery';
+    return 'Venta';
+  }
+  function _yFormat(metric){
+    return metric === 'delivery_share' ? 'percent' : 'money';
+  }
+  function _chartType(question){
+    var q = _questionNorm(question);
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
+    if(/barra|barras|ranking|top/.test(q)) return 'bar';
+    if(/linea|línea|tendencia|serie|evolucion|evolución/.test(q)) return 'line';
+    return 'auto';
+  }
+  function _dimension(question, chartType){
+    var q = _questionNorm(question);
+    if(/categor/.test(q)) return 'category';
+    if(/marca/.test(q)) return 'brand';
+    if(/departamento|depto/.test(q)) return 'department';
+    if(/tienda|store/.test(q)) return 'store';
+    if(/turno|horario|daypart/.test(q)) return 'daypart';
+    if(/dia de semana|día de semana|dow/.test(q)) return 'dow';
+    if(chartType === 'pie') return 'category';
+    return '';
+  }
+  function _entity(question){
+    var q = _norm(question);
+    var aliases = [
+      {prop:'department', label:'Licores', norm:'LICORES'},
+      {prop:'department', label:'Cervezas y RTD', norm:'CERVEZAS'},
+      {prop:'department', label:'Cervezas y RTD', norm:'CERVEZA'},
+      {prop:'department', label:'Food Service', norm:'FOODSERVICE'},
+      {prop:'category', label:'Whisky', norm:'WHISKY'},
+      {prop:'category', label:'Vodka', norm:'VODKA'},
+      {prop:'category', label:'Ron', norm:'RON'},
+      {prop:'category', label:'Tequila', norm:'TEQUILA'},
+      {prop:'category', label:'Gin', norm:'GIN'},
+      {prop:'category', label:'Vinos y Champagne', norm:'VINO'},
+      {prop:'category', label:'Vinos y Champagne', norm:'CHAMPAGNE'}
+    ];
+    for(var i=0;i<aliases.length;i+=1){
+      if(q.indexOf(aliases[i].norm) >= 0) return aliases[i];
+    }
+    return null;
+  }
+  function _matchEntity(row, entity){
+    if(!entity) return true;
+    var propVal = _norm(row && row[entity.prop]);
+    var target = _norm(entity.label);
+    return !!propVal && (propVal === target || propVal.indexOf(target) >= 0 || target.indexOf(propVal) >= 0);
+  }
+  function _channelFilter(question){
+    var q = _questionNorm(question);
+    if(/uber/.test(q)) return 'UBER';
+    if(/pedidos ya|pedidoya|pya|peya/.test(q)) return 'PYA';
+    return '';
+  }
+  function _matchChannel(row, channel){
+    if(!channel) return true;
+    var ch = _norm(row && row.delivery_channel);
+    if(channel === 'UBER') return ch.indexOf('UBER') >= 0;
+    if(channel === 'PYA') return ch.indexOf('PEDIDOS') >= 0 || ch.indexOf('PYA') >= 0 || ch.indexOf('PEYA') >= 0;
+    return true;
+  }
+  function _valueFromBucket(bucket, metric){
+    var b = bucket || {total:0, delivery:0, non_delivery:0, margin:0};
+    if(metric === 'gross_margin') return Number(b.margin || 0);
+    if(metric === 'delivery_sales') return Number(b.delivery || 0);
+    if(metric === 'delivery_share') return b.total ? Number((((b.delivery || 0) / b.total) * 100).toFixed(2)) : 0;
+    return Number(b.total || 0);
+  }
+  function _addBucket(bucket, row){
+    var sales = _num(row && row.sales);
+    bucket.total += sales;
+    bucket.delivery += (row && row.is_delivery) ? sales : 0;
+    bucket.non_delivery += (row && row.is_delivery) ? 0 : sales;
+    bucket.margin += _num(row && row.gross_margin);
+  }
+  function _groupLabel(row, dim){
+    if(!row) return '';
+    if(dim === 'store') return _txt(row.store).toUpperCase();
+    if(dim === 'department') return _txt(row.department);
+    if(dim === 'category') return _txt(row.category);
+    if(dim === 'brand') return _txt(row.brand);
+    if(dim === 'daypart') return _txt(row.daypart);
+    if(dim === 'dow') return _txt(row.dow_name || row.dow);
+    return '';
+  }
+  function _questionCount(question, mode){
+    var q = _questionNorm(question);
+    var m = q.match(/(?:ultim(?:a|as|o|os)?\s+)?(\d+)\s+(semanas?|meses?)/);
+    var n = m ? Number(m[1]) : NaN;
+    if(Number.isFinite(n) && n > 0) return Math.min(n, mode === 'month' ? 18 : 16);
+    return mode === 'month' ? 6 : 8;
+  }
+  function _resolvePeriods(question, rows, mode, count, breakdown){
+    var explicit = [];
+    if(mode === 'month'){
+      var mo = _monthFromQuestion(question);
+      if(mo) explicit = [mo];
+    } else {
+      var wk = _weekFromQuestion(question);
+      if(wk) explicit = [wk];
+    }
+    var all = _sortPeriods(Array.from(new Set((rows || []).map(function(r){ return _periodKey(r, mode); }).filter(Boolean))), mode);
+    if(explicit.length) return explicit;
+    var q = _questionNorm(question);
+    if(/ultim|últim|\b\d+\s+(semanas|meses)\b/.test(q)) return all.slice(-count);
+    return breakdown ? all.slice(-1) : all.slice(-count);
+  }
+  function _sortEntries(entries){
+    return (entries || []).slice().sort(function(a,b){
+      var av = Math.abs(_num(a && a.value));
+      var bv = Math.abs(_num(b && b.value));
+      if(bv !== av) return bv - av;
+      return _txt(a && a.label).localeCompare(_txt(b && b.label));
+    });
+  }
+  function _buildBreakdownContext(entries, metric, dim, periods, compareLy, entity){
+    var total = (entries || []).reduce(function(acc, item){ return acc + _num(item && item.value); }, 0);
+    return {
+      analysis_type: 'breakdown',
+      dimension: dim,
+      metric: metric,
+      metric_label: _metricLabel(metric),
+      compare_vs_ly: !!compareLy,
+      filters_detected: entity ? { focus: entity.label, focus_prop: entity.prop } : null,
+      periods_used: (periods || []).slice(),
+      totals: { visible_total: Number(total.toFixed(2)) },
+      top_items: (entries || []).map(function(item, idx){
+        var cur = _num(item && item.value);
+        var ly = _num(item && item.lyValue);
+        return {
+          rank: idx + 1,
+          label: _txt(item && item.label),
+          current_value: Number(cur.toFixed(2)),
+          ly_value: compareLy ? Number(ly.toFixed(2)) : null,
+          delta_vs_ly: compareLy ? Number((cur - ly).toFixed(2)) : null,
+          share_pct: total ? Number(((cur / total) * 100).toFixed(2)) : 0
+        };
+      })
+    };
+  }
+  function _buildSeriesContext(labels, cur, ly, metric, entity, mode){
+    return {
+      analysis_type: 'time_series',
+      period_mode: mode,
+      metric: metric,
+      metric_label: _metricLabel(metric),
+      entity: entity ? entity.label : 'Total',
+      labels: (labels || []).slice(),
+      current_series: (cur || []).slice(),
+      ly_series: (ly || []).slice()
+    };
+  }
+  function _fallbackBuild(question){
+    var rows = _availableRows();
+    if(!rows.length) return null;
+
+    var mode = _inferMode(question);
+    var metric = _metricMode(question);
+    var chartType = _chartType(question);
+    var dim = _dimension(question, chartType);
+    var compareLy = /vs ly|contra ly|\bly\b|ano pasado|año pasado|compar/.test(_questionNorm(question));
+    var entity = _entity(question);
+    var channel = _channelFilter(question);
+    var count = _questionCount(question, mode);
+    var breakdown = chartType === 'pie' || !!dim || /participacion|participación|share|mix|top|ranking/.test(_questionNorm(question));
+
+    var scoped = rows.filter(function(r){ return _matchEntity(r, entity) && _matchChannel(r, channel); });
+    if(!scoped.length && entity && entity.prop === 'department' && entity.label === 'Licores'){
+      scoped = rows.filter(function(r){ return _norm(r.department) === 'LICORES'; });
+    }
+    if(!scoped.length) scoped = rows.slice();
+    if(!scoped.length) return null;
+
+    var usePeriods = _resolvePeriods(question, scoped, mode, count, breakdown);
+    if(!usePeriods.length) return null;
+    var useSet = new Set(usePeriods);
+    var currentRows = scoped.filter(function(r){ return useSet.has(_periodKey(r, mode)); });
+    if(!currentRows.length) currentRows = scoped.slice();
+
+    if(breakdown){
+      var currentMap = new Map();
+      currentRows.forEach(function(r){
+        var label = _groupLabel(r, dim || 'category');
+        if(!label) return;
+        if(!currentMap.has(label)) currentMap.set(label, {total:0, delivery:0, non_delivery:0, margin:0});
+        _addBucket(currentMap.get(label), r);
+      });
+
+      var lyMap = new Map();
+      if(compareLy){
+        var lyPeriods = usePeriods.map(function(pk){ return _lyPeriod(pk, mode); }).filter(Boolean);
+        var lySet = new Set(lyPeriods);
+        scoped.forEach(function(r){
+          var pk = _periodKey(r, mode);
+          if(!lySet.has(pk)) return;
+          var label = _groupLabel(r, dim || 'category');
+          if(!label) return;
+          if(!lyMap.has(label)) lyMap.set(label, {total:0, delivery:0, non_delivery:0, margin:0});
+          _addBucket(lyMap.get(label), r);
+        });
+      }
+
+      var labelsAll = Array.from(new Set([].concat(Array.from(currentMap.keys()), Array.from(lyMap.keys()))));
+      var entries = labelsAll.map(function(label){
+        return {
+          label: label,
+          value: _valueFromBucket(currentMap.get(label), metric),
+          lyValue: _valueFromBucket(lyMap.get(label), metric)
+        };
+      }).filter(function(x){ return _num(x.value) !== 0 || _num(x.lyValue) !== 0; });
+
+      entries = _sortEntries(entries).slice(0, chartType === 'pie' ? 12 : 14);
+      if(!entries.length) return null;
+
+      return {
+        mode: mode,
+        metric: metric,
+        entity: entity,
+        chartType: chartType === 'pie' ? 'pie' : 'bar',
+        periods: usePeriods,
+        labels: entries.map(function(x){ return x.label; }),
+        datasets: compareLy && chartType !== 'pie'
+          ? [
+              { label: _metricLabel(metric) + ' actual', data: entries.map(function(x){ return _num(x.value); }), type:'bar', color:'#0C4D8F' },
+              { label: _metricLabel(metric) + ' LY', data: entries.map(function(x){ return _num(x.lyValue); }), type:'bar', color:'#F58320' }
+            ]
+          : [
+              { label: _metricLabel(metric), data: entries.map(function(x){ return _num(x.value); }), type:(chartType === 'pie' ? 'pie' : 'bar'), color:'#0C4D8F' }
+            ],
+        title: _metricLabel(metric) + ' por ' + (dim === 'brand' ? 'marca' : dim === 'department' ? 'departamento' : dim === 'store' ? 'tienda' : dim === 'daypart' ? 'turno' : dim === 'dow' ? 'día' : 'categoría') + (entity ? (' · ' + entity.label) : ''),
+        subtitle: usePeriods.length === 1
+          ? ('Corte detectado: ' + _periodLabel(usePeriods[0], mode))
+          : ('Periodos acumulados: ' + usePeriods.map(function(pk){ return _periodLabel(pk, mode); }).join(', ')),
+        tag: chartType === 'pie' ? 'Participación' : (compareLy ? 'Actual vs LY' : 'Breakdown'),
+        yFormat: _yFormat(metric),
+        type: chartType === 'pie' ? 'pie' : 'bar',
+        horizontal: chartType === 'bar-horizontal',
+        note: 'Fuente directa: Cubo_Sales_DetailHallazgos',
+        questionScopedContext: _buildBreakdownContext(entries, metric, dim || 'category', usePeriods, compareLy, entity)
+      };
+    }
+
+    var periodMap = new Map();
+    scoped.forEach(function(r){
+      var pk = _periodKey(r, mode);
+      if(!pk) return;
+      if(!periodMap.has(pk)) periodMap.set(pk, {total:0, delivery:0, non_delivery:0, margin:0});
+      _addBucket(periodMap.get(pk), r);
+    });
+    var periods = _sortPeriods(Array.from(periodMap.keys()), mode).slice(-count);
+    if(!periods.length) return null;
+    var curSeries = periods.map(function(pk){ return _valueFromBucket(periodMap.get(pk), metric); });
+    var lySeries = compareLy ? periods.map(function(pk){
+      var lyKey = _lyPeriod(pk, mode);
+      return _valueFromBucket(periodMap.get(lyKey), metric);
+    }) : [];
+
+    return {
+      mode: mode,
+      metric: metric,
+      entity: entity,
+      periods: periods,
+      labels: periods.map(function(pk){ return _periodLabel(pk, mode); }),
+      datasets: compareLy
+        ? [
+            { label: _metricLabel(metric) + ' actual', data: curSeries, type:(chartType === 'bar' ? 'bar' : 'line'), color:'#0C4D8F' },
+            { label: _metricLabel(metric) + ' LY', data: lySeries, type:(chartType === 'bar' ? 'bar' : 'line'), color:'#F58320' }
+          ]
+        : [
+            { label: _metricLabel(metric), data: curSeries, type:(chartType === 'bar' ? 'bar' : 'line'), color:'#0C4D8F' }
+          ],
+      title: _metricLabel(metric) + (entity ? (' · ' + entity.label) : ''),
+      subtitle: mode === 'month' ? 'Serie mensual directa desde el cubo' : 'Serie semanal directa desde el cubo',
+      tag: compareLy ? 'Actual vs LY' : (mode === 'month' ? 'Mensual' : 'Semanal'),
+      yFormat: _yFormat(metric),
+      type: (chartType === 'bar' ? 'bar' : 'line'),
+      horizontal: chartType === 'bar-horizontal',
+      note: 'Fuente directa: Cubo_Sales_DetailHallazgos',
+      questionScopedContext: _buildSeriesContext(periods.map(function(pk){ return _periodLabel(pk, mode); }), curSeries, lySeries, metric, entity, mode)
+    };
+  }
+
+  window.__ampmAiDirectCuboBuild = _fallbackBuild;
+  aiBuildLocalIntentModel = function(question){
+    try{
+      return window.__ampmAiDirectCuboBuild(question);
+    }catch(err){
+      console.warn('ai direct cubo build failed', err);
+      return null;
+    }
+  };
+  aiBuildSeries = aiBuildLocalIntentModel;
+  buildAiQuestionScopedContext = function(question){
+    try{
+      var model = aiBuildLocalIntentModel(question);
+      return model ? model.questionScopedContext : null;
+    }catch(_e){ return null; }
+  };
+})();
+</script>
+
 </body>
 
 
@@ -59211,214 +60141,5 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
-
-
-<style id="ampm-ai-compact-chat-v1">
-#ampmAiSection.ampm-ai-visible{display:block !important;}
-#ampmAiSection{
-  margin:0 0 14px !important;
-  min-height:0 !important;
-  border-radius:16px !important;
-  box-shadow:0 12px 28px rgba(15,23,42,.06) !important;
-}
-#ampmAiSection .ampm-ai-nav,
-#ampmAiSection .ampm-ai-visual-shell,
-#ampmAiSection .ampm-ai-prompts{
-  display:none !important;
-}
-#ampmAiSection .ampm-ai-main{
-  background:#fff !important;
-}
-#ampmAiSection .ampm-ai-header{
-  padding:10px 14px 8px !important;
-  min-height:0 !important;
-}
-#ampmAiSection .ampm-ai-header-title{
-  font-size:14px !important;
-}
-#ampmAiSection .ampm-ai-header-sub{
-  margin-top:2px !important;
-  font-size:11.5px !important;
-  line-height:1.35 !important;
-}
-#ampmAiSection .ampm-ai-header-right{
-  gap:6px !important;
-}
-#ampmAiSection .ampm-ai-badge,
-#ampmAiSection .ampm-ai-btn-icon,
-#ampmAiSection .ampm-ai-key-status,
-#ampmAiSection .ampm-ai-key-btn{
-  padding:6px 10px !important;
-  font-size:11px !important;
-  border-radius:999px !important;
-}
-#ampmAiSection .ampm-ai-key-status.compact-inline{
-  display:inline-flex !important;
-  background:#f8fafc !important;
-  border:1px solid rgba(15,23,42,.08) !important;
-  color:#11284A !important;
-}
-#ampmAiSection .ampm-ai-key-btn.compact-inline{
-  width:auto !important;
-  background:#fff !important;
-  color:#334155 !important;
-  border:1px solid rgba(15,23,42,.10) !important;
-}
-#ampmAiSection .ampm-ai-chat{
-  height:320px !important;
-  min-height:320px !important;
-  max-height:320px !important;
-  overflow:auto !important;
-  padding:12px 14px !important;
-  background:linear-gradient(180deg,#fbfdff 0%, #f8fafc 100%) !important;
-}
-#ampmAiSection .ampm-ai-empty{
-  padding:16px 14px !important;
-  border-radius:14px !important;
-}
-#ampmAiSection .ampm-ai-empty-icon{
-  width:40px !important;
-  height:40px !important;
-  border-radius:12px !important;
-  margin-bottom:8px !important;
-  font-size:16px !important;
-}
-#ampmAiSection .ampm-ai-empty-title{
-  font-size:13px !important;
-}
-#ampmAiSection .ampm-ai-empty-text{
-  margin-top:4px !important;
-  font-size:11.5px !important;
-}
-#ampmAiSection .ampm-ai-messages{
-  gap:10px !important;
-  padding-right:2px !important;
-}
-#ampmAiSection .ampm-ai-msg{
-  max-width:min(860px, 92%) !important;
-  border-radius:16px !important;
-  padding:10px 12px !important;
-}
-#ampmAiSection .ampm-ai-msg-top{
-  margin-bottom:4px !important;
-}
-#ampmAiSection .ampm-ai-msg-role,
-#ampmAiSection .ampm-ai-msg-meta{
-  font-size:10px !important;
-}
-#ampmAiSection .ampm-ai-msg-body{
-  font-size:12px !important;
-  line-height:1.5 !important;
-}
-#ampmAiSection .ampm-ai-input-row{
-  gap:8px !important;
-  padding:10px 14px 10px !important;
-}
-#ampmAiSection .ampm-ai-textarea{
-  min-height:46px !important;
-  max-height:90px !important;
-  border-radius:14px !important;
-  padding:11px 13px !important;
-  font-size:12.5px !important;
-}
-#ampmAiSection .ampm-ai-send-btn{
-  width:48px !important;
-  min-width:48px !important;
-  border-radius:14px !important;
-  box-shadow:0 10px 20px rgba(245,131,32,.18) !important;
-}
-#ampmAiSection .ampm-ai-footer-note{
-  padding:0 14px 10px !important;
-  font-size:10px !important;
-}
-@media (max-width: 720px){
-  #ampmAiSection .ampm-ai-header,
-  #ampmAiSection .ampm-ai-chat,
-  #ampmAiSection .ampm-ai-input-row,
-  #ampmAiSection .ampm-ai-footer-note{padding-left:10px !important; padding-right:10px !important;}
-  #ampmAiSection .ampm-ai-chat{height:300px !important; min-height:300px !important; max-height:300px !important;}
-  #ampmAiSection .ampm-ai-msg{max-width:96% !important;}
-}
-</style>
-
-<script id="ampm-ai-compact-chat-v1-script">
-(function(){
-  if(window.__AMPM_AI_COMPACT_CHAT_V1__) return;
-  window.__AMPM_AI_COMPACT_CHAT_V1__ = true;
-
-  function compactAiPanel(){
-    var panel = document.getElementById('ampmAiSection');
-    if(!panel) return;
-
-    var nav = panel.querySelector('.ampm-ai-nav');
-    if(nav) nav.style.display = 'none';
-
-    var visual = document.getElementById('ampmAiVisualShell');
-    if(visual && visual.parentNode) visual.parentNode.removeChild(visual);
-
-    var prompts = document.getElementById('ampmAiPrompts');
-    if(prompts && prompts.parentNode) prompts.parentNode.removeChild(prompts);
-
-    var title = document.getElementById('ampmAiHeaderTitle');
-    var sub = document.getElementById('ampmAiHeaderSub');
-    var badge = document.getElementById('ampmAiScopeBadge');
-    var emptyTitle = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-title');
-    var emptyText = panel.querySelector('#ampmAiEmpty .ampm-ai-empty-text');
-    var input = document.getElementById('ampmAiInput');
-    var footer = document.getElementById('ampmAiFooterHint');
-    var headerRight = panel.querySelector('.ampm-ai-header-right');
-    var keyStatus = document.getElementById('ampmAiKeyStatus');
-    var keyBtn = document.getElementById('ampmAiOpenKeyBtn');
-    var clearBtn = document.getElementById('ampmAiClearBtn');
-
-    if(title) title.textContent = 'Asistente de datos';
-    if(sub) sub.textContent = 'Preguntá sobre la data del dashboard y te respondo con hallazgos, impacto y acciones concretas.';
-    if(badge) badge.textContent = 'Solo data del dashboard';
-    if(emptyTitle) emptyTitle.textContent = 'Listo para responder';
-    if(emptyText) emptyText.textContent = 'Preguntá por ventas, ticket, TX, margen, delivery, SBF, merma, inventario o productos en cero.';
-    if(input){
-      input.rows = 1;
-      input.placeholder = 'Ejemplo: ¿Qué está frenando SBF y qué acción harías esta semana?';
-    }
-    if(footer) footer.textContent = 'Responde con base en la data visible del dashboard y prioriza acciones útiles.';
-
-    if(headerRight && keyStatus && !headerRight.contains(keyStatus)){
-      headerRight.insertBefore(keyStatus, clearBtn || badge || null);
-      keyStatus.classList.add('compact-inline');
-    }
-    if(headerRight && keyBtn && !headerRight.contains(keyBtn)){
-      headerRight.insertBefore(keyBtn, clearBtn || null);
-      keyBtn.classList.add('compact-inline');
-      keyBtn.textContent = 'Configurar Key';
-    }
-  }
-
-  function bindCompactScroll(){
-    var messages = document.getElementById('ampmAiMessages');
-    var chat = document.getElementById('ampmAiChat');
-    if(!messages || !chat || messages.__compactScrollBound) return;
-    messages.__compactScrollBound = true;
-    var obs = new MutationObserver(function(){
-      chat.scrollTop = chat.scrollHeight + 300;
-    });
-    obs.observe(messages, { childList:true, subtree:true, characterData:true });
-  }
-
-  function runCompactAi(){
-    compactAiPanel();
-    bindCompactScroll();
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(runCompactAi, 120); });
-  }else{
-    setTimeout(runCompactAi, 120);
-  }
-
-  ['ampm:tabshown','ampm:authchanged','ampm:refresh'].forEach(function(evt){
-    window.addEventListener(evt, function(){ setTimeout(runCompactAi, 80); });
-  });
-})();
-</script>
 
 </html>
