@@ -3727,7 +3727,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   position:relative;
 }
 .ampm-ai-wrap[style*="display:none"]{display:none!important}
-body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
+body.auth-ok .ampm-ai-wrap#ampmAiSection.ampm-ai-visible{display:flex!important}
 .ampm-ai-nav{
   width:196px;
   min-width:196px;
@@ -4094,7 +4094,52 @@ body.auth-ok .ampm-ai-wrap#ampmAiSection{display:flex!important}
 <script id="ampm-ai-panel-script">
 (function(){
   var LS_KEY = 'ampm_openai_key_v1';
-  var OPENAI_MODEL = 'gpt-4o';
+  var OPENAI_MODEL = 'gpt-5.4-mini';
+  var OPENAI_REASONING_EFFORT = 'low';
+  var OPENAI_VERBOSITY = 'low';
+  var OPENAI_MAX_OUTPUT_TOKENS = 850;
+  var OPENAI_MAX_HISTORY_MESSAGES = 6;
+  var OPENAI_TEMPERATURE = 0.2;
+
+  function getAiModeLabel(){
+    return 'GPT-5.4 mini · reasoning '+OPENAI_REASONING_EFFORT+' · salida controlada';
+  }
+
+  function extractResponseText(data){
+    try{
+      if(data && typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
+      var output = data && Array.isArray(data.output) ? data.output : [];
+      var parts = [];
+      output.forEach(function(item){
+        if(!item) return;
+        if(item.type === 'message' && Array.isArray(item.content)){
+          item.content.forEach(function(part){
+            if(part && typeof part.text === 'string' && String(part.text).trim()) parts.push(String(part.text).trim());
+          });
+        }
+      });
+      return parts.join('
+
+').trim();
+    }catch(_e){ return ''; }
+  }
+
+  function formatUsageMeta(usage){
+    try{
+      if(!usage) return '';
+      var total = Number(usage.total_tokens || 0);
+      var input = Number(usage.input_tokens || 0);
+      var output = Number(usage.output_tokens || 0);
+      var reasoning = Number((usage.output_tokens_details && usage.output_tokens_details.reasoning_tokens) || 0);
+      if(!(total || input || output || reasoning)) return '';
+      var nf = function(n){ return Number(n || 0).toLocaleString('es-SV'); };
+      var pieces = [];
+      if(input) pieces.push('in '+nf(input));
+      if(output) pieces.push('out '+nf(output));
+      if(reasoning) pieces.push('reason '+nf(reasoning));
+      return ' · uso: '+nf(total)+' tok' + (pieces.length ? ' ('+pieces.join(' | ')+')' : '');
+    }catch(_e){ return ''; }
+  }
 
   function getApiKey(){
     try{ return localStorage.getItem(LS_KEY) || ''; }catch(_e){ return ''; }
@@ -4756,67 +4801,157 @@ Cada vez que te comparta información, empieza de inmediato con:
 - benchmark aterrizado
 - prioridades`;
 
-  function buildDataContext(){
-    var ctx = [];
-    var kpiIds = [
-      ['kpi_sales_cur','Venta Diario'],['kpi_sales_lm','Venta LW'],['kpi_sales_ly','Venta LY'],
-      ['kpi_meta','Meta Mensual'],['kpi_proj','Proyección cierre mes'],['kpi_tx','TX Diario'],
-      ['kpi_margin','Margen Diario'],['kpi_del','Vta Delivery'],['kpi_no_del','Vta sin Delivery'],
-      ['kpi_drop','Drop Diario'],['kpi_inv_adj','Ajuste Inventario'],['kpi_prd0','PRD en cero'],
-      ['kpi_days_inv','Días Inventario'],['kpi_cxc','CXC MTD'],['kpi_mkt_margin','Margen Mercadeo'],
-      ['kpi_tx_sbf','TX SBF'],['kpi_sales_delta3lm','Delta vs Prom S8'],['kpi_sales_deltalm','Delta vs LW'],
-      ['kpi_sales_delta_ly','Delta vs LY'],['kpi_alcance','Alcance MTD'],['kpi_delta_meta','Delta Meta'],
-      ['kpi_proj_vs_meta','Proy vs Meta'],['kpi_proj_vs_ly','Proy vs LY'],['kpi_tx_delta_ly','Delta TX vs LY'],
-      ['kpi_del_delta_ly','Delta Delivery vs LY'],['kpi_del_share_pill','% Delivery / Vta'],
-      ['kpi_no_del_delta_ly','Delta sin Delivery vs LY'],['kpi_drop_delta_ly','Delta Drop vs LY'],
+
+  function aiResolveTopic(topic, userText){
+    var t = String(topic || currentTopic || 'chat').trim();
+    var q = String(userText || '').toLowerCase();
+    if(/\b(sbf|cxc|agente|recarga|rapibac|western union|western|puntoxpress|smart ticket|n1co|aki pago|loto|promerica)\b/.test(q)) return 'sbf';
+    if(/\b(merma|desperdicio|vencimiento|caduc|proveedor.*merma|merma.*proveedor)\b/.test(q)) return 'merma';
+    if(/\b(inventario|hueso|sobrestock|stock|dias de inventario|d[ií]as de inventario|rop|reorden|transfer)\b/.test(q)) return 'inventario';
+    if(/\b(prd|quiebre|agotado|agotados|en cero|fuera de stock|sin inventario)\b/.test(q)) return 'prd_cero';
+    if(/\b(delivery|uber|pedidos ?ya|pya|marketplace|canal digital)\b/.test(q)) return 'delivery';
+    if(/\b(meta|proyecci[oó]n|run rate|cierre de mes|alcance)\b/.test(q)) return 'ventas_proyeccion';
+    if(/\b(mix|share|categor[ií]a|categorias|marca|marcas|departamento|departamentos)\b/.test(q)) return 'ventas_mix';
+    if(/\b(tienda|tiendas|ampm01|ampm02|ampm03|store)\b/.test(q)) return 'tiendas';
+    if(/\b(ly|lw|vs ly|vs lw|vs prom|vs s8|crec|ca[ií]da|variaci[oó]n|decrec|tendencia|desempe[nñ]o)\b/.test(q)) return (t === 'chat' ? 'ventas_variacion' : t);
+    return t || 'chat';
+  }
+
+  function aiGetFilterContext(){
+    var mode = (typeof getUnifiedReportMode === 'function' ? getUnifiedReportMode() : 'diario');
+    var currentYm = (document.getElementById('currentMonth') && document.getElementById('currentMonth').value) || 'N/D';
+    var prev = [];
+    try{ prev = (typeof getSelectedValues === 'function') ? getSelectedValues(document.getElementById('prevMonths')) : []; }catch(_e){}
+    var stores = [];
+    try{ stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : []; }catch(_e){}
+    var parts = [
+      'Modo reporte: ' + mode,
+      'Periodo actual: ' + currentYm,
+      'Comparables: ' + (prev && prev.length ? prev.join(', ') : 'N/D'),
+      'Tiendas: ' + (stores && stores.length ? stores.join(', ') : 'Todas')
     ];
-    var kpiLines = [];
-    kpiIds.forEach(function(p){
-      var el = document.getElementById(p[0]);
-      if(el && el.textContent){
-        var t = el.textContent.trim();
-        if(t && t !== '—' && t !== 'Pendiente') kpiLines.push(p[1]+': '+t);
-      }
+    return '=== CONTEXTO DE FILTROS ===\n' + parts.join('\n');
+  }
+
+  function aiPushText(ctx, id, label, max){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var raw = String(el.textContent || '').replace(/\s+/g,' ').trim();
+    if(!raw || raw === '—' || raw === 'Pendiente') return;
+    ctx.push('=== ' + label + ' ===\n' + raw.substring(0, max || 1200));
+  }
+
+  function aiPushKpis(ctx){
+    var defs = [
+      ['kpi_sales_cur','Venta actual'],['kpi_sales_ly','Venta LY'],['kpi_sales_delta_ly','Delta ventas vs LY'],
+      ['kpi_meta','Meta mensual'],['kpi_proj','Proyección cierre'],['kpi_proj_vs_meta','Proyección vs meta'],
+      ['kpi_margin','Margen'],['kpi_del','Venta delivery'],['kpi_del_share_pill','Share delivery'],
+      ['kpi_drop','Drop'],['kpi_prd0','PRD en cero'],['kpi_days_inv','Días inventario'],['kpi_tx_sbf','TX SBF'],['kpi_cxc','CXC MTD']
+    ];
+    var lines = [];
+    defs.forEach(function(def){
+      var el = document.getElementById(def[0]);
+      var val = el ? String(el.textContent || '').replace(/\s+/g,' ').trim() : '';
+      if(val && val !== '—' && val !== 'Pendiente') lines.push(def[1] + ': ' + val);
     });
-    if(kpiLines.length) ctx.push('=== KPIs ===\n'+kpiLines.join('\n'));
+    if(lines.length) ctx.push('=== KPIs RESUMEN ===\n' + lines.join('\n'));
+  }
 
-    function grabText(id, label, max){
-      var el = document.getElementById(id);
-      if(el && el.textContent && el.textContent.trim() && el.textContent.trim() !== '—'){
-        ctx.push('=== '+label+' ===\n'+el.textContent.trim().substring(0, max||1000));
+  function aiPushTable(ctx, id, label, maxRows, maxCols){
+    var table = document.getElementById(id);
+    if(!table) return;
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tr') || []);
+    if(!rows.length) return;
+    var lines = [];
+    var rowLimit = maxRows || 18;
+    var colLimit = maxCols || 20;
+    for(var i=0; i<rows.length && lines.length < rowLimit; i++){
+      var cells = Array.prototype.slice.call(rows[i].querySelectorAll('th,td') || []);
+      if(!cells.length) continue;
+      var vals = [];
+      for(var c=0; c<cells.length && vals.length < colLimit; c++){
+        var txt = String(cells[c].textContent || '').replace(/\s+/g,' ').trim();
+        if(txt) vals.push(txt);
       }
+      var line = vals.join(' | ');
+      if(line && line.replace(/[|\s]/g,'')) lines.push(line);
     }
-    grabText('autoSummaryList','INSIGHTS AUTOMÁTICOS',1200);
-    grabText('autoTopCats','TOP CATEGORÍAS',800);
-    grabText('autoTopBrands','TOP MARCAS',800);
-    grabText('radarInsights','RADAR EJECUTIVO — TOP INSIGHTS',1200);
-    grabText('radarWatchlist','WATCHLIST RIESGOS',600);
-    grabText('radarQuickWins','QUICK WINS',600);
-    grabText('radarInitiatives','INICIATIVAS',600);
-    grabText('autoKeyLy','KEY FINDINGS vs LY',800);
-    grabText('autoKeyLm','KEY FINDINGS vs Prom S8',800);
-    grabText('ampmBizDetailSummary','HALLAZGOS DEL NEGOCIO',800);
-    grabText('ampmBizMoverList','PALANCAS SOBRESALIENTES',800);
+    if(lines.length) ctx.push('=== ' + label + ' ===\n' + lines.join('\n'));
+  }
 
-    function extractTable(id, label, maxRows){
-      var t = document.getElementById(id);
-      if(!t) return;
-      var rows = t.querySelectorAll('tr');
-      if(!rows.length) return;
-      var lines = []; var count = 0;
-      rows.forEach(function(row){
-        if(count >= (maxRows||20)) return;
-        var cells = row.querySelectorAll('th,td');
-        var vals = []; cells.forEach(function(c){ vals.push(c.textContent.trim()); });
-        var line = vals.join(' | ');
-        if(line.replace(/[|\s]/g,'')){ lines.push(line); count++; }
-      });
-      if(lines.length) ctx.push('=== '+label+' ===\n'+lines.join('\n'));
+  function buildDataContext(topic, userText){
+    var resolvedTopic = aiResolveTopic(topic, userText);
+    var ctx = [aiGetFilterContext()];
+
+    if(['chat','ejecutivo','acciones','tiendas','ventas_variacion','ventas_mix','ventas_proyeccion'].indexOf(resolvedTopic) >= 0){
+      aiPushKpis(ctx);
+      aiPushText(ctx, 'radarInsights', 'RADAR EJECUTIVO', 1400);
+      aiPushText(ctx, 'radarWatchlist', 'WATCHLIST', 700);
+      aiPushText(ctx, 'radarQuickWins', 'QUICK WINS', 700);
+      aiPushText(ctx, 'radarInitiatives', 'INICIATIVAS', 700);
+      aiPushText(ctx, 'ampmBizDetailSummary', 'HALLAZGO DE NEGOCIO SELECCIONADO', 900);
+      aiPushText(ctx, 'ampmBizMoverList', 'PALANCAS SOBRESALIENTES', 1200);
     }
-    extractTable('t_sales','TABLA SALES',25);
-    extractTable('t_pxd','PROM X DÍA',15);
-    extractTable('t_merma_matrix','MERMA POR DEPARTAMENTO',20);
-    extractTable('t_merma_drill','MERMA DETALLE',20);
+
+    switch(resolvedTopic){
+      case 'sbf':
+        ctx.push('=== REGLA DE LECTURA SBF ===\nEn las tablas SBF de este dashboard, las columnas "Delta vs ..." son ratios: > 1.00 = crecimiento, < 1.00 = caída, = 1.00 = flat. Las columnas "Dif vs ..." son diferencias absolutas. Para SBF y CXC mandan las tablas específicas; no usar KPIs generales si contradicen la tabla.');
+        aiPushTable(ctx, 't_sbf_store', 'SBF — TX POR TIENDA', 12, 18);
+        aiPushTable(ctx, 't_sbf_prov', 'SBF — TX POR PROVEEDOR', 16, 18);
+        aiPushTable(ctx, 't_sbf_daypart', 'SBF — TX POR HORARIO FS', 12, 16);
+        aiPushTable(ctx, 't_sbf_dow', 'SBF — TX POR DÍA', 12, 16);
+        aiPushTable(ctx, 't_cxc', 'CXC AGENTES', 18, 10);
+        aiPushText(ctx, 'sbfHourCompareNote', 'NOTA SBF HORAS', 300);
+        break;
+      case 'merma':
+        ctx.push('=== REGLA DE LECTURA MERMA ===\nPara merma, mayor % o mayor monto implica peor desempeño. Si la tabla detalle muestra proveedor, categoría o producto, usalos como fuente principal para responder top de merma.');
+        aiPushTable(ctx, 't_merma_matrix', 'MERMA POR DEPARTAMENTO', 18, 16);
+        aiPushTable(ctx, 't_merma_drill', 'MERMA DETALLE', 24, 18);
+        break;
+      case 'inventario':
+        ctx.push('=== REGLA DE LECTURA INVENTARIO ===\nPriorizar días de inventario altos, sobrestock, hueso y propuestas de transferencia/reorden.');
+        aiPushTable(ctx, 't_inv_dept', 'INVENTARIO POR DEPARTAMENTO', 18, 14);
+        aiPushTable(ctx, 't_rop_sug', 'PROPUESTAS DE REORDEN', 18, 14);
+        aiPushTable(ctx, 't_hueso', 'HUESO — SEGUIMIENTO', 18, 14);
+        aiPushTable(ctx, 't_hueso_prop', 'HUESO — PROPUESTAS', 18, 14);
+        break;
+      case 'prd_cero':
+        ctx.push('=== REGLA DE LECTURA PRD EN CERO ===\nPriorizar quiebres con impacto de venta, recurrencia y oportunidad de reposición rápida.');
+        aiPushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 22, 16);
+        break;
+      case 'delivery':
+        ctx.push('=== REGLA DE LECTURA DELIVERY ===\nSeparar lectura por canal y por share. En ratios Delta: > 1.00 crece, < 1.00 cae.');
+        aiPushTable(ctx, 't_del', 'SALES DELIVERY', 14, 18);
+        aiPushTable(ctx, 't_delshare', 'SHARE DELIVERY', 14, 18);
+        aiPushTable(ctx, 't_delx', 'VENTA POR CANAL DELIVERY', 14, 18);
+        break;
+      case 'ventas_mix':
+        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
+        aiPushTable(ctx, 't_fs_cat', 'FOOD SERVICE POR CATEGORÍA', 14, 16);
+        break;
+      case 'ventas_proyeccion':
+        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
+        aiPushText(ctx, 'radarForecastTable', 'PROYECCIÓN 4 SEMANAS', 1200);
+        aiPushText(ctx, 'radarForecastInsights', 'LECTURA PROYECCIÓN', 800);
+        break;
+      case 'tiendas':
+        aiPushTable(ctx, 't_sales', 'SALES POR TIENDA', 12, 18);
+        aiPushTable(ctx, 't_del', 'DELIVERY POR TIENDA', 12, 18);
+        aiPushTable(ctx, 't_sbf_store', 'SBF POR TIENDA', 12, 18);
+        aiPushTable(ctx, 't_merma_matrix', 'MERMA POR DEPARTAMENTO', 10, 16);
+        break;
+      case 'ventas_variacion':
+      case 'chat':
+      case 'ejecutivo':
+      case 'acciones':
+      default:
+        aiPushTable(ctx, 't_sales', 'SALES', 12, 18);
+        aiPushTable(ctx, 't_del', 'SALES DELIVERY', 12, 18);
+        aiPushTable(ctx, 't_merma_matrix', 'MERMA', 10, 16);
+        aiPushTable(ctx, 't_sbf_store', 'SBF POR TIENDA', 10, 18);
+        aiPushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 12, 16);
+        break;
+    }
 
     if(!ctx.length) return 'No hay data cargada en el reporte. Cargá un archivo y actualizá los cuadros antes de consultar.';
     return ctx.join('\n\n');
@@ -4928,33 +5063,69 @@ Cada vez que te comparta información, empieza de inmediato con:
           if(!window.Chart) return;
           var t = String(payload.chart.type||'bar').toLowerCase();
           var chartType = (t==='line'||t==='doughnut'||t==='pie') ? t : 'bar';
-          var values = payload.chart.values.map(function(v){ return Number(v)||0; });
+          var labels = payload.chart.labels.slice(0,12);
+          var values = payload.chart.values.slice(0,12).map(function(v){ return Number(v)||0; });
+          var palette = ['#0C4D8F','#F58320','#11284A','#0EA5E9','#E67425','#1D4ED8','#7C3AED','#B45309','#334155','#14B8A6','#F59E0B','#2563EB'];
+          var dataset = {
+            label: payload.chart.series_label || 'Valor',
+            data: values,
+            borderColor: '#0C4D8F',
+            borderWidth: 2,
+            tension: 0.28,
+            fill: chartType === 'line',
+            pointRadius: chartType === 'line' ? 4 : 0,
+            pointHoverRadius: chartType === 'line' ? 5 : 0,
+            pointBackgroundColor: '#0C4D8F',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: chartType === 'line' ? 1.5 : 0,
+            backgroundColor: chartType === 'line'
+              ? 'rgba(12,77,143,0.14)'
+              : labels.map(function(_, idx){ return palette[idx % palette.length]; }),
+            borderRadius: chartType === 'bar' ? 10 : 0,
+            maxBarThickness: chartType === 'bar' ? 46 : undefined,
+            categoryPercentage: chartType === 'bar' ? 0.7 : undefined,
+            barPercentage: chartType === 'bar' ? 0.78 : undefined
+          };
+          var chartPlugins = [];
+          if((chartType === 'bar' || chartType === 'line') && typeof ValueLabels !== 'undefined') chartPlugins.push(ValueLabels);
           new Chart(cv.getContext('2d'), {
             type: chartType,
-            data: {
-              labels: payload.chart.labels.slice(0,12),
-              datasets: [{
-                label: payload.chart.series_label || 'Valor',
-                data: values.slice(0,12),
-                backgroundColor: chartType==='line' ? 'rgba(12,77,143,0.16)' : ['#0C4D8F','#F58320','#11284A','#5B6B82','#2E8B57','#E67425','#1D4ED8','#7C3AED','#B45309','#334155','#0EA5E9','#F59E0B'],
-                borderColor: '#0C4D8F',
-                borderWidth: 2,
-                tension: 0.28,
-                fill: chartType==='line'
-              }]
-            },
+            data: { labels: labels, datasets: [dataset] },
             options: {
               responsive:true,
               maintainAspectRatio:false,
+              animation:false,
+              layout:{padding:{top:10,right:10,left:6,bottom:0}},
               plugins:{
-                legend:{display:chartType==='doughnut'||chartType==='pie'},
-                tooltip:{callbacks:{label:function(ctx){var fmt = payload.chart.format || ''; return (ctx.dataset.label?ctx.dataset.label+': ':'') + ampmFmtValue(ctx.parsed.y!=null?ctx.parsed.y:ctx.parsed, fmt);}}}
+                legend:{display:(chartType==='doughnut'||chartType==='pie'||!!payload.chart.show_legend), position:'bottom', labels:{boxWidth:12, usePointStyle:true, pointStyle:'circle', color:'#334155', font:{weight:'700'}}},
+                title:{display:false},
+                tooltip:{
+                  backgroundColor:'rgba(15,23,42,0.95)',
+                  titleColor:'#fff',
+                  bodyColor:'#e2e8f0',
+                  padding:10,
+                  displayColors:false,
+                  callbacks:{label:function(ctx){ var raw = (ctx.parsed && ctx.parsed.y!=null) ? ctx.parsed.y : (ctx.parsed != null ? ctx.parsed : ctx.raw); return (ctx.dataset.label ? ctx.dataset.label + ': ' : '') + ampmFmtValue(raw, payload.chart.format || ''); }}
+                },
+                valueLabels:{
+                  bar: chartType === 'bar',
+                  line: chartType === 'line',
+                  formatter:function(v){ return ampmFmtValue(Number(v)||0, payload.chart.format || ''); }
+                }
               },
-              scales: chartType==='bar'||chartType==='line' ? {
-                y:{ticks:{callback:function(v){ return ampmFmtValue(v, payload.chart.format||''); }}, beginAtZero:true},
-                x:{ticks:{autoSkip:false, maxRotation:0, minRotation:0}}
+              scales: (chartType==='bar'||chartType==='line') ? {
+                y:{
+                  beginAtZero:true,
+                  grid:{color:'rgba(148,163,184,0.18)', drawBorder:false},
+                  ticks:{color:'#475569', font:{weight:'700'}, callback:function(v){ return ampmFmtValue(v, payload.chart.format || ''); }}
+                },
+                x:{
+                  grid:{display:false, drawBorder:false},
+                  ticks:{color:'#334155', font:{weight:'800'}, autoSkip:false, maxRotation:0, minRotation:0}
+                }
               } : {}
-            }
+            },
+            plugins: chartPlugins
           });
         }catch(_e){}
       },0);
@@ -5085,7 +5256,7 @@ Cada vez que te comparta información, empieza de inmediato con:
     var titleEl = getEl('ampmAiHeaderTitle');
     var subEl = getEl('ampmAiHeaderSub');
     if(titleEl) titleEl.textContent = meta.title;
-    if(subEl) subEl.textContent = meta.sub;
+    if(subEl) subEl.textContent = meta.sub + ' · ' + getAiModeLabel();
     var promptsEl = getEl('ampmAiPrompts');
     if(promptsEl){
       promptsEl.innerHTML = '';
@@ -5123,12 +5294,31 @@ Cada vez que te comparta información, empieza de inmediato con:
     setSendDisabled(true);
     appendMsg('assistant','Analizando…','ampm-ai-thinking');
 
-    var dataContext = buildDataContext();
+    var resolvedTopic = aiResolveTopic(currentTopic, userText);
+    var dataContext = buildDataContext(resolvedTopic, userText);
+    var visualIntent = /graf|gr[aá]fic|visual|compar|ranking|top|vs | versus |impacto|tendenc|c[oó]mo van|cu[aá]l|d[oó]nde|mejor|peor|proveedor|tienda|share|mix|resumen|scorecard|sem[aá]foro/i.test(userText) || ['ejecutivo','tiendas','ventas_variacion','delivery','sbf','merma','inventario','prd_cero'].indexOf(resolvedTopic) >= 0;
     var topicInstr = TOPIC_PROMPTS[currentTopic] || TOPIC_PROMPTS.chat;
+    var visualBlockSpec = `
+<AMPM_VISUAL>{
+  "summary":"respuesta ejecutiva corta",
+  "cards":[
+    {"label":"Indicador 1","value":12000,"format":"money","delta":"+8% vs LY","status":"good"},
+    {"label":"Indicador 2","value":0.66,"format":"number","delta":"caída vs LY","status":"bad"}
+  ],
+  "chart":{"type":"bar","title":"Dónde está el impacto","subtitle":"máximo 6 barras","labels":["A","B"],"values":[10,20],"series_label":"Impacto","format":"money"},
+  "actions":[
+    {"title":"Acción puntual","detail":"qué hacer y por qué","priority":"Alta","owner":"Operaciones","kpi":"Ventas / margen"}
+  ],
+  "notes":["solo insights accionables"]
+}</AMPM_VISUAL>`;
+
     var systemPrompt = `${MASTER_MULTIAGENT_PROMPT}
 
 CONTEXTO ESPECÍFICO DEL ANÁLISIS ACTUAL:
 ${topicInstr}
+
+TEMA RESUELTO PARA ESTA CONSULTA:
+${resolvedTopic}
 
 DATA DEL REPORTE (FUENTE PRINCIPAL DE VERDAD):
 ${dataContext}
@@ -5138,39 +5328,40 @@ REGLAS OPERATIVAS FINALES:
 - Basate primero en la data del reporte y en lo que el usuario comparta.
 - No inventés números, causas ni benchmarks.
 - Si falta data, decilo explícitamente y seguí con la mejor recomendación posible.
-- Pensá la respuesta según la pregunta concreta; no repitas siempre la misma plantilla.
-- Abrí con una respuesta directa y luego baja a impacto y acción.
-- Priorizá claridad ejecutiva, lógica comercial, accionabilidad e impacto negocio.
-- Mantené respuestas cortas, concretas, útiles y comerciales.
-- Usá KPIs, responsables, prioridad e impacto cuando realmente aporte valor.
-- Si proponés benchmark global, aterrizalo al contexto real de AMPM.
-- Si el usuario no pide profundidad extra, no alargués la respuesta.
-- Si la pregunta es puntual, respondé puntual; si es estratégica, respondé estratégico.
-- Mostrá qué movería ventas, margen, tráfico, ticket, ejecución o experiencia.
-- Si la consulta se beneficiaría visualmente y hay suficiente data numérica, podés responder en MODO VISUAL usando EXACTAMENTE este bloque y nada fuera del bloque:
-<AMPM_VISUAL>{
-  "summary":"respuesta ejecutiva corta",
-  "cards":[
-    {"label":"Impacto ventas","value":12000,"format":"money","delta":"+8% vs LY","status":"good"},
-    {"label":"Riesgo margen","value":1.8,"format":"percent","delta":"-0.6 pp","status":"bad"}
-  ],
-  "chart":{"type":"bar","title":"Dónde está el upside","subtitle":"máximo 6 barras","labels":["A","B"],"values":[10,20],"series_label":"Impacto","format":"money"},
-  "actions":[
-    {"title":"Acción puntual","detail":"qué hacer y por qué","priority":"Alta","owner":"Operaciones","kpi":"Ventas / margen"}
-  ],
-  "notes":["solo insights accionables"]
-}</AMPM_VISUAL>
-- Usá MODO VISUAL solo cuando sume claridad real; si no, respondé texto normal.
-- No inventés datos para llenar cards o gráficas.
+- Si existe tabla específica del tema consultado, esa tabla manda sobre KPIs generales del resumen.
+- En este dashboard, cuando una tabla diga "Delta vs ...": > 1.00 = crecimiento, < 1.00 = caída, = 1.00 = flat.
+- Cuando una tabla diga "Dif vs ..." interpretalo como diferencia absoluta, no como ratio.
+- Abrí con la respuesta ejecutiva; luego bajá a impacto negocio y finalmente a acciones.
+- Priorizá siempre qué movería ventas, margen, tráfico, ticket, ejecución o experiencia.
+- Respondé con criterio ejecutivo: claro, comercial, accionable y sin relleno.
+- Si la pregunta es puntual, respondé puntual. Si es estratégica, integrá contexto de negocio.
+- No repitas plantillas vacías ni frases genéricas.
+- Cerrá con acciones concretas: qué hacer, dónde, responsable sugerido y KPI cuando aplique.
+- Cuando el dato sea malo, decilo claro; no suavicés caídas.
+- Si proponés benchmark global, tropicalizalo a AMPM.
+- Si la consulta se beneficia de visual y hay data suficiente, usá MODO VISUAL.
+- ${visualIntent ? 'Para esta consulta, preferí MODO VISUAL. Solo si no hay suficiente data confiable, respondé en texto normal.' : 'Usá MODO VISUAL solo si realmente mejora la claridad.'}
+- En MODO VISUAL usá EXACTAMENTE este bloque y nada fuera del bloque:
+${visualBlockSpec}
 - No uses markdown complejo dentro de <AMPM_VISUAL>.`;
 
-    var messages = [{role:'system', content:systemPrompt}];
-    chatHistory.slice(-10).forEach(function(m){ messages.push(m); });
+    var inputItems = [{ role:'developer', content:systemPrompt }];
+    chatHistory.slice(-OPENAI_MAX_HISTORY_MESSAGES).forEach(function(m){
+      inputItems.push({ role:(m && m.role === 'assistant') ? 'assistant' : 'user', content:String((m && m.content) || '') });
+    });
 
-    fetch('https://api.openai.com/v1/chat/completions',{
+    fetch('https://api.openai.com/v1/responses',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},
-      body:JSON.stringify({model:OPENAI_MODEL, messages:messages, max_tokens:1500, temperature:0.7})
+      body:JSON.stringify({
+        model: OPENAI_MODEL,
+        input: inputItems,
+        reasoning: { effort: OPENAI_REASONING_EFFORT },
+        text: { verbosity: OPENAI_VERBOSITY },
+        max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
+        temperature: OPENAI_TEMPERATURE,
+        store: false
+      })
     })
     .then(function(res){ return res.json(); })
     .then(function(data){
@@ -5180,10 +5371,16 @@ REGLAS OPERATIVAS FINALES:
         appendMsg('assistant','❌ Error OpenAI: '+(data.error.message||JSON.stringify(data.error)),'error');
         return;
       }
-      var reply = data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+      var reply = extractResponseText(data);
       if(!reply){ appendMsg('assistant','⚠️ Sin respuesta.','error'); return; }
       chatHistory.push({role:'assistant', content:reply});
       appendMsg('assistant', reply);
+      try{
+        var meta = TOPIC_META[currentTopic] || TOPIC_META.chat;
+        var subEl = getEl('ampmAiHeaderSub');
+        if(subEl) subEl.textContent = meta.sub + ' · ' + getAiModeLabel() + formatUsageMeta(data && data.usage);
+      }catch(_e){}
+      try{ console.info('[AMPM IA] usage', data && data.usage); }catch(_e){}
     })
     .catch(function(err){
       try{removeThinking();}catch(_e){}
@@ -5200,20 +5397,28 @@ REGLAS OPERATIVAS FINALES:
     setSendDisabled(false);
   };
 
-  function checkAdmin(){
+  function updateAiPanelVisibility(){
     try{
-      var raw = sessionStorage.getItem('ampm_report_auth_v1');
-      if(!raw) return;
-      var s = JSON.parse(raw);
-      var u = String(s&&s.user||'').toLowerCase().trim();
       var panel = getEl('ampmAiSection');
       if(!panel) return;
-      if(u === 'admin'){
-        panel.style.display = 'flex';
-      } else {
-        panel.style.display = 'none';
+      var raw = sessionStorage.getItem('ampm_report_auth_v1');
+      var activeTab = String((document.querySelector('.tabBtn.active') && document.querySelector('.tabBtn.active').dataset && document.querySelector('.tabBtn.active').dataset.tab) || '').toLowerCase().trim();
+      var isAdmin = false;
+      if(raw){
+        try{
+          var s = JSON.parse(raw);
+          var u = String(s && s.user || '').toLowerCase().trim();
+          isAdmin = (u === 'admin');
+        }catch(_e){}
       }
+      var shouldShow = !!isAdmin && activeTab === 'resumen';
+      panel.classList.toggle('ampm-ai-visible', shouldShow);
+      panel.style.display = shouldShow ? 'flex' : 'none';
     }catch(_e){}
+  }
+
+  function checkAdmin(){
+    updateAiPanelVisibility();
   }
 
   function bindEnter(){
@@ -5229,7 +5434,8 @@ REGLAS OPERATIVAS FINALES:
     checkAdmin();
     bindEnter();
     updateKeyStatus();
-    setInterval(checkAdmin, 2000);
+    setInterval(updateAiPanelVisibility, 2000);
+    window.addEventListener('ampm:tabshown', function(){ setTimeout(updateAiPanelVisibility, 20); });
     document.addEventListener('click',function(e){
       var t = e.target;
       if(t&&(t.id==='ampmLogoutBtn'||t.closest&&t.closest('#ampmAuthForm'))){
