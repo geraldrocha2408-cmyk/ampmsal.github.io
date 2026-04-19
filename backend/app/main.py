@@ -35,9 +35,9 @@ class QueryRequest(BaseModel):
 def load_catalog():
     files = []
     if DATA_DIR.exists():
-        for p in DATA_DIR.glob("*.json"):
-            files.append(p.name)
-    return files
+        for p in DATA_DIR.rglob("*.json"):
+            files.append(str(p.relative_to(DATA_DIR)).replace("\\", "/"))
+    return sorted(files)
 
 @app.get("/health")
 def health():
