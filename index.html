@@ -3594,717 +3594,1806 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </div>
 </div>
 
-<!-- ========== PANEL IA ADMIN v2 ========== -->
-<div class="ampm-ai-wrap" data-tabpage="resumen" id="ampmAiSection" style="display:none">
 
-  <!-- sidebar nav -->
-  <nav class="ampm-ai-nav">
+<!-- ========== PANEL IA ADMIN v3 ========== -->
+<div class="ampm-ai-wrap" data-tabpage="resumen" id="ampmAiSection" hidden aria-hidden="true">
+  <aside class="ampm-ai-nav" aria-label="Temas IA">
     <div class="ampm-ai-nav-logo">
       <span class="ampm-ai-nav-icon">✦</span>
-      <span class="ampm-ai-nav-label">IA Admin</span>
+      <div class="ampm-ai-nav-brand">
+        <span class="ampm-ai-nav-label">IA Ejecutiva</span>
+        <small>Solo admin · Resumen</small>
+      </div>
     </div>
+
     <div class="ampm-ai-nav-items" id="ampmAiNavItems">
-      <button class="ampm-ai-nav-btn active" data-topic="chat" onclick="ampmAiNav(this,'chat')">
+      <button class="ampm-ai-nav-btn active" data-topic="chat" type="button">
         <span class="ampm-ai-nav-ico">💬</span><span>Chat libre</span>
       </button>
-      <div class="ampm-ai-nav-sep">Ventas</div>
-      <button class="ampm-ai-nav-btn" data-topic="ventas_variacion" onclick="ampmAiNav(this,'ventas_variacion')">
-        <span class="ampm-ai-nav-ico">📈</span><span>Crecimiento / caída</span>
+
+      <div class="ampm-ai-nav-sep">Resumen</div>
+      <button class="ampm-ai-nav-btn" data-topic="ejecutivo" type="button">
+        <span class="ampm-ai-nav-ico">📊</span><span>Lectura ejecutiva</span>
       </button>
-      <button class="ampm-ai-nav-btn" data-topic="ventas_proyeccion" onclick="ampmAiNav(this,'ventas_proyeccion')">
-        <span class="ampm-ai-nav-ico">🎯</span><span>Proyección vs meta</span>
+      <button class="ampm-ai-nav-btn" data-topic="acciones" type="button">
+        <span class="ampm-ai-nav-ico">⚡</span><span>Prioridades y acciones</span>
       </button>
-      <button class="ampm-ai-nav-btn" data-topic="ventas_mix" onclick="ampmAiNav(this,'ventas_mix')">
-        <span class="ampm-ai-nav-ico">🥧</span><span>Mix categorías y marcas</span>
+
+      <div class="ampm-ai-nav-sep">Negocio</div>
+      <button class="ampm-ai-nav-btn" data-topic="ventas" type="button">
+        <span class="ampm-ai-nav-ico">📈</span><span>Ventas y tráfico</span>
       </button>
-      <div class="ampm-ai-nav-sep">Operaciones</div>
-      <button class="ampm-ai-nav-btn" data-topic="merma" onclick="ampmAiNav(this,'merma')">
-        <span class="ampm-ai-nav-ico">🗑️</span><span>Merma y causas</span>
-      </button>
-      <button class="ampm-ai-nav-btn" data-topic="inventario" onclick="ampmAiNav(this,'inventario')">
-        <span class="ampm-ai-nav-ico">📦</span><span>Inventario y hueso</span>
-      </button>
-      <button class="ampm-ai-nav-btn" data-topic="prd_cero" onclick="ampmAiNav(this,'prd_cero')">
-        <span class="ampm-ai-nav-ico">🚫</span><span>PRD en cero</span>
-      </button>
-      <div class="ampm-ai-nav-sep">Canales</div>
-      <button class="ampm-ai-nav-btn" data-topic="delivery" onclick="ampmAiNav(this,'delivery')">
+      <button class="ampm-ai-nav-btn" data-topic="delivery" type="button">
         <span class="ampm-ai-nav-ico">🛵</span><span>Delivery</span>
       </button>
-      <button class="ampm-ai-nav-btn" data-topic="sbf" onclick="ampmAiNav(this,'sbf')">
-        <span class="ampm-ai-nav-ico">💳</span><span>SBF / CXC</span>
+      <button class="ampm-ai-nav-btn" data-topic="sbf" type="button">
+        <span class="ampm-ai-nav-ico">💳</span><span>SBF y CXC</span>
       </button>
-      <div class="ampm-ai-nav-sep">Resúmenes</div>
-      <button class="ampm-ai-nav-btn" data-topic="ejecutivo" onclick="ampmAiNav(this,'ejecutivo')">
-        <span class="ampm-ai-nav-ico">📊</span><span>Resumen ejecutivo</span>
+
+      <div class="ampm-ai-nav-sep">Operación</div>
+      <button class="ampm-ai-nav-btn" data-topic="merma" type="button">
+        <span class="ampm-ai-nav-ico">🧾</span><span>Merma y ajuste</span>
       </button>
-      <button class="ampm-ai-nav-btn" data-topic="acciones" onclick="ampmAiNav(this,'acciones')">
-        <span class="ampm-ai-nav-ico">⚡</span><span>Plan de acción</span>
+      <button class="ampm-ai-nav-btn" data-topic="inventario" type="button">
+        <span class="ampm-ai-nav-ico">📦</span><span>Inventario y transfer</span>
       </button>
-      <button class="ampm-ai-nav-btn" data-topic="tiendas" onclick="ampmAiNav(this,'tiendas')">
-        <span class="ampm-ai-nav-ico">🏪</span><span>Por tienda</span>
+      <button class="ampm-ai-nav-btn" data-topic="prd_cero" type="button">
+        <span class="ampm-ai-nav-ico">🚫</span><span>PRD en cero</span>
       </button>
     </div>
-    <!-- API Key config at bottom of nav -->
+
     <div class="ampm-ai-key-section">
       <div class="ampm-ai-key-status" id="ampmAiKeyStatus">
         <span class="ampm-ai-key-dot" id="ampmAiKeyDot"></span>
         <span id="ampmAiKeyStatusTxt">Sin API Key</span>
       </div>
-      <button class="ampm-ai-key-btn" onclick="ampmAiOpenKeyModal()">⚙ Configurar Key</button>
+      <button class="ampm-ai-key-btn" id="ampmAiOpenKeyBtn" type="button">⚙ Configurar Key</button>
     </div>
-  </nav>
+  </aside>
 
-  <!-- Key Modal -->
-  <div class="ampm-ai-modal-backdrop" id="ampmAiKeyModal" style="display:none" onclick="ampmAiCloseKeyModal(event)">
-    <div class="ampm-ai-modal">
-      <div class="ampm-ai-modal-title">🔑 API Key de OpenAI</div>
-      <div class="ampm-ai-modal-sub">Se guarda en tu navegador. No se sube a ningún servidor.</div>
-      <input class="ampm-ai-modal-input" id="ampmAiKeyInput" type="password" placeholder="sk-proj-..." autocomplete="off" />
+  <div class="ampm-ai-modal-backdrop" id="ampmAiKeyModal" style="display:none" aria-hidden="true">
+    <div class="ampm-ai-modal" role="dialog" aria-modal="true" aria-labelledby="ampmAiKeyModalTitle">
+      <div class="ampm-ai-modal-title" id="ampmAiKeyModalTitle">Configurar API Key</div>
+      <div class="ampm-ai-modal-sub">Se guarda solo en este navegador para activar las respuestas del copiloto.</div>
+      <input class="ampm-ai-modal-input" id="ampmAiKeyInput" type="password" placeholder="sk-proj-..." autocomplete="off"/>
       <div class="ampm-ai-modal-actions">
-        <button class="ampm-ai-modal-cancel" onclick="ampmAiCloseKeyModal()">Cancelar</button>
-        <button class="ampm-ai-modal-save" onclick="ampmAiSaveKey()">Guardar</button>
+        <button class="ampm-ai-modal-cancel" id="ampmAiKeyCancelBtn" type="button">Cancelar</button>
+        <button class="ampm-ai-modal-save" id="ampmAiKeySaveBtn" type="button">Guardar</button>
       </div>
-      <div class="ampm-ai-modal-hint">Tu key se guarda en localStorage de este navegador y persiste aunque subas archivos nuevos a GitHub.</div>
+      <div class="ampm-ai-modal-hint">Los visuales ejecutivos se generan con la data local del dashboard. La key solo se usa para la capa conversacional.</div>
     </div>
   </div>
 
-  <!-- main content -->
-  <div class="ampm-ai-main">
-
-    <!-- header -->
+  <section class="ampm-ai-main">
     <div class="ampm-ai-header">
       <div class="ampm-ai-header-left">
         <div class="ampm-ai-header-title" id="ampmAiHeaderTitle">Chat libre</div>
-        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Hacé cualquier consulta sobre la data del reporte</div>
+        <div class="ampm-ai-header-sub" id="ampmAiHeaderSub">Copiloto ejecutivo conectado al dashboard con contexto compacto y foco en negocio.</div>
       </div>
       <div class="ampm-ai-header-right">
-        <button class="ampm-ai-btn-icon" title="Limpiar chat" onclick="ampmAiClearChat()">↺ Limpiar</button>
+        <span class="ampm-ai-badge" id="ampmAiScopeBadge">Contexto: ejecutivo</span>
+        <button class="ampm-ai-btn-icon" id="ampmAiClearBtn" type="button">↺ Limpiar</button>
       </div>
     </div>
 
-    <!-- quick prompts -->
-    <div class="ampm-ai-prompts" id="ampmAiPrompts">
-      <button class="ampm-ai-prompt-pill" onclick="ampmAiQuick(this)">¿Cuál es el estado general del negocio esta semana?</button>
-      <button class="ampm-ai-prompt-pill" onclick="ampmAiQuick(this)">¿Por qué crecimos o caímos vs LY?</button>
-      <button class="ampm-ai-prompt-pill" onclick="ampmAiQuick(this)">¿Vamos a llegar a meta este mes?</button>
-      <button class="ampm-ai-prompt-pill" onclick="ampmAiQuick(this)">¿Qué acciones tomar esta semana?</button>
+    <div class="ampm-ai-visual-shell" id="ampmAiVisualShell">
+      <div class="ampm-ai-visual-top">
+        <div class="ampm-ai-section-title">Lectura rápida</div>
+        <div class="ampm-ai-source-chips" id="ampmAiSourceChips"></div>
+      </div>
+
+      <div class="ampm-ai-scorecards" id="ampmAiScorecards"></div>
+
+      <div class="ampm-ai-visual-grid">
+        <div class="ampm-ai-chart-card">
+          <div class="ampm-ai-card-head">
+            <div>
+              <div class="ampm-ai-card-title" id="ampmAiChartTitle">Top drivers</div>
+              <div class="ampm-ai-card-sub" id="ampmAiChartSub">Priorizado con data disponible del dashboard</div>
+            </div>
+            <span class="ampm-ai-mini-tag" id="ampmAiChartTag">Local</span>
+          </div>
+          <div class="ampm-ai-chart-wrap">
+            <canvas id="ampmAiChart"></canvas>
+            <div class="ampm-ai-chart-empty" id="ampmAiChartEmpty">No hay suficiente data estructurada para graficar este foco.</div>
+          </div>
+        </div>
+
+        <div class="ampm-ai-action-card">
+          <div class="ampm-ai-card-head">
+            <div>
+              <div class="ampm-ai-card-title">Oportunidades priorizadas</div>
+              <div class="ampm-ai-card-sub">Impacto, causa probable, acción y KPI sugerido</div>
+            </div>
+            <span class="ampm-ai-mini-tag" id="ampmAiActionTag">Top 3</span>
+          </div>
+          <div class="ampm-ai-opps" id="ampmAiOpps"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- chat messages -->
+    <div class="ampm-ai-prompts" id="ampmAiPrompts"></div>
+
     <div class="ampm-ai-chat" id="ampmAiChat">
       <div class="ampm-ai-empty" id="ampmAiEmpty">
         <div class="ampm-ai-empty-icon">✦</div>
-        <div class="ampm-ai-empty-text">Seleccioná un tema del menú o escribí tu consulta</div>
+        <div class="ampm-ai-empty-title">Copiloto ejecutivo listo</div>
+        <div class="ampm-ai-empty-text">Selecciona un frente o escribe una consulta. La respuesta se alimenta con la data del dashboard y un contexto reducido al tema relevante.</div>
       </div>
       <div class="ampm-ai-messages" id="ampmAiMessages"></div>
     </div>
 
-    <!-- input -->
     <div class="ampm-ai-input-row">
-      <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Escribí tu consulta…" rows="2"></textarea>
-      <button class="ampm-ai-send-btn" id="ampmAiSendBtn" onclick="ampmAiSend()">
+      <textarea class="ampm-ai-textarea" id="ampmAiInput" placeholder="Ejemplo: ¿Qué está frenando SBF y qué harías esta semana?" rows="2"></textarea>
+      <button class="ampm-ai-send-btn" id="ampmAiSendBtn" type="button">
         <span id="ampmAiSendLabel">▶</span>
       </button>
     </div>
-    <div class="ampm-ai-footer-note">Ctrl+Enter para enviar · La IA analiza la data visible en el reporte</div>
-
-  </div>
+    <div class="ampm-ai-footer-note">
+      <span id="ampmAiFooterHint">Solo contexto relevante · sin enviar todo el dashboard · enfoque en impacto, causa, acción, prioridad y KPI.</span>
+      <span id="ampmAiUsageMeta"></span>
+    </div>
+  </section>
 </div>
 
-<style id="ampm-ai-styles-v2">
+<style id="ampm-ai-styles-v3">
 .ampm-ai-wrap{
   display:none;
   margin:0 0 18px;
-  border-radius:16px;
-  border:1px solid #d0daea;
+  border-radius:20px;
+  border:1px solid rgba(12,77,143,.12);
   background:#fff;
-  box-shadow:0 4px 24px rgba(0,0,0,.07);
+  box-shadow:0 18px 42px rgba(15,23,42,.08);
   overflow:hidden;
-  flex-direction:row;
-  min-height:480px;
-  max-height:640px;
+  min-height:620px;
   position:relative;
 }
-.ampm-ai-wrap[style*="display:none"]{display:none!important}
-body.auth-ok .ampm-ai-wrap#ampmAiSection.ampm-ai-visible{display:flex!important}
-body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visible{display:flex!important}
+.ampm-ai-wrap.ampm-ai-visible{
+  display:flex !important;
+}
+.ampm-ai-wrap[hidden]{display:none !important;}
 .ampm-ai-nav{
-  width:196px;
-  min-width:196px;
-  background:#0b1a2e;
+  width:220px;
+  min-width:220px;
+  background:linear-gradient(180deg, #10233d 0%, #0b1730 100%);
   display:flex;
   flex-direction:column;
-  overflow-y:auto;
-  flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.06);
 }
 .ampm-ai-nav-logo{
   display:flex;
-  align-items:center;
-  gap:8px;
-  padding:16px 14px 12px;
-  border-bottom:1px solid rgba(255,255,255,.07);
+  align-items:flex-start;
+  gap:10px;
+  padding:18px 16px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
 .ampm-ai-nav-icon{
-  font-size:16px;
-  color:#4fa3e8;
+  width:28px;
+  height:28px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(79,163,232,.16);
+  color:#7ec6f5;
+  font-size:14px;
+  flex:0 0 28px;
+}
+.ampm-ai-nav-brand{display:flex; flex-direction:column; gap:2px;}
+.ampm-ai-nav-brand small{
+  color:rgba(255,255,255,.48);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
 }
 .ampm-ai-nav-label{
   font-size:12px;
-  font-weight:900;
+  font-weight:1000;
   color:#fff;
-  letter-spacing:.4px;
+  letter-spacing:.08em;
   text-transform:uppercase;
 }
 .ampm-ai-nav-items{
   display:flex;
   flex-direction:column;
-  padding:8px 0 16px;
-  gap:1px;
+  gap:2px;
+  padding:10px 0 14px;
   flex:1;
+  overflow:auto;
 }
 .ampm-ai-nav-sep{
-  font-size:9.5px;
+  font-size:10px;
   font-weight:900;
   color:rgba(255,255,255,.32);
   text-transform:uppercase;
-  letter-spacing:.5px;
-  padding:10px 14px 3px;
+  letter-spacing:.06em;
+  padding:10px 16px 4px;
 }
 .ampm-ai-nav-btn{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:rgba(255,255,255,.72);
+  padding:10px 16px;
   display:flex;
   align-items:center;
-  gap:8px;
-  padding:8px 14px;
-  background:transparent;
-  border:none;
-  color:rgba(255,255,255,.65);
-  font-size:12px;
-  font-weight:700;
-  cursor:pointer;
+  gap:9px;
+  font-size:12.5px;
+  font-weight:800;
   text-align:left;
-  border-radius:0;
-  transition:background .15s, color .15s;
-  width:100%;
+  cursor:pointer;
+  transition:background .14s ease,color .14s ease,border-color .14s ease;
+  border-left:3px solid transparent;
 }
 .ampm-ai-nav-btn:hover{
-  background:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.06);
   color:#fff;
 }
 .ampm-ai-nav-btn.active{
-  background:rgba(79,163,232,.18);
-  color:#7ec6f5;
-  border-left:2px solid #4fa3e8;
+  background:linear-gradient(90deg, rgba(79,163,232,.16), rgba(79,163,232,.06));
+  color:#fff;
+  border-left-color:#4fa3e8;
 }
-.ampm-ai-nav-ico{font-size:13px;flex:0 0 auto;}
+.ampm-ai-nav-ico{font-size:13px; line-height:1; flex:0 0 auto;}
+.ampm-ai-key-section{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:14px 16px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.ampm-ai-key-status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#fff;
+  font-size:11.5px;
+  font-weight:900;
+}
+.ampm-ai-key-dot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  background:#cbd5e1;
+  box-shadow:0 0 0 3px rgba(203,213,225,.12);
+}
+.ampm-ai-key-status.ok .ampm-ai-key-dot{
+  background:#22c55e;
+  box-shadow:0 0 0 3px rgba(34,197,94,.16);
+}
+.ampm-ai-key-btn{
+  width:100%;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.ampm-ai-key-btn:hover{background:rgba(255,255,255,.10);}
 .ampm-ai-main{
   flex:1;
   display:flex;
   flex-direction:column;
   min-width:0;
-  overflow:hidden;
+  background:linear-gradient(180deg,#fbfdff 0%, #f6f9fc 100%);
 }
 .ampm-ai-header{
+  padding:16px 18px 12px;
+  border-bottom:1px solid #e6edf5;
+  background:rgba(255,255,255,.96);
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  padding:14px 18px 10px;
-  border-bottom:1px solid #e8edf3;
-  background:#f8fafd;
-  flex-shrink:0;
+  gap:12px;
+  flex-wrap:wrap;
 }
 .ampm-ai-header-title{
-  font-size:15px;
-  font-weight:900;
-  color:#0b1a2e;
-  line-height:1.2;
+  font-size:18px;
+  line-height:1.1;
+  font-weight:1000;
+  color:#11284A;
 }
 .ampm-ai-header-sub{
-  font-size:11.5px;
-  color:#64748b;
-  margin-top:2px;
+  margin-top:4px;
+  font-size:12px;
+  line-height:1.4;
+  color:#5B6B82;
+  font-weight:700;
+}
+.ampm-ai-header-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.ampm-ai-badge,
+.ampm-ai-mini-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eef6ff;
+  color:#0C4D8F;
+  border:1px solid rgba(0,94,167,.14);
+  font-size:11px;
+  font-weight:900;
+}
+.ampm-ai-mini-tag{
+  background:#fff7ed;
+  color:#9A3412;
+  border-color:rgba(245,131,32,.18);
 }
 .ampm-ai-btn-icon{
-  padding:6px 12px;
+  padding:7px 11px;
   border-radius:999px;
-  border:1px solid #d0daea;
+  border:1px solid rgba(15,23,42,.10);
   background:#fff;
   color:#475569;
   font-size:11.5px;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
-  white-space:nowrap;
 }
-.ampm-ai-btn-icon:hover{background:#f1f5f9;}
-.ampm-ai-prompts{
+.ampm-ai-btn-icon:hover{background:#f8fafc;}
+.ampm-ai-visual-shell{
+  padding:14px 18px 12px;
+  border-bottom:1px solid #e6edf5;
+  background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,251,255,.96));
+}
+.ampm-ai-visual-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.ampm-ai-section-title{
+  font-size:12px;
+  font-weight:1000;
+  color:#11284A;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.ampm-ai-source-chips{
   display:flex;
   flex-wrap:wrap;
   gap:6px;
-  padding:10px 16px;
-  border-bottom:1px solid #e8edf3;
-  background:#fff;
-  flex-shrink:0;
 }
-.ampm-ai-prompt-pill{
-  padding:5px 11px;
+.ampm-ai-source-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
   border-radius:999px;
-  border:1px solid #c8d8ea;
-  background:#eef6ff;
-  color:#1a4a7a;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.10);
+  color:#475569;
+  font-size:10.5px;
+  font-weight:900;
+}
+.ampm-ai-scorecards{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.ampm-ai-scorecard{
+  background:#fff;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:16px;
+  padding:12px 12px 10px;
+  box-shadow:0 8px 20px rgba(15,23,42,.04);
+}
+.ampm-ai-scorecard-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+.ampm-ai-scorecard-title{
+  font-size:11px;
+  font-weight:1000;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.ampm-ai-scorecard-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:56px;
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:1000;
+  text-transform:uppercase;
+  border:1px solid rgba(15,23,42,.10);
+}
+.ampm-ai-scorecard-status.good{background:rgba(34,197,94,.10); color:#166534; border-color:rgba(34,197,94,.18);}
+.ampm-ai-scorecard-status.warn{background:rgba(245,158,11,.12); color:#9A3412; border-color:rgba(245,158,11,.18);}
+.ampm-ai-scorecard-status.bad{background:rgba(239,68,68,.10); color:#B42318; border-color:rgba(239,68,68,.16);}
+.ampm-ai-scorecard-status.neutral{background:#f8fafc; color:#475569;}
+.ampm-ai-scorecard-value{
+  font-size:23px;
+  font-weight:1000;
+  line-height:1.02;
+  color:#11284A;
+}
+.ampm-ai-scorecard-note{
+  margin-top:6px;
   font-size:11.5px;
+  line-height:1.35;
+  color:#5B6B82;
   font-weight:700;
-  cursor:pointer;
-  transition:all .15s;
+}
+.ampm-ai-visual-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(320px, .95fr);
+  gap:12px;
+}
+.ampm-ai-chart-card,
+.ampm-ai-action-card{
+  background:#fff;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:18px;
+  box-shadow:0 8px 20px rgba(15,23,42,.04);
+  overflow:hidden;
+}
+.ampm-ai-card-head{
+  padding:12px 14px 10px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  border-bottom:1px solid #edf2f7;
+}
+.ampm-ai-card-title{
+  font-size:14px;
+  font-weight:1000;
+  color:#11284A;
+}
+.ampm-ai-card-sub{
+  margin-top:3px;
+  font-size:11px;
+  line-height:1.35;
+  color:#64748b;
+  font-weight:700;
+}
+.ampm-ai-chart-wrap{
+  position:relative;
+  padding:10px 14px 14px;
+  min-height:260px;
+}
+.ampm-ai-chart-wrap canvas{
+  width:100% !important;
+  height:230px !important;
+}
+.ampm-ai-chart-empty{
+  position:absolute;
+  inset:62px 14px 14px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border-radius:14px;
+  border:1px dashed rgba(148,163,184,.28);
+  background:#f8fafc;
+  color:#64748b;
+  font-size:12px;
+  font-weight:800;
+  padding:14px;
+}
+.ampm-ai-chart-empty.show{display:flex;}
+.ampm-ai-opps{
+  padding:12px 14px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.ampm-ai-opp{
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:16px;
+  padding:10px 11px;
+  background:linear-gradient(180deg,#ffffff, #fafcff);
+}
+.ampm-ai-opp-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.ampm-ai-opp-title{
+  font-size:12.5px;
+  font-weight:1000;
+  color:#11284A;
+  line-height:1.25;
+}
+.ampm-ai-priority{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:62px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:1000;
+  text-transform:uppercase;
   white-space:nowrap;
 }
+.ampm-ai-priority.alta{background:rgba(239,68,68,.10); color:#B42318; border:1px solid rgba(239,68,68,.16);}
+.ampm-ai-priority.media{background:rgba(245,158,11,.12); color:#9A3412; border:1px solid rgba(245,158,11,.18);}
+.ampm-ai-priority.baja{background:rgba(34,197,94,.10); color:#166534; border:1px solid rgba(34,197,94,.16);}
+.ampm-ai-opp-body{
+  margin-top:7px;
+  display:grid;
+  gap:6px;
+}
+.ampm-ai-opp-line{
+  font-size:11.5px;
+  line-height:1.4;
+  color:#475569;
+}
+.ampm-ai-opp-line b{color:#0f172a;}
+.ampm-ai-prompts{
+  padding:10px 18px 8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  border-bottom:1px solid #e6edf5;
+  background:#fff;
+}
+.ampm-ai-prompt-pill{
+  padding:7px 11px;
+  border:1px solid rgba(15,23,42,.10);
+  background:#fff;
+  color:#334155;
+  border-radius:999px;
+  font-size:11.5px;
+  font-weight:900;
+  cursor:pointer;
+}
 .ampm-ai-prompt-pill:hover{
-  background:#d9edff;
-  border-color:#4fa3e8;
+  background:#fff7ed;
+  border-color:rgba(245,131,32,.22);
+  color:#9A3412;
 }
 .ampm-ai-chat{
   flex:1;
-  overflow-y:auto;
-  padding:14px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  background:#f8fafd;
-  min-height:0;
+  min-height:220px;
+  position:relative;
+  overflow:auto;
+  padding:16px 18px;
 }
 .ampm-ai-empty{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  height:100%;
-  color:#94a3b8;
+  border:1px dashed rgba(148,163,184,.28);
+  background:#fff;
+  border-radius:18px;
+  padding:24px 18px;
   text-align:center;
 }
-.ampm-ai-empty-icon{font-size:28px;color:#c0cfe0;}
-.ampm-ai-empty-text{font-size:13px;line-height:1.5;}
-.ampm-ai-messages{display:flex;flex-direction:column;gap:10px;width:100%;}
-.ampm-ai-msg{display:flex;flex-direction:column;gap:3px;max-width:90%;}
-.ampm-ai-msg.user{align-self:flex-end;align-items:flex-end;}
-.ampm-ai-msg.assistant{align-self:flex-start;align-items:flex-start;}
-.ampm-ai-msg-lbl{font-size:10px;font-weight:900;color:#94a3b8;letter-spacing:.3px;text-transform:uppercase;}
-.ampm-ai-bubble{
-  padding:10px 13px;
-  border-radius:12px;
-  font-size:12.5px;
-  line-height:1.65;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-.ampm-ai-msg.user .ampm-ai-bubble{
-  background:#0b1a2e;
-  color:#e8f1fb;
-  border-bottom-right-radius:3px;
-}
-.ampm-ai-msg.assistant .ampm-ai-bubble{
-  background:#fff;
-  color:#0f172a;
-  border:1px solid #d8e4f0;
-  border-bottom-left-radius:3px;
-}
-.ampm-ai-msg.error .ampm-ai-bubble{
-  background:#fff5f5;
-  border-color:#fca5a5;
-  color:#7f1d1d;
-}
-.ampm-ai-thinking .ampm-ai-bubble{
-  color:#94a3b8;
-  font-style:italic;
-  background:#f1f5f9;
-  border:1px dashed #cbd5e1;
-}
-.ampm-ai-input-row{
-  display:flex;
-  gap:8px;
-  padding:10px 16px 8px;
-  border-top:1px solid #e8edf3;
-  background:#fff;
-  align-items:flex-end;
-  flex-shrink:0;
-}
-.ampm-ai-textarea{
-  flex:1;
-  padding:9px 12px;
-  border:1px solid #c8d8ea;
-  border-radius:10px;
-  font-size:13px;
-  font-family:inherit;
-  color:#0f172a;
-  resize:none;
-  outline:none;
-  background:#f8fafd;
-  line-height:1.5;
-}
-.ampm-ai-textarea:focus{border-color:#4fa3e8;background:#fff;box-shadow:0 0 0 3px rgba(79,163,232,.12);}
-.ampm-ai-send-btn{
-  width:38px;
-  height:38px;
-  border-radius:10px;
-  border:none;
-  background:#0b1a2e;
-  color:#fff;
-  font-size:16px;
-  cursor:pointer;
+.ampm-ai-empty-icon{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  margin:0 auto 12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  flex-shrink:0;
-  transition:opacity .15s;
+  background:linear-gradient(135deg, rgba(0,94,167,.12), rgba(245,131,32,.12));
+  color:#0C4D8F;
+  font-size:20px;
 }
-.ampm-ai-send-btn:hover{opacity:.85;}
-.ampm-ai-send-btn:disabled{opacity:.4;cursor:not-allowed;}
-.ampm-ai-footer-note{
-  padding:4px 16px 10px;
-  font-size:10.5px;
-  color:#94a3b8;
-  background:#fff;
-  flex-shrink:0;
+.ampm-ai-empty-title{
+  font-size:14px;
+  font-weight:1000;
+  color:#11284A;
 }
-.ampm-ai-key-section{
-  padding:12px 10px;
-  border-top:1px solid rgba(255,255,255,.08);
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-  margin-top:auto;
-}
-.ampm-ai-key-status{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:10.5px;
-  color:rgba(255,255,255,.5);
+.ampm-ai-empty-text{
+  margin-top:6px;
+  font-size:12px;
+  line-height:1.5;
+  color:#64748b;
   font-weight:700;
 }
-.ampm-ai-key-dot{
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  background:#ef4444;
-  flex:0 0 auto;
-}
-.ampm-ai-key-dot.ok{background:#22c55e;}
-.ampm-ai-key-btn{
-  padding:7px 10px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,.15);
-  background:rgba(255,255,255,.07);
-  color:rgba(255,255,255,.75);
-  font-size:11px;
-  font-weight:800;
-  cursor:pointer;
-  text-align:left;
-  transition:background .15s;
-}
-.ampm-ai-key-btn:hover{background:rgba(255,255,255,.14);color:#fff;}
-.ampm-ai-modal-backdrop{
-  position:absolute;
-  inset:0;
-  background:rgba(11,26,46,.72);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-  border-radius:16px;
-}
-.ampm-ai-modal{
-  background:#fff;
-  border-radius:14px;
-  padding:22px 24px;
-  width:min(380px,90%);
+.ampm-ai-messages{
   display:flex;
   flex-direction:column;
   gap:12px;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
 }
-.ampm-ai-modal-title{font-size:16px;font-weight:900;color:#0b1a2e;}
-.ampm-ai-modal-sub{font-size:12px;color:#64748b;margin-top:-6px;}
-.ampm-ai-modal-input{
-  padding:10px 13px;
-  border:1px solid #c8d8ea;
-  border-radius:9px;
+.ampm-ai-msg{
+  max-width:min(920px, 100%);
+  border-radius:18px;
+  padding:12px 14px;
+  box-shadow:0 8px 18px rgba(15,23,42,.04);
+  border:1px solid rgba(15,23,42,.08);
+  background:#fff;
+}
+.ampm-ai-msg.user{
+  align-self:flex-end;
+  background:linear-gradient(135deg, #0C4D8F, #005EA7);
+  color:#fff;
+  border-color:rgba(12,77,143,.22);
+}
+.ampm-ai-msg.assistant{
+  align-self:flex-start;
+  background:#fff;
+}
+.ampm-ai-msg.error{
+  border-color:rgba(239,68,68,.22);
+  background:#fff6f6;
+}
+.ampm-ai-msg-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.ampm-ai-msg-role{
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.82;
+}
+.ampm-ai-msg-meta{
+  font-size:10px;
+  font-weight:900;
+  opacity:.7;
+}
+.ampm-ai-msg-body{
+  font-size:12.5px;
+  line-height:1.55;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.ampm-ai-msg-body ul,
+.ampm-ai-msg-body ol{margin:8px 0 8px 18px; padding:0;}
+.ampm-ai-msg-body li{margin:4px 0;}
+.ampm-ai-thinking{
+  display:inline-flex;
+  gap:5px;
+  align-items:center;
+}
+.ampm-ai-thinking i{
+  width:7px; height:7px; border-radius:999px; background:#94a3b8; display:inline-block; animation: ampmAiPulse 1.2s infinite ease-in-out;
+}
+.ampm-ai-thinking i:nth-child(2){animation-delay:.15s;}
+.ampm-ai-thinking i:nth-child(3){animation-delay:.3s;}
+@keyframes ampmAiPulse{
+  0%, 80%, 100%{transform:scale(.8); opacity:.5;}
+  40%{transform:scale(1); opacity:1;}
+}
+.ampm-ai-input-row{
+  display:flex;
+  gap:10px;
+  padding:12px 18px 14px;
+  border-top:1px solid #e6edf5;
+  background:#fff;
+}
+.ampm-ai-textarea{
+  flex:1;
+  min-height:52px;
+  max-height:120px;
+  resize:vertical;
+  border:1px solid rgba(15,23,42,.12);
+  background:#fff;
+  border-radius:16px;
+  padding:12px 14px;
+  font:inherit;
   font-size:13px;
-  font-family:monospace;
   color:#0f172a;
   outline:none;
-  background:#f8fafd;
+}
+.ampm-ai-textarea:focus{
+  border-color:rgba(0,94,167,.35);
+  box-shadow:0 0 0 4px rgba(0,94,167,.12);
+}
+.ampm-ai-send-btn{
+  width:54px;
+  min-width:54px;
+  border:0;
+  border-radius:16px;
+  background:linear-gradient(135deg, #F58320, #E67425);
+  color:#fff;
+  font-size:18px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:0 14px 28px rgba(245,131,32,.22);
+}
+.ampm-ai-send-btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+.ampm-ai-footer-note{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:0 18px 14px;
+  font-size:10.5px;
+  color:#64748b;
+  font-weight:800;
+  background:#fff;
+}
+.ampm-ai-modal-backdrop{
+  position:absolute;
+  inset:0;
+  z-index:12;
+  background:rgba(2,6,23,.44);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.ampm-ai-modal{
+  width:min(420px, 100%);
+  background:#fff;
+  border-radius:20px;
+  border:1px solid rgba(15,23,42,.10);
+  box-shadow:0 28px 60px rgba(2,6,23,.26);
+  padding:18px;
+}
+.ampm-ai-modal-title{
+  font-size:18px;
+  font-weight:1000;
+  color:#11284A;
+}
+.ampm-ai-modal-sub{
+  margin-top:4px;
+  font-size:12px;
+  line-height:1.45;
+  color:#64748b;
+  font-weight:700;
+}
+.ampm-ai-modal-input{
   width:100%;
-  box-sizing:border-box;
+  margin-top:14px;
+  border:1px solid rgba(15,23,42,.12);
+  background:#fff;
+  border-radius:14px;
+  padding:12px 13px;
+  font:inherit;
+  font-size:13px;
+  color:#0f172a;
+  outline:none;
 }
-.ampm-ai-modal-input:focus{border-color:#4fa3e8;background:#fff;box-shadow:0 0 0 3px rgba(79,163,232,.15);}
-.ampm-ai-modal-actions{display:flex;gap:8px;justify-content:flex-end;}
-.ampm-ai-modal-cancel{
-  padding:8px 16px;border-radius:8px;border:1px solid #d0daea;
-  background:#f1f5f9;color:#475569;font-size:13px;font-weight:800;cursor:pointer;
+.ampm-ai-modal-actions{
+  margin-top:14px;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
 }
+.ampm-ai-modal-cancel,
 .ampm-ai-modal-save{
-  padding:8px 20px;border-radius:8px;border:none;
-  background:#0b1a2e;color:#fff;font-size:13px;font-weight:800;cursor:pointer;
+  border:0;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:1000;
+  cursor:pointer;
 }
-.ampm-ai-modal-save:hover{opacity:.85;}
-.ampm-ai-modal-hint{font-size:10.5px;color:#94a3b8;line-height:1.5;}
-@media (max-width:700px){
-  .ampm-ai-wrap{flex-direction:column;max-height:none;}
-  .ampm-ai-nav{width:100%;min-width:0;flex-direction:row;overflow-x:auto;}
-  .ampm-ai-nav-items{flex-direction:row;padding:4px 8px;gap:4px;}
-  .ampm-ai-nav-sep{display:none;}
-  .ampm-ai-nav-logo{padding:10px 12px;}
+.ampm-ai-modal-cancel{background:#f1f5f9; color:#334155;}
+.ampm-ai-modal-save{background:linear-gradient(135deg, #F58320, #E67425); color:#fff;}
+.ampm-ai-modal-hint{
+  margin-top:10px;
+  font-size:10.5px;
+  line-height:1.45;
+  color:#64748b;
+  font-weight:800;
 }
-
-
-.ampm-ai-bubble{white-space:pre-wrap; line-height:1.5;}
-.ampm-ai-bubble.visual{padding:0 !important; background:transparent !important; box-shadow:none !important;}
-.ampm-ai-visual{display:flex; flex-direction:column; gap:12px; min-width:0;}
-.ampm-ai-v-summary{padding:12px 14px; border-radius:14px; background:linear-gradient(180deg,#f8fbff,#eef6ff); border:1px solid rgba(0,94,167,.14); color:#11284A; font-size:13px; font-weight:800; line-height:1.45;}
-.ampm-ai-v-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px;}
-.ampm-ai-v-card{padding:12px 12px 10px; border-radius:16px; border:1px solid rgba(15,23,42,.08); background:#fff; box-shadow:0 8px 18px rgba(15,23,42,.05);}
-.ampm-ai-v-card.good{background:linear-gradient(180deg,#f0fdf4,#ffffff); border-color:rgba(34,197,94,.22);}
-.ampm-ai-v-card.warn{background:linear-gradient(180deg,#fff7ed,#ffffff); border-color:rgba(245,158,11,.22);}
-.ampm-ai-v-card.bad{background:linear-gradient(180deg,#fff1f2,#ffffff); border-color:rgba(239,68,68,.20);}
-.ampm-ai-v-label{font-size:11px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:#64748b;}
-.ampm-ai-v-value{margin-top:5px; font-size:22px; line-height:1.05; font-weight:1000; color:#11284A;}
-.ampm-ai-v-delta{margin-top:6px; display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; background:#f8fafc; border:1px solid rgba(15,23,42,.08); color:#334155;}
-.ampm-ai-v-delta.good{background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.20); color:#166534;}
-.ampm-ai-v-delta.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.22); color:#9a3412;}
-.ampm-ai-v-delta.bad{background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.20); color:#b91c1c;}
-.ampm-ai-v-chart{padding:12px 14px; border-radius:16px; background:#fff; border:1px solid rgba(15,23,42,.08); box-shadow:0 8px 18px rgba(15,23,42,.05);}
-.ampm-ai-v-chart-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
-.ampm-ai-v-chart-title{font-size:13px; font-weight:1000; color:#11284A;}
-.ampm-ai-v-chart-sub{font-size:11px; color:#64748b; font-weight:800;}
-.ampm-ai-v-canvas{position:relative; height:240px;}
-.ampm-ai-v-actions{display:grid; grid-template-columns:1fr; gap:8px;}
-.ampm-ai-v-action{padding:10px 12px; border-radius:14px; background:#fff; border:1px solid rgba(15,23,42,.08); box-shadow:0 6px 14px rgba(15,23,42,.04);}
-.ampm-ai-v-action-title{font-size:12px; font-weight:1000; color:#11284A;}
-.ampm-ai-v-action-meta{margin-top:5px; display:flex; gap:6px; flex-wrap:wrap;}
-.ampm-ai-v-pill{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; background:#eef2ff; border:1px solid rgba(99,102,241,.14); color:#334155;}
-.ampm-ai-v-notes{display:grid; gap:6px;}
-.ampm-ai-v-note{padding:9px 11px; border-radius:12px; background:#f8fafc; border:1px dashed rgba(148,163,184,.28); color:#334155; font-size:12px; font-weight:700; line-height:1.4;}
-.ampm-ai-v-table-wrap{overflow:auto; border:1px solid rgba(15,23,42,.08); border-radius:16px; background:#fff;}
-.ampm-ai-v-table{width:100%; border-collapse:separate; border-spacing:0; min-width:560px;}
-.ampm-ai-v-table th,.ampm-ai-v-table td{padding:8px 10px; border-bottom:1px solid rgba(15,23,42,.08); text-align:left; font-size:12px;}
-.ampm-ai-v-table th{background:#0C4D8F; color:#fff; font-weight:900; position:sticky; top:0;}
-.ampm-ai-v-table tr:last-child td{border-bottom:none;}
-@media (max-width:760px){.ampm-ai-v-canvas{height:220px;}}
+@media (max-width: 1180px){
+  .ampm-ai-scorecards{grid-template-columns:repeat(2, minmax(0,1fr));}
+  .ampm-ai-visual-grid{grid-template-columns:1fr;}
+}
+@media (max-width: 980px){
+  .ampm-ai-wrap{flex-direction:column; max-height:none;}
+  .ampm-ai-nav{width:100%; min-width:0;}
+  .ampm-ai-nav-items{max-height:240px;}
+}
+@media (max-width: 720px){
+  .ampm-ai-header,
+  .ampm-ai-visual-shell,
+  .ampm-ai-prompts,
+  .ampm-ai-chat,
+  .ampm-ai-input-row,
+  .ampm-ai-footer-note{padding-left:12px; padding-right:12px;}
+  .ampm-ai-scorecards{grid-template-columns:1fr;}
+}
 </style>
 
-<script id="ampm-ai-panel-script">
+<script id="ampm-ai-script-v3">
 (function(){
+  if(window.__AMPM_AI_V3_READY__) return;
+  window.__AMPM_AI_V3_READY__ = true;
+
   var LS_KEY = 'ampm_openai_key_v1';
+  var AUTH_KEY = 'ampm_report_auth_v1';
   var OPENAI_MODEL = 'gpt-5.4-mini';
-  var OPENAI_REASONING_EFFORT = 'low';
-  var OPENAI_VERBOSITY = 'low';
-  var OPENAI_MAX_OUTPUT_TOKENS = 850;
-  var OPENAI_MAX_HISTORY_MESSAGES = 6;
+  var OPENAI_MAX_OUTPUT_TOKENS = 620;
+  var stateAi = {
+    topic: 'chat',
+    lastResponseId: '',
+    uiMessages: [],
+    chart: null,
+    activePack: null,
+    lastTopicForResponse: '',
+    lastUsage: ''
+  };
 
-  function getEl(id){ return document.getElementById(id); }
-  function getMsgs(){ return getEl('ampmAiMessages'); }
-  function showEmpty(show){ var e=getEl('ampmAiEmpty'); if(e) e.style.display=show?'flex':'none'; }
-  function setSendDisabled(disabled){ var b=getEl('ampmAiSendBtn'); if(b) b.disabled=!!disabled; }
+  var TOPICS = {
+    chat: {
+      title: 'Chat libre',
+      sub: 'Detecta automáticamente el frente más relevante según tu pregunta y reduce el contexto al mínimo útil.',
+      prompts: [
+        '¿Cuál es el principal riesgo del negocio con los filtros actuales?',
+        '¿Dónde está el mayor impacto económico hoy?',
+        '¿Qué priorizarías esta semana para mover venta y margen?'
+      ],
+      defaultPack: 'ejecutivo'
+    },
+    ejecutivo: {
+      title: 'Lectura ejecutiva',
+      sub: 'Resumen corto del negocio con foco en impacto, drivers y próximos pasos.',
+      prompts: [
+        'Dame la lectura ejecutiva del negocio con prioridad y KPI.',
+        '¿Qué tres señales debo vigilar hoy?',
+        'Resume el estado general en formato ejecutivo.'
+      ]
+    },
+    acciones: {
+      title: 'Prioridades y acciones',
+      sub: 'Acciones concretas aterrizadas al dashboard, no teoría.',
+      prompts: [
+        'Dame un plan de acción de 7 días.',
+        '¿Qué atacas primero y por qué?',
+        'Prioriza oportunidades por impacto económico.'
+      ]
+    },
+    ventas: {
+      title: 'Ventas y tráfico',
+      sub: 'Venta, TX, margen, meta y mix comercial usando solo señales de ventas.',
+      prompts: [
+        '¿Qué está explicando la variación de ventas?',
+        '¿Cuál es la brecha real vs meta y qué harías?',
+        '¿Qué categoría o marca está moviendo más impacto?'
+      ]
+    },
+    delivery: {
+      title: 'Delivery',
+      sub: 'Share, crecimiento y oportunidad comercial sin mezclar ruido de otras áreas.',
+      prompts: [
+        '¿Cómo está delivery y qué acción concreta harías?',
+        '¿El share de delivery está sano o no?',
+        '¿Dónde hay oportunidad real en delivery?'
+      ]
+    },
+    sbf: {
+      title: 'SBF y CXC',
+      sub: 'Lectura correcta de TX SBF, LY, CXC y foco operativo.',
+      prompts: [
+        '¿Cómo está SBF realmente vs LY?',
+        'Explícame SBF y CXC con criterio de negocio.',
+        '¿Qué harías para recuperar TX SBF?'
+      ]
+    },
+    merma: {
+      title: 'Merma y ajuste',
+      sub: 'Aprovecha la data de merma disponible antes de concluir que falta información.',
+      prompts: [
+        'Explícame la merma y el impacto real.',
+        '¿Qué productos o bloques están presionando merma?',
+        '¿Qué acción concreta harías para bajar el ajuste?'
+      ]
+    },
+    inventario: {
+      title: 'Inventario y transfer',
+      sub: 'Días inventario, sugerencias y transferencias con foco en caja y rotación.',
+      prompts: [
+        '¿Dónde está el riesgo de inventario?',
+        '¿Qué moverías por transfer y qué no comprarías?',
+        '¿Qué harías para bajar días inventario?'
+      ]
+    },
+    prd_cero: {
+      title: 'PRD en cero',
+      sub: 'Identifica quiebres con impacto y prioriza la recuperación.',
+      prompts: [
+        '¿Qué tan grave es PRD en cero y qué atacas primero?',
+        '¿Cuál es el impacto operativo de los quiebres?',
+        'Dame acciones concretas para bajar PRD en cero.'
+      ]
+    }
+  };
 
-  function getApiKey(){ try{ return localStorage.getItem(LS_KEY) || ''; }catch(_e){ return ''; } }
-  function saveApiKey(k){ try{ localStorage.setItem(LS_KEY, String(k||'').trim()); }catch(_e){} }
-
+  function el(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function htmlEscape(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+  function isVisible(node){
+    try{
+      if(!node) return false;
+      var st = window.getComputedStyle(node);
+      return st && st.display !== 'none' && st.visibility !== 'hidden';
+    }catch(_e){ return false; }
+  }
+  function readSession(){
+    try{
+      var raw = sessionStorage.getItem(AUTH_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(_e){ return null; }
+  }
+  function isAdminLogged(){
+    try{
+      var s = readSession();
+      var u = txt(s && s.user).toLowerCase();
+      return !!(document.body.classList.contains('auth-ok') && u === 'admin');
+    }catch(_e){ return false; }
+  }
+  function resolveActiveTab(){
+    try{
+      var activeBtn = document.querySelector('.tabBtn.active');
+      var tab = txt(activeBtn && activeBtn.getAttribute('data-tab')).toLowerCase();
+      if(tab) return tab;
+      var stored = txt(localStorage.getItem('ampm_tab')).toLowerCase();
+      return stored || 'resumen';
+    }catch(_e){ return 'resumen'; }
+  }
+  function ensurePlacement(){
+    try{
+      var panel = el('ampmAiSection');
+      var anchor = el('autoKeyPanel');
+      if(panel && anchor && anchor.parentNode && panel.previousElementSibling !== anchor){
+        anchor.insertAdjacentElement('afterend', panel);
+      }
+    }catch(_e){}
+  }
+  function setApiKey(value){
+    try{ localStorage.setItem(LS_KEY, txt(value)); }catch(_e){}
+  }
+  function getApiKey(){
+    try{ return txt(localStorage.getItem(LS_KEY)); }catch(_e){ return ''; }
+  }
   function updateKeyStatus(){
-    var k = getApiKey();
-    var dot = getEl('ampmAiKeyDot');
-    var txt = getEl('ampmAiKeyStatusTxt');
-    if(k && k.indexOf('sk-') === 0){
-      if(dot) dot.className = 'ampm-ai-key-dot ok';
-      if(txt) txt.textContent = 'Key configurada ✓';
-    } else {
-      if(dot) dot.className = 'ampm-ai-key-dot';
-      if(txt) txt.textContent = 'Sin API Key';
+    var hasKey = /^sk-/.test(getApiKey());
+    var wrap = el('ampmAiKeyStatus');
+    var txtEl = el('ampmAiKeyStatusTxt');
+    if(wrap) wrap.classList.toggle('ok', hasKey);
+    if(txtEl) txtEl.textContent = hasKey ? 'API Key lista' : 'Sin API Key';
+  }
+  function openKeyModal(){
+    var modal = el('ampmAiKeyModal');
+    var input = el('ampmAiKeyInput');
+    if(!modal) return;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    if(input){
+      input.value = getApiKey();
+      setTimeout(function(){ try{ input.focus(); input.select(); }catch(_e){} }, 40);
+    }
+  }
+  function closeKeyModal(){
+    var modal = el('ampmAiKeyModal');
+    if(!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function saveKeyFromModal(){
+    var input = el('ampmAiKeyInput');
+    setApiKey(input ? input.value : '');
+    updateKeyStatus();
+    closeKeyModal();
+  }
+  function disableInput(disabled){
+    var input = el('ampmAiInput');
+    var btn = el('ampmAiSendBtn');
+    if(input) input.disabled = !!disabled;
+    if(btn) btn.disabled = !!disabled;
+  }
+  function updateVisibility(){
+    ensurePlacement();
+    var panel = el('ampmAiSection');
+    if(!panel) return;
+    var shouldShow = isAdminLogged() && resolveActiveTab() === 'resumen';
+    panel.hidden = !shouldShow;
+    panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    panel.classList.toggle('ampm-ai-visible', shouldShow);
+    panel.style.display = shouldShow ? 'flex' : 'none';
+    disableInput(!shouldShow);
+    if(!shouldShow){
+      closeKeyModal();
     }
   }
 
-  window.ampmAiOpenKeyModal = function(){
-    var modal = getEl('ampmAiKeyModal');
-    var inp = getEl('ampmAiKeyInput');
-    if(inp) inp.value = getApiKey();
-    if(modal) modal.style.display = 'flex';
-    setTimeout(function(){ try{ if(inp) inp.focus(); }catch(_e){} }, 60);
-  };
-  window.ampmAiCloseKeyModal = function(e){
-    if(e && e.target !== getEl('ampmAiKeyModal')) return;
-    var modal = getEl('ampmAiKeyModal');
-    if(modal) modal.style.display = 'none';
-  };
-  window.ampmAiSaveKey = function(){
-    var inp = getEl('ampmAiKeyInput');
-    var k = inp ? String(inp.value||'').trim() : '';
-    if(!k){ alert('Ingresá tu API Key de OpenAI'); return; }
-    if(k.indexOf('sk-') !== 0){ alert('La API Key debe empezar con sk-'); return; }
-    saveApiKey(k);
-    updateKeyStatus();
-    var modal = getEl('ampmAiKeyModal');
-    if(modal) modal.style.display = 'none';
-  };
-
-  var chatHistory = [];
-  var currentTopic = 'chat';
-
-  var TOPIC_META = {
-    chat:             { title:'Chat libre',              sub:'Hacé cualquier consulta sobre la data del reporte',             prompts:['¿Cuál es el estado general del negocio?','¿Qué está pasando esta semana?','Dame un resumen rápido'] },
-    ventas_variacion: { title:'Crecimiento / caída',     sub:'Motivos de variación vs LY y vs Prom S8',                       prompts:['¿Por qué crecimos o caímos vs LY?','¿Qué departamento está jalando más?','¿Qué semana fue la mejor?'] },
-    ventas_proyeccion:{ title:'Proyección vs meta',      sub:'Análisis de alcance y proyección de cierre de mes',             prompts:['¿Vamos a llegar a meta este mes?','¿Cuánto nos falta para meta?','¿Cuál es el run rate necesario?'] },
-    ventas_mix:       { title:'Mix categorías y marcas', sub:'Composición de ventas por categoría, marca y departamento',     prompts:['¿Cuáles son las categorías más importantes?','¿Qué marca creció más?','¿Hay categorías perdiendo share?'] },
-    merma:            { title:'Merma y causas',          sub:'Análisis de merma por departamento, categoría y proveedor',     prompts:['¿Cuál es el nivel de merma actual?','¿Qué proveedor genera más merma?','¿Cómo reducir la merma esta semana?'] },
-    inventario:       { title:'Inventario y hueso',      sub:'Días de inventario, sobrestock y productos sin rotación',       prompts:['¿Cuántos días de inventario tenemos?','¿Hay hueso identificado?','¿Qué categoría tiene sobrestock?'] },
-    prd_cero:         { title:'PRD en cero',             sub:'Productos agotados y su impacto en ventas',                     prompts:['¿Cuántos productos están en cero?','¿Qué categorías tienen más quiebres?','¿Cuál es el impacto en venta?'] },
-    delivery:         { title:'Delivery',                sub:'Análisis de Uber Eats, Pedidos Ya y canal digital',             prompts:['¿Cómo va delivery vs LY?','¿Qué canal está creciendo más?','¿Cuál es el share de delivery?'] },
-    sbf:              { title:'SBF / CXC',               sub:'Servicios financieros y cartera de agentes',                    prompts:['¿Cómo van los TX de SBF?','¿Cuál es el estado de la cartera CXC?','¿Qué agente tiene mayor volumen?'] },
-    ejecutivo:        { title:'Resumen ejecutivo',       sub:'Vista 360 del negocio para reuniones y reportes',               prompts:['Dame un resumen ejecutivo completo','Redactame el hallazgo de la semana','¿Qué le diría al CEO hoy?'] },
-    acciones:         { title:'Plan de acción',          sub:'Recomendaciones concretas y quick wins para esta semana',       prompts:['¿Qué acciones tomar esta semana?','Dame 3 quick wins para ejecutar hoy','¿Qué priorizar primero?'] },
-    tiendas:          { title:'Por tienda',              sub:'Desempeño comparativo entre AMPM01, AMPM02 y AMPM03',           prompts:['¿Cuál tienda está mejor vs LY?','¿Qué tienda está arrastrando el resultado?','Comparame las 3 tiendas'] }
-  };
-
-  var TOPIC_PROMPTS = {
-    chat:             'Respondé la consulta del usuario sobre el negocio AMPM usando toda la data disponible.',
-    ventas_variacion: 'Analizá en profundidad el crecimiento o caída de ventas vs LY y vs Prom S8. Identificá drivers principales: departamentos, categorías, marcas, tiendas y días. Explicá el por qué con números concretos.',
-    ventas_proyeccion:'Analizá si el negocio va a llegar a la meta mensual. Calculá el run-rate necesario, la brecha actual y la probabilidad de alcanzar la meta. Sé específico con los números.',
-    ventas_mix:       'Analizá la composición de ventas: share por departamento, categoría y marca. Identificá qué está ganando o perdiendo participación y por qué importa.',
-    merma:            'Analizá la merma en detalle: nivel actual vs meta, top departamentos, categorías o proveedores con más merma, causas probables y acciones concretas para reducirla.',
-    inventario:       'Analizá el inventario: días por departamento, productos con sobrestock, quiebres y recomendaciones de reorden o devolución.',
-    prd_cero:         'Analizá los productos en cero: cuántos son, en qué categorías están, su impacto estimado en ventas perdidas y qué acciones tomar para resolverlo.',
-    delivery:         'Analizá el canal delivery: performance vs LY, share sobre venta total, comparativa Uber Eats vs Pedidos Ya por tienda, tendencia y oportunidades.',
-    sbf:              'Analizá SBF: volumen de TX, desempeño por tienda, comparativa vs períodos anteriores y estado de la cartera CXC.',
-    ejecutivo:        'Generá un resumen ejecutivo completo del negocio: ventas, meta, delivery, merma, inventario, highlights positivos y negativos, y las 3 acciones más importantes a tomar.',
-    acciones:         'Basado en toda la data, generá un plan de acción concreto para esta semana: quick wins, acciones de mediano plazo y riesgos a vigilar.',
-    tiendas:          'Analizá el desempeño por tienda: ranking, cuál lidera, cuál arrastra, diferencias en ventas, delivery, merma y recomendaciones por tienda.'
-  };
-
-  var MASTER_MULTIAGENT_PROMPT = [
-    'Actúa como un consultor senior para una cadena de tiendas de conveniencia 24/7.',
-    'Pensá con criterio ejecutivo, comercial y operativo.',
-    'Usá primero la data del reporte; no inventés números ni causas.',
-    'Si la data no alcanza, decilo explícitamente y proponé la siguiente mejor acción.',
-    'Respondé en español, con claridad, impacto de negocio y acciones concretas.',
-    'Priorizá ventas, ticket, transacciones, margen, mix, delivery, food service, disponibilidad, quiebres, merma e inventario.',
-    'No uses una plantilla rígida siempre. Adaptá el formato a la pregunta.',
-    'Cuando aplique, cerrá con 3-5 acciones claras con responsable sugerido y KPI.'
-  ].join('\n');
-
-  function appendMsg(role, text, extraClass){
-    var msgs = getMsgs();
-    if(!msgs) return null;
-    showEmpty(false);
-    var box = document.createElement('div');
-    box.className = 'ampm-ai-msg ' + role + (extraClass ? (' ' + extraClass) : '');
-    var lbl = document.createElement('div');
-    lbl.className = 'ampm-ai-msg-lbl';
-    lbl.textContent = role === 'user' ? 'Vos' : 'IA';
-    var bubble = document.createElement('div');
-    bubble.className = 'ampm-ai-bubble';
-    bubble.textContent = text;
-    box.appendChild(lbl);
-    box.appendChild(bubble);
-    msgs.appendChild(box);
-    try{ msgs.scrollTop = msgs.scrollHeight; }catch(_e){}
-    return box;
+  function parseNumber(raw){
+    var s = txt(raw);
+    if(!s) return NaN;
+    var isPct = s.indexOf('%') >= 0;
+    s = s.replace(/[A-Za-z$€£¥₡]/g,'');
+    s = s.replace(/\s/g,'');
+    s = s.replace(/,/g,'');
+    s = s.replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-');
+    var m = s.match(/-?\d+(?:\.\d+)?/);
+    if(!m) return NaN;
+    var n = Number(m[0]);
+    if(!isFinite(n)) return NaN;
+    if(isPct) return n / 100;
+    return n;
+  }
+  function parseDisplayNumber(raw){
+    var s = txt(raw);
+    if(!s) return NaN;
+    s = s.replace(/[A-Za-z$€£¥₡]/g,'');
+    s = s.replace(/\s/g,'');
+    s = s.replace(/,/g,'');
+    s = s.replace(/−/g,'-').replace(/–/g,'-').replace(/—/g,'-');
+    var m = s.match(/-?\d+(?:\.\d+)?/);
+    return m ? Number(m[0]) : NaN;
+  }
+  function fmtMoney(n){
+    if(!isFinite(n)) return '—';
+    try{ return '$' + Number(n).toLocaleString('es-SV', { maximumFractionDigits: 2, minimumFractionDigits: 2 }); }
+    catch(_e){ return '$' + Math.round(n * 100) / 100; }
+  }
+  function fmtInt(n){
+    if(!isFinite(n)) return '—';
+    try{ return Math.round(n).toLocaleString('es-SV'); }
+    catch(_e){ return String(Math.round(n)); }
+  }
+  function fmtPct(n){
+    if(!isFinite(n)) return '—';
+    return (n * 100).toFixed(2) + '%';
+  }
+  function fmtRatio(n){
+    if(!isFinite(n)) return '—';
+    return Number(n).toFixed(2) + 'x';
+  }
+  function nowStamp(){
+    try{
+      return new Date().toLocaleTimeString('es-SV', { hour:'2-digit', minute:'2-digit' });
+    }catch(_e){ return ''; }
+  }
+  function extractRatioFromNote(note){
+    var m = txt(note).match(/(-?\d+(?:\.\d+)?)/);
+    return m ? Number(m[1]) : NaN;
+  }
+  function higherBetterStatus(value, target){
+    if(!isFinite(value)) return 'neutral';
+    if(isFinite(target)){
+      if(value >= target) return 'good';
+      if(value >= target * 0.95) return 'warn';
+      return 'bad';
+    }
+    return value > 0 ? 'good' : (value < 0 ? 'bad' : 'neutral');
+  }
+  function lowerBetterStatus(value, target){
+    if(!isFinite(value)) return 'neutral';
+    if(isFinite(target)){
+      if(value <= target) return 'good';
+      if(value <= target * 1.15) return 'warn';
+      return 'bad';
+    }
+    return value < 0 ? 'good' : (value > 0 ? 'bad' : 'neutral');
+  }
+  function ratioStatus(ratio){
+    if(!isFinite(ratio)) return 'neutral';
+    if(ratio > 1.02) return 'good';
+    if(ratio >= 0.98) return 'warn';
+    return 'bad';
+  }
+  function normalizeTone(status){
+    return (status === 'good' || status === 'warn' || status === 'bad') ? status : 'neutral';
   }
 
-  function removeThinking(){
-    var msgs = getMsgs();
-    if(!msgs) return;
-    var nodes = msgs.querySelectorAll('.ampm-ai-thinking');
-    Array.prototype.forEach.call(nodes, function(n){ try{ n.remove(); }catch(_e){} });
+  function collectFilters(){
+    var summary = { reportMode:'', current:'', prev:'', stores:'' };
+    try{
+      var reportMode = el('reportMode');
+      summary.reportMode = txt(reportMode && reportMode.value);
+      var currentMonth = el('currentMonth');
+      summary.current = txt(currentMonth && currentMonth.options && currentMonth.selectedOptions && currentMonth.selectedOptions[0] ? currentMonth.selectedOptions[0].textContent : currentMonth && currentMonth.value);
+      var prevMonths = el('prevMonths');
+      if(prevMonths && prevMonths.selectedOptions){
+        summary.prev = Array.prototype.slice.call(prevMonths.selectedOptions).map(function(o){ return txt(o.textContent || o.value); }).filter(Boolean).slice(0,3).join(' | ');
+      }
+      if(typeof getSelectedStoresOrAll === 'function'){
+        var stores = getSelectedStoresOrAll() || [];
+        summary.stores = Array.isArray(stores) ? stores.join(' | ') : txt(stores);
+      } else {
+        var storeSel = el('storeFilter');
+        if(storeSel && storeSel.selectedOptions){
+          summary.stores = Array.prototype.slice.call(storeSel.selectedOptions).map(function(o){ return txt(o.textContent || o.value); }).filter(Boolean).join(' | ');
+        }
+      }
+    }catch(_e){}
+    return summary;
   }
 
-  function syncTopicUi(){
-    var meta = TOPIC_META[currentTopic] || TOPIC_META.chat;
-    var title = getEl('ampmAiHeaderTitle');
-    var sub = getEl('ampmAiHeaderSub');
-    var prompts = getEl('ampmAiPrompts');
-    if(title) title.textContent = meta.title;
-    if(sub) sub.textContent = meta.sub;
-    if(prompts){
-      prompts.innerHTML = '';
-      (meta.prompts || []).forEach(function(p){
-        var btn = document.createElement('button');
-        btn.className = 'ampm-ai-prompt-pill';
-        btn.textContent = p;
-        btn.onclick = function(){ window.ampmAiQuick(btn); };
-        prompts.appendChild(btn);
+  function extractKpiCard(card){
+    if(!card) return null;
+    var key = txt(card.getAttribute('data-kpi'));
+    var title = txt(card.querySelector('.kpiTitle') && card.querySelector('.kpiTitle').textContent);
+    var valueText = txt(card.querySelector('.kpiValue') && card.querySelector('.kpiValue').textContent);
+    var subTexts = Array.prototype.slice.call(card.querySelectorAll('.kpiSub')).map(function(node){ return txt(node.textContent); }).filter(Boolean);
+    var payload = {
+      key: key,
+      title: title,
+      valueText: valueText,
+      valueNumber: parseNumber(valueText),
+      displayNumber: parseDisplayNumber(valueText),
+      notes: subTexts,
+      noteJoined: subTexts.join(' | ')
+    };
+    return payload;
+  }
+
+  function collectKpis(){
+    return Array.prototype.slice.call(document.querySelectorAll('#kpiBoard .kpiCard[data-kpi]')).map(extractKpiCard).filter(Boolean);
+  }
+  function findKpi(kpis, key){
+    return (kpis || []).find(function(item){ return item && item.key === key; }) || null;
+  }
+
+  function collectTextList(id, limit){
+    var root = el(id);
+    if(!root) return [];
+    var items = Array.prototype.slice.call(root.querySelectorAll('li, .insightLine, .wlTitle, .wlVal, .actionTitle, .actionDesc')).map(function(node){
+      return txt(node.textContent);
+    }).filter(Boolean);
+    return items.slice(0, limit || 6);
+  }
+
+  function tablePreview(id, label, maxRows, maxCols){
+    var table = el(id);
+    if(!table) return null;
+    var headRows = Array.prototype.slice.call(table.querySelectorAll('thead tr'));
+    var headerCells = headRows.length ? Array.prototype.slice.call(headRows[headRows.length - 1].children) : [];
+    var headers = headerCells.map(function(th){ return txt(th.textContent); }).filter(Boolean);
+    var bodyRows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+    var rows = bodyRows.map(function(tr){
+      return Array.prototype.slice.call(tr.children).map(function(td){ return txt(td.textContent); });
+    }).filter(function(cells){
+      return cells.some(Boolean) && !/^total$/i.test(txt(cells[0]));
+    });
+    if(!rows.length) return null;
+    if(!headers.length){
+      headers = rows[0].map(function(_v, i){ return i === 0 ? 'Concepto' : ('Col ' + (i + 1)); });
+    }
+    var clippedRows = rows.slice(0, maxRows || 5).map(function(r){ return r.slice(0, maxCols || 6); });
+    var clippedHeaders = headers.slice(0, maxCols || 6);
+    return { id:id, label:label || id, headers:clippedHeaders, rows:clippedRows };
+  }
+
+  function pickRankingFromTable(preview){
+    if(!preview || !preview.rows || !preview.rows.length) return [];
+    var headers = preview.headers || [];
+    var rows = preview.rows || [];
+    var bestIndex = -1;
+    var bestScore = -999;
+    headers.forEach(function(head, idx){
+      if(idx === 0) return;
+      var values = rows.map(function(r){ return parseDisplayNumber(r[idx]); }).filter(function(v){ return isFinite(v); });
+      if(!values.length) return;
+      var label = txt(head).toLowerCase();
+      var score = 0;
+      if(/venta|sales|mtd|actual|current|qty|tx|margen|monto|importe|valor|total/i.test(label)) score += 4;
+      if(/delta|ly|lw|prom|share|ratio|pp|meta|vs/i.test(label)) score -= 5;
+      if(/%/.test(label)) score -= 3;
+      score += Math.min(values.length, 4);
+      if(score > bestScore){
+        bestScore = score;
+        bestIndex = idx;
+      }
+    });
+    if(bestIndex < 0){
+      for(var i = 1; i < headers.length; i++){
+        if(rows.some(function(r){ return isFinite(parseDisplayNumber(r[i])); })){ bestIndex = i; break; }
+      }
+    }
+    if(bestIndex < 0) return [];
+    return rows.map(function(r){
+      return {
+        label: txt(r[0]),
+        value: parseDisplayNumber(r[bestIndex]),
+        note: txt(headers[bestIndex]),
+        raw: r
+      };
+    }).filter(function(item){
+      return item.label && isFinite(item.value);
+    }).sort(function(a,b){
+      return Math.abs(b.value) - Math.abs(a.value);
+    }).slice(0, 6);
+  }
+
+  function inferTopicFromQuestion(question){
+    var q = txt(question).toLowerCase();
+    if(!q) return 'ejecutivo';
+    if(/merma|ajuste|inventario ajuste|shrink/i.test(q)) return 'merma';
+    if(/sbf|cxc|cobro|agentes/i.test(q)) return 'sbf';
+    if(/prd en cero|prd cero|quiebre|sin stock|agotad/i.test(q)) return 'prd_cero';
+    if(/inventario|dias inventario|transfer|hueso|rop|no buy|nobuy/i.test(q)) return 'inventario';
+    if(/delivery|uber|pedidos ya|pedidoya|share/i.test(q)) return 'delivery';
+    if(/venta|ventas|tx|trafico|ticket|margen|meta|proyeccion|ly|lw|prom/i.test(q)) return 'ventas';
+    if(/accion|prioridad|que har[ií]as|plan/i.test(q)) return 'acciones';
+    return 'ejecutivo';
+  }
+
+  function buildTopicPack(topic, question){
+    var kpis = collectKpis();
+    var filters = collectFilters();
+    var pack = {
+      topic: topic,
+      question: txt(question),
+      filters: filters,
+      kpis: kpis,
+      tables: [],
+      facts: [],
+      sourceLabels: [],
+      scorecards: [],
+      opps: [],
+      chart: { title:'Top drivers', subtitle:'Priorizado con data disponible del dashboard', tag:'Local', labels:[], values:[], note:'', positiveBetter:true }
+    };
+
+    var salesCur = findKpi(kpis, 'sales_cur');
+    var salesLm = findKpi(kpis, 'sales_lm');
+    var salesLy = findKpi(kpis, 'sales_ly');
+    var tx = findKpi(kpis, 'tx');
+    var margin = findKpi(kpis, 'margin');
+    var meta = findKpi(kpis, 'meta');
+    var proj = findKpi(kpis, 'proj');
+    var delivery = findKpi(kpis, 'del');
+    var noDel = findKpi(kpis, 'no_del');
+    var invAdj = findKpi(kpis, 'inv_adj');
+    var prd0 = findKpi(kpis, 'prd0');
+    var daysInv = findKpi(kpis, 'days_inv');
+    var cxc = findKpi(kpis, 'cxc');
+    var txSbf = findKpi(kpis, 'tx_sbf');
+
+    function addFact(text){
+      text = txt(text);
+      if(text) pack.facts.push(text);
+    }
+    function addSource(label){
+      label = txt(label);
+      if(label && pack.sourceLabels.indexOf(label) < 0) pack.sourceLabels.push(label);
+    }
+    function addTable(id, label, rows, cols){
+      var preview = tablePreview(id, label, rows, cols);
+      if(preview){
+        pack.tables.push(preview);
+        addSource(label || id);
+      }
+      return preview;
+    }
+    function scorecard(title, value, note, status){
+      pack.scorecards.push({
+        title: title,
+        value: value,
+        note: note,
+        status: normalizeTone(status)
       });
     }
-    var navBtns = document.querySelectorAll('.ampm-ai-nav-btn');
-    Array.prototype.forEach.call(navBtns, function(btn){
-      btn.classList.toggle('active', String(btn.getAttribute('data-topic')||'') === currentTopic);
+    function opp(title, priority, impact, cause, action, kpiTxt){
+      pack.opps.push({
+        title: title,
+        priority: priority,
+        impact: impact,
+        cause: cause,
+        action: action,
+        kpi: kpiTxt
+      });
+    }
+
+    addSource('KPIs Resumen');
+
+    if(salesCur) addFact('Venta actual visible: ' + salesCur.valueText + '.');
+    if(tx) addFact('TX visible: ' + tx.valueText + '.');
+    if(margin) addFact('Margen visible: ' + margin.valueText + '.');
+    if(delivery) addFact('Delivery visible: ' + delivery.valueText + ' | ' + delivery.noteJoined + '.');
+
+    if(topic === 'chat') topic = TOPICS.chat.defaultPack || inferTopicFromQuestion(question);
+    pack.resolvedTopic = topic;
+
+    if(topic === 'ejecutivo' || topic === 'acciones'){
+      addSource('Insights automáticos');
+      addSource('Key Findings');
+      addSource('Radar Ejecutivo');
+      collectTextList('autoSummaryList', 4).forEach(addFact);
+      collectTextList('autoKeyLy', 3).forEach(addFact);
+      collectTextList('autoKeyLm', 3).forEach(addFact);
+      collectTextList('radarInsights', 4).forEach(addFact);
+
+      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura disponible', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || salesCur && salesCur.noteJoined || '')));
+      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura disponible', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
+      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura disponible', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
+      scorecard('Meta / Proyección', proj ? proj.valueText : '—', proj ? proj.noteJoined : (meta ? meta.noteJoined : 'Sin lectura disponible'), ratioStatus(extractRatioFromNote(proj && proj.noteJoined || '')));
+
+      var executiveMetrics = [
+        { label:'Venta vs LY', value: extractRatioFromNote(salesLy && salesLy.noteJoined || salesCur && salesCur.noteJoined || '') },
+        { label:'Venta vs LW', value: extractRatioFromNote(salesLm && salesLm.noteJoined || '') },
+        { label:'TX vs LY', value: extractRatioFromNote(tx && tx.noteJoined || '') },
+        { label:'Proy vs Meta', value: extractRatioFromNote(proj && proj.noteJoined || '') }
+      ].filter(function(item){ return isFinite(item.value); });
+      pack.chart.title = 'Semáforo de ratios clave';
+      pack.chart.subtitle = 'Mayor a 1.00 = crecimiento / menor a 1.00 = caída';
+      pack.chart.tag = 'Ratios';
+      pack.chart.labels = executiveMetrics.map(function(item){ return item.label; });
+      pack.chart.values = executiveMetrics.map(function(item){ return Number((item.value * 100).toFixed(2)); });
+      pack.chart.note = '% del ratio respecto a 1.00x';
+      pack.chart.positiveBetter = true;
+
+      if(salesLy){
+        var salesRatio = extractRatioFromNote(salesLy.noteJoined);
+        opp(
+          'Proteger venta base',
+          salesRatio < 1 ? 'alta' : 'media',
+          salesLy.valueText ? 'Venta LY visible: ' + salesLy.valueText : 'Mover venta real',
+          salesRatio < 1 ? 'El ratio vs LY viene por debajo de 1.00 y la base se está erosionando.' : 'La base de venta requiere sostenerse para no perder tracción.',
+          'Atacar primero tiendas o categorías con mayor brecha absoluta, no solo porcentual.',
+          'KPI: Delta vs LY + brecha $'
+        );
+      }
+      if(invAdj){
+        opp(
+          'Contener ajuste de inventario',
+          lowerBetterStatus(invAdj.valueNumber, 0.0055) === 'bad' ? 'alta' : 'media',
+          'El ajuste pega margen y caja.',
+          'La métrica de ajuste debe leerse contra meta 0.55%, no aislada.',
+          'Revisar top productos y tiendas con mayor impacto antes de negociar compras nuevas.',
+          'KPI: Ajuste % vs meta'
+        );
+      }
+      if(txSbf){
+        var sbfRatioExec = extractRatioFromNote(txSbf.noteJoined);
+        opp(
+          'Recuperar TX SBF',
+          sbfRatioExec < 1 ? 'alta' : 'media',
+          'SBF afecta tráfico y recurrencia.',
+          isFinite(sbfRatioExec) && sbfRatioExec < 1 ? 'Ratio SBF menor a 1.00 = caída real vs LY.' : 'SBF necesita sostener conversión operativa.',
+          'Monitorear tiendas con menor ratio y asegurar ejecución comercial y de servicio.',
+          'KPI: TX SBF vs LY'
+        );
+      }
+    }
+
+    if(topic === 'ventas'){
+      addTable('t_sales', 'Venta por tienda', 6, 6);
+      addTable('t_dept_sales', 'Venta por departamento', 6, 6);
+      addTable('t_brand_sales', 'Venta por marca', 6, 6);
+      addTable('t_cat_sales', 'Venta por categoría', 6, 6);
+      addTable('t_tx_store', 'TX por tienda', 6, 6);
+
+      var salesRatio = extractRatioFromNote(salesLy && salesLy.noteJoined || '');
+      var salesLmRatio = extractRatioFromNote(salesLm && salesLm.noteJoined || '');
+      var txRatio = extractRatioFromNote(tx && tx.noteJoined || '');
+      addFact(isFinite(salesRatio) ? ('Interpretación local: ratio venta vs LY ' + salesRatio.toFixed(2) + ' => ' + (salesRatio > 1 ? 'crecimiento' : (salesRatio < 1 ? 'caída' : 'estable')) + '.') : '');
+      addFact(isFinite(salesLmRatio) ? ('Interpretación local: ratio venta vs LW/LM ' + salesLmRatio.toFixed(2) + ' => ' + (salesLmRatio > 1 ? 'mejora' : (salesLmRatio < 1 ? 'caída' : 'estable')) + '.') : '');
+      addFact(isFinite(txRatio) ? ('Interpretación local: ratio TX vs LY ' + txRatio.toFixed(2) + ' => ' + (txRatio > 1 ? 'crecimiento' : (txRatio < 1 ? 'caída' : 'estable')) + '.') : '');
+
+      scorecard('Venta actual', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(salesRatio));
+      scorecard('Venta vs LY', salesLy ? salesLy.valueText : '—', salesLy ? salesLy.noteJoined : 'Sin lectura', ratioStatus(salesRatio));
+      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(txRatio));
+      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
+
+      var salesRanking = pickRankingFromTable(pack.tables[1] || pack.tables[2] || pack.tables[0]);
+      pack.chart.title = 'Top drivers comerciales';
+      pack.chart.subtitle = 'Ranking local desde tabla de ventas disponible';
+      pack.chart.tag = 'Drivers';
+      pack.chart.labels = salesRanking.map(function(item){ return item.label; });
+      pack.chart.values = salesRanking.map(function(item){ return item.value; });
+      pack.chart.note = salesRanking.length ? salesRanking[0].note : '';
+      pack.chart.positiveBetter = true;
+
+      opp('Recuperar venta con impacto real', ratioStatus(salesRatio) === 'bad' ? 'alta' : 'media', 'La brecha de venta pega flujo y absorción de gastos.', 'Si el ratio vs LY es menor a 1.00, el negocio viene por debajo de la base.', 'Ataca primero categorías o tiendas con mayor brecha absoluta en $.', 'KPI: Venta actual vs LY / delta $');
+      opp('Proteger tráfico', ratioStatus(txRatio) === 'bad' ? 'alta' : 'media', 'TX sostiene recurrencia y ticket futuro.', 'Una caída de TX suele anticipar presión en venta aun si el ticket aguanta.', 'Activa ejecución comercial por franja y tienda con mayor caída de TX.', 'KPI: Delta TX vs LY');
+      opp('Blindar margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'El margen convierte venta en utilidad real.', 'Una venta que sube sin margen puede destruir rentabilidad.', 'Revisar mix, subsidios y productos de baja contribución antes de empujar volumen.', 'KPI: Margen % vs meta');
+    }
+
+    if(topic === 'delivery'){
+      addTable('t_delshare', 'Share delivery', 6, 6);
+      addTable('t_del', 'Venta delivery', 6, 6);
+      addTable('t_nodel', 'Venta sin delivery', 6, 6);
+      addTable('t_cat_sales_del', 'Categorías delivery', 6, 6);
+      addTable('t_brand_sales_del', 'Marcas delivery', 6, 6);
+
+      var delRatio = extractRatioFromNote(delivery && delivery.noteJoined || '');
+      var shareText = delivery ? delivery.noteJoined : '';
+      addFact(isFinite(delRatio) ? ('Interpretación local: delivery vs LY ' + delRatio.toFixed(2) + ' => ' + (delRatio > 1 ? 'crecimiento' : (delRatio < 1 ? 'caída' : 'estable')) + '.') : '');
+      if(shareText) addFact('Share delivery visible: ' + shareText + '.');
+
+      scorecard('Venta delivery', delivery ? delivery.valueText : '—', delivery ? delivery.noteJoined : 'Sin lectura', ratioStatus(delRatio));
+      scorecard('Vta sin delivery', noDel ? noDel.valueText : '—', noDel ? noDel.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(noDel && noDel.noteJoined || '')));
+      scorecard('Share delivery', delivery ? delivery.noteJoined : '—', 'Participación sobre venta', ratioStatus(delRatio));
+      scorecard('Margen', margin ? margin.valueText : '—', 'No perder rentabilidad por volumen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
+
+      var delRanking = pickRankingFromTable(pack.tables[0] || pack.tables[3] || pack.tables[4] || pack.tables[1]);
+      pack.chart.title = 'Drivers de delivery';
+      pack.chart.subtitle = 'Ranking local del bloque delivery';
+      pack.chart.tag = 'Canal';
+      pack.chart.labels = delRanking.map(function(item){ return item.label; });
+      pack.chart.values = delRanking.map(function(item){ return item.value; });
+      pack.chart.note = delRanking.length ? delRanking[0].note : '';
+      pack.chart.positiveBetter = true;
+
+      opp('Defender crecimiento del canal', ratioStatus(delRatio) === 'bad' ? 'alta' : 'media', 'Delivery aporta venta incremental y cobertura de ocasión.', 'Si el ratio vs LY es menor a 1.00, el canal no está escalando al ritmo esperado.', 'Prioriza categorías con mayor tracción y mejora ejecución/promos del canal.', 'KPI: Delivery vs LY');
+      opp('Cuidar el share, no solo la venta', 'media', 'El share muestra peso real del canal sobre la venta total.', 'Un share plano puede ocultar falta de captura digital.', 'Sube conversión en surtido ganador y campañas del canal con objetivo de share.', 'KPI: % Delivery / Vta');
+      opp('No sacrificar margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'Venta digital sin margen suficiente destruye rentabilidad.', 'Descuentos o mix pueden estar comprando venta cara.', 'Revisar mix, combos y subsidios antes de ampliar pauta o descuentos.', 'KPI: Margen %');
+    }
+
+    if(topic === 'sbf'){
+      addTable('t_sbf_store', 'SBF por tienda', 6, 6);
+      addTable('t_sbf_prov', 'SBF por proveedor', 6, 6);
+      addTable('t_cxc', 'CXC', 6, 6);
+      addTable('t_sbf_dow', 'SBF por día', 6, 6);
+
+      var sbfRatio = extractRatioFromNote(txSbf && txSbf.noteJoined || '');
+      addFact(isFinite(sbfRatio) ? ('Interpretación local obligatoria: ratio TX SBF vs LY ' + sbfRatio.toFixed(2) + ' => ' + (sbfRatio > 1 ? 'crecimiento' : (sbfRatio < 1 ? 'caída' : 'estable')) + '. Nunca interpretarlo al revés.') : '');
+      if(cxc && cxc.valueText) addFact('CXC visible: ' + cxc.valueText + ' | ' + cxc.noteJoined + '.');
+
+      scorecard('TX SBF', txSbf ? txSbf.valueText : '—', txSbf ? txSbf.noteJoined : 'Sin lectura', ratioStatus(sbfRatio));
+      scorecard('CXC', cxc ? cxc.valueText : '—', cxc ? cxc.noteJoined : 'Sin lectura', lowerBetterStatus(cxc ? cxc.displayNumber : NaN, 0));
+      scorecard('Venta actual', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
+      scorecard('TX general', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
+
+      var sbfRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1] || pack.tables[2]);
+      pack.chart.title = 'Ranking SBF / CXC';
+      pack.chart.subtitle = 'Lectura local del bloque financiero-operativo';
+      pack.chart.tag = 'SBF';
+      pack.chart.labels = sbfRanking.map(function(item){ return item.label; });
+      pack.chart.values = sbfRanking.map(function(item){ return item.value; });
+      pack.chart.note = sbfRanking.length ? sbfRanking[0].note : '';
+      pack.chart.positiveBetter = true;
+
+      opp('Recuperar TX SBF', ratioStatus(sbfRatio) === 'bad' ? 'alta' : 'media', 'SBF ayuda a tráfico y frecuencia.', isFinite(sbfRatio) && sbfRatio < 1 ? 'El ratio menor a 1.00 indica caída real vs LY.' : 'La base SBF debe sostenerse con ejecución consistente.', 'Ataca primero tiendas/proveedores con mayor caída absoluta, no solo porcentual.', 'KPI: TX SBF vs LY');
+      opp('Bajar presión de CXC', cxc && isFinite(cxc.displayNumber) && cxc.displayNumber > 0 ? 'alta' : 'media', 'CXC pega caja y disciplina operativa.', 'Cuando CXC sube, la presión no es solo comercial sino de control.', 'Asignar seguimiento con responsable y fecha por lote/agente crítico.', 'KPI: CXC agentes MTD');
+      opp('Cruzar SBF con tráfico', ratioStatus(sbfRatio) === 'bad' && ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')) === 'bad' ? 'alta' : 'media', 'La caída simultánea de SBF y TX suele amplificar el deterioro.', 'No leer SBF aislado; hay que validar si además se está perdiendo tráfico general.', 'Empujar activación de servicios en tiendas donde el tráfico aún aguanta.', 'KPI: TX SBF + TX general');
+    }
+
+    if(topic === 'merma'){
+      addTable('t_merma_matrix', 'Merma resumen', 6, 6);
+      addTable('t_merma_drill', 'Merma drill', 6, 6);
+
+      var mermaTarget = 0.0055;
+      var mermaValue = invAdj ? invAdj.valueNumber : NaN;
+      addFact('La data de merma / ajuste sí existe en el dashboard vía KPI y tablas de merma.');
+      addFact(isFinite(mermaValue) ? ('Lectura local: ajuste visible ' + fmtPct(mermaValue) + ' vs meta 0.55%.') : 'Lectura local: existe data de merma en tablas aunque el KPI no esté numéricamente parseado.');
+
+      scorecard('Ajuste inventario', invAdj ? invAdj.valueText : '—', invAdj ? invAdj.noteJoined : 'Meta 0.55%', lowerBetterStatus(mermaValue, mermaTarget));
+      scorecard('Margen', margin ? margin.valueText : '—', 'Merma impacta margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
+      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
+      scorecard('Prioridad', lowerBetterStatus(mermaValue, mermaTarget) === 'bad' ? 'Alta' : 'Media', 'Semáforo local', lowerBetterStatus(mermaValue, mermaTarget));
+
+      var mermaRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1]);
+      pack.chart.title = 'Top impacto de merma';
+      pack.chart.subtitle = 'Ranking local usando tabla de merma disponible';
+      pack.chart.tag = 'Merma';
+      pack.chart.labels = mermaRanking.map(function(item){ return item.label; });
+      pack.chart.values = mermaRanking.map(function(item){ return item.value; });
+      pack.chart.note = mermaRanking.length ? mermaRanking[0].note : '';
+      pack.chart.positiveBetter = false;
+
+      opp('Bajar ajuste por encima de meta', lowerBetterStatus(mermaValue, mermaTarget) === 'bad' ? 'alta' : 'media', 'Merma presiona margen y utilidad.', 'Debe leerse contra meta 0.55%, no como dato aislado.', 'Ataca primero productos/tiendas con mayor impacto absoluto antes de generalizar acciones.', 'KPI: Ajuste % vs 0.55%');
+      opp('Conectar merma con margen', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35) === 'bad' ? 'alta' : 'media', 'La pérdida de margen puede venir acompañada de ajuste alto.', 'Si margen cae y merma sube, hay destrucción de rentabilidad.', 'Cruzar top merma con top caída de margen antes de definir promociones o compras.', 'KPI: Margen % + ajuste %');
+      opp('Cerrar causa operativa', 'media', 'La merma no se corrige solo con reporte.', 'Necesita disciplina en recepción, control y ejecución en tienda.', 'Asignar revisión física a los top ítems del ranking local y definir acción dueña.', 'KPI: Top ítems corregidos / semana');
+    }
+
+    if(topic === 'inventario'){
+      addTable('t_rop_sug', 'Sugerencias inventario', 6, 6);
+      addTable('t_transfers', 'Transferencias', 6, 6);
+      addTable('t_hueso', 'Productos hueso', 6, 6);
+      addTable('t_hueso_prop', 'Hueso propuesta', 6, 6);
+
+      addFact('La lectura de inventario usa solo días inventario, sugerencias y transfers del dashboard.');
+      if(daysInv && daysInv.valueText) addFact('Días inventario visible: ' + daysInv.valueText + '.');
+
+      scorecard('Días inventario', daysInv ? daysInv.valueText : '—', daysInv ? daysInv.noteJoined : 'Sin lectura', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30));
+      scorecard('PRD en cero', prd0 ? prd0.valueText : '—', prd0 ? prd0.noteJoined : 'Sin lectura', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
+      scorecard('Ajuste inventario', invAdj ? invAdj.valueText : '—', invAdj ? invAdj.noteJoined : 'Meta 0.55%', lowerBetterStatus(invAdj ? invAdj.valueNumber : NaN, 0.0055));
+      scorecard('Caja inmovilizada', daysInv && isFinite(daysInv.displayNumber) ? fmtInt(daysInv.displayNumber) + ' d' : '—', 'Velocidad de rotación', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30));
+
+      var invRanking = pickRankingFromTable(pack.tables[0] || pack.tables[1] || pack.tables[2]);
+      pack.chart.title = 'Top señales de inventario';
+      pack.chart.subtitle = 'Ranking local desde sugerencias / transfers / hueso';
+      pack.chart.tag = 'Inventario';
+      pack.chart.labels = invRanking.map(function(item){ return item.label; });
+      pack.chart.values = invRanking.map(function(item){ return item.value; });
+      pack.chart.note = invRanking.length ? invRanking[0].note : '';
+      pack.chart.positiveBetter = false;
+
+      opp('Bajar días inventario', lowerBetterStatus(daysInv ? daysInv.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Más días inventario inmovilizan caja.', 'Si el inventario rota lento, la rentabilidad se deteriora por capital amarrado.', 'Congelar compras no críticas y mover inventario por transfer donde sí hay salida.', 'KPI: Días inventario');
+      opp('Prevenir quiebres con criterio', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Bajar inventario no debe abrir más quiebres.', 'El riesgo es recortar stock sin distinguir velocidad y criticidad.', 'Priorizar disponibilidad de fast movers y corregir low movers por transfer o no-buy.', 'KPI: PRD en cero + días inventario');
+      opp('Limpiar hueso comercial', 'media', 'El hueso consume espacio y caja.', 'Inventario lento compite contra productos que sí venden.', 'Definir plan de salida o rebalanceo para top ítems hueso identificados en el dashboard.', 'KPI: % inventario lento');
+    }
+
+    if(topic === 'prd_cero'){
+      addTable('t_prd0_prov', 'PRD en cero por proveedor', 6, 6);
+
+      addFact('La data de PRD en cero está disponible y se prioriza sin mezclar otros frentes.');
+      if(prd0 && prd0.valueText) addFact('PRD en cero visible: ' + prd0.valueText + ' | ' + prd0.noteJoined + '.');
+
+      scorecard('PRD en cero', prd0 ? prd0.valueText : '—', prd0 ? prd0.noteJoined : 'Meta < 30', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
+      scorecard('Venta', salesCur ? salesCur.valueText : '—', 'Quiebre bloquea venta capturable', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
+      scorecard('TX', tx ? tx.valueText : '—', 'Quiebre también erosiona tráfico', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
+      scorecard('Prioridad', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'Alta' : 'Media', 'Semáforo local', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30));
+
+      var prdRanking = pickRankingFromTable(pack.tables[0]);
+      pack.chart.title = 'Top quiebres con foco';
+      pack.chart.subtitle = 'Ranking local del bloque PRD en cero';
+      pack.chart.tag = 'Quiebres';
+      pack.chart.labels = prdRanking.map(function(item){ return item.label; });
+      pack.chart.values = prdRanking.map(function(item){ return item.value; });
+      pack.chart.note = prdRanking.length ? prdRanking[0].note : '';
+      pack.chart.positiveBetter = false;
+
+      opp('Bajar PRD en cero con impacto', lowerBetterStatus(prd0 ? prd0.displayNumber : NaN, 30) === 'bad' ? 'alta' : 'media', 'Cada quiebre frena venta y experiencia.', 'No todos los quiebres pesan igual: hay que ir por los de mayor impacto.', 'Atacar primero proveedores o productos con mayor incidencia en la tabla local.', 'KPI: PRD en cero');
+      opp('Recuperar venta capturable', 'media', 'El quiebre destruye venta que sí tenía demanda.', 'Si además venta o TX vienen débiles, el costo del quiebre es mayor.', 'Cruzar top quiebres con fast movers antes de reordenar el surtido completo.', 'KPI: PRD en cero + venta');
+      opp('Subir disciplina de reposición', 'media', 'La raíz suele ser ejecución, no solo compra.', 'Proveedor, pedido y reposición deben cerrarse con responsable claro.', 'Definir tablero semanal de top quiebres con dueño y fecha de corrección.', 'KPI: Ítems recuperados / semana');
+    }
+
+    if(!pack.scorecards.length){
+      scorecard('Venta', salesCur ? salesCur.valueText : '—', salesCur ? salesCur.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(salesLy && salesLy.noteJoined || '')));
+      scorecard('TX', tx ? tx.valueText : '—', tx ? tx.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(tx && tx.noteJoined || '')));
+      scorecard('Margen', margin ? margin.valueText : '—', margin ? margin.noteJoined : 'Sin lectura', higherBetterStatus(margin ? margin.valueNumber : NaN, 0.35));
+      scorecard('Proyección', proj ? proj.valueText : '—', proj ? proj.noteJoined : 'Sin lectura', ratioStatus(extractRatioFromNote(proj && proj.noteJoined || '')));
+    }
+    if(!pack.opps.length){
+      opp('Priorizar brecha principal', 'media', 'Mover primero el frente con mayor impacto económico.', 'Una lectura ejecutiva útil prioriza $ antes que ruido.', 'Revisar scorecards y atacar la métrica en rojo con mayor peso de negocio.', 'KPI: driver principal');
+    }
+
+    pack.opps = pack.opps.slice(0, 3);
+    pack.scorecards = pack.scorecards.slice(0, 4);
+
+    var compactTables = pack.tables.slice(0, 3).map(function(t){
+      return {
+        label: t.label,
+        headers: t.headers,
+        rows: t.rows.slice(0, 4)
+      };
+    });
+
+    var promptPayload = {
+      topic: pack.resolvedTopic || pack.topic,
+      question: pack.question || '',
+      filters: pack.filters,
+      facts: pack.facts.slice(0, 12),
+      source_labels: pack.sourceLabels.slice(0, 8),
+      scorecards: pack.scorecards.map(function(item){
+        return { title:item.title, value:item.value, note:item.note, status:item.status };
+      }),
+      top_local_opportunities: pack.opps.map(function(item){
+        return { title:item.title, priority:item.priority, impact:item.impact, cause:item.cause, action:item.action, kpi:item.kpi };
+      }),
+      tables: compactTables
+    };
+    pack.context = JSON.stringify(promptPayload);
+    return pack;
+  }
+
+  function renderSourceChips(labels){
+    var root = el('ampmAiSourceChips');
+    if(!root) return;
+    root.innerHTML = (labels || []).slice(0, 8).map(function(label){
+      return '<span class="ampm-ai-source-chip">' + htmlEscape(label) + '</span>';
+    }).join('');
+  }
+  function renderScorecards(cards){
+    var root = el('ampmAiScorecards');
+    if(!root) return;
+    root.innerHTML = (cards || []).map(function(card){
+      return ''
+        + '<div class="ampm-ai-scorecard">'
+        +   '<div class="ampm-ai-scorecard-head">'
+        +     '<div class="ampm-ai-scorecard-title">' + htmlEscape(card.title) + '</div>'
+        +     '<span class="ampm-ai-scorecard-status ' + htmlEscape(card.status) + '">' + htmlEscape(card.status === 'good' ? 'Sano' : (card.status === 'warn' ? 'Atento' : (card.status === 'bad' ? 'Crítico' : 'Neutro'))) + '</span>'
+        +   '</div>'
+        +   '<div class="ampm-ai-scorecard-value">' + htmlEscape(card.value) + '</div>'
+        +   '<div class="ampm-ai-scorecard-note">' + htmlEscape(card.note) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  function renderOpps(items){
+    var root = el('ampmAiOpps');
+    if(!root) return;
+    root.innerHTML = (items || []).map(function(item){
+      return ''
+        + '<div class="ampm-ai-opp">'
+        +   '<div class="ampm-ai-opp-top">'
+        +     '<div class="ampm-ai-opp-title">' + htmlEscape(item.title) + '</div>'
+        +     '<span class="ampm-ai-priority ' + htmlEscape(item.priority) + '">' + htmlEscape(item.priority) + '</span>'
+        +   '</div>'
+        +   '<div class="ampm-ai-opp-body">'
+        +     '<div class="ampm-ai-opp-line"><b>Impacto:</b> ' + htmlEscape(item.impact) + '</div>'
+        +     '<div class="ampm-ai-opp-line"><b>Causa probable:</b> ' + htmlEscape(item.cause) + '</div>'
+        +     '<div class="ampm-ai-opp-line"><b>Acción concreta:</b> ' + htmlEscape(item.action) + '</div>'
+        +     '<div class="ampm-ai-opp-line"><b>KPI sugerido:</b> ' + htmlEscape(item.kpi) + '</div>'
+        +   '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function destroyChart(){
+    try{
+      if(stateAi.chart && typeof stateAi.chart.destroy === 'function') stateAi.chart.destroy();
+    }catch(_e){}
+    stateAi.chart = null;
+  }
+
+  function renderChart(chartModel){
+    var titleEl = el('ampmAiChartTitle');
+    var subEl = el('ampmAiChartSub');
+    var tagEl = el('ampmAiChartTag');
+    var canvas = el('ampmAiChart');
+    var empty = el('ampmAiChartEmpty');
+
+    if(titleEl) titleEl.textContent = txt(chartModel && chartModel.title) || 'Top drivers';
+    if(subEl) subEl.textContent = txt(chartModel && chartModel.subtitle) || 'Priorizado con data disponible del dashboard';
+    if(tagEl) tagEl.textContent = txt(chartModel && chartModel.tag) || 'Local';
+
+    destroyChart();
+    if(!canvas || !window.Chart){
+      if(empty){ empty.classList.add('show'); empty.textContent = 'No fue posible inicializar la visual.'; }
+      return;
+    }
+
+    var labels = (chartModel && chartModel.labels) || [];
+    var values = (chartModel && chartModel.values) || [];
+    if(!labels.length || !values.length){
+      if(empty){ empty.classList.add('show'); empty.textContent = 'No hay suficiente data estructurada para graficar este foco.'; }
+      return;
+    }
+    if(empty) empty.classList.remove('show');
+
+    stateAi.chart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: txt(chartModel.note) || 'Valor',
+          data: values
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        animation: false,
+        layout: { padding: { left: 4, right: 10, top: 6, bottom: 0 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx){
+                var value = ctx.parsed && typeof ctx.parsed.x !== 'undefined' ? ctx.parsed.x : ctx.raw;
+                if(!isFinite(value)) return '—';
+                if(chartModel && chartModel.note && /%|ratio/i.test(chartModel.note)) return ' ' + Number(value).toLocaleString('es-SV');
+                return ' ' + Number(value).toLocaleString('es-SV');
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color:'rgba(148,163,184,.18)' },
+            ticks: { color:'#334155', font:{ weight:'800' } }
+          },
+          y: {
+            grid: { display:false },
+            ticks: { color:'#0f172a', font:{ weight:'900' } }
+          }
+        }
+      }
     });
   }
 
-  window.ampmAiNav = function(_btn, topic){ currentTopic = topic || 'chat'; syncTopicUi(); };
-  window.ampmAiQuick = function(btn){
-    var txt = btn ? String(btn.textContent || '').trim() : '';
-    var inp = getEl('ampmAiInput');
-    if(inp) inp.value = txt;
-    window.ampmAiSend();
-  };
-  window.ampmAiClearChat = function(){
-    chatHistory = [];
-    var msgs = getMsgs();
-    if(msgs) msgs.innerHTML = '';
-    showEmpty(true);
-    setSendDisabled(false);
-  };
-
-  function getTableText(table, maxRows, maxCols){
-    if(!table) return '';
-    var rows = Array.prototype.slice.call(table.querySelectorAll('tr')).slice(0, maxRows || 12);
-    return rows.map(function(tr){
-      var cells = Array.prototype.slice.call(tr.children).slice(0, maxCols || 12);
-      return cells.map(function(td){ return String((td.innerText || td.textContent || '')).replace(/\s+/g,' ').trim(); }).filter(Boolean).join(' | ');
-    }).filter(Boolean).join('\n');
+  function renderVisuals(topic, question){
+    var effectiveTopic = topic === 'chat' ? inferTopicFromQuestion(question) : topic;
+    var pack = buildTopicPack(effectiveTopic, question);
+    stateAi.activePack = pack;
+    renderSourceChips(pack.sourceLabels);
+    renderScorecards(pack.scorecards);
+    renderOpps(pack.opps);
+    renderChart(pack.chart);
+    var footer = el('ampmAiFooterHint');
+    if(footer){
+      footer.textContent = 'Tema: ' + TOPICS[topic].title + ' · fuentes usadas: ' + (pack.sourceLabels.join(', ') || 'KPIs') + ' · contexto compacto listo.';
+    }
+    var scopeBadge = el('ampmAiScopeBadge');
+    if(scopeBadge) scopeBadge.textContent = 'Contexto: ' + (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : 'ejecutivo');
   }
 
-  function pushText(ctx, id, label, max){
-    var el = getEl(id);
-    if(!el) return;
-    var txt = String(el.innerText || el.textContent || '').replace(/\s+/g,' ').trim();
-    if(!txt) return;
-    ctx.push('[' + label + ']\n' + txt.slice(0, max || 1200));
+  function syncTopicUi(){
+    var conf = TOPICS[stateAi.topic] || TOPICS.chat;
+    var titleEl = el('ampmAiHeaderTitle');
+    var subEl = el('ampmAiHeaderSub');
+    if(titleEl) titleEl.textContent = conf.title;
+    if(subEl) subEl.textContent = conf.sub;
+
+    Array.prototype.slice.call(document.querySelectorAll('#ampmAiNavItems .ampm-ai-nav-btn')).forEach(function(btn){
+      btn.classList.toggle('active', txt(btn.getAttribute('data-topic')) === stateAi.topic);
+    });
+
+    var promptsRoot = el('ampmAiPrompts');
+    if(promptsRoot){
+      promptsRoot.innerHTML = conf.prompts.map(function(prompt){
+        return '<button class="ampm-ai-prompt-pill" type="button" data-prompt="' + htmlEscape(prompt) + '">' + htmlEscape(prompt) + '</button>';
+      }).join('');
+    }
+
+    renderVisuals(stateAi.topic, '');
   }
 
-  function pushTable(ctx, id, label, maxRows, maxCols){
-    var el = getEl(id);
-    if(!el) return;
-    var txt = getTableText(el, maxRows, maxCols);
-    if(!txt) return;
-    ctx.push('[' + label + ']\n' + txt);
+  function setUsageMeta(text){
+    stateAi.lastUsage = txt(text);
+    var meta = el('ampmAiUsageMeta');
+    if(meta) meta.textContent = stateAi.lastUsage;
   }
 
-  function getFilterContext(){
-    try{
-      var chips = [];
-      var week = getEl('weekLabelChip');
-      if(week) chips.push('Periodo: ' + String(week.textContent||'').trim());
-      var tabs = document.querySelector('.tabBtn.active');
-      if(tabs) chips.push('Pestaña activa: ' + String(tabs.textContent||'').trim());
-      return chips.join(' · ');
-    }catch(_e){ return ''; }
+  function clearConversation(fullReset){
+    stateAi.uiMessages = [];
+    stateAi.lastResponseId = '';
+    stateAi.lastTopicForResponse = '';
+    var messages = el('ampmAiMessages');
+    var empty = el('ampmAiEmpty');
+    if(messages) messages.innerHTML = '';
+    if(empty) empty.style.display = '';
+    setUsageMeta('');
+    if(fullReset) renderVisuals(stateAi.topic, '');
   }
 
-  function buildDataContext(){
-    var ctx = [];
-    var fc = getFilterContext();
-    if(fc) ctx.push('[FILTROS]\n' + fc);
-    pushText(ctx, 'noteBox', 'NOTAS DEL REPORTE', 1200);
-    pushText(ctx, 'radarInsights', 'RADAR EJECUTIVO', 1600);
-    pushText(ctx, 'ampmBizDetailSummary', 'HALLAZGO DE NEGOCIO', 1200);
-    pushTable(ctx, 't_sbf_store', 'SBF TX POR TIENDA', 12, 18);
-    pushTable(ctx, 't_sbf_prov', 'SBF TX POR PROVEEDOR', 18, 18);
-    pushTable(ctx, 't_cxc', 'CXC', 18, 10);
-    pushTable(ctx, 't_merma_matrix', 'MERMA MATRIZ', 16, 12);
-    pushTable(ctx, 't_merma_drill', 'MERMA DRILL', 20, 14);
-    pushTable(ctx, 't_prd0_prov', 'PRD EN CERO', 18, 14);
-    pushTable(ctx, 't_rop_sug', 'INVENTARIO Y HUESO', 18, 14);
-    pushTable(ctx, 't_transfers', 'TRANSFERENCIAS', 18, 12);
-    return ctx.join('\n\n').slice(0, 16000);
+  function appendMessage(role, body, kind, meta){
+    var messages = el('ampmAiMessages');
+    var empty = el('ampmAiEmpty');
+    if(!messages) return null;
+    if(empty) empty.style.display = 'none';
+
+    var node = document.createElement('div');
+    node.className = 'ampm-ai-msg ' + (role === 'user' ? 'user' : 'assistant') + (kind === 'error' ? ' error' : '');
+    node.innerHTML = ''
+      + '<div class="ampm-ai-msg-top">'
+      +   '<div class="ampm-ai-msg-role">' + (role === 'user' ? 'Usuario' : 'IA ejecutiva') + '</div>'
+      +   '<div class="ampm-ai-msg-meta">' + htmlEscape(meta || nowStamp()) + '</div>'
+      + '</div>'
+      + '<div class="ampm-ai-msg-body"></div>';
+    node.querySelector('.ampm-ai-msg-body').textContent = body || '';
+    messages.appendChild(node);
+    messages.scrollTop = messages.scrollHeight + 200;
+    return node;
+  }
+
+  function setAssistantThinking(){
+    var messages = el('ampmAiMessages');
+    var empty = el('ampmAiEmpty');
+    if(!messages) return null;
+    if(empty) empty.style.display = 'none';
+    var node = document.createElement('div');
+    node.className = 'ampm-ai-msg assistant';
+    node.id = 'ampmAiThinkingNode';
+    node.innerHTML = ''
+      + '<div class="ampm-ai-msg-top">'
+      +   '<div class="ampm-ai-msg-role">IA ejecutiva</div>'
+      +   '<div class="ampm-ai-msg-meta">analizando</div>'
+      + '</div>'
+      + '<div class="ampm-ai-msg-body"><span class="ampm-ai-thinking"><i></i><i></i><i></i></span></div>';
+    messages.appendChild(node);
+    messages.scrollTop = messages.scrollHeight + 200;
+    return node;
+  }
+  function removeThinking(){
+    var node = el('ampmAiThinkingNode');
+    if(node && node.parentNode) node.parentNode.removeChild(node);
   }
 
   function extractResponseText(data){
@@ -4313,10 +5402,9 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
       var output = data && Array.isArray(data.output) ? data.output : [];
       var parts = [];
       output.forEach(function(item){
-        if(!item) return;
-        if(item.type === 'message' && Array.isArray(item.content)){
+        if(item && item.type === 'message' && Array.isArray(item.content)){
           item.content.forEach(function(part){
-            if(part && typeof part.text === 'string' && String(part.text).trim()) parts.push(String(part.text).trim());
+            if(part && typeof part.text === 'string' && txt(part.text)) parts.push(txt(part.text));
           });
         }
       });
@@ -4324,175 +5412,207 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
     }catch(_e){ return ''; }
   }
 
-  function formatUsageMeta(usage){
-    try{
-      if(!usage) return '';
-      var total = Number(usage.total_tokens || 0);
-      if(!total) return '';
-      var input = Number(usage.input_tokens || 0);
-      var output = Number(usage.output_tokens || 0);
-      var reasoning = Number((usage.output_tokens_details && usage.output_tokens_details.reasoning_tokens) || 0);
-      var nf = function(n){ return Number(n || 0).toLocaleString('es-SV'); };
-      var parts = [];
-      if(input) parts.push('in ' + nf(input));
-      if(output) parts.push('out ' + nf(output));
-      if(reasoning) parts.push('reason ' + nf(reasoning));
-      return '\n\nUso: ' + nf(total) + ' tok' + (parts.length ? ' (' + parts.join(' | ') + ')' : '');
-    }catch(_e){ return ''; }
+  function buildSystemPrompt(topic, pack){
+    return [
+      'Sos un copiloto ejecutivo para AMPM EL SALVADOR.',
+      'Respondé siempre en español, de forma directa y aterrizada.',
+      'Usá únicamente la data del contexto entregado. No inventés datos, causas ni tendencias que no estén en el contexto.',
+      'Cuando una razón no esté probada por la data, presentala como causa probable, no como hecho.',
+      'Leé correctamente las métricas: ratio > 1 = crecimiento; ratio < 1 = caída; pp = puntos porcentuales; share y mix no son venta absoluta.',
+      'Priorizá siempre impacto real, causa probable, acción concreta, prioridad y KPI sugerido.',
+      'No uses plantillas rígidas ni texto académico.',
+      'Si el contexto local dice explícitamente que una métrica sí existe, no respondás que no hay data.',
+      'Estructura recomendada según aplique: respuesta directa, qué significa, acción, prioridad, KPI.',
+      'No repitas los datos innecesariamente y no expliques el modelo.',
+      'Tema actual: ' + (TOPICS[topic] ? TOPICS[topic].title : topic) + '.',
+      'Contexto compacto del dashboard (JSON): ' + pack.context
+    ].join('\n');
   }
 
-  function buildInputItems(systemPrompt){
-    var items = [{ role:'system', content:[{ type:'input_text', text:systemPrompt }] }];
-    chatHistory.slice(-OPENAI_MAX_HISTORY_MESSAGES).forEach(function(m){
-      items.push({ role:m.role, content:[{ type:'input_text', text:String(m.content || '') }] });
-    });
-    return items;
-  }
-
-  window.ampmAiSend = function(){
+  function requestOpenAI(userQuestion){
     var apiKey = getApiKey();
-    if(!apiKey || apiKey.indexOf('sk-') !== 0){
-      appendMsg('assistant','⚠️ Primero configurá tu API Key de OpenAI.','error');
-      window.ampmAiOpenKeyModal();
+    if(!/^sk-/.test(apiKey)){
+      appendMessage('assistant', 'Primero configura la API Key para habilitar las respuestas del copiloto. Los visuales locales ya están conectados a la data del dashboard.', 'error');
+      openKeyModal();
       return;
     }
-    var inputEl = getEl('ampmAiInput');
-    var userText = inputEl ? String(inputEl.value || '').trim() : '';
-    if(!userText) return;
 
-    appendMsg('user', userText);
-    if(inputEl) inputEl.value = '';
-    chatHistory.push({ role:'user', content:userText });
-    setSendDisabled(true);
-    appendMsg('assistant','Analizando…','ampm-ai-thinking');
+    var effectiveTopic = stateAi.topic === 'chat' ? inferTopicFromQuestion(userQuestion) : stateAi.topic;
+    var pack = buildTopicPack(effectiveTopic, userQuestion);
+    stateAi.activePack = pack;
+    renderSourceChips(pack.sourceLabels);
+    renderScorecards(pack.scorecards);
+    renderOpps(pack.opps);
+    renderChart(pack.chart);
 
-    var topicInstr = TOPIC_PROMPTS[currentTopic] || TOPIC_PROMPTS.chat;
-    var systemPrompt = MASTER_MULTIAGENT_PROMPT + '\n\n' +
-      'CONTEXTO ESPECÍFICO DEL ANÁLISIS ACTUAL:\n' + topicInstr + '\n\n' +
-      'DATA DEL REPORTE (FUENTE PRINCIPAL DE VERDAD):\n' + buildDataContext() + '\n\n' +
-      'REGLAS OPERATIVAS FINALES:\n' +
-      '- Respondé siempre en español.\n' +
-      '- Basate primero en la data del reporte.\n' +
-      '- Si ves un ratio menor a 1.00 vs LY o vs Prom, interpretalo como caída; mayor a 1.00 es crecimiento.\n' +
-      '- Si la data no alcanza, decilo explícitamente y pedí o sugerí la fuente correcta.\n' +
-      '- Priorizá impacto de negocio, drivers y acciones.\n' +
-      '- No repitas una plantilla rígida siempre.';
+    var body = {
+      model: OPENAI_MODEL,
+      store: true,
+      reasoning: { effort: 'none' },
+      text: { verbosity: 'low' },
+      max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
+      input: [
+        { role:'system', content:[{ type:'input_text', text: buildSystemPrompt(effectiveTopic, pack) }] },
+        { role:'user', content:[{ type:'input_text', text: userQuestion }] }
+      ]
+    };
+    if(stateAi.lastResponseId && stateAi.lastTopicForResponse === effectiveTopic){
+      body.previous_response_id = stateAi.lastResponseId;
+    }
+
+    disableInput(true);
+    setAssistantThinking();
 
     fetch('https://api.openai.com/v1/responses', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        reasoning: { effort: OPENAI_REASONING_EFFORT },
-        text: { verbosity: OPENAI_VERBOSITY },
-        max_output_tokens: OPENAI_MAX_OUTPUT_TOKENS,
-        input: buildInputItems(systemPrompt)
-      })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify(body)
     })
     .then(function(res){ return res.json(); })
     .then(function(data){
       removeThinking();
-      setSendDisabled(false);
+      disableInput(false);
+
       if(data && data.error){
-        appendMsg('assistant', '❌ Error OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error');
+        appendMessage('assistant', 'Error OpenAI: ' + (data.error.message || JSON.stringify(data.error)), 'error');
         return;
       }
+
       var reply = extractResponseText(data);
       if(!reply){
-        appendMsg('assistant', '⚠️ No vino respuesta utilizable del modelo.', 'error');
+        appendMessage('assistant', 'No vino una respuesta utilizable del modelo.', 'error');
         return;
       }
-      reply += formatUsageMeta(data && data.usage);
-      chatHistory.push({ role:'assistant', content:reply });
-      appendMsg('assistant', reply);
+
+      stateAi.lastResponseId = txt(data && data.id);
+      stateAi.lastTopicForResponse = effectiveTopic;
+      var usage = data && data.usage ? data.usage : null;
+      var total = usage && usage.total_tokens ? Number(usage.total_tokens) : 0;
+      var inputTokens = usage && usage.input_tokens ? Number(usage.input_tokens) : 0;
+      var outputTokens = usage && usage.output_tokens ? Number(usage.output_tokens) : 0;
+      setUsageMeta(total ? ('Uso tokens · in ' + inputTokens.toLocaleString('es-SV') + ' · out ' + outputTokens.toLocaleString('es-SV') + ' · total ' + total.toLocaleString('es-SV')) : 'Contexto compacto enviado');
+
+      appendMessage('assistant', reply, '', effectiveTopic === stateAi.topic ? nowStamp() : (TOPICS[effectiveTopic] ? TOPICS[effectiveTopic].title : nowStamp()));
     })
     .catch(function(err){
       removeThinking();
-      setSendDisabled(false);
-      appendMsg('assistant', '❌ Error de conexión: ' + String(err), 'error');
+      disableInput(false);
+      appendMessage('assistant', 'Error de conexión: ' + String(err), 'error');
     });
-  };
+  }
 
-  function resolveActiveTab(){
-    try{
-      var activeBtn = document.querySelector('.tabBtn.active');
-      var tab = String((activeBtn && activeBtn.getAttribute('data-tab')) || '').toLowerCase().trim();
-      if(tab) return tab;
-      var visible = Array.prototype.slice.call(document.querySelectorAll('[data-tabpage]')).find(function(el){
-        return el.offsetParent !== null && getComputedStyle(el).display !== 'none';
+  function handleSend(){
+    if(!isAdminLogged() || resolveActiveTab() !== 'resumen') return;
+    var input = el('ampmAiInput');
+    var userQuestion = txt(input && input.value);
+    if(!userQuestion) return;
+    appendMessage('user', userQuestion);
+    if(input) input.value = '';
+    requestOpenAI(userQuestion);
+  }
+
+  function handleTopicChange(nextTopic){
+    nextTopic = txt(nextTopic);
+    if(!TOPICS[nextTopic]) nextTopic = 'chat';
+    stateAi.topic = nextTopic;
+    stateAi.lastResponseId = '';
+    stateAi.lastTopicForResponse = '';
+    syncTopicUi();
+    clearConversation(false);
+  }
+
+  function bindUi(){
+    var panel = el('ampmAiSection');
+    if(!panel || panel.__aiBoundV3) return;
+    panel.__aiBoundV3 = true;
+
+    panel.addEventListener('click', function(ev){
+      var navBtn = ev.target.closest('.ampm-ai-nav-btn');
+      if(navBtn){
+        handleTopicChange(navBtn.getAttribute('data-topic'));
+        return;
+      }
+      var promptBtn = ev.target.closest('.ampm-ai-prompt-pill');
+      if(promptBtn){
+        var prompt = txt(promptBtn.getAttribute('data-prompt'));
+        var input = el('ampmAiInput');
+        if(input){
+          input.value = prompt;
+          input.focus();
+        }
+        return;
+      }
+      if(ev.target.id === 'ampmAiClearBtn'){
+        clearConversation(true);
+        return;
+      }
+      if(ev.target.id === 'ampmAiOpenKeyBtn'){
+        openKeyModal();
+        return;
+      }
+      if(ev.target.id === 'ampmAiSendBtn'){
+        handleSend();
+        return;
+      }
+      if(ev.target.id === 'ampmAiKeySaveBtn'){
+        saveKeyFromModal();
+        return;
+      }
+      if(ev.target.id === 'ampmAiKeyCancelBtn'){
+        closeKeyModal();
+        return;
+      }
+      if(ev.target.id === 'ampmAiKeyModal'){
+        closeKeyModal();
+      }
+    });
+
+    var input = el('ampmAiInput');
+    if(input){
+      input.addEventListener('keydown', function(ev){
+        if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){
+          ev.preventDefault();
+          handleSend();
+        }
       });
-      return String((visible && visible.getAttribute('data-tabpage')) || '').toLowerCase().trim();
-    }catch(_e){ return ''; }
-  }
+    }
 
-  function resolveAdminSession(){
-    try{
-      var raw = sessionStorage.getItem('ampm_report_auth_v1');
-      if(!raw) return false;
-      var s = JSON.parse(raw);
-      var u = String((s && s.user) || '').toLowerCase().trim();
-      return u === 'admin';
-    }catch(_e){ return false; }
-  }
-
-  function syncAiPanelPlacement(panel){
-    try{
-      if(!panel) return;
-      var anchor = getEl('autoKeyPanel');
-      if(anchor && anchor.parentNode && panel.previousElementSibling !== anchor){
-        anchor.insertAdjacentElement('afterend', panel);
-      }
-    }catch(_e){}
-  }
-
-  function updateAiPanelVisibility(){
-    try{
-      var panel = getEl('ampmAiSection');
-      if(!panel) return;
-      syncAiPanelPlacement(panel);
-      var activeTab = resolveActiveTab();
-      var shouldShow = resolveAdminSession() && document.body.classList.contains('auth-ok') && activeTab === 'resumen';
-      document.body.setAttribute('data-active-tab', activeTab || '');
-      panel.classList.toggle('ampm-ai-visible', shouldShow);
-      panel.style.display = shouldShow ? 'flex' : 'none';
-      panel.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
-    }catch(_e){}
-  }
-
-  function bindEnter(){
-    var inp = getEl('ampmAiInput');
-    if(!inp || inp.__aiBound) return;
-    inp.__aiBound = true;
-    inp.addEventListener('keydown', function(e){
-      if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
-        e.preventDefault();
-        window.ampmAiSend();
-      }
+    ['ampm:tabshown', 'ampm:authchanged', 'ampm:refresh'].forEach(function(evt){
+      window.addEventListener(evt, function(){
+        updateVisibility();
+        if(isAdminLogged() && resolveActiveTab() === 'resumen'){
+          setTimeout(function(){ renderVisuals(stateAi.topic, ''); }, 80);
+        }
+      });
     });
-  }
 
-  function bindVisibilityWatchers(){
-    setInterval(updateAiPanelVisibility, 800);
-    window.addEventListener('ampm:tabshown', function(){ setTimeout(updateAiPanelVisibility, 20); });
-    window.addEventListener('ampm:authchanged', function(){ setTimeout(updateAiPanelVisibility, 20); });
-    document.addEventListener('click', function(e){
-      var t = e.target;
-      if(t && (t.closest('.tabBtn') || t.id === 'ampmLogoutBtn' || t.closest('#ampmAuthForm'))){
-        setTimeout(updateAiPanelVisibility, 40);
-      }
-    }, true);
-    try{
-      var mo = new MutationObserver(function(){ updateAiPanelVisibility(); });
-      mo.observe(document.body, { attributes:true, childList:false, subtree:true, attributeFilter:['class','style'] });
-    }catch(_e){}
+    window.addEventListener('resize', function(){
+      try{
+        if(stateAi.chart && typeof stateAi.chart.resize === 'function') stateAi.chart.resize();
+      }catch(_e){}
+    }, { passive:true });
+
+    var logoutBtn = el('ampmLogoutBtn');
+    if(logoutBtn){
+      logoutBtn.addEventListener('click', function(){
+        stateAi.lastResponseId = '';
+        stateAi.lastTopicForResponse = '';
+        clearConversation(true);
+        updateVisibility();
+      }, true);
+    }
   }
 
   function init(){
-    syncTopicUi();
-    bindEnter();
     updateKeyStatus();
-    bindVisibilityWatchers();
-    updateAiPanelVisibility();
+    ensurePlacement();
+    bindUi();
+    syncTopicUi();
+    clearConversation(true);
+    updateVisibility();
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true });
@@ -4500,7 +5620,8 @@ body.auth-ok[data-active-tab="resumen"] .ampm-ai-wrap#ampmAiSection.ampm-ai-visi
 })();
 </script>
 
-<div class="section" data-tabpage="resumen" id="radar"><h2>Radar Ejecutivo — Top 10 Insights y Qué Hacer</h2></div><h2>Radar Ejecutivo — Top 10 Insights y Qué Hacer</h2></div>
+<div class="section" data-tabpage="resumen" id="radar"><h2>Radar Ejecutivo — Top 10 Insights y Qué Hacer</h2></div>
+
 <div class="radarPanel" data-tabpage="resumen" id="radarExec">
 <div class="radarHead">
 <div>
