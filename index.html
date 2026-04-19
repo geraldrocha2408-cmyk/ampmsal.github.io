@@ -60439,6 +60439,755 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-json-route-v2">
+(function(){
+  if(window.__AMPM_JSON_ROUTE_V2_READY__) return;
+  window.__AMPM_JSON_ROUTE_V2_READY__ = true;
+
+  var BASE = './data_api/out';
+  var FILES = {
+    manifest: 'meta/manifest.json',
+    calendars: 'meta/calendars.json',
+    catalogs: 'meta/catalogs.json',
+    stores: 'meta/stores.json',
+
+    salesMonthlyBusiness: 'ventas/monthly_business.json',
+    salesWeeklyBusiness: 'ventas/weekly_business.json',
+    salesMonthlyStore: 'ventas/monthly_store.json',
+    salesWeeklyStore: 'ventas/weekly_store.json',
+    salesMonthlyDepartment: 'ventas/monthly_department.json',
+    salesWeeklyDepartment: 'ventas/weekly_department.json',
+    salesMonthlyCategory: 'ventas/monthly_category.json',
+    salesWeeklyCategory: 'ventas/weekly_category.json',
+    salesMonthlyBrand: 'ventas/monthly_brand.json',
+    salesWeeklyBrand: 'ventas/weekly_brand.json',
+    salesMonthlyDescription: 'ventas/monthly_description.json',
+    salesByDow: 'ventas/sales_by_dow.json',
+    salesByHour: 'ventas/sales_by_hour.json',
+
+    deliveryMonthlyBusiness: 'delivery/monthly_business.json',
+    deliveryWeeklyBusiness: 'delivery/weekly_business.json',
+    deliveryMonthlyStorePlatform: 'delivery/monthly_store_platform.json',
+    deliveryWeeklyStorePlatform: 'delivery/weekly_store_platform.json',
+    deliveryMonthlyCategory: 'delivery/monthly_category.json',
+    deliveryWeeklyCategory: 'delivery/weekly_category.json',
+    deliveryByDow: 'delivery/delivery_by_dow.json',
+    deliveryByHour: 'delivery/delivery_by_hour.json',
+
+    invSnapshot: 'inventario/store_sku_snapshot.json',
+    invDoi: 'inventario/doi_store_sku.json',
+    invShortage: 'inventario/shortage_alerts.json',
+    invExcess: 'inventario/excess_alerts.json',
+    invTransfer: 'inventario/transfer_candidates.json',
+
+    shrinkMonthlyBusiness: 'merma/monthly_business.json',
+    shrinkMonthlyStore: 'merma/monthly_store.json',
+    shrinkDetailDescription: 'merma/detail_store_description.json',
+    shrinkDetailSupplier: 'merma/detail_supplier.json',
+
+    sbfMonthlyBusiness: 'sbf/monthly_business.json',
+    sbfWeeklyBusiness: 'sbf/weekly_business.json',
+    sbfMonthlyServiceStore: 'sbf/monthly_service_store.json',
+    sbfWeeklyServiceStore: 'sbf/weekly_service_store.json',
+
+    cxcSummary: 'cxc/summary.json',
+    cxcDetail: 'cxc/detail.json',
+
+    prd0Summary: 'prd0/supplier_summary.json',
+    prd0Detail: 'prd0/supplier_detail.json',
+
+    hallSales: 'hallazgos/sales_signals.json',
+    hallDelivery: 'hallazgos/delivery_signals.json',
+    hallInventory: 'hallazgos/inventory_signals.json',
+    hallShrink: 'hallazgos/shrink_signals.json',
+
+    innovationMonthly: 'innovation/monthly_summary.json',
+    innovationWeekly: 'innovation/weekly_summary.json',
+    innovationByDow: 'innovation/by_dow.json',
+    innovationByHour: 'innovation/by_hour.json',
+    innovationByStore: 'innovation/by_store.json'
+  };
+
+  var PRELOAD = [
+    'manifest','calendars','catalogs','stores',
+    'salesMonthlyBusiness','salesWeeklyBusiness','salesMonthlyStore','salesWeeklyStore','salesMonthlyDepartment','salesWeeklyDepartment','salesMonthlyCategory','salesWeeklyCategory','salesByDow','salesByHour',
+    'deliveryMonthlyBusiness','deliveryWeeklyBusiness','deliveryMonthlyStorePlatform','deliveryWeeklyStorePlatform','deliveryMonthlyCategory','deliveryWeeklyCategory','deliveryByDow','deliveryByHour',
+    'invSnapshot','invDoi','invShortage','invExcess','invTransfer',
+    'shrinkMonthlyBusiness','shrinkMonthlyStore','shrinkDetailDescription','shrinkDetailSupplier',
+    'sbfMonthlyBusiness','sbfWeeklyBusiness','sbfMonthlyServiceStore','sbfWeeklyServiceStore',
+    'cxcSummary','cxcDetail','prd0Summary','prd0Detail',
+    'hallSales','hallDelivery','hallInventory','hallShrink',
+    'innovationMonthly','innovationWeekly','innovationByDow','innovationByHour','innovationByStore'
+  ];
+  var DEFERRED = ['salesMonthlyBrand','salesWeeklyBrand','salesMonthlyDescription'];
+
+  var CACHE = { data:{}, loaded:{}, loading:{}, failed:{}, warnings:[] };
+  var STOP = new Set(['de','del','la','el','los','las','por','para','con','sin','que','como','cuál','cual','dame','grafica','gráfico','grafico','analisis','análisis','mostrar','muestra','quiero','necesito','vs','ly','lm','mes','meses','semana','semanas','por','tienda','store','categoria','categoría','marca','departamento','delivery','ventas','venta','inventario','merma','sbf','cxc','prd','cero','hallazgos','innovation','innovacion','hora','horario','dia','día','descripcion','descripción','description','producto','articulo','artículo']);
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function norm(v){
+    var s = txt(v);
+    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
+    return s.toLowerCase().trim();
+  }
+  function keyNorm(v){ return norm(v).replace(/[^a-z0-9]+/g, ''); }
+  function pad2(v){ v = Number(v || 0); return (v < 10 ? '0' : '') + String(v); }
+  function arr(v){ return Array.isArray(v) ? v : []; }
+  function uniq(list){ return Array.from(new Set(arr(list).filter(Boolean))); }
+  function pathFor(name){ return BASE + '/' + FILES[name]; }
+  function warn(msg){ if(CACHE.warnings.indexOf(msg) < 0) CACHE.warnings.push(msg); try{ console.warn(msg); }catch(_e){} }
+
+  function loadJson(name){
+    if(CACHE.loaded[name] || CACHE.loading[name] || CACHE.failed[name] || !FILES[name]) return;
+    CACHE.loading[name] = fetch(pathFor(name), { cache:'no-store' })
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status + ' ' + name); return res.json(); })
+      .then(function(data){ CACHE.data[name] = data; CACHE.loaded[name] = true; return data; })
+      .catch(function(err){ CACHE.failed[name] = true; warn('JSON route v2 · no pude cargar ' + name + ': ' + String(err)); return null; })
+      .finally(function(){ delete CACHE.loading[name]; });
+  }
+  function getJson(name){ if(!CACHE.loaded[name] && !CACHE.loading[name] && !CACHE.failed[name]) loadJson(name); return CACHE.data[name]; }
+  function warmup(){ PRELOAD.forEach(loadJson); setTimeout(function(){ DEFERRED.forEach(loadJson); }, 1200); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', warmup, { once:true });
+  else warmup();
+
+  function getManifest(){ var m = getJson('manifest'); return m && typeof m === 'object' ? m : {}; }
+  function getCalendars(){ var c = getJson('calendars'); return c && typeof c === 'object' ? c : {}; }
+  function getCatalogs(){ var c = getJson('catalogs'); return c && typeof c === 'object' ? c : {}; }
+  function getStoresCatalog(){ return arr(getJson('stores')); }
+
+  function latestMonthKey(){
+    var cal = getCalendars();
+    var months = arr(cal.months).map(function(x){ return txt(x && x.month_key); }).filter(Boolean);
+    if(months.length) return months[months.length - 1];
+    var man = getManifest();
+    var ma = arr(man.months_available).map(txt).filter(Boolean);
+    return ma.length ? ma[ma.length - 1] : '';
+  }
+  function latestWeekKey(){
+    var cal = getCalendars();
+    var weeks = arr(cal.weeks).map(function(x){ return txt(x && x.week_key); }).filter(Boolean);
+    if(weeks.length) return weeks[weeks.length - 1];
+    var man = getManifest();
+    var wa = arr(man.weeks_available).map(txt).filter(Boolean);
+    return wa.length ? wa[wa.length - 1] : '';
+  }
+  function monthLabel(pk){
+    var m = txt(pk).match(/^(\d{4})-(\d{2})$/);
+    if(!m) return txt(pk);
+    var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return names[Math.max(0, Number(m[2]) - 1)] + ' ' + m[1];
+  }
+  function weekLabel(pk){ return txt(pk); }
+  function periodLabel(pk, mode){ return mode === 'month' ? monthLabel(pk) : weekLabel(pk); }
+  function comparablePeriod(periodKey, mode, kind){
+    var cal = getCalendars();
+    if(mode === 'month'){
+      var row = arr(cal.months).find(function(x){ return txt(x && x.month_key) === txt(periodKey); }) || null;
+      if(!row) return '';
+      return kind === 'lm' ? txt(row.lm_month) : txt(row.comparable_ly_month);
+    }
+    var rowW = arr(cal.weeks).find(function(x){ return txt(x && x.week_key) === txt(periodKey); }) || null;
+    if(!rowW) return '';
+    return txt(rowW.comparable_ly_week);
+  }
+
+  function dashboardMode(){
+    try{ if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month'; }catch(_e){}
+    try{ if(document.body && document.body.classList.contains('report-mode-mensual')) return 'month'; }catch(_e){}
+    return 'week';
+  }
+  function monthFromQuestion(question){
+    var q = norm(question);
+    var direct = q.match(/\b(20\d{2})[-\/](\d{1,2})\b/);
+    if(direct){ var mo = Number(direct[2]); if(mo >= 1 && mo <= 12) return direct[1] + '-' + pad2(mo); }
+    var map = { enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06', julio:'07', agosto:'08', septiembre:'09', setiembre:'09', octubre:'10', noviembre:'11', diciembre:'12' };
+    var years = q.match(/\b20\d{2}\b/g) || [];
+    if(years.length){
+      var keys = Object.keys(map);
+      for(var i=0;i<keys.length;i+=1){ if(q.indexOf(keys[i]) >= 0) return years[0] + '-' + map[keys[i]]; }
+    }
+    return '';
+  }
+  function weekFromQuestion(question){
+    var q = norm(question);
+    var m = q.match(/\b(20\d{2})\s*[- ]?w\s*(\d{1,2})\b/);
+    if(m) return m[1] + '-W' + pad2(m[2]);
+    m = q.match(/\bsemana\s+(\d{1,2})(?:\s+de)?\s+(20\d{2})\b/);
+    if(m) return m[2] + '-W' + pad2(m[1]);
+    return '';
+  }
+  function tailCount(question, mode){
+    var q = norm(question);
+    var m = q.match(/(?:ultim|últim|last)\s*(\d{1,2})\s*(seman|week|mes|month)/);
+    if(m) return Math.max(1, Number(m[1] || 0));
+    if(mode === 'week' && /ultim|últim|tendencia|serie|evolucion|evolución|trend/.test(q)) return 8;
+    if(mode === 'month' && /ultim|últim|tendencia|serie|evolucion|evolución|trend/.test(q)) return 6;
+    return 0;
+  }
+  function compareKind(question){
+    var q = norm(question);
+    if(/\blm\b|last month|vs mes anterior|vs mes pasado|mes anterior|mes pasado/.test(q)) return 'lm';
+    var years = q.match(/\b20\d{2}\b/g) || [];
+    if(years.length >= 2) return 'ly';
+    if(/\bly\b|año pasado|ano pasado|last year|vs 2025|vs 2024|vs 2023|comparativ|contra|\bvs\b/.test(q)) return 'ly';
+    return '';
+  }
+  function chartType(question){
+    var q = norm(question);
+    if(/pastel|pie|donut|doughnut|rosca/.test(q)) return 'pie';
+    if(/linea|línea|trend|tendencia|serie|evolucion|evolución/.test(q)) return 'line';
+    if(/barra horizontal|horizontal/.test(q)) return 'bar-horizontal';
+    if(/barra|barras|ranking|top|grafic/.test(q)) return 'bar';
+    return 'auto';
+  }
+  function detectDomain(question){
+    var q = norm(question);
+    if(/hallazgo|signal|señal|senal/.test(q)) return 'hallazgos';
+    if(/innovation|innovacion|food service combo|combo/.test(q)) return 'innovation';
+    if(/prd\s*en\s*cero|prd\s*cero|quiebre|agotad/.test(q)) return 'prd0';
+    if(/sbf|smart ticket|western union|puntoxpress|rapibac|loto|n1co|aki pago|recarga/.test(q)) return 'sbf';
+    if(/cxc|cuentas por cobrar|faltante caja|batch|cashier/.test(q)) return 'cxc';
+    if(/merma|shrink|ajuste/.test(q)) return 'merma';
+    if(/inventario|doi|dias inventario|d[ií]as inventario|transfer|sobreinventario|shortage|faltante/.test(q)) return 'inventario';
+    if(/delivery|uber|pedidos ya|pedidoya|pya|share/.test(q)) return 'delivery';
+    return 'sales';
+  }
+  function detectMetric(question, domain){
+    var q = norm(question);
+    if(domain === 'sbf') return 'tx';
+    if(domain === 'cxc') return /cantidad|conteo|entries/.test(q) ? 'entry_count' : 'amount';
+    if(domain === 'merma') return /%|porcentaje|pct/.test(q) ? 'shrink_pct' : 'shrink_amount';
+    if(domain === 'inventario'){
+      if(/doi|dias inventario|d[ií]as inventario/.test(q)) return 'doi';
+      if(/monto|valor|costo|inventory amount/.test(q)) return 'inventory_amount';
+      if(/faltante|shortage/.test(q)) return 'shortage_units';
+      if(/exceso|sobreinventario|overstock/.test(q)) return 'excess_units';
+      if(/transfer/.test(q)) return 'transfer_units';
+      return 'stock_units';
+    }
+    if(domain === 'prd0') return /cantidad|conteo|items/.test(q) ? 'item_count' : 'lost_sales_3d';
+    if(domain === 'hallazgos') return /%|porcentaje/.test(q) ? 'delta_pct' : 'delta';
+    if(domain === 'innovation') return /qty|unidades|cantidad/.test(q) ? 'qty' : 'sales';
+    if(domain === 'delivery' && /share|participacion|participación/.test(q)) return 'share';
+    if(/tx|transaccion|transacción|trafico|tráfico/.test(q)) return 'tx';
+    if(/ticket/.test(q)) return 'avg_ticket';
+    if(/margen\s*%|margin\s*%/.test(q)) return 'margin_pct';
+    if(/margen|margin|gm/.test(q)) return 'margin';
+    if(/qty|unidades|cantidad/.test(q)) return 'qty';
+    return 'sales';
+  }
+  function detectDimension(question, domain){
+    var q = norm(question);
+    if(/dia de semana|d[ií]a de semana|dow|lunes|martes|miercoles|miércoles|jueves|viernes|sabado|sábado|domingo/.test(q)) return 'dow';
+    if(/hora|horario/.test(q)) return 'hour';
+    if(/plataforma|uber|pedidos ya|pedidoya|pya/.test(q) && domain === 'delivery') return 'platform';
+    if(/servicio/.test(q) && domain === 'sbf') return 'service';
+    if(/proveedor/.test(q)) return 'supplier';
+    if(/descripcion|descripción|sku|producto|articulo|artículo/.test(q)) return 'description';
+    if(/marca/.test(q)) return 'brand';
+    if(/categor/.test(q)) return 'category';
+    if(/departamento|depto/.test(q)) return 'department';
+    if(/tienda|store/.test(q)) return 'store';
+    if(domain === 'innovation' && /combo/.test(q)) return 'combo_label';
+    return '';
+  }
+  function metricLabel(metric, domain){
+    var map = {
+      sales:'Venta', tx:'TX', margin:'Margen', margin_pct:'Margen %', avg_ticket:'Ticket promedio', qty:'Unidades', share:'Share delivery',
+      stock_units:'Stock unidades', inventory_amount:'Valor inventario', doi:'DOI', shortage_units:'Faltante unidades', excess_units:'Exceso unidades', transfer_units:'Transfer unidades',
+      shrink_amount:'Merma $', shrink_pct:'Merma %', amount:'Monto CXC', entry_count:'Registros CXC', item_count:'Items PRD en cero', lost_sales_3d:'Venta perdida 3d',
+      delta:'Delta', delta_pct:'Delta %', current_value:'Valor actual'
+    };
+    return map[metric] || metric;
+  }
+  function yFormat(metric){
+    if(/pct|share/.test(metric)) return 'percent';
+    if(/amount|sales|margin|ticket|lost_sales/.test(metric)) return 'currency';
+    return 'number';
+  }
+  function fmtNumber(v, kind){
+    if(v == null || !Number.isFinite(Number(v))) return 'N/D';
+    var n = Number(v);
+    if(kind === 'percent') return n.toLocaleString('es-SV', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
+    if(kind === 'currency') return '$' + n.toLocaleString('es-SV', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    return n.toLocaleString('es-SV', { maximumFractionDigits:2 });
+  }
+  function selectedStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function'){
+        var s = getSelectedStoresOrAll() || [];
+        return uniq(arr(s).map(function(v){ return txt(v).toUpperCase(); }));
+      }
+    }catch(_e){}
+    return [];
+  }
+  function storesFromQuestion(question){
+    var hits = [];
+    var qn = keyNorm(question);
+    var regex = /ampm0?\d+/ig;
+    var m;
+    while((m = regex.exec(question || ''))){ hits.push(txt(m[0]).toUpperCase().replace(/AMPM(\d)$/,'AMPM0$1')); }
+    getStoresCatalog().forEach(function(row){
+      var st = txt(row && (row.store_name || row.store)).toUpperCase();
+      if(st && qn.indexOf(keyNorm(st)) >= 0) hits.push(st);
+    });
+    return uniq(hits);
+  }
+  function entityAliases(question){
+    var q = norm(question);
+    if(/licor|whisky|vodka|ron|tequila|gin|brandy|vino|champagne/.test(q)) return { field:'department', value:'Licores' };
+    if(/cerveza|beer/.test(q)) return { field:'department', value:'Cervezas y RTD' };
+    if(/food service|hot dog|hamburguesa|pizza|burrito|nacho|cafe|café/.test(q)) return { field:'department', value:'Food Service' };
+    if(/boquita|snack/.test(q)) return { field:'category', value:'Boquitas' };
+    return null;
+  }
+  function platformFromQuestion(question){
+    var q = norm(question);
+    if(/uber/.test(q)) return 'Uber';
+    if(/pedidos ya|pedidoya|pya|peya/.test(q)) return 'Pedido, YA';
+    return '';
+  }
+  function serviceFromQuestion(question){
+    var q = norm(question);
+    var services = arr((getCatalogs().sbf_services || [])).map(txt);
+    for(var i=0;i<services.length;i+=1){ if(q.indexOf(norm(services[i])) >= 0) return services[i]; }
+    return '';
+  }
+  function supplierFromQuestion(question){
+    var q = norm(question);
+    var suppliers = arr((getCatalogs().suppliers || [])).map(txt);
+    for(var i=0;i<suppliers.length;i+=1){ if(q.indexOf(norm(suppliers[i])) >= 0) return suppliers[i]; }
+    return '';
+  }
+  function buildKeywords(question){
+    return uniq(norm(question).split(/[^a-z0-9]+/g).filter(function(tok){ return tok && tok.length >= 3 && !STOP.has(tok); }));
+  }
+  function textMatch(row, fields, keywords){
+    if(!keywords.length) return true;
+    var bag = fields.map(function(f){ return norm(row && row[f]); }).join(' | ');
+    return keywords.every(function(k){ return bag.indexOf(k) >= 0; });
+  }
+  function sortPeriods(list, mode){
+    return arr(list).slice().sort(function(a,b){ return txt(a).localeCompare(txt(b), undefined, { numeric:true }); });
+  }
+
+  function configFromQuestion(question){
+    var domain = detectDomain(question);
+    var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
+    var periodKey = mode === 'month' ? (monthFromQuestion(question) || latestMonthKey()) : (weekFromQuestion(question) || latestWeekKey());
+    var compare = compareKind(question);
+    var cfg = {
+      question: txt(question),
+      domain: domain,
+      mode: mode,
+      periodKey: periodKey,
+      compare: compare,
+      comparePeriodKey: compare ? comparablePeriod(periodKey, mode, compare) : '',
+      chartType: chartType(question),
+      dimension: detectDimension(question, domain),
+      metric: detectMetric(question, domain),
+      tail: tailCount(question, mode),
+      stores: storesFromQuestion(question),
+      dashboardStores: selectedStores(),
+      platform: platformFromQuestion(question),
+      service: serviceFromQuestion(question),
+      supplier: supplierFromQuestion(question),
+      alias: entityAliases(question),
+      keywords: buildKeywords(question)
+    };
+    return cfg;
+  }
+
+  function datasetPlan(cfg){
+    var mode = cfg.mode;
+    switch(cfg.domain){
+      case 'delivery':
+        if(cfg.dimension === 'dow') return { key:'deliveryByDow', timeField:'period_key', periodTypeField:'period_type', groupField:'dow_name' };
+        if(cfg.dimension === 'hour') return { key:'deliveryByHour', timeField:'period_key', periodTypeField:'period_type', groupField:'hour' };
+        if(cfg.dimension === 'category') return { key: mode === 'month' ? 'deliveryMonthlyCategory' : 'deliveryWeeklyCategory', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'category' };
+        if(cfg.dimension === 'store' || cfg.dimension === 'platform' || cfg.platform) return { key: mode === 'month' ? 'deliveryMonthlyStorePlatform' : 'deliveryWeeklyStorePlatform', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField: cfg.dimension === 'platform' ? 'platform' : 'store_name' };
+        return { key: mode === 'month' ? 'deliveryMonthlyBusiness' : 'deliveryWeeklyBusiness', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'' };
+      case 'inventario':
+        if(/transfer/.test(norm(cfg.question))) return { key:'invTransfer', timeField:'', groupField:'description' };
+        if(/faltante|shortage/.test(norm(cfg.question))) return { key:'invShortage', timeField:'', groupField:'description' };
+        if(/exceso|sobreinventario|overstock/.test(norm(cfg.question))) return { key:'invExcess', timeField:'', groupField:'description' };
+        if(cfg.metric === 'doi') return { key:'invDoi', timeField:'', groupField:'description' };
+        return { key:'invSnapshot', timeField:'', groupField:'description' };
+      case 'merma':
+        if(cfg.dimension === 'description') return { key:'shrinkDetailDescription', timeField:'month_key', groupField:'description' };
+        if(cfg.dimension === 'supplier' || cfg.supplier) return { key:'shrinkDetailSupplier', timeField:'month_key', groupField:'supplier' };
+        if(cfg.dimension === 'store') return { key:'shrinkMonthlyStore', timeField:'month_key', groupField:'store_name' };
+        return { key:'shrinkMonthlyBusiness', timeField:'month_key', groupField:'' };
+      case 'sbf':
+        if(cfg.dimension === 'service' || cfg.service || cfg.dimension === 'store') return { key: mode === 'month' ? 'sbfMonthlyServiceStore' : 'sbfWeeklyServiceStore', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField: cfg.dimension === 'store' ? 'store_name' : 'service' };
+        return { key: mode === 'month' ? 'sbfMonthlyBusiness' : 'sbfWeeklyBusiness', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'' };
+      case 'cxc':
+        if(/detalle|comentario|batch|cashier|cajero/.test(norm(cfg.question))) return { key:'cxcDetail', timeField:'month_key', groupField:'comment' };
+        return { key:'cxcSummary', timeField:'month_key', groupField:'store_name' };
+      case 'prd0':
+        if(cfg.dimension === 'description' || cfg.dimension === 'supplier' || cfg.supplier) return { key:'prd0Detail', timeField:'', groupField: cfg.dimension === 'supplier' || cfg.supplier ? 'supplier' : 'description' };
+        return { key:'prd0Summary', timeField:'', groupField:'supplier' };
+      case 'hallazgos':
+        if(/delivery/.test(norm(cfg.question))) return { key:'hallDelivery', timeField:'period_key', groupField:'scope_key' };
+        if(/inventario|doi|transfer|stock/.test(norm(cfg.question))) return { key:'hallInventory', timeField:'period_key', groupField:'scope_key' };
+        if(/merma|shrink/.test(norm(cfg.question))) return { key:'hallShrink', timeField:'period_key', groupField:'scope_key' };
+        return { key:'hallSales', timeField:'period_key', groupField:'scope_key' };
+      case 'innovation':
+        if(cfg.dimension === 'dow') return { key:'innovationByDow', timeField:'period_key', periodTypeField:'period_type', groupField:'dow_name' };
+        if(cfg.dimension === 'hour') return { key:'innovationByHour', timeField:'period_key', periodTypeField:'period_type', groupField:'hour' };
+        if(cfg.dimension === 'store') return { key:'innovationByStore', timeField:'period_key', periodTypeField:'period_type', groupField:'store_name' };
+        return { key: mode === 'month' ? 'innovationMonthly' : 'innovationWeekly', timeField:'period_key', groupField:'combo_label' };
+      case 'sales':
+      default:
+        if(cfg.dimension === 'dow') return { key:'salesByDow', timeField:'period_key', periodTypeField:'period_type', groupField:'dow_name' };
+        if(cfg.dimension === 'hour') return { key:'salesByHour', timeField:'period_key', periodTypeField:'period_type', groupField:'hour' };
+        if(cfg.dimension === 'description') return { key:'salesMonthlyDescription', timeField:'month_key', groupField:'description' };
+        if(cfg.dimension === 'brand') return { key: mode === 'month' ? 'salesMonthlyBrand' : 'salesWeeklyBrand', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'brand' };
+        if(cfg.dimension === 'category') return { key: mode === 'month' ? 'salesMonthlyCategory' : 'salesWeeklyCategory', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'category' };
+        if(cfg.dimension === 'department') return { key: mode === 'month' ? 'salesMonthlyDepartment' : 'salesWeeklyDepartment', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'department' };
+        if(cfg.dimension === 'store') return { key: mode === 'month' ? 'salesMonthlyStore' : 'salesWeeklyStore', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'store_name' };
+        return { key: mode === 'month' ? 'salesMonthlyBusiness' : 'salesWeeklyBusiness', timeField: mode === 'month' ? 'month_key' : 'week_key', groupField:'' };
+    }
+  }
+
+  function phaseField(metric, phase){
+    if(phase === 'current') return metric;
+    if(phase === 'ly'){
+      if(metric === 'margin_pct') return 'margin_pct_ly';
+      if(metric === 'avg_ticket') return 'avg_ticket_ly';
+      return metric + '_ly';
+    }
+    if(phase === 'lm'){
+      if(metric === 'avg_ticket') return 'avg_ticket_lm';
+      return metric + '_lm';
+    }
+    return metric;
+  }
+  function rowMetric(row, cfg, phase, extra){
+    var metric = cfg.metric;
+    if(metric === 'share'){
+      var salesVal = phase === 'current' ? num(extra && extra.deliverySales) : num(extra && extra.deliveryCompareSales);
+      var totalVal = phase === 'current' ? num(extra && extra.totalSales) : num(extra && extra.totalCompareSales);
+      return totalVal ? Number(((salesVal / totalVal) * 100).toFixed(2)) : 0;
+    }
+    return num(row && row[phaseField(metric, phase)]);
+  }
+  function rowMatches(row, cfg, ds){
+    if(!row) return false;
+    if(ds.periodTypeField && txt(row[ds.periodTypeField]) && txt(row[ds.periodTypeField]) !== cfg.mode) return false;
+
+    var storeScope = cfg.stores.length ? cfg.stores : cfg.dashboardStores;
+    if(storeScope.length){
+      var rowStore = txt(row.store_name || row.store).toUpperCase();
+      if(rowStore && storeScope.indexOf(rowStore) < 0) return false;
+    }
+
+    if(cfg.platform){
+      var platform = norm(row.platform || row.delivery_platform || row.delivery_channel);
+      if(platform.indexOf(norm(cfg.platform)) < 0) return false;
+    }
+    if(cfg.service){
+      var service = norm(row.service);
+      if(service.indexOf(norm(cfg.service)) < 0) return false;
+    }
+    if(cfg.supplier){
+      var supplier = norm(row.supplier);
+      if(supplier.indexOf(norm(cfg.supplier)) < 0) return false;
+    }
+    if(cfg.alias){
+      var aliasVal = norm(row[cfg.alias.field]);
+      if(aliasVal.indexOf(norm(cfg.alias.value)) < 0) return false;
+    }
+
+    if(cfg.dimension === 'description'){
+      if(!textMatch(row, ['description','brand','category','department'], cfg.keywords)) return false;
+    }
+    return true;
+  }
+
+  function sortRowsByMetric(rows, cfg){
+    return arr(rows).slice().sort(function(a,b){ return rowMetric(b, cfg, 'current') - rowMetric(a, cfg, 'current'); });
+  }
+  function topNRows(rows, cfg, n){ return sortRowsByMetric(rows, cfg).slice(0, Math.max(1, n || 10)); }
+
+  function shareSupport(cfg, currentRows, compareRows){
+    if(cfg.domain !== 'delivery' || cfg.metric !== 'share') return { deliverySales:0, totalSales:0, deliveryCompareSales:0, totalCompareSales:0 };
+    var mode = cfg.mode;
+    var salesDs = mode === 'month' ? getJson('salesMonthlyBusiness') : getJson('salesWeeklyBusiness');
+    var salesStoreDs = mode === 'month' ? getJson('salesMonthlyStore') : getJson('salesWeeklyStore');
+    var storeScope = cfg.stores.length ? cfg.stores : cfg.dashboardStores;
+    var periodField = mode === 'month' ? 'month_key' : 'week_key';
+    function sumPeriod(rows, key){
+      return arr(rows).filter(function(r){
+        if(txt(r[periodField]) !== txt(key)) return false;
+        if(storeScope.length && txt(r.store_name || r.store)) return storeScope.indexOf(txt(r.store_name || r.store).toUpperCase()) >= 0;
+        return true;
+      }).reduce(function(acc, r){ return acc + num(r.sales); }, 0);
+    }
+    var currentPeriod = cfg.periodKey;
+    var comparePeriod = cfg.comparePeriodKey;
+    var deliverySales = arr(currentRows).reduce(function(acc,r){ return acc + num(r.sales); }, 0);
+    var deliveryCompareSales = arr(currentRows).reduce(function(acc,r){ return acc + num(r.sales_ly || r.sales_lm); }, 0);
+    var totalBase = storeScope.length ? salesStoreDs : salesDs;
+    return {
+      deliverySales: deliverySales,
+      totalSales: sumPeriod(totalBase, currentPeriod),
+      deliveryCompareSales: deliveryCompareSales,
+      totalCompareSales: comparePeriod ? sumPeriod(totalBase, comparePeriod) : 0
+    };
+  }
+
+  function buildSnapshotModel(rows, cfg, ds){
+    var currentRows = ds.timeField ? arr(rows).filter(function(r){ return txt(r[ds.timeField]) === txt(cfg.periodKey); }) : arr(rows);
+    if(!currentRows.length) return null;
+    var extra = shareSupport(cfg, currentRows, []);
+    var current = currentRows.reduce(function(acc, r){ return acc + rowMetric(r, cfg, 'current', extra); }, 0);
+    var compare = 0;
+    if(cfg.compare){
+      compare = currentRows.reduce(function(acc, r){ return acc + rowMetric(r, cfg, cfg.compare, extra); }, 0);
+      if(!compare && ds.timeField && cfg.comparePeriodKey){
+        var compareRows = arr(rows).filter(function(r){ return txt(r[ds.timeField]) === txt(cfg.comparePeriodKey); });
+        var extraCompare = shareSupport(cfg, currentRows, compareRows);
+        compare = compareRows.reduce(function(acc, r){ return acc + rowMetric(r, cfg, 'current', extraCompare); }, 0);
+        if(cfg.metric === 'share' && !compare){ compare = rowMetric(null, cfg, cfg.compare, extraCompare); }
+      }
+    }
+    if(cfg.metric === 'share') current = rowMetric(null, cfg, 'current', extra);
+    var labels = cfg.compare ? [periodLabel(cfg.periodKey, cfg.mode), periodLabel(cfg.comparePeriodKey || comparablePeriod(cfg.periodKey, cfg.mode, cfg.compare), cfg.mode)] : [periodLabel(cfg.periodKey, cfg.mode)];
+    var values = cfg.compare ? [current, compare] : [current];
+    var delta = cfg.compare ? current - compare : 0;
+    var deltaPct = cfg.compare && compare ? (delta / compare) * 100 : 0;
+    return {
+      labels: labels,
+      datasets: [{ label: metricLabel(cfg.metric, cfg.domain), data: values, type:'bar', color:'#0C4D8F' }],
+      title: metricLabel(cfg.metric, cfg.domain) + ' · ' + cfg.domain.toUpperCase(),
+      subtitle: cfg.compare ? ('Comparativo ' + labels[0] + ' vs ' + labels[1]) : ('Corte ' + labels[0]),
+      tag: cfg.compare ? 'Actual vs ' + cfg.compare.toUpperCase() : (cfg.mode === 'month' ? 'Mensual' : 'Semanal'),
+      yFormat: yFormat(cfg.metric),
+      type:'bar',
+      horizontal:false,
+      note:'Fuente JSON analítico · ' + ds.key,
+      periods:[cfg.periodKey],
+      questionScopedContext:
+        'Dominio: ' + cfg.domain + '. ' +
+        'Periodo: ' + labels[0] + '. ' +
+        metricLabel(cfg.metric, cfg.domain) + ' actual: ' + fmtNumber(current, yFormat(cfg.metric)) + '. ' +
+        (cfg.compare ? ('Comparativo: ' + fmtNumber(compare, yFormat(cfg.metric)) + ' en ' + labels[1] + '. Delta: ' + fmtNumber(delta, yFormat(cfg.metric)) + '. Delta %: ' + fmtNumber(deltaPct, 'percent') + '. ') : '') +
+        'Fuente JSON: ' + ds.key + '.'
+    };
+  }
+
+  function buildBreakdownModel(rows, cfg, ds){
+    var baseRows = ds.timeField ? arr(rows).filter(function(r){ return txt(r[ds.timeField]) === txt(cfg.periodKey); }) : arr(rows);
+    if(!baseRows.length) return null;
+    var extra = shareSupport(cfg, baseRows, []);
+    var groupField = ds.groupField || cfg.dimension || 'description';
+    var map = new Map();
+    baseRows.forEach(function(r){
+      var label = txt(r[groupField] || r.store_name || r.store || r.description || r.category || r.brand || r.service || r.platform || r.scope_key || 'Sin dato');
+      if(!label) return;
+      if(!map.has(label)) map.set(label, { current:0, compare:0 });
+      var bucket = map.get(label);
+      bucket.current += rowMetric(r, cfg, 'current', extra);
+      if(cfg.compare) bucket.compare += rowMetric(r, cfg, cfg.compare, extra);
+    });
+    var entries = Array.from(map.entries()).map(function(pair){ return { label:pair[0], current:pair[1].current, compare:pair[1].compare }; })
+      .filter(function(x){ return Number.isFinite(x.current); })
+      .sort(function(a,b){ return Math.abs(b.current) - Math.abs(a.current); })
+      .slice(0, cfg.chartType === 'pie' ? 8 : 12);
+    if(!entries.length) return null;
+    var labels = entries.map(function(x){ return x.label; });
+    var datasets = [{ label: metricLabel(cfg.metric, cfg.domain), data: entries.map(function(x){ return x.current; }), type: cfg.chartType === 'pie' ? 'pie' : 'bar', color:'#0C4D8F' }];
+    if(cfg.compare && entries.some(function(x){ return x.compare !== 0; })){ datasets.push({ label: metricLabel(cfg.metric, cfg.domain) + ' ' + cfg.compare.toUpperCase(), data: entries.map(function(x){ return x.compare; }), type:'bar', color:'#F58320' }); }
+    var total = entries.reduce(function(acc,x){ return acc + x.current; }, 0);
+    var topText = entries.slice(0,5).map(function(x){ return x.label + ': ' + fmtNumber(x.current, yFormat(cfg.metric)); }).join(' | ');
+    return {
+      labels: labels,
+      datasets: datasets,
+      title: metricLabel(cfg.metric, cfg.domain) + ' por ' + groupField,
+      subtitle: 'Corte ' + periodLabel(cfg.periodKey, cfg.mode),
+      tag: cfg.chartType === 'pie' ? 'Participación' : (cfg.compare ? 'Actual vs ' + cfg.compare.toUpperCase() : 'Breakdown'),
+      yFormat: yFormat(cfg.metric),
+      type: cfg.chartType === 'pie' ? 'pie' : 'bar',
+      horizontal: cfg.chartType === 'bar-horizontal' || (cfg.chartType !== 'pie' && labels.length > 6),
+      note:'Fuente JSON analítico · ' + ds.key,
+      periods:[cfg.periodKey],
+      questionScopedContext:
+        'Dominio: ' + cfg.domain + '. ' +
+        'Periodo: ' + periodLabel(cfg.periodKey, cfg.mode) + '. ' +
+        'Breakdown por ' + groupField + '. ' +
+        'Total visible: ' + fmtNumber(total, yFormat(cfg.metric)) + '. ' +
+        'Top líneas: ' + topText + '. ' +
+        'Fuente JSON: ' + ds.key + '.'
+    };
+  }
+
+  function buildSeriesModel(rows, cfg, ds){
+    if(!ds.timeField) return null;
+    var map = new Map();
+    arr(rows).forEach(function(r){
+      var pk = txt(r[ds.timeField]);
+      if(!pk) return;
+      if(!map.has(pk)) map.set(pk, { current:0, compare:0 });
+      var extra = shareSupport(cfg, [r], []);
+      var bucket = map.get(pk);
+      bucket.current += rowMetric(r, cfg, 'current', extra);
+      if(cfg.compare) bucket.compare += rowMetric(r, cfg, cfg.compare, extra);
+    });
+    var periods = sortPeriods(Array.from(map.keys()), cfg.mode);
+    if(cfg.tail) periods = periods.slice(-cfg.tail);
+    if(!periods.length) return null;
+    var labels = periods.map(function(pk){ return periodLabel(pk, cfg.mode); });
+    var currentVals = periods.map(function(pk){ return map.get(pk).current; });
+    var datasets = [{ label: metricLabel(cfg.metric, cfg.domain), data: currentVals, type: cfg.chartType === 'bar' ? 'bar' : 'line', color:'#0C4D8F' }];
+    if(cfg.compare && periods.some(function(pk){ return map.get(pk).compare !== 0; })) datasets.push({ label: metricLabel(cfg.metric, cfg.domain) + ' ' + cfg.compare.toUpperCase(), data: periods.map(function(pk){ return map.get(pk).compare; }), type: cfg.chartType === 'bar' ? 'bar' : 'line', color:'#F58320' });
+    var first = currentVals[0] || 0, last = currentVals[currentVals.length - 1] || 0, delta = last - first, deltaPct = first ? (delta / first) * 100 : 0;
+    return {
+      labels: labels,
+      datasets: datasets,
+      title: metricLabel(cfg.metric, cfg.domain) + ' · serie ' + (cfg.mode === 'month' ? 'mensual' : 'semanal'),
+      subtitle: cfg.tail ? ('Últimos ' + cfg.tail + ' periodos') : 'Serie histórica',
+      tag: cfg.compare ? 'Actual vs ' + cfg.compare.toUpperCase() : 'Tendencia',
+      yFormat: yFormat(cfg.metric),
+      type: cfg.chartType === 'bar' ? 'bar' : 'line',
+      horizontal:false,
+      note:'Fuente JSON analítico · ' + ds.key,
+      periods: periods,
+      questionScopedContext:
+        'Dominio: ' + cfg.domain + '. ' +
+        'Serie ' + (cfg.mode === 'month' ? 'mensual' : 'semanal') + ' en ' + periods.map(function(pk){ return periodLabel(pk, cfg.mode); }).join(', ') + '. ' +
+        metricLabel(cfg.metric, cfg.domain) + ' inicial: ' + fmtNumber(first, yFormat(cfg.metric)) + '. ' +
+        metricLabel(cfg.metric, cfg.domain) + ' final: ' + fmtNumber(last, yFormat(cfg.metric)) + '. ' +
+        'Delta serie: ' + fmtNumber(delta, yFormat(cfg.metric)) + ' | ' + fmtNumber(deltaPct, 'percent') + '. ' +
+        'Fuente JSON: ' + ds.key + '.'
+    };
+  }
+
+  function buildRankingRowsModel(rows, cfg, ds){
+    var top = topNRows(rows, cfg, 12);
+    if(!top.length) return null;
+    var labelField = ds.groupField || 'description';
+    var labels = top.map(function(r){
+      if(ds.key === 'invTransfer') return txt(r.description) + ' · ' + txt(r.from_store) + '→' + txt(r.to_store);
+      if(ds.key === 'cxcDetail') return txt(r.comment || r.reference_id || 'Sin detalle');
+      return txt(r[labelField] || r.description || r.supplier || r.scope_key || r.store_name || 'Sin dato');
+    });
+    var values = top.map(function(r){ return rowMetric(r, cfg, 'current'); });
+    var bullets = top.slice(0,6).map(function(r){
+      var head = txt(r[labelField] || r.description || r.supplier || r.scope_key || r.store_name || 'Sin dato');
+      var metricTxt = fmtNumber(rowMetric(r, cfg, 'current'), yFormat(cfg.metric));
+      var meta = [];
+      if(r.store_name || r.store) meta.push('tienda ' + txt(r.store_name || r.store));
+      if(r.supplier && labelField !== 'supplier') meta.push('proveedor ' + txt(r.supplier));
+      if(r.severity) meta.push('severity ' + txt(r.severity));
+      if(r.priority) meta.push('priority ' + txt(r.priority));
+      return head + ': ' + metricTxt + (meta.length ? ' (' + meta.join(' · ') + ')' : '');
+    }).join(' | ');
+    return {
+      labels: labels,
+      datasets: [{ label: metricLabel(cfg.metric, cfg.domain), data: values, type:'bar', color:'#0C4D8F' }],
+      title: metricLabel(cfg.metric, cfg.domain) + ' · ranking ' + cfg.domain,
+      subtitle: 'Top señales filtradas',
+      tag:'Ranking',
+      yFormat:yFormat(cfg.metric),
+      type:'bar',
+      horizontal:true,
+      note:'Fuente JSON analítico · ' + ds.key,
+      periods: cfg.periodKey ? [cfg.periodKey] : [],
+      questionScopedContext:
+        'Dominio: ' + cfg.domain + '. ' +
+        (cfg.periodKey ? ('Periodo: ' + periodLabel(cfg.periodKey, cfg.mode) + '. ') : '') +
+        'Top señales: ' + bullets + '. ' +
+        'Fuente JSON: ' + ds.key + '.'
+    };
+  }
+
+  function buildModel(question){
+    var cfg = configFromQuestion(question);
+    var ds = datasetPlan(cfg);
+    var raw = getJson(ds.key);
+    if(!Array.isArray(raw) || !raw.length) return null;
+    var rows = raw.filter(function(r){ return rowMatches(r, cfg, ds); });
+    if(cfg.domain === 'hallazgos'){
+      var dedupe = new Map();
+      rows.forEach(function(r){
+        var k = [txt(r.scope_key), txt(r.metric), txt(r.period_key)].join('|');
+        if(!dedupe.has(k)) dedupe.set(k, r);
+      });
+      rows = Array.from(dedupe.values());
+    }
+    if(ds.timeField && cfg.periodKey){
+      var anyCurrent = rows.some(function(r){ return txt(r[ds.timeField]) === txt(cfg.periodKey); });
+      if(anyCurrent){
+        var currentScoped = rows.filter(function(r){ return txt(r[ds.timeField]) === txt(cfg.periodKey); });
+        if(currentScoped.length && !(/tendencia|serie|evolucion|evolución|ultim|últim/.test(norm(cfg.question)))) rows = currentScoped.concat(rows.filter(function(r){ return txt(r[ds.timeField]) !== txt(cfg.periodKey); }));
+      } else if(cfg.mode === 'month' && latestMonthKey() && cfg.periodKey !== latestMonthKey()) rows = rows.filter(Boolean);
+    }
+    if(!rows.length) return null;
+
+    var seriesHint = cfg.tail > 0 || cfg.chartType === 'line' || /tendencia|serie|evolucion|evolución|ultim|últim/.test(norm(cfg.question));
+    if(ds.timeField && !seriesHint && (cfg.domain === 'cxc' || cfg.domain === 'hallazgos' || cfg.domain === 'merma')){
+      var scopedNow = rows.filter(function(r){ return txt(r[ds.timeField]) === txt(cfg.periodKey); });
+      if(scopedNow.length) rows = scopedNow;
+    }
+
+    if(cfg.domain === 'sales' || cfg.domain === 'delivery' || cfg.domain === 'sbf' || cfg.domain === 'innovation'){
+      if(seriesHint) return buildSeriesModel(rows, cfg, ds) || buildBreakdownModel(rows, cfg, ds) || buildSnapshotModel(rows, cfg, ds);
+      if(cfg.dimension && cfg.dimension !== 'store' && cfg.dimension !== 'service' && cfg.dimension !== 'platform') return buildBreakdownModel(rows, cfg, ds) || buildSnapshotModel(rows, cfg, ds);
+      if(cfg.chartType === 'pie' || cfg.dimension === 'store' || cfg.dimension === 'platform' || cfg.dimension === 'service') return buildBreakdownModel(rows, cfg, ds) || buildSnapshotModel(rows, cfg, ds);
+      return buildSnapshotModel(rows, cfg, ds) || buildBreakdownModel(rows, cfg, ds);
+    }
+
+    if(cfg.domain === 'merma'){
+      if(cfg.dimension === 'description' || cfg.dimension === 'supplier' || cfg.chartType !== 'auto') return buildBreakdownModel(rows, cfg, ds) || buildRankingRowsModel(rows, cfg, ds);
+      return buildSnapshotModel(rows, cfg, ds) || buildRankingRowsModel(rows, cfg, ds);
+    }
+
+    if(cfg.domain === 'inventario' || cfg.domain === 'cxc' || cfg.domain === 'prd0' || cfg.domain === 'hallazgos'){
+      return buildRankingRowsModel(rows, cfg, ds) || buildBreakdownModel(rows, cfg, ds) || buildSnapshotModel(rows, cfg, ds);
+    }
+
+    return null;
+  }
+
+  var oldBuild = typeof window.__ampmAiDirectCuboBuild === 'function' ? window.__ampmAiDirectCuboBuild : null;
+  var oldScoped = typeof window.buildAiQuestionScopedContext === 'function' ? window.buildAiQuestionScopedContext : null;
+
+  function routeBuild(question){
+    try{
+      var model = buildModel(question);
+      if(model) return model;
+    }catch(err){ warn('JSON route v2 · build failed: ' + String(err)); }
+    return oldBuild ? oldBuild(question) : null;
+  }
+
+  window.__ampmJsonRouteV2Ready = function(){
+    return PRELOAD.every(function(k){ return !!CACHE.loaded[k] || !!CACHE.failed[k]; });
+  };
+  window.__ampmJsonRouteV2State = CACHE;
+  window.__ampmAiDirectCuboBuild = routeBuild;
+  aiBuildLocalIntentModel = routeBuild;
+  aiBuildSeries = routeBuild;
+  buildAiQuestionScopedContext = function(question){
+    var model = routeBuild(question);
+    if(model && model.questionScopedContext) return model.questionScopedContext;
+    return oldScoped ? oldScoped(question) : null;
+  };
+
+  function refreshAiMeta(){
+    try{
+      var sub = document.getElementById('ampmAiStageSub');
+      if(sub && window.__ampmJsonRouteV2Ready()) sub.textContent = 'Base analítica activa: JSON preprocesado + fallback local del dashboard. Pide un gráfico local o una imagen IA y se mostrará aquí.';
+      var footer = document.getElementById('ampmAiFooterHint');
+      if(footer && window.__ampmJsonRouteV2Ready() && footer.textContent && footer.textContent.indexOf('JSON analítico activo') < 0){ footer.textContent = footer.textContent + ' · JSON analítico activo.'; }
+    }catch(_e){}
+  }
+  setInterval(refreshAiMeta, 2500);
+})();
+</script>
+
 </body>
 
 
