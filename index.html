@@ -5936,7 +5936,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     }
   }
 
-  function renderRequestedLocalVisual(question, pack){
+  function renderRequestedLocalVisual(question, pack, options){
     var smart = null;
     try{ smart = aiBuildLocalIntentModel(question); }catch(_e){ smart = null; }
 
@@ -5968,6 +5968,23 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     );
 
     if(!hasData){
+      if(!(options && options.__retried) && typeof window.__ampmJsonRouteV2EnsureReadyForQuestion === 'function'){
+        try{
+          setStageLoading('Preparando capa JSON para tu solicitud…');
+          window.__ampmJsonRouteV2EnsureReadyForQuestion(question)
+            .then(function(){
+              var ok = false;
+              try{ ok = renderRequestedLocalVisual(question, pack, { __retried:true }); }catch(_e){ ok = false; }
+              if(!ok){
+                resetStage('No encontré una estructura local suficiente para graficar exactamente esa solicitud con la data disponible.');
+              }
+            })
+            .catch(function(err){
+              resetStage('No pude preparar la capa JSON para esa solicitud: ' + txt(err && err.message || err));
+            });
+          return true;
+        }catch(_e){}
+      }
       resetStage('No encontré una estructura local suficiente para graficar exactamente esa solicitud con la data disponible.');
       return false;
     }
@@ -60773,6 +60790,22 @@ function innovationOnePagerCreateBrandedShell(){
     return arr(list).slice().sort(function(a,b){ return txt(a).localeCompare(txt(b), undefined, { numeric:true }); });
   }
 
+  function normalizeRequestedDimension(cfg){
+    if(cfg && cfg.dimension) return cfg.dimension;
+    if(!cfg) return '';
+    if(cfg.chartType === 'pie'){
+      if(cfg.domain === 'sales') return 'category';
+      if(cfg.domain === 'delivery') return cfg.platform ? 'platform' : 'category';
+      if(cfg.domain === 'sbf') return 'service';
+      if(cfg.domain === 'innovation') return 'combo_label';
+      if(cfg.domain === 'merma' || cfg.domain === 'inventario' || cfg.domain === 'prd0') return 'description';
+      if(cfg.domain === 'hallazgos') return 'scope_key';
+    }
+    if(cfg.domain === 'sales' && cfg.alias && cfg.alias.field === 'department' && /mix|participacion|participación|share|breakdown|desglose/.test(norm(cfg.question))) return 'category';
+    if(cfg.domain === 'delivery' && !cfg.dimension && cfg.platform) return 'store';
+    return cfg.dimension || '';
+  }
+
   function configFromQuestion(question){
     var domain = detectDomain(question);
     var mode = monthFromQuestion(question) ? 'month' : (weekFromQuestion(question) ? 'week' : dashboardMode());
@@ -60797,6 +60830,7 @@ function innovationOnePagerCreateBrandedShell(){
       alias: entityAliases(question),
       keywords: buildKeywords(question)
     };
+    cfg.dimension = normalizeRequestedDimension(cfg);
     return cfg;
   }
 
@@ -61163,6 +61197,23 @@ function innovationOnePagerCreateBrandedShell(){
     return oldBuild ? oldBuild(question) : null;
   }
 
+  function ensureQuestionDatasets(question){
+    var cfg = configFromQuestion(question);
+    var ds = datasetPlan(cfg);
+    var needed = uniq([
+      ds && ds.key,
+      cfg.domain === 'sales' ? (cfg.mode === 'month' ? 'salesMonthlyBusiness' : 'salesWeeklyBusiness') : '',
+      cfg.domain === 'delivery' ? (cfg.mode === 'month' ? 'deliveryMonthlyBusiness' : 'deliveryWeeklyBusiness') : '',
+      cfg.domain === 'delivery' && cfg.metric === 'share' ? (cfg.mode === 'month' ? 'salesMonthlyBusiness' : 'salesWeeklyBusiness') : '',
+      cfg.domain === 'delivery' && cfg.metric === 'share' && (cfg.stores.length || cfg.dashboardStores.length) ? (cfg.mode === 'month' ? 'salesMonthlyStore' : 'salesWeeklyStore') : '',
+      'calendars','manifest'
+    ].filter(Boolean));
+    needed.forEach(loadJson);
+    var waits = needed.map(function(name){ return CACHE.loading[name]; }).filter(Boolean);
+    return Promise.all(waits).then(function(){ return { cfg:cfg, dataset:ds }; });
+  }
+
+  window.__ampmJsonRouteV2EnsureReadyForQuestion = ensureQuestionDatasets;
   window.__ampmJsonRouteV2Ready = function(){
     return PRELOAD.every(function(k){ return !!CACHE.loaded[k] || !!CACHE.failed[k]; });
   };
