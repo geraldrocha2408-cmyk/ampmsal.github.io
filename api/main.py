@@ -9,7 +9,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="AMPM Data API", version="1.0.0")
+app = FastAPI(title="AMPM Data API", version="1.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +21,12 @@ app.add_middleware(
 
 CACHE = {
     "ts": 0,
-    "workbook": None,
+    "excel_bytes": None,
+    "sheet_names": None,
+    "sales_sheet_name": None,
+    "tx_sheet_name": None,
+    "sales_df": None,
+    "tx_df": None,
 }
 
 CACHE_SECONDS = 300
@@ -66,32 +71,27 @@ def parse_month_key(value):
     s = str(value).strip()
     ns = norm(s)
 
-    # Evitar confundir semanas con meses
     if "sem" in ns or "week" in ns or re.search(r"\bs\d{1,2}\b", ns):
         return None
 
-    # 2026-03 / 2026/03 / 2026_03
     m = re.match(r"^(\d{4})[-/_ ](\d{1,2})$", ns)
     if m:
         y, mo = int(m.group(1)), int(m.group(2))
         if 1 <= mo <= 12:
             return f"{y:04d}-{mo:02d}"
 
-    # 202603
     m = re.match(r"^(\d{4})(\d{2})$", ns)
     if m:
         y, mo = int(m.group(1)), int(m.group(2))
         if 1 <= mo <= 12:
             return f"{y:04d}-{mo:02d}"
 
-    # 2026m03
     m = re.match(r"^(\d{4})m(\d{1,2})$", ns)
     if m:
         y, mo = int(m.group(1)), int(m.group(2))
         if 1 <= mo <= 12:
             return f"{y:04d}-{mo:02d}"
 
-    # Fecha parseable
     try:
         dt = pd.to_datetime(value, errors="raise")
         return f"{dt.year:04d}-{dt.month:02d}"
@@ -99,46 +99,77 @@ def parse_month_key(value):
         return None
 
 
-async def load_workbook():
+async def ensure_excel_bytes():
     excel_url = os.getenv("EXCEL_URL", "").strip()
     if not excel_url:
         raise HTTPException(status_code=500, detail="Falta la variable EXCEL_URL")
 
     now = time.time()
-    if CACHE["workbook"] is not None and (now - CACHE["ts"]) < CACHE_SECONDS:
-        return CACHE["workbook"]
+    if CACHE["excel_bytes"] is not None and (now - CACHE["ts"]) < CACHE_SECONDS:
+        return CACHE["excel_bytes"]
 
-    async with httpx.AsyncClient(timeout=90) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         response = await client.get(excel_url)
         response.raise_for_status()
-        content = BytesIO(response.content)
+        content = response.content
 
-    workbook = pd.read_excel(content, sheet_name=None)
-    CACHE["workbook"] = workbook
     CACHE["ts"] = now
-    return workbook
+    CACHE["excel_bytes"] = content
+    CACHE["sheet_names"] = None
+    CACHE["sales_sheet_name"] = None
+    CACHE["tx_sheet_name"] = None
+    CACHE["sales_df"] = None
+    CACHE["tx_df"] = None
+    return content
 
 
-def find_sales_sheet(workbook):
+async def get_excel_file():
+    content = await ensure_excel_bytes()
+    return pd.ExcelFile(BytesIO(content))
+
+
+async def get_sheet_names():
+    if CACHE["sheet_names"] is not None:
+        return CACHE["sheet_names"]
+
+    xls = await get_excel_file()
+    CACHE["sheet_names"] = xls.sheet_names
+    return CACHE["sheet_names"]
+
+
+async def get_sales_sheet_name():
+    if CACHE["sales_sheet_name"]:
+        return CACHE["sales_sheet_name"]
+
+    sheet_names = await get_sheet_names()
     for name in ["Cubo_Sales_Fact", "Cubo_Sales", "Cubo_Sales_DetailHallazgos"]:
-        if name in workbook:
+        if name in sheet_names:
+            CACHE["sales_sheet_name"] = name
             return name
-    return None
+
+    raise HTTPException(status_code=500, detail="No encontré hoja de ventas base")
 
 
-def find_tx_sheet(workbook):
+async def get_tx_sheet_name():
+    if CACHE["tx_sheet_name"]:
+        return CACHE["tx_sheet_name"]
+
+    sheet_names = await get_sheet_names()
     for name in ["Cubo_TX_Fact", "Cubo_TX", "Cubo_Tx_Fact"]:
-        if name in workbook:
+        if name in sheet_names:
+            CACHE["tx_sheet_name"] = name
             return name
+
     return None
 
 
-def build_sales_df(workbook):
-    sheet_name = find_sales_sheet(workbook)
-    if not sheet_name:
-        raise HTTPException(status_code=500, detail="No encontré hoja de ventas base")
+async def get_sales_df():
+    if CACHE["sales_df"] is not None:
+        return CACHE["sales_df"]
 
-    df = workbook[sheet_name].copy()
+    content = await ensure_excel_bytes()
+    sheet_name = await get_sales_sheet_name()
+    df = pd.read_excel(BytesIO(content), sheet_name=sheet_name)
     df.columns = [str(c).strip() for c in df.columns]
     cols = list(df.columns)
 
@@ -151,38 +182,37 @@ def build_sales_df(workbook):
     c_gm = pick_col(cols, ["Gross Margin", "Margen", "GM", "Total GM", "gross_margin"])
 
     if not c_period or not c_sales:
-        raise HTTPException(
-            status_code=500,
-            detail=f"No pude identificar columnas base de ventas. Columnas: {cols}"
-        )
+        raise HTTPException(status_code=500, detail=f"No pude identificar columnas base de ventas. Columnas: {cols}")
 
     df["_month_key"] = df[c_period].apply(parse_month_key)
     df = df[df["_month_key"].notna()].copy()
 
-    if c_store:
-        df["_store"] = df[c_store].astype(str).str.strip().str.upper()
-    else:
-        df["_store"] = "TOTAL"
-
+    df["_store"] = df[c_store].astype(str).str.strip().str.upper() if c_store else "TOTAL"
     df["_department"] = df[c_dept].astype(str).str.strip() if c_dept else ""
     df["_category"] = df[c_cat].astype(str).str.strip() if c_cat else ""
     df["_brand"] = df[c_brand].astype(str).str.strip() if c_brand else ""
     df["_sales"] = pd.to_numeric(df[c_sales], errors="coerce").fillna(0)
+    df["_gm"] = pd.to_numeric(df[c_gm], errors="coerce").fillna(0) if c_gm else 0
 
-    if c_gm:
-        df["_gm"] = pd.to_numeric(df[c_gm], errors="coerce").fillna(0)
-    else:
-        df["_gm"] = 0
+    CACHE["sales_df"] = {
+        "sheet_name": sheet_name,
+        "columns": cols,
+        "df": df
+    }
+    return CACHE["sales_df"]
 
-    return df, sheet_name, cols
 
+async def get_tx_df():
+    if CACHE["tx_df"] is not None:
+        return CACHE["tx_df"]
 
-def build_tx_df(workbook):
-    sheet_name = find_tx_sheet(workbook)
-    if not sheet_name:
-        return None, None, None
+    tx_sheet = await get_tx_sheet_name()
+    if not tx_sheet:
+        CACHE["tx_df"] = {"sheet_name": None, "columns": [], "df": None}
+        return CACHE["tx_df"]
 
-    df = workbook[sheet_name].copy()
+    content = await ensure_excel_bytes()
+    df = pd.read_excel(BytesIO(content), sheet_name=tx_sheet)
     df.columns = [str(c).strip() for c in df.columns]
     cols = list(df.columns)
 
@@ -191,18 +221,20 @@ def build_tx_df(workbook):
     c_tx = pick_col(cols, ["TX", "Transactions", "Transacciones"])
 
     if not c_period or not c_tx:
-        return None, sheet_name, cols
+        CACHE["tx_df"] = {"sheet_name": tx_sheet, "columns": cols, "df": None}
+        return CACHE["tx_df"]
 
     df["_month_key"] = df[c_period].apply(parse_month_key)
     df = df[df["_month_key"].notna()].copy()
-
-    if c_store:
-        df["_store"] = df[c_store].astype(str).str.strip().str.upper()
-    else:
-        df["_store"] = "TOTAL"
-
+    df["_store"] = df[c_store].astype(str).str.strip().str.upper() if c_store else "TOTAL"
     df["_tx"] = pd.to_numeric(df[c_tx], errors="coerce").fillna(0)
-    return df, sheet_name, cols
+
+    CACHE["tx_df"] = {
+        "sheet_name": tx_sheet,
+        "columns": cols,
+        "df": df
+    }
+    return CACHE["tx_df"]
 
 
 @app.get("/health")
@@ -212,18 +244,20 @@ async def health():
 
 @app.get("/meta")
 async def meta():
-    workbook = await load_workbook()
-    sales_df, sales_sheet, sales_cols = build_sales_df(workbook)
-    tx_df, tx_sheet, tx_cols = build_tx_df(workbook)
+    sheet_names = await get_sheet_names()
+    sales_pack = await get_sales_df()
+    tx_pack = await get_tx_df()
+
+    sales_df = sales_pack["df"]
 
     return {
         "ok": True,
-        "sheets": list(workbook.keys()),
-        "sales_sheet": sales_sheet,
-        "sales_columns": sales_cols,
-        "tx_sheet": tx_sheet,
-        "tx_columns": tx_cols,
-        "sample_months": sorted(sales_df["_month_key"].dropna().unique().tolist())[:24]
+        "sheets": sheet_names,
+        "sales_sheet": sales_pack["sheet_name"],
+        "sales_columns": sales_pack["columns"],
+        "tx_sheet": tx_pack["sheet_name"],
+        "tx_columns": tx_pack["columns"],
+        "sample_months": sorted(sales_df["_month_key"].dropna().unique().tolist())[:36]
     }
 
 
@@ -234,27 +268,27 @@ async def monthly_category_sales(
     department: str = Query(...),
     store: str = Query(None)
 ):
-    workbook = await load_workbook()
-    sales_df, sales_sheet, _ = build_sales_df(workbook)
-
+    sales_pack = await get_sales_df()
+    sales_df = sales_pack["df"]
     month_key = f"{year:04d}-{month:02d}"
+
     df = sales_df[sales_df["_month_key"] == month_key].copy()
 
     if store:
         df = df[df["_store"] == store.strip().upper()]
 
-    dept_norm = norm(department)
-    df = df[df["_department"].apply(norm) == dept_norm]
+    df = df[df["_department"].apply(norm) == norm(department)]
 
     if df.empty:
         return {
             "ok": True,
             "month_key": month_key,
             "department": department,
+            "store": store,
             "labels": [],
             "values": [],
             "total": 0,
-            "source_sheet": sales_sheet
+            "source_sheet": sales_pack["sheet_name"]
         }
 
     grouped = (
@@ -266,18 +300,15 @@ async def monthly_category_sales(
 
     grouped["_category"] = grouped["_category"].replace("", "Sin categoría")
 
-    labels = grouped["_category"].astype(str).tolist()
-    values = grouped["_sales"].round(2).tolist()
-
     return {
         "ok": True,
         "month_key": month_key,
         "department": department,
         "store": store,
-        "labels": labels,
-        "values": values,
-        "total": round(float(sum(values)), 2),
-        "source_sheet": sales_sheet
+        "labels": grouped["_category"].astype(str).tolist(),
+        "values": grouped["_sales"].round(2).tolist(),
+        "total": round(float(grouped["_sales"].sum()), 2),
+        "source_sheet": sales_pack["sheet_name"]
     }
 
 
@@ -288,9 +319,11 @@ async def monthly_compare(
     compare_year: int = Query(...),
     store: str = Query(None)
 ):
-    workbook = await load_workbook()
-    sales_df, sales_sheet, _ = build_sales_df(workbook)
-    tx_df, tx_sheet, _ = build_tx_df(workbook)
+    sales_pack = await get_sales_df()
+    tx_pack = await get_tx_df()
+
+    sales_df = sales_pack["df"]
+    tx_df = tx_pack["df"]
 
     cur_key = f"{year:04d}-{month:02d}"
     prev_key = f"{compare_year:04d}-{month:02d}"
@@ -346,6 +379,6 @@ async def monthly_compare(
         "avg_ticket_delta_pct": round(((avg_ticket / avg_ticket_ly) - 1) * 100, 2) if avg_ticket is not None and avg_ticket_ly not in (None, 0) else None,
         "margin_pct": round(margin_pct, 2) if margin_pct is not None else None,
         "margin_pct_ly": round(margin_pct_ly, 2) if margin_pct_ly is not None else None,
-        "source_sales_sheet": sales_sheet,
-        "source_tx_sheet": tx_sheet
+        "source_sales_sheet": sales_pack["sheet_name"],
+        "source_tx_sheet": tx_pack["sheet_name"]
     }
