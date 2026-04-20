@@ -10,4 +10,4 @@ COPY data_api/out /app/data_api/out
 
 ENV PYTHONUNBUFFERED=1
 
-CMD sh -c "cd /app/backend/app && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"
+CMD python /app/backend/app/main.py
