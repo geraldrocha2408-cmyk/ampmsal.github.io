@@ -1175,92 +1175,92 @@ tr.invFocus{ outline:2px solid rgba(237,117,35,.25); outline-offset:-2px; }
     .delSwitch button.active{ background: rgba(245,131,32,.22); border: 1px solid rgba(245,131,32,.48); }
     .delSwitch button:focus{ outline:none; box-shadow: 0 0 0 3px rgba(245,131,32,.22); }
 
-/* SIDEBAR — Menú lateral izquierdo colapsable */
-#sidebarOverlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(2,8,23,.55);backdrop-filter:blur(3px);}
-#sidebarOverlay.show{display:block;}
-#ampmSidebar{position:fixed;left:0;top:0;bottom:0;width:224px;z-index:200;display:flex;flex-direction:column;background:linear-gradient(180deg,#0b1220 0%,#0d1a30 60%,#0f1e38 100%);border-right:1px solid rgba(255,255,255,.07);box-shadow:4px 0 28px rgba(2,8,23,.32);transition:width .22s cubic-bezier(.4,0,.2,1),transform .22s cubic-bezier(.4,0,.2,1);overflow:hidden;}
-#ampmSidebar.collapsed{width:56px;}
-#sidebarToggle{position:absolute;top:16px;right:-14px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:#0d1a30;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:900;z-index:210;box-shadow:0 4px 12px rgba(2,8,23,.35);transition:transform .22s ease;flex:0 0 auto;}
-#ampmSidebar.collapsed #sidebarToggle{transform:rotate(180deg);}
-.sidebarBrand{display:flex;align-items:center;gap:10px;padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.07);min-height:60px;flex:0 0 auto;overflow:hidden;}
-.sidebarBrandIcon{width:32px;height:32px;flex:0 0 32px;border-radius:10px;background:linear-gradient(135deg,#F58320,#E67425);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;box-shadow:0 6px 16px rgba(245,131,32,.35);}
-.sidebarBrandText{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.sidebarBrandName{font-size:13px;font-weight:900;color:#fff;white-space:nowrap;letter-spacing:.1px;}
-.sidebarBrandSub{font-size:10px;color:rgba(255,255,255,.50);font-weight:700;white-space:nowrap;margin-top:1px;}
-#ampmSidebar.collapsed .sidebarBrandText{display:none;}
-.sidebarMeta{padding:10px 14px 8px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:4px;flex:0 0 auto;overflow:hidden;}
-.sidebarMetaPill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sidebarMetaPill b{color:#fff;font-weight:900;overflow:hidden;text-overflow:ellipsis;}
-.sidebarMetaDot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex:0 0 6px;}
-#ampmSidebar.collapsed .sidebarMeta{display:none;}
-.sidebarNav{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:8px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}
-.sidebarNav::-webkit-scrollbar{width:4px;}
-.sidebarNav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px;}
-.sidebarSection{padding:0 10px;margin-bottom:4px;}
-.sidebarSectionLabel{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.30);padding:8px 4px 4px;display:block;white-space:nowrap;}
-#ampmSidebar.collapsed .sidebarSectionLabel{display:none;}
-/* Tab buttons en sidebar */
-#ampmSidebar .tabBtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:10px;border:1px solid transparent;background:transparent;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:800;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;transition:background .14s ease,color .14s ease,border-color .14s ease;line-height:1.2;margin-bottom:1px;}
-#ampmSidebar .tabBtn:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.08);}
-#ampmSidebar .tabBtn:active{transform:scale(.99);}
-#ampmSidebar .tabBtn.active{background:linear-gradient(135deg,rgba(245,131,32,.20),rgba(230,116,37,.12));color:#fff;border-color:rgba(245,131,32,.35);}
-#ampmSidebar .tabBtn.active .tabBtnIcon{color:#F58320;}
-#ampmSidebar .tabBtn:focus{outline:none;box-shadow:0 0 0 2px rgba(245,131,32,.30);}
-.tabBtnIcon{font-size:15px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex:0 0 20px;color:rgba(255,255,255,.45);transition:color .14s;}
-.tabBtnLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#ampmSidebar.collapsed .tabBtnLabel{display:none;}
-#ampmSidebar.collapsed .tabBtn{padding:9px;justify-content:center;}
-/* Filtros en sidebar */
-.sidebarFilters{border-top:1px solid rgba(255,255,255,.07);flex:0 0 auto;}
-.sidebarFiltersHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 8px;cursor:pointer;user-select:none;}
-.sidebarFiltersTitle{font-size:11px;font-weight:900;color:rgba(255,255,255,.55);letter-spacing:.05em;text-transform:uppercase;}
-.sidebarFiltersChevron{font-size:10px;color:rgba(255,255,255,.35);transition:transform .2s;}
-.sidebarFilters.open .sidebarFiltersChevron{transform:rotate(180deg);}
-.sidebarFiltersBody{display:none;padding:0 10px 10px;max-height:360px;overflow-y:auto;}
-.sidebarFilters.open .sidebarFiltersBody{display:block;}
-#ampmSidebar.collapsed .sidebarFilters{display:none;}
-.sidebarFiltersBody label{font-size:10px;font-weight:800;color:rgba(255,255,255,.45);margin-bottom:3px;margin-top:8px;display:block;}
-.sidebarFiltersBody select{width:100%;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;font-size:11px;font-weight:700;outline:none;}
-.sidebarFiltersBody select:focus{border-color:rgba(245,131,32,.45);}
-.sidebarFiltersBody select[multiple]{min-height:72px;}
-#sidebarApplyBtn{margin:10px 10px 4px;width:calc(100% - 20px);padding:9px;border-radius:10px;border:1px solid rgba(245,131,32,.45);background:linear-gradient(135deg,rgba(245,131,32,.22),rgba(230,116,37,.14));color:#fff;font-size:12px;font-weight:900;cursor:pointer;}
-#sidebarApplyBtn:hover{background:linear-gradient(135deg,rgba(245,131,32,.35),rgba(230,116,37,.22));}
-/* Content wrapper */
-#ampmMainContent{margin-left:224px;flex:1 1 auto;min-width:0;transition:margin-left .22s cubic-bezier(.4,0,.2,1);}
-body.auth-ok #ampmSidebar.collapsed ~ #ampmMainContent{margin-left:56px;}
-/* Ocultar tabsbar original — sidebar lo reemplaza */
-.tabsbar,.tabsbar.fixed{display:none !important;}
-#tabsbarSpacer{display:none !important;}
-/* Mobile */
-#mobileSidebarToggle{display:none;position:fixed;top:12px;left:12px;z-index:300;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(11,18,32,.92);backdrop-filter:blur(8px);color:#fff;font-size:18px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(2,8,23,.35);}
-@media(max-width:768px){
-  #ampmSidebar{transform:translateX(-100%);width:224px !important;}
-  #ampmSidebar.mobile-open{transform:translateX(0);}
-  #ampmMainContent{margin-left:0 !important;}
-  #sidebarToggle{display:none;}
-  #mobileSidebarToggle{display:flex !important;}
+.tabsbar{
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: linear-gradient(90deg, rgba(17,40,74,.98), rgba(12,77,143,.92)); /* AMPM navy -> blue */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.10);
 }
-/* Layout body */
-body.auth-ok{display:flex;min-height:100vh;}
-#ampmAuthGate{z-index:9000 !important;}
-#ampmLogoutBtn{z-index:9001 !important;}
-/* Mejoras visuales gráficas */
-.chartCard{background:var(--card) !important;border:1px solid rgba(15,23,42,.08) !important;border-radius:16px !important;box-shadow:0 4px 20px rgba(2,8,23,.06),0 1px 4px rgba(2,8,23,.04) !important;overflow:hidden;}
-.chartCard:hover{box-shadow:0 8px 32px rgba(2,8,23,.10),0 2px 8px rgba(2,8,23,.06) !important;}
-thead th{font-size:11px !important;font-weight:900 !important;letter-spacing:.04em !important;}
-.loadingFill{background:linear-gradient(90deg,#005EA7 0%,#0ea5e9 40%,#F58320 80%,#FAA21E 100%) !important;}
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(15,23,42,.16);border-radius:999px;}
-/* Innovation sub-tabs */
-.innov-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0;}
-.innov-tab-btn{padding:7px 14px;border-radius:999px;border:1px solid rgba(15,23,42,.12);background:#f8fafc;color:#475569;font-size:12px;font-weight:800;cursor:pointer;transition:all .14s;}
-.innov-tab-btn.active{background:linear-gradient(135deg,#0C4D8F,#005EA7);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(12,77,143,.22);}
-.innov-tab-btn:hover:not(.active){background:rgba(0,94,167,.08);border-color:rgba(0,94,167,.20);color:#0C4D8F;}
-/* tabsbar kept for JS compatibility — hidden via display:none above */
-.tabsbar .tabsInner{display:flex;}
-.tabsbar .tabs{display:flex;}
-.tabsbar .tabsRight{display:flex;}
+.tabsbar .tabsInner{
+  max-width: none;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  box-sizing:border-box;
+}
+.tabsbar .tabsTitle{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .15px;
+  color:#fff;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.tabsbar .tabs{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap: nowrap;
+  overflow-x:hidden;
+  padding: 1px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.tabsbar .tabs::-webkit-scrollbar{ display:none; height:0; }
+.tabsbar .tabs::-webkit-scrollbar-thumb{ background: transparent; border-radius: 999px; }
+
+.tabsbar button.tabBtn{
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.92);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 14px;
+  line-height: 1.1;
+  font-weight: 900;
+  cursor:pointer;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
+  transition: transform .08s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.tabsbar button.tabBtn:hover{
+  border-color: rgba(0,94,167,.55);
+  background: rgba(0,94,167,.22);
+  color:#fff;
+}
+.tabsbar button.tabBtn:active{ transform: scale(.99); }
+
+.tabsbar button.tabBtn.active{
+  background: linear-gradient(180deg, var(--am-orange), var(--am-orange-2));
+  color:#fff;
+  border-color: rgba(255,255,255,.0);
+  box-shadow: 0 10px 18px rgba(245,131,32,.22), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.tabsbar button.tabBtn:focus{
+  outline:none;
+  box-shadow: 0 0 0 3px rgba(245,131,32,.20), inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.tabsbar .tabsMeta{
+  display:none;
+}
+.tabsbar .tabsRight{
+  margin-left: auto;
+  padding-left: 8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  flex: 0 0 auto;
+}
 .tabsStoreQuick{ position:relative; }
 .tabsStoreQuickBtn{
   display:none;
@@ -3400,7 +3400,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </div>
 <button id="ampmLogoutBtn" type="button">Cerrar sesión <small id="ampmLogoutUser">—</small></button>
 
-<div id="ampmMainContent"><div class="wrap">
+<div class="wrap">
 <div class="topbar">
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
@@ -3503,74 +3503,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </div>
 <div class="filterDirtyBanner" id="filterDirtyBanner">Tenés cambios pendientes en filtros. Presioná <strong style="margin-left:4px">Aplicar filtros</strong> para actualizar el dashboard con la nueva selección.</div>
 <div class="note" id="noteBox">
-<!-- SIDEBAR — Reemplaza tabsbar horizontal -->
-<div id="sidebarOverlay"></div>
-<button id="mobileSidebarToggle" type="button" aria-label="Abrir menú">&#9776;</button>
-<div id="ampmSidebar" aria-label="Navegación del reporte">
-  <button id="sidebarToggle" type="button" aria-label="Colapsar">&#9664;</button>
-  <div class="sidebarBrand">
-    <div class="sidebarBrandIcon">A</div>
-    <div class="sidebarBrandText">
-      <span class="sidebarBrandName">AMPM Dashboard</span>
-      <span class="sidebarBrandSub" id="sidebarModePill">&#8212;</span>
-    </div>
-  </div>
-  <div class="sidebarMeta">
-    <div class="sidebarMetaPill"><div class="sidebarMetaDot"></div><span>Modo: <b id="sidebarMode">&#8212;</b></span></div>
-    <div class="sidebarMetaPill"><span style="font-size:10px">&#128193; <b id="sidebarFile">&#8212;</b></span></div>
-  </div>
-  <nav class="sidebarNav" role="tablist" aria-label="Hojas del reporte">
-    <div class="sidebarSection">
-      <span class="sidebarSectionLabel">Reportes</span>
-      <button class="tabBtn" data-tab="resumen" type="button" role="tab"><span class="tabBtnIcon">&#128202;</span><span class="tabBtnLabel">Resumen</span></button>
-      <button class="tabBtn" data-tab="onepager" type="button" role="tab"><span class="tabBtnIcon">&#128196;</span><span class="tabBtnLabel">One Pager</span></button>
-      <button class="tabBtn" data-tab="ventas" type="button" role="tab"><span class="tabBtnIcon">&#128176;</span><span class="tabBtnLabel">Ventas</span></button>
-      <button class="tabBtn" data-tab="delivery" type="button" role="tab"><span class="tabBtnIcon">&#128757;</span><span class="tabBtnLabel">Delivery</span></button>
-      <button class="tabBtn" data-tab="innovacion" type="button" role="tab"><span class="tabBtnIcon">&#128640;</span><span class="tabBtnLabel">Innovaci&#243;n</span></button>
-    </div>
-    <div class="sidebarSection">
-      <span class="sidebarSectionLabel">Operaciones</span>
-      <button class="tabBtn" data-tab="sbf" type="button" role="tab"><span class="tabBtnIcon">&#9889;</span><span class="tabBtnLabel">SBF</span></button>
-      <button class="tabBtn" data-tab="inventario" type="button" role="tab"><span class="tabBtnIcon">&#128230;</span><span class="tabBtnLabel">Inventario</span></button>
-      <button class="tabBtn" data-tab="merma" type="button" role="tab"><span class="tabBtnIcon">&#9888;</span><span class="tabBtnLabel">Merma</span></button>
-      <button class="tabBtn" data-tab="prd0" type="button" role="tab"><span class="tabBtnIcon">&#128308;</span><span class="tabBtnLabel">PRD en cero</span></button>
-    </div>
-    <div class="sidebarSection">
-      <span class="sidebarSectionLabel">Gesti&#243;n</span>
-      <button class="tabBtn" data-tab="cxc" type="button" role="tab"><span class="tabBtnIcon">&#128179;</span><span class="tabBtnLabel">CXC</span></button>
-      <button class="tabBtn" data-tab="hallazgos" type="button" role="tab"><span class="tabBtnIcon">&#128269;</span><span class="tabBtnLabel">Hallazgos</span></button>
-      <button class="tabBtn" data-tab="criticos" type="button" role="tab"><span class="tabBtnIcon">&#128680;</span><span class="tabBtnLabel">Cr&#237;ticos</span></button>
-    </div>
-  </nav>
-  <div class="sidebarFilters" id="sidebarFiltersPanel">
-    <div class="sidebarFiltersHead" id="sidebarFiltersToggle">
-      <span class="sidebarFiltersTitle">Filtros r&#225;pidos</span>
-      <span class="sidebarFiltersChevron">&#9650;</span>
-    </div>
-    <div class="sidebarFiltersBody">
-      <label>Per&#237;odo actual</label>
-      <select id="sf_currentMonth"></select>
-      <label>Tiendas</label>
-      <select id="sf_stores" multiple></select>
-      <label>D&#237;a de semana</label>
-      <select id="sf_dowFilter" multiple></select>
-      <button id="sidebarApplyBtn" type="button">&#10003; Aplicar filtros</button>
-    </div>
-  </div>
-  <!-- Store quick: IDs originales preservados para compatibilidad JS -->
-  <div class="tabsStoreQuick" id="tabsStoreQuick" style="display:none">
-    <button class="tabsStoreQuickBtn" id="storeQuickBtn" style="display:none;" type="button"><span class="muted">Tienda:</span> <span class="storeQuickLabel" id="storeQuickLabel">ALL</span></button>
-    <div class="storeQuickMenu" id="storeQuickMenu">
-      <div class="storeQuickActions">
-        <button class="storeQuickActionBtn" data-storequick-action="all" type="button">Todas</button>
-        <button class="storeQuickActionBtn" data-storequick-action="none" type="button">Limpiar</button>
-      </div>
-      <div class="storeQuickList" id="storeQuickList"></div>
-    </div>
-  </div>
-</div>
-<!-- Tabsbar original oculto — el JS existente lo requiere para .tabBtn.active -->
-<div class="tabsbar" id="ampmTabsBar" aria-hidden="true">
+<div class="tabsbar" id="ampmTabsBar">
 <div class="tabsInner">
 <div class="tabsTitle">Cuadros</div>
 <div aria-label="Hojas del reporte" class="tabs" role="tablist">
@@ -3578,16 +3511,26 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <button class="tabBtn" data-tab="onepager" type="button">One Pager</button>
 <button class="tabBtn" data-tab="ventas" type="button">Ventas</button>
 <button class="tabBtn" data-tab="delivery" type="button">Delivery</button>
-<button class="tabBtn" data-tab="innovacion" type="button">Innovaci&#243;n</button>
+<button class="tabBtn" data-tab="innovacion" type="button">Innovación</button>
 <button class="tabBtn" data-tab="sbf" type="button">SBF</button>
 <button class="tabBtn" data-tab="inventario" type="button">Inventario</button>
 <button class="tabBtn" data-tab="merma" type="button">Merma</button>
 <button class="tabBtn" data-tab="prd0" type="button">PRD en cero</button>
 <button class="tabBtn" data-tab="cxc" type="button">CXC</button>
 <button class="tabBtn" data-tab="hallazgos" type="button">Hallazgos</button>
-<button class="tabBtn" data-tab="criticos" type="button">Cr&#237;ticos</button>
+<button class="tabBtn" data-tab="criticos" type="button">Críticos</button>
 </div>
 <div class="tabsRight">
+<div class="tabsStoreQuick" id="tabsStoreQuick">
+<button class="tabsStoreQuickBtn" id="storeQuickBtn" style="display:none;" type="button"><span class="muted">Tienda:</span> <span class="storeQuickLabel" id="storeQuickLabel">ALL</span></button>
+<div class="storeQuickMenu" id="storeQuickMenu">
+<div class="storeQuickActions">
+<button class="storeQuickActionBtn" data-storequick-action="all" type="button">Todas</button>
+<button class="storeQuickActionBtn" data-storequick-action="none" type="button">Limpiar</button>
+</div>
+<div class="storeQuickList" id="storeQuickList"></div>
+</div>
+</div>
 <div aria-hidden="true" class="tabsMeta" id="ampmTabMeta"></div>
 </div>
 </div>
@@ -4100,13 +4043,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
 <div class="innovationChartWrap"><canvas aria-label="Innovación matahambrita burritos" id="chart_innovation_matahambrita"></canvas></div>
 </div>
-</div>
-<div class="innov-tabs" data-tabpage="innovacion" id="innovTabs">
-  <button class="innov-tab-btn active" data-innov-tab="burgers" type="button">Hamburguesas</button>
-  <button class="innov-tab-btn" data-innov-tab="postres" type="button">Postres / Combos</button>
-  <button class="innov-tab-btn" data-innov-tab="fs" type="button">Food Service</button>
-  <button class="innov-tab-btn" data-innov-tab="fs_del" type="button">FS Delivery</button>
-  <button class="innov-tab-btn" data-innov-tab="meta_fs" type="button">Meta FS</button>
 </div>
 <div class="innovationGrid innovationGridComboRow" data-tabpage="innovacion">
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
@@ -56791,165 +56727,6 @@ function innovationOnePagerCreateBrandedShell(){
 }
 </style>
 
-</div><!-- /#ampmMainContent -->
-
-<script id="ampm-sidebar-init">
-/* Sidebar lateral — inicialización y sincronización con el JS original */
-(function(){
-  var sidebar = document.getElementById('ampmSidebar');
-  var overlay = document.getElementById('sidebarOverlay');
-  var toggleBtn = document.getElementById('sidebarToggle');
-  var mobileToggle = document.getElementById('mobileSidebarToggle');
-  var filtersToggle = document.getElementById('sidebarFiltersToggle');
-  var filtersPanel = document.getElementById('sidebarFiltersPanel');
-  var sidebarApply = document.getElementById('sidebarApplyBtn');
-
-  if(!sidebar) return;
-
-  /* Colapsar/expandir sidebar en desktop */
-  var COLLAPSE_KEY = 'ampm_sidebar_collapsed';
-  if(localStorage.getItem(COLLAPSE_KEY) === '1') sidebar.classList.add('collapsed');
-
-  if(toggleBtn) toggleBtn.addEventListener('click', function(){
-    sidebar.classList.toggle('collapsed');
-    localStorage.setItem(COLLAPSE_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
-  });
-
-  /* Sidebar móvil */
-  function openMobile(){ sidebar.classList.add('mobile-open'); if(overlay) overlay.classList.add('show'); }
-  function closeMobile(){ sidebar.classList.remove('mobile-open'); if(overlay) overlay.classList.remove('show'); }
-  if(mobileToggle) mobileToggle.addEventListener('click', openMobile);
-  if(overlay) overlay.addEventListener('click', closeMobile);
-
-  /* Filtros colapsables */
-  if(filtersToggle && filtersPanel){
-    filtersPanel.classList.add('open');
-    filtersToggle.addEventListener('click', function(){ filtersPanel.classList.toggle('open'); });
-  }
-
-  /* Sincronizar select origen -> sidebar y viceversa */
-  function syncSelect(srcId, dstId){
-    var src = document.getElementById(srcId);
-    var dst = document.getElementById(dstId);
-    if(!src || !dst) return;
-    function copyOpts(){
-      dst.innerHTML = '';
-      for(var i=0; i<src.options.length; i++){
-        var o = src.options[i];
-        var n = document.createElement('option');
-        n.value = o.value; n.text = o.text; n.selected = o.selected;
-        dst.appendChild(n);
-      }
-    }
-    copyOpts();
-    src.addEventListener('change', copyOpts);
-    dst.addEventListener('change', function(){
-      for(var i=0; i<src.options.length; i++){
-        src.options[i].selected = dst.options[i] ? dst.options[i].selected : false;
-      }
-    });
-    new MutationObserver(copyOpts).observe(src, {childList:true, subtree:true});
-  }
-  syncSelect('currentMonth', 'sf_currentMonth');
-  syncSelect('stores', 'sf_stores');
-  syncSelect('dowFilter', 'sf_dowFilter');
-
-  /* Botón aplicar en sidebar */
-  if(sidebarApply) sidebarApply.addEventListener('click', function(){
-    var btn = document.getElementById('refresh');
-    if(btn) btn.click();
-  });
-
-  /* Actualizar indicadores de modo/archivo */
-  function syncMeta(){
-    var m = document.getElementById('mode');
-    var f = document.getElementById('filename');
-    var sm = document.getElementById('sidebarMode');
-    var sf = document.getElementById('sidebarFile');
-    var sp = document.getElementById('sidebarModePill');
-    if(sm && m) sm.textContent = m.textContent || '—';
-    if(sf && f) sf.textContent = (f.textContent || '—').slice(0,22);
-    if(sp && m) sp.textContent = m.textContent || '—';
-  }
-  setInterval(syncMeta, 800);
-
-  /* Sincronizar tab activo del sidebar con el tabsbar oculto */
-  function syncActiveTab(){
-    var src = document.querySelector('#ampmTabsBar .tabBtn.active');
-    if(!src) return;
-    var activeTab = src.dataset.tab;
-    document.querySelectorAll('#ampmSidebar .tabBtn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.tab === activeTab);
-    });
-  }
-  var tabsbarOrig = document.querySelector('#ampmTabsBar .tabs');
-  if(tabsbarOrig){
-    new MutationObserver(syncActiveTab).observe(tabsbarOrig, {attributes:true, subtree:true, attributeFilter:['class']});
-  }
-
-  /* Clicks en los botones del sidebar -> click en tabsbar oculto */
-  document.querySelectorAll('#ampmSidebar .tabBtn[data-tab]').forEach(function(b){
-    b.addEventListener('click', function(){
-      var tab = b.dataset.tab;
-      var orig = document.querySelector('#ampmTabsBar .tabBtn[data-tab="' + tab + '"]');
-      if(orig) orig.click();
-      document.querySelectorAll('#ampmSidebar .tabBtn').forEach(function(x){ x.classList.remove('active'); });
-      b.classList.add('active');
-      closeMobile();
-    });
-  });
-
-  setTimeout(syncActiveTab, 400);
-})();
-
-/* Innovación — sub-tabs dinámicos */
-(function(){
-  function showInnovTab(tabKey){
-    document.querySelectorAll('[data-tabpage="innovacion"]').forEach(function(el){
-      if(el.id === 'innovTabs') return;
-      el.style.display = 'none';
-    });
-    if(tabKey === 'burgers'){
-      document.querySelectorAll('.innovationGrid:not(.innovationGridComboRow)[data-tabpage="innovacion"]').forEach(function(el){ el.style.display='grid'; });
-    } else if(tabKey === 'postres'){
-      document.querySelectorAll('.innovationGridComboRow[data-tabpage="innovacion"]').forEach(function(el){ el.style.display='grid'; });
-    } else if(tabKey === 'fs'){
-      ['innovation_fs_exec_section','innovation_fs_category_pagers_section'].forEach(function(id){
-        var el = document.getElementById(id); if(el) el.style.display='';
-      });
-    } else if(tabKey === 'fs_del'){
-      var el = document.getElementById('innovation_fs_del_exec_section'); if(el) el.style.display='';
-    } else if(tabKey === 'meta_fs'){
-      ['innovation_meta_fs_section','innovation_fs_exercise_section','innovation_waste_sim_section'].forEach(function(id){
-        var el = document.getElementById(id); if(el) el.style.display='';
-      });
-    }
-    try{ localStorage.setItem('ampm_innov_tab', tabKey); }catch(e){}
-    setTimeout(function(){ try{ if(window.resizeCharts) window.resizeCharts(); }catch(e){} }, 150);
-  }
-
-  function initInnovTabs(){
-    var btns = document.querySelectorAll('.innov-tab-btn[data-innov-tab]');
-    if(!btns.length) return;
-    btns.forEach(function(btn){
-      btn.addEventListener('click', function(){
-        btns.forEach(function(b){ b.classList.remove('active'); });
-        btn.classList.add('active');
-        showInnovTab(btn.getAttribute('data-innov-tab'));
-      });
-    });
-    var saved = 'burgers';
-    try{ saved = localStorage.getItem('ampm_innov_tab') || 'burgers'; }catch(e){}
-    var target = document.querySelector('.innov-tab-btn[data-innov-tab="' + saved + '"]');
-    if(target) target.click();
-  }
-
-  window.addEventListener('ampm:tabshown', function(e){
-    if(e && e.detail && e.detail.tab === 'innovacion') setTimeout(initInnovTabs, 100);
-  });
-  document.addEventListener('DOMContentLoaded', function(){ setTimeout(initInnovTabs, 600); });
-})();
-</script>
 </body>
 
 
