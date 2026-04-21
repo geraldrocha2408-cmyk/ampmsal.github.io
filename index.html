@@ -57217,6 +57217,77 @@ function innovationOnePagerCreateBrandedShell(){
 }
 </style>
 
+
+<script id="ampm-chart-recover-v19">
+(function(){
+  if(window.__ampmChartRecoverV19) return;
+  window.__ampmChartRecoverV19 = true;
+
+  function activeTab(){
+    try{
+      return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || '').trim();
+    }catch(_e){
+      return '';
+    }
+  }
+
+  function run(tab, force){
+    try{
+      const current = activeTab();
+      const target = String(tab || current || '').trim();
+      if(!target || current !== target) return;
+
+      try{
+        if(typeof refreshVisibleTabCharts === 'function'){
+          refreshVisibleTabCharts(target, !!force);
+        }
+      }catch(_e){}
+
+      try{
+        if(typeof scheduleVisibleChartRefresh === 'function'){
+          scheduleVisibleChartRefresh(target);
+        }
+      }catch(_e){}
+
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(_e){}
+  }
+
+  function queue(tab){
+    const target = String(tab || activeTab() || '').trim();
+    if(!target) return;
+    [40, 180, 420, 820, 1300].forEach((ms, i)=>{
+      setTimeout(()=>run(target, i >= 2), ms);
+    });
+  }
+
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      const tab = String(ev && ev.detail && ev.detail.tab || activeTab() || '').trim();
+      queue(tab);
+    }catch(_e){}
+  });
+
+  window.addEventListener('load', function(){
+    queue(activeTab());
+  }, { once:true });
+
+  document.addEventListener('click', function(ev){
+    const btn = ev.target && ev.target.closest ? ev.target.closest('#ampmStoreFloatingApply, #refresh, .tabBtn[data-tab]') : null;
+    if(!btn) return;
+    setTimeout(()=>queue(activeTab()), 60);
+  }, true);
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      setTimeout(()=>queue(activeTab()), 120);
+    }
+  });
+})();
+</script>
+
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
