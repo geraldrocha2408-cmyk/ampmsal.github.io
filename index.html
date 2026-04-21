@@ -2805,20 +2805,38 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     line-height:1.45;
     font-weight:700;
   }
-  #ampmLogoutBtn{
-    position:absolute;
+  #ampmFloatingActions{
+    position:fixed;
     top:14px;
     right:14px;
     z-index:100000;
     display:none;
     align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+    max-width:min(720px, calc(100vw - 28px));
+  }
+  body.auth-ok #ampmFloatingActions{display:flex;}
+  #ampmFloatingActions .export-dd{
+    position:relative;
+    width:auto !important;
+    max-width:none !important;
+  }
+  #ampmExportWrap{display:inline-flex;align-items:center;}
+  #ampmExportWrap .export-menu{display:none !important;}
+  #exportBtn,
+  #ampmLogoutBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
     gap:8px;
     width:auto !important;
     min-width:0;
-    max-width:none;
+    max-width:none !important;
     border:1px solid rgba(15,23,42,.12);
-    background:rgba(255,255,255,.96);
-    color:#11284A;
+    background:rgba(255,255,255,.96) !important;
+    color:#11284A !important;
     border-radius:999px;
     padding:10px 14px;
     font-size:12px;
@@ -2827,11 +2845,158 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     box-shadow:0 12px 24px rgba(2,6,23,.14);
     backdrop-filter:blur(8px);
   }
-  body.auth-ok #ampmLogoutBtn{display:inline-flex;}
+  #exportBtn:hover,
+  #ampmLogoutBtn:hover{
+    background:#ffffff !important;
+    filter:none !important;
+  }
+  #exportBtn{
+    border-color:rgba(15,23,42,.10) !important;
+  }
+  #ampmLogoutBtn{
+    position:static;
+  }
   #ampmLogoutBtn small{
     font-size:11px;
     font-weight:900;
     color:#64748b;
+  }
+
+  #ampmStoreFloatingWrap{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+  }
+  #ampmStoreFloatingBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:auto !important;
+    min-width:220px;
+    max-width:min(320px, calc(100vw - 28px)) !important;
+    border:1px solid rgba(15,23,42,.12);
+    background:rgba(255,255,255,.96) !important;
+    color:#11284A !important;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:0 12px 24px rgba(2,6,23,.14);
+    backdrop-filter:blur(8px);
+  }
+  #ampmStoreFloatingBtn:hover{ background:#fff !important; }
+  #ampmStoreFloatingBtn .muted{
+    color:#64748b;
+    font-weight:900;
+    flex:0 0 auto;
+  }
+  #ampmStoreFloatingLabel{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:left;
+    flex:1 1 auto;
+  }
+  #ampmStoreFloatingCaret{ flex:0 0 auto; color:#0C4D8F; font-size:11px; }
+  #ampmStoreFloatingMenu{
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    width:min(330px, calc(100vw - 28px));
+    padding:12px;
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,.26);
+    background:rgba(255,255,255,.98);
+    box-shadow:0 24px 48px rgba(2,6,23,.16);
+    backdrop-filter:blur(16px);
+    display:none;
+  }
+  #ampmStoreFloatingMenu.open{ display:block; }
+  .ampmStoreFloatingHead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid rgba(148,163,184,.20);
+  }
+  .ampmStoreFloatingTitle{
+    font-size:12px;
+    font-weight:1000;
+    color:#11284A;
+    letter-spacing:.02em;
+  }
+  .ampmStoreFloatingSub{
+    font-size:11px;
+    font-weight:800;
+    color:#64748b;
+  }
+  .ampmStoreFloatingActions{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  .ampmStoreFloatingActionBtn{
+    appearance:none;
+    border:1px solid rgba(12,77,143,.16);
+    background:linear-gradient(180deg, rgba(243,247,252,.98), rgba(232,240,248,.98));
+    color:#0C4D8F;
+    border-radius:999px;
+    padding:8px 12px;
+    font-size:11px;
+    font-weight:1000;
+    cursor:pointer;
+  }
+  #ampmStoreFloatingList{
+    max-height:min(44vh, 300px);
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding-right:2px;
+  }
+  .ampmStoreFloatingItem{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,.18);
+    background:rgba(244,248,252,.72);
+    color:#11284A;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .ampmStoreFloatingItem:hover{ background:rgba(230,240,250,.88); }
+  .ampmStoreFloatingItem input{
+    width:16px;
+    height:16px;
+    accent-color:#F58320;
+    flex:0 0 16px;
+  }
+  @media (max-width: 860px){
+    #ampmStoreFloatingBtn{
+      min-width:170px;
+      max-width:min(240px, calc(100vw - 20px)) !important;
+    }
+    #ampmStoreFloatingMenu{
+      width:min(300px, calc(100vw - 20px));
+    }
+  }
+  @media (max-width: 640px){
+    #ampmStoreFloatingBtn{
+      min-width:0;
+      width:auto !important;
+      max-width:min(220px, calc(100vw - 20px)) !important;
+      padding:9px 12px;
+    }
+    #ampmStoreFloatingBtn .muted{ display:none; }
   }
   @media (max-width: 640px){
     #ampmAuthGate{padding:14px;}
@@ -2839,7 +3004,17 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     .ampmAuthHero,.ampmAuthBody{padding-left:16px;padding-right:16px;}
     .ampmAuthTitle{font-size:24px;}
     .ampmAuthBtn{width:100%;}
-    #ampmLogoutBtn{top:10px;right:10px;padding:9px 12px;width:auto !important;}
+    #ampmFloatingActions{
+      top:10px;
+      right:10px;
+      gap:8px;
+      max-width:calc(100vw - 20px);
+    }
+    #exportBtn,
+    #ampmLogoutBtn{
+      padding:9px 12px;
+      width:auto !important;
+    }
   }
 </style>
 <style id="ampm-kpi-ceo-upgrade-v1">
@@ -3433,6 +3608,67 @@ body{
 .ampm-shell.is-collapsed .ampm-sidebar-nav{padding:12px 8px !important;overflow:hidden !important;}
 .ampm-shell.is-collapsed .ampm-sidebar .tabs{align-items:center !important;}
 </style>
+
+<style id="ampm-sidebar-premium-background-v10">
+.ampm-main{
+  background:
+    linear-gradient(145deg, rgba(230,240,250,.98) 0%, rgba(244,248,252,.98) 34%, rgba(251,247,242,.98) 100%) !important;
+  border:1px solid rgba(12,77,143,.10) !important;
+  box-shadow:0 28px 64px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.82) !important;
+}
+.ampm-main::before{
+  background:
+    radial-gradient(circle at 10% 8%, rgba(0,94,167,.22), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(245,131,32,.18), transparent 24%),
+    radial-gradient(circle at 82% 82%, rgba(12,77,143,.16), transparent 24%),
+    radial-gradient(circle at 24% 100%, rgba(250,162,30,.10), transparent 26%),
+    linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 34%) !important;
+  opacity:1 !important;
+}
+.ampm-main::after{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 24%),
+    linear-gradient(90deg, rgba(0,94,167,.08) 0%, rgba(0,94,167,0) 18%, rgba(245,131,32,0) 78%, rgba(245,131,32,.08) 100%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.10) 0 14px, rgba(255,255,255,0) 14px 32px) !important;
+  opacity:.95 !important;
+}
+.ampm-mainInner::before{
+  height:9px !important;
+  background:linear-gradient(90deg, rgba(12,77,143,.72), rgba(0,94,167,.42), rgba(245,131,32,.40), rgba(12,77,143,.30)) !important;
+  box-shadow:0 6px 18px rgba(12,77,143,.12);
+}
+.ampm-sidebar{
+  background:
+    linear-gradient(180deg, rgba(17,40,74,.98) 0%, rgba(12,77,143,.96) 52%, rgba(0,94,167,.94) 100%) !important;
+  box-shadow:0 24px 52px rgba(2,6,23,.22), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+.ampm-sidebar::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,255,255,.10), transparent 28%),
+    radial-gradient(circle at 100% 24%, rgba(245,131,32,.18), transparent 26%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 22%);
+}
+.ampm-sidebar-section, .ampm-sidebar .tabsbar button.tabBtn{
+  backdrop-filter: blur(2px);
+}
+.ampm-shell.is-collapsed .ampm-sidebar-sectionTitle,
+.ampm-shell.is-collapsed .ampm-sidebar .tabsTitle,
+.ampm-shell.is-collapsed .ampm-sidebar .ampm-sidebar-sectionTitle *,
+.ampm-shell.is-collapsed .ampm-sidebar .tabsTitle *{
+  display:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  max-width:0 !important;
+  overflow:hidden !important;
+}
+.ampm-shell.is-collapsed .ampm-sidebar-nav{
+  padding-top:10px !important;
+}
+</style>
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -3463,7 +3699,17 @@ body{
 </div>
 </div>
 </div>
-<button id="ampmLogoutBtn" type="button">Cerrar sesión <small id="ampmLogoutUser">—</small></button>
+<div id="ampmFloatingActions"><div id="ampmStoreFloatingWrap"><button id="ampmStoreFloatingBtn" type="button"><span class="muted">Tienda:</span><span id="ampmStoreFloatingLabel">ALL</span><span aria-hidden="true" id="ampmStoreFloatingCaret">▾</span></button><div id="ampmStoreFloatingMenu"><div class="ampmStoreFloatingHead"><div><div class="ampmStoreFloatingTitle">Filtro rápido de tiendas</div><div class="ampmStoreFloatingSub">Siempre visible y sincronizado</div></div></div><div class="ampmStoreFloatingActions"><button class="ampmStoreFloatingActionBtn" data-floating-store-action="all" type="button">Todas</button><button class="ampmStoreFloatingActionBtn" data-floating-store-action="none" type="button">Limpiar</button></div><div id="ampmStoreFloatingList"></div></div></div><div class="export-dd" id="ampmExportWrap">
+<button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
+<div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
+<button data-export="excel" type="button">Excel (.xls)</button>
+<button data-export="word" type="button">Word (.doc)</button>
+<button data-export="sbf-top3-xlsx" type="button">SBF Top 3 (.xlsx)</button>
+<button data-export="onepager-pdf" type="button">One Pager PDF (.pdf)</button>
+<button data-export="innovation-onepager-pptx" type="button">One Pager Innovación (.pptx)</button>
+<button data-export="innovation-pptx" type="button">PowerPoint Innovación (.pptx)</button>
+</div>
+</div><button id="ampmLogoutBtn" type="button">Cerrar sesión <small id="ampmLogoutUser">—</small></button></div>
 <div class="wrap">
 
 <div class="panel">
@@ -3593,19 +3839,7 @@ body{
 <span class="pendingPill ok" id="pendingFiltersPill">Filtros aplicados</span>
 <span class="badge" id="meta">Cargá un archivo</span>
 </div>
-<div class="actionDockSide">
-<div class="export-dd">
-<button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
-<div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
-<button data-export="excel" type="button">Excel (.xls)</button>
-<button data-export="word" type="button">Word (.doc)</button>
-<button data-export="sbf-top3-xlsx" type="button">SBF Top 3 (.xlsx)</button>
-<button data-export="onepager-pdf" type="button">One Pager PDF (.pdf)</button>
-<button data-export="innovation-onepager-pptx" type="button">One Pager Innovación (.pptx)</button>
-<button data-export="innovation-pptx" type="button">PowerPoint Innovación (.pptx)</button>
-</div>
-</div>
-</div>
+<div class="actionDockSide" style="display:none !important;"></div>
 </div>
 <div class="filterDirtyBanner" id="filterDirtyBanner">Tenés cambios pendientes en filtros. Presioná <strong style="margin-left:4px">Aplicar filtros</strong> para actualizar el dashboard con la nueva selección.</div>
 
@@ -37378,6 +37612,36 @@ callback:(v)=> axisMoneyCompact1(v)
   window.refreshVisibleTabCharts = refreshVisibleTabCharts;
   window.scheduleSettledFullRefresh = scheduleSettledFullRefresh;
 
+  function scrollActiveTabToTop(immediate){
+    try{
+      const target = document.querySelector('.ampm-mainInner') || document.querySelector('.ampm-main') || document.getElementById('noteBox') || document.body;
+      if(!target) return;
+      const rect = target.getBoundingClientRect();
+      const top = Math.max(0, Math.round(rect.top + window.scrollY - 8));
+      const behavior = immediate ? 'auto' : 'smooth';
+      try{ window.scrollTo({ top, behavior }); }catch(_e){ window.scrollTo(0, top); }
+      try{
+        const docScroller = document.scrollingElement || document.documentElement || document.body;
+        if(docScroller && Math.abs((docScroller.scrollTop || 0) - top) > 2){ docScroller.scrollTop = top; }
+      }catch(_e){}
+      try{
+        const mainScrollers = [document.querySelector('.ampm-main'), document.querySelector('.ampm-mainInner')];
+        mainScrollers.forEach(function(node){
+          if(node && typeof node.scrollTop === 'number' && node.scrollTop !== 0) node.scrollTop = 0;
+        });
+      }catch(_e){}
+    }catch(_e){}
+  }
+
+  function queueActiveTabTopScroll(){
+    try{
+      scrollActiveTabToTop(true);
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scrollActiveTabToTop(true); }); });
+      setTimeout(()=>{ scrollActiveTabToTop(true); }, 90);
+      setTimeout(()=>{ scrollActiveTabToTop(true); }, 240);
+    }catch(_e){}
+  }
+
   function showTab(tab){
     const prevTab = String(state._lastActiveTab || '').trim();
     tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab === tab));
@@ -37402,6 +37666,11 @@ callback:(v)=> axisMoneyCompact1(v)
       state._lastActiveTab = tab;
     }catch(e){}
 
+    const didChangeTab = !!tab && tab !== prevTab;
+    if(didChangeTab){
+      queueActiveTabTopScroll();
+    }
+
     requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ resizeCharts(); scheduleFitTables(); }); });
     try{ window.dispatchEvent(new CustomEvent('ampm:tabshown', { detail:{ tab, previousTab: prevTab } })); }catch(e){}
 
@@ -37409,6 +37678,9 @@ callback:(v)=> axisMoneyCompact1(v)
       try{
         refreshAll();
         requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scheduleVisibleChartRefresh(tab); }); });
+        if(didChangeTab){
+          setTimeout(queueActiveTabTopScroll, 120);
+        }
       }catch(e){
         console.warn('refreshAll on showTab error', e);
         scheduleVisibleChartRefresh(tab);
@@ -37416,6 +37688,9 @@ callback:(v)=> axisMoneyCompact1(v)
       return;
     }
     scheduleVisibleChartRefresh(tab);
+    if(didChangeTab){
+      setTimeout(queueActiveTabTopScroll, 120);
+    }
   }
 
   function _scrollToSelector(selector){
@@ -37488,13 +37763,7 @@ callback:(v)=> axisMoneyCompact1(v)
       const tab = b.dataset.tab;
       localStorage.setItem('ampm_tab', tab);
       showTab(tab);
-      (function(){
-        const anchor = document.getElementById('tabsbarSpacer') || document.getElementById('ampmTabsBar');
-        if(!anchor) return;
-        const y = anchor.getBoundingClientRect().top + window.scrollY;
-        const offset = (document.getElementById('ampmTabsBar')?.offsetHeight || 60) + 8;
-        window.scrollTo({ top: Math.max(0, y - offset), behavior: 'smooth' });
-      })();
+      queueActiveTabTopScroll();
     });
   });
 
@@ -49839,11 +50108,14 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
 
   function scrollTabsAnchor(){
     try{
-      var anchor = document.getElementById('tabsbarSpacer') || document.getElementById('ampmTabsBar');
-      if(!anchor) return;
-      var y = anchor.getBoundingClientRect().top + window.scrollY;
-      var offset = (document.getElementById('ampmTabsBar')?.offsetHeight || 60) + 8;
-      window.scrollTo({ top: Math.max(0, y - offset), behavior: 'smooth' });
+      var target = document.querySelector('.ampm-mainInner') || document.querySelector('.ampm-main') || document.getElementById('noteBox') || document.body;
+      if(!target) return;
+      var top = Math.max(0, Math.round(target.getBoundingClientRect().top + window.scrollY - 8));
+      try{ window.scrollTo({ top: top, behavior: 'auto' }); }catch(_e){ window.scrollTo(0, top); }
+      try{
+        var docScroller = document.scrollingElement || document.documentElement || document.body;
+        if(docScroller) docScroller.scrollTop = top;
+      }catch(_e){}
     }catch(_e){}
   }
 
@@ -49863,6 +50135,8 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
           e.stopPropagation();
           stableShowTab(b.dataset.tab || '');
           scrollTabsAnchor();
+          setTimeout(scrollTabsAnchor, 90);
+          setTimeout(scrollTabsAnchor, 240);
         });
       });
       window.ampmShowTab = stableShowTab;
@@ -56609,7 +56883,104 @@ function innovationOnePagerCreateBrandedShell(){
   }
 }
 </style>
-<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Mostrar menú lateral':'Ocultar menú lateral';var lbl=btn.querySelector('.ampm-sidebar-toggleLabel');if(lbl)lbl.textContent=collapsed?'Mostrar menú':'Ocultar menú';var ic=btn.querySelector('.ampm-sidebar-toggleIcon path');if(ic)ic.setAttribute('d',collapsed?'M9 6l6 6-6 6':'M15 6l-6 6 6 6');try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script></body>
+<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Mostrar menú lateral':'Ocultar menú lateral';var lbl=btn.querySelector('.ampm-sidebar-toggleLabel');if(lbl)lbl.textContent=collapsed?'Mostrar menú':'Ocultar menú';var ic=btn.querySelector('.ampm-sidebar-toggleIcon path');if(ic)ic.setAttribute('d',collapsed?'M9 6l6 6-6 6':'M15 6l-6 6 6 6');try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script>
+<script id="ampm-floating-store-filter-v14">(function(){
+  if(window.__ampmFloatingStoreFilterV14) return;
+  window.__ampmFloatingStoreFilterV14 = true;
+  function el(id){ return document.getElementById(id); }
+  function getStoreSel(){ return el('stores'); }
+  function selectedValues(sel){
+    return Array.from((sel && sel.options) || []).filter(function(o){ return o.selected; }).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
+  }
+  function allValues(sel){
+    return Array.from((sel && sel.options) || []).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
+  }
+  function labelText(){
+    try{
+      if(typeof window.storeQuickLabelText === 'function') return window.storeQuickLabelText();
+    }catch(_e){}
+    var sel = getStoreSel();
+    if(!sel) return 'ALL';
+    var all = allValues(sel);
+    var picked = selectedValues(sel);
+    if(!all.length || !picked.length || picked.length === all.length) return 'ALL';
+    if(picked.length <= 2) return picked.join(', ');
+    return picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
+  }
+  function render(){
+    var sel = getStoreSel();
+    var btn = el('ampmStoreFloatingBtn');
+    var label = el('ampmStoreFloatingLabel');
+    var list = el('ampmStoreFloatingList');
+    if(label) label.textContent = labelText();
+    if(!sel || !btn || !list) return;
+    var opts = Array.from(sel.options || []);
+    btn.disabled = !opts.length;
+    list.innerHTML = opts.map(function(o){
+      var v = String(o.value || '').replace(/"/g, '&quot;');
+      var lbl = String(o.textContent || o.label || o.value || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="' + v + '" ' + (o.selected ? 'checked' : '') + '> <span>' + lbl + '</span></label>';
+    }).join('');
+  }
+  function apply(values){
+    var sel = getStoreSel();
+    if(!sel) return;
+    var wanted = new Set((values || []).map(function(v){ return String(v).trim(); }));
+    Array.from(sel.options || []).forEach(function(o){ o.selected = wanted.has(String(o.value || '').trim()); });
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+    render();
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+  function open(force){
+    var menu = el('ampmStoreFloatingMenu');
+    if(!menu) return;
+    var next = (typeof force === 'boolean') ? force : !menu.classList.contains('open');
+    menu.classList.toggle('open', !!next);
+    if(next) render();
+  }
+  function bind(){
+    var btn = el('ampmStoreFloatingBtn');
+    var menu = el('ampmStoreFloatingMenu');
+    var list = el('ampmStoreFloatingList');
+    var sel = getStoreSel();
+    if(!btn || !menu || !list) return;
+    if(!btn.__bound){
+      btn.__bound = true;
+      btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); open(); });
+      menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
+      list.addEventListener('change', function(){
+        var vals = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return String(i.value || '').trim(); });
+        apply(vals);
+      });
+      menu.querySelectorAll('[data-floating-store-action]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var act = b.getAttribute('data-floating-store-action');
+          var values = allValues(getStoreSel());
+          if(act === 'all') apply(values);
+          if(act === 'none') apply([]);
+        });
+      });
+      document.addEventListener('click', function(){ open(false); });
+      document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') open(false); });
+    }
+    if(sel && !sel.__floatingStoreBound){
+      sel.__floatingStoreBound = true;
+      sel.addEventListener('change', render);
+      try{
+        var mo = new MutationObserver(function(){ render(); });
+        mo.observe(sel, {childList:true, subtree:true, attributes:true, attributeFilter:['selected']});
+        sel.__floatingStoreObserver = mo;
+      }catch(_e){}
+    }
+    render();
+    setTimeout(render, 120);
+    setTimeout(render, 450);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, {once:true});
+  else bind();
+  window.addEventListener('load', function(){ setTimeout(render, 120); setTimeout(render, 500); }, {once:true});
+})();</script>
+</body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
