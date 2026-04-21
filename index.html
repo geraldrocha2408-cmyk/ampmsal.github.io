@@ -3352,19 +3352,88 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 #noteBox.note{margin:0!important;padding:0!important;border:0!important;background:transparent!important;color:inherit!important;font-size:inherit!important;line-height:inherit!important;}
 .ampm-shell{display:grid;grid-template-columns:minmax(92px,var(--ampm-sidebar-w)) minmax(0,1fr);gap:var(--ampm-shell-gap);align-items:start;width:100%;padding:16px;}
 .ampm-shell.is-collapsed{grid-template-columns:var(--ampm-sidebar-w-collapsed) minmax(0,1fr);}
-.ampm-sidebar{position:sticky;top:12px;align-self:start;min-width:0;max-height:calc(100vh - 24px);border-radius:24px;overflow:hidden;background:radial-gradient(circle at top right, rgba(245,131,32,.18), transparent 34%),linear-gradient(180deg,#11284A 0%,#0C4D8F 56%,#005EA7 100%);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 50px rgba(2,6,23,.18);}
+.ampm-sidebar{position:sticky;top:12px;align-self:start;min-width:0;max-height:calc(100vh - 24px);border-radius:24px;overflow:hidden;background:radial-gradient(circle at 88% 10%, rgba(250,162,30,.22), transparent 28%),radial-gradient(circle at 18% 0%, rgba(125,211,252,.12), transparent 22%),linear-gradient(180deg,#11284A 0%,#0B3F77 34%,#0C5A9F 68%,#0B6FB0 100%);border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 50px rgba(2,6,23,.20), inset 0 1px 0 rgba(255,255,255,.08);}
 .ampm-sidebar::after{content:'';position:absolute;inset:auto 0 0 0;height:120px;background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.04));pointer-events:none;}
 .ampm-sidebar-scroll{position:relative;z-index:1;max-height:calc(100vh - 24px);overflow:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.28) transparent;}
 .ampm-sidebar-scroll::-webkit-scrollbar{width:10px;}.ampm-sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
 .ampm-sidebar-toggleRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}.ampm-sidebar-toggleMeta{min-width:0;display:flex;flex-direction:column;gap:2px;color:#fff;}.ampm-sidebar-toggleKicker{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.74);}.ampm-sidebar-toggleTitle{font-size:14px;font-weight:1000;line-height:1.1;color:#fff;}.ampm-sidebar-toggle{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.12);color:#fff;border-radius:14px;min-width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;font-size:13px;font-weight:1000;cursor:pointer;box-shadow:0 10px 22px rgba(2,6,23,.16);backdrop-filter:blur(10px);} .ampm-sidebar-toggle:hover{background:rgba(255,255,255,.18);} .ampm-sidebar-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
-.ampm-sidebar-section{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);border-radius:20px;padding:12px;margin-bottom:12px;backdrop-filter:blur(8px);} .ampm-sidebar-section:last-child{margin-bottom:0;} .ampm-sidebar-sectionTitle{margin:0 0 10px;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.76);} 
+.ampm-sidebar-section{border:1px solid rgba(255,255,255,.15);background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.07));border-radius:20px;padding:12px;margin-bottom:12px;backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);} .ampm-sidebar-section:last-child{margin-bottom:0;} .ampm-sidebar-sectionTitle{margin:0 0 10px;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.82);} 
 .ampm-sidebar .topbar{padding:0!important;color:#fff!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:12px!important;}.ampm-sidebar .brand{width:100%;}.ampm-sidebar h1{font-size:24px!important;line-height:1.06!important;color:#fff!important;}.ampm-sidebar .sub{color:rgba(255,255,255,.82)!important;font-size:12px!important;line-height:1.45!important;}.ampm-sidebar .tag{background:linear-gradient(135deg,#FAA21E,#F58320)!important;color:#11284A!important;box-shadow:0 10px 22px rgba(245,131,32,.22);} .ampm-sidebar .topbar>div:last-child{width:100%;justify-content:flex-start!important;gap:8px!important;} .ampm-sidebar .topbar .pill{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.16)!important;color:rgba(255,255,255,.84)!important;} .ampm-sidebar .topbar .pill b{color:#fff!important;}
 .ampm-sidebar .controls{padding:0!important;border:0!important;background:transparent!important;}.ampm-sidebar .controlStack{gap:12px!important;}.ampm-sidebar .controlSection{border-radius:18px!important;overflow:visible!important;box-shadow:0 12px 28px rgba(2,6,23,.14)!important;}.ampm-sidebar .controlSectionHead{padding:14px 14px 10px!important;align-items:flex-start!important;}.ampm-sidebar .controlSectionAccent{font-size:10px!important;padding:7px 10px!important;}.ampm-sidebar .grid,.ampm-sidebar .gridHero,.ampm-sidebar .gridFilters{grid-template-columns:1fr!important;padding:12px!important;gap:10px!important;}.ampm-sidebar .gridHero>.fieldCard.primary:first-child,.ampm-sidebar .gridHero>.fieldCard.primary:last-child{width:100%!important;max-width:none!important;}.ampm-sidebar .fieldCard{border-radius:16px!important;min-width:0!important;}.ampm-sidebar .fieldCard label{white-space:normal;line-height:1.25;}.ampm-sidebar .actionDock{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;padding-top:2px!important;}.ampm-sidebar .actionDockMain,.ampm-sidebar .actionDockSide{min-height:0!important;width:100%!important;flex:auto!important;padding:12px!important;}.ampm-sidebar .actionDockMain{display:grid!important;grid-template-columns:1fr!important;}.ampm-sidebar .applyBtn,.ampm-sidebar #exportBtn{max-width:none!important;width:100%!important;}.ampm-sidebar .pendingPill,.ampm-sidebar .badge{width:100%;justify-content:center;text-align:center;}.ampm-sidebar #filterDirtyBanner{margin-top:10px!important;}.ampm-sidebar .export-dd{max-width:none!important;}.ampm-sidebar .export-menu{width:min(300px, calc(100vw - 44px))!important;}.ampm-sidebar select[multiple]{min-height:120px!important;}.ampm-sidebar #dowFilter[multiple]{min-height:132px!important;}
 .ampm-sidebar #ampmTabsBar,.ampm-sidebar #ampmTabsBar.fixed{position:relative!important;top:auto!important;left:auto!important;right:auto!important;box-shadow:none!important;margin:0!important;border:0!important;background:transparent!important;backdrop-filter:none!important;}.ampm-sidebar #tabsbarSpacer{display:none!important;height:0!important;}.ampm-sidebar .tabsInner{display:block!important;padding:0!important;}.ampm-sidebar .tabsTitle{display:block!important;margin:0 0 10px!important;color:rgba(255,255,255,.76)!important;font-size:11px!important;font-weight:1000!important;letter-spacing:.12em!important;text-transform:uppercase!important;}.ampm-sidebar .tabs{display:flex!important;flex-direction:column!important;gap:8px!important;overflow:visible!important;}.ampm-sidebar .tabsbar button.tabBtn{width:100%;justify-content:flex-start;display:flex;align-items:center;min-height:42px;padding:10px 14px!important;border-radius:14px!important;font-size:13px!important;box-shadow:0 10px 18px rgba(2,6,23,.10);}.ampm-sidebar .tabsRight{margin:10px 0 0!important;padding:0!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;}.ampm-sidebar .tabsStoreQuick{display:block!important;width:100%;}.ampm-sidebar .tabsStoreQuickBtn{display:flex!important;width:100%;max-width:none!important;min-width:0!important;background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important;box-shadow:0 10px 18px rgba(2,6,23,.10);} .ampm-sidebar .tabsStoreQuickBtn .muted{color:rgba(255,255,255,.72)!important;} .ampm-sidebar .storeQuickMenu{right:auto!important;left:0!important;top:calc(100% + 8px)!important;max-width:min(320px, calc(100vw - 44px))!important;}
 .ampm-main,.ampm-mainInner,#noteBox.note{min-width:0;width:100%;display:block;} #noteBox.note>*{min-width:0;}
 .ampm-shell.is-collapsed .ampm-sidebar{box-shadow:0 18px 40px rgba(2,6,23,.16);} .ampm-shell.is-collapsed .ampm-sidebar-scroll{overflow:hidden;} .ampm-shell.is-collapsed .ampm-sidebar-section:not(.ampm-sidebar-nav), .ampm-shell.is-collapsed .ampm-sidebar .ampm-sidebar-brand, .ampm-shell.is-collapsed .ampm-sidebar .ampm-sidebar-controls{opacity:0;pointer-events:none;transform:translateX(-10px);max-height:0;margin:0;padding-top:0!important;padding-bottom:0!important;border-width:0!important;} .ampm-shell.is-collapsed .ampm-sidebar .tabsTitle,.ampm-shell.is-collapsed .ampm-sidebar .tabsRight{display:none!important;} .ampm-shell.is-collapsed .ampm-sidebar-nav{opacity:1!important;pointer-events:auto!important;transform:none!important;max-height:none!important;padding:10px!important;border-width:1px!important;} .ampm-shell.is-collapsed .ampm-sidebar .tabs{gap:8px!important;} .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn{justify-content:center!important;padding:10px 0!important;font-size:0!important;min-height:44px;} .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn::after{content:attr(data-short);font-size:10px;line-height:1;font-weight:1000;letter-spacing:.05em;} .ampm-shell.is-collapsed .ampm-sidebar-toggle{padding:0!important;width:44px;} .ampm-shell.is-collapsed .ampm-sidebar-toggleMeta{display:none!important;} .ampm-shell.is-collapsed .ampm-sidebar-scroll{padding:12px 10px;}
+.ampm-sidebar-toggle{justify-content:center;min-width:160px;}
+.ampm-sidebar-toggleLabel{display:inline-flex;align-items:center;white-space:nowrap;}
+.ampm-sidebar-toggleIcon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ampm-sidebar .tabsbar button.tabBtn .tabIcon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px;}
+.ampm-sidebar .tabsbar button.tabBtn .tabIcon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ampm-sidebar .tabsbar button.tabBtn .tabLabel{display:inline-flex;align-items:center;}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn{justify-content:center!important;padding:10px 0!important;font-size:13px!important;gap:0!important;}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn .tabLabel{display:none!important;}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn .tabIcon{width:20px;height:20px;flex-basis:20px;}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn::after{display:none!important;content:none!important;}
+.ampm-shell.is-collapsed .ampm-sidebar-toggle{padding:0 10px!important;width:auto;min-width:44px;}
+.ampm-shell.is-collapsed .ampm-sidebar-toggleLabel{display:none!important;}
+
 @media (max-width:1180px){:root{--ampm-sidebar-w:320px;}.ampm-shell{gap:14px;padding:14px;}} @media (max-width:960px){:root{--ampm-sidebar-w:288px;--ampm-sidebar-w-collapsed:80px;}.ampm-shell{gap:12px;padding:12px;}.ampm-sidebar .tabsbar button.tabBtn{min-height:40px;padding:9px 12px!important;}}
-</style></head>
+</style>
+<style id="ampm-sidebar-layout-static-v4-overrides">
+body{
+  background:
+    linear-gradient(180deg,#dce9f4 0%, #e7eff6 28%, #edf2f7 100%) !important;
+}
+.panel{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.90) 0%, rgba(244,248,252,.96) 100%) !important;
+}
+.ampm-main{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg, rgba(236,244,251,.96) 0%, rgba(247,250,253,.98) 34%, rgba(246,248,251,.99) 100%);
+  border:1px solid rgba(17,40,74,.08);
+  box-shadow:0 26px 58px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.78);
+}
+.ampm-main::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(0,94,167,.16), transparent 26%),
+    radial-gradient(circle at 86% 14%, rgba(245,131,32,.14), transparent 22%),
+    radial-gradient(circle at 82% 78%, rgba(12,77,143,.11), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 34%);
+  pointer-events:none;
+}
+.ampm-main::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0) 26%),
+    linear-gradient(90deg, rgba(0,94,167,.05) 0%, rgba(0,94,167,0) 16%, rgba(245,131,32,0) 82%, rgba(245,131,32,.05) 100%);
+  pointer-events:none;
+}
+.ampm-mainInner{
+  position:relative;
+  z-index:1;
+}
+.ampm-mainInner::before{
+  content:'';
+  position:absolute;
+  left:0;right:0;top:0;height:7px;
+  background:linear-gradient(90deg, rgba(12,77,143,.50), rgba(0,94,167,.22), rgba(245,131,32,.26), rgba(12,77,143,.22));
+  opacity:.95;
+  pointer-events:none;
+}
+.ampm-shell.is-collapsed .ampm-sidebar .ampm-sidebar-sectionTitle,
+.ampm-shell.is-collapsed .ampm-sidebar .tabsTitle{display:none !important;}
+.ampm-shell.is-collapsed .ampm-sidebar-nav{padding:12px 8px !important;overflow:hidden !important;}
+.ampm-shell.is-collapsed .ampm-sidebar .tabs{align-items:center !important;}
+</style>
+</head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
 <div class="ampmAuthCard">
@@ -3409,11 +3478,11 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
 
 
-<div class="ampm-shell"><aside class="ampm-sidebar"><div class="ampm-sidebar-scroll"><div class="ampm-sidebar-toggleRow"><div class="ampm-sidebar-toggleMeta"><span class="ampm-sidebar-toggleKicker">Panel operativo</span><span class="ampm-sidebar-toggleTitle">Menú lateral</span></div><button aria-expanded="true" class="ampm-sidebar-toggle" id="ampmSidebarToggle" title="Colapsar menú lateral" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div><section class="ampm-sidebar-section ampm-sidebar-brand"><div class="topbar">
+<div class="ampm-shell"><aside class="ampm-sidebar"><div class="ampm-sidebar-scroll"><div class="ampm-sidebar-toggleRow"><div class="ampm-sidebar-toggleMeta"><span class="ampm-sidebar-toggleKicker">Panel operativo</span><span class="ampm-sidebar-toggleTitle">Menú lateral</span></div><button aria-expanded="true" class="ampm-sidebar-toggle" id="ampmSidebarToggle" title="Ocultar menú lateral" type="button"><svg aria-hidden="true" class="ampm-sidebar-toggleIcon" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"></path></svg><span class="ampm-sidebar-toggleLabel">Ocultar menú</span></button></div><section class="ampm-sidebar-section ampm-sidebar-brand"><div class="topbar">
 <div class="brand">
 <span class="tag" id="reportTag">Cuadros Diarios</span>
 <h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-<p class="sub" id="reportSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+
 </div>
 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
 <span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
@@ -3423,18 +3492,18 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="tabsInner">
 <div class="tabsTitle">Cuadros</div>
 <div aria-label="Hojas del reporte" class="tabs" role="tablist">
-<button class="tabBtn" data-tab="resumen" type="button">Resumen</button>
-<button class="tabBtn" data-tab="onepager" type="button">One Pager</button>
-<button class="tabBtn" data-tab="ventas" type="button">Ventas</button>
-<button class="tabBtn" data-tab="delivery" type="button">Delivery</button>
-<button class="tabBtn" data-tab="innovacion" type="button">Innovación</button>
-<button class="tabBtn" data-tab="sbf" type="button">SBF</button>
-<button class="tabBtn" data-tab="inventario" type="button">Inventario</button>
-<button class="tabBtn" data-tab="merma" type="button">Merma</button>
-<button class="tabBtn" data-tab="prd0" type="button">PRD en cero</button>
-<button class="tabBtn" data-tab="cxc" type="button">CXC</button>
-<button class="tabBtn" data-tab="hallazgos" type="button">Hallazgos</button>
-<button class="tabBtn" data-tab="criticos" type="button">Críticos</button>
+<button class="tabBtn" data-tab="resumen" title="Resumen" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8"></path><path d="M8 13h5"></path></svg></span><span class="tabLabel">Resumen</span></button>
+<button class="tabBtn" data-tab="onepager" title="One Pager" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 4h8l4 4v12H7z"></path><path d="M15 4v4h4"></path><path d="M10 13h6"></path><path d="M10 17h6"></path></svg></span><span class="tabLabel">One Pager</span></button>
+<button class="tabBtn" data-tab="ventas" title="Ventas" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19V9"></path><path d="M12 19V5"></path><path d="M19 19v-8"></path></svg></span><span class="tabLabel">Ventas</span></button>
+<button class="tabBtn" data-tab="delivery" title="Delivery" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 16h2l2-5h6l3 5h2"></path><path d="M14 11h3l3 3"></path><circle cx="8" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span><span class="tabLabel">Delivery</span></button>
+<button class="tabBtn" data-tab="innovacion" title="Innovación" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a6 6 0 0 0-4 10c1 1 2 2 2 4h4c0-2 1-3 2-4a6 6 0 0 0-4-10z"></path></svg></span><span class="tabLabel">Innovación</span></button>
+<button class="tabBtn" data-tab="sbf" title="SBF" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="M8 12h8"></path></svg></span><span class="tabLabel">SBF</span></button>
+<button class="tabBtn" data-tab="inventario" title="Inventario" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4-8-4z"></path><path d="M4 12l8 4 8-4"></path><path d="M4 17l8 4 8-4"></path></svg></span><span class="tabLabel">Inventario</span></button>
+<button class="tabBtn" data-tab="merma" title="Merma" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3C8 8 6 11 6 14a6 6 0 0 0 12 0c0-3-2-6-6-11z"></path></svg></span><span class="tabLabel">Merma</span></button>
+<button class="tabBtn" data-tab="prd0" title="PRD en cero" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14"></path><path d="M5 12h8"></path><path d="M5 17h10"></path><circle cx="18" cy="12" r="3"></circle></svg></span><span class="tabLabel">PRD en cero</span></button>
+<button class="tabBtn" data-tab="cxc" title="CXC" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h10v10H7z"></path><path d="M9 9h6v6H9z"></path></svg></span><span class="tabLabel">CXC</span></button>
+<button class="tabBtn" data-tab="hallazgos" title="Hallazgos" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.2-4.2"></path></svg></span><span class="tabLabel">Hallazgos</span></button>
+<button class="tabBtn" data-tab="criticos" title="Críticos" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4l8 14H4z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span><span class="tabLabel">Críticos</span></button>
 </div>
 <div class="tabsRight">
 <div class="tabsStoreQuick" id="tabsStoreQuick">
@@ -3456,9 +3525,9 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="controlSectionHead">
 <div>
 <h3 class="controlSectionTitle">Base del reporte</h3>
-<p class="controlSectionSub">Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.</p>
+
 </div>
-<span class="controlSectionAccent">Carga + vista</span>
+<span class="controlSectionAccent">Carga y vista</span>
 </div>
 <div class="grid gridHero">
 <div class="fieldCard primary">
@@ -3486,7 +3555,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div class="controlSectionHead">
 <div>
 <h3 class="controlSectionTitle">Filtros y comparativos</h3>
-<p class="controlSectionSub">Armá el escenario completo y aplicalo de una sola vez. Los cambios no refrescan el dashboard hasta presionar el botón.</p>
+
 </div>
 <span class="controlSectionAccent">Aplicación manual</span>
 </div>
@@ -4810,7 +4879,73 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 <div id="sbf_provider_trend_cards" style="display:grid; grid-template-columns:1fr; gap:16px"></div>
 </div><div class="footer" data-tabpage="delivery">
         Nota: si en algún mes <b>Delivery &gt; Total</b>, se clamp “Sin Delivery” a 0 y se levanta alerta.
-      </div></div></div></div></div></div>
+      </div>
+<div class="section" data-tabpage="criticos"><h2>Críticos</h2></div>
+<div class="criticosWrap" data-tabpage="criticos" id="criticosWrap">
+<div class="criticosTopbar">
+<div>
+<div class="criticosTitle">Críticos</div>
+<div class="criticosSub" id="criticosSub">Lectura semanal de criticidad por tienda, usando semanas completas seleccionadas en el filtro.</div>
+</div>
+<div class="criticosChips" id="criticosChips"></div>
+</div>
+<div class="criticosStoreTabs" id="criticosStoreTabs"></div>
+<div class="criticosSummary" id="criticosSummary"></div>
+<div class="criticosGrid">
+<div class="criticosCard">
+<div class="criticosCardHead">
+<div>
+<div class="criticosCardTitle" id="criticosCard1Title">Top 30 críticos</div>
+<div class="criticosCardMeta" id="criticosCard1Meta">Ordenado por valor faltante estimado a 1 semana.</div>
+</div>
+<div class="criticosHeadTools">
+<label class="criticosFilterLabel" for="criticosFilterA">Sugerencia</label>
+<select class="criticosFilterSelect" id="criticosFilterA">
+<option value="all">Todos los ítems</option>
+<option value="changes">Solo con cambio de ROP</option>
+</select>
+</div>
+</div>
+<div class="criticosLegend">
+<span class="criticosPill">ROP ideal final = lógica actual de Inventario</span>
+<span class="criticosPill gray">Planimetría incluida como piso</span>
+</div>
+<div class="criticosTableWrap">
+<table class="criticosTable" id="criticosTableA">
+<thead id="criticosTableAHead"></thead>
+<tbody id="criticosTableABody"></tbody>
+</table>
+</div>
+</div>
+<div class="criticosCard">
+<div class="criticosCardHead">
+<div>
+<div class="criticosCardTitle" id="criticosCard2Title">Listado ALTO + MEDIO + BAJO</div>
+<div class="criticosCardMeta" id="criticosCard2Meta">Ordenado de mayor importancia ajustada a menor.</div>
+</div>
+<div class="criticosHeadTools">
+<label class="criticosFilterLabel" for="criticosFilterB">Sugerencia</label>
+<select class="criticosFilterSelect" id="criticosFilterB">
+<option value="all">Todos los ítems</option>
+<option value="changes">Solo con cambio de ROP</option>
+</select>
+</div>
+</div>
+<div class="criticosLegend">
+<span class="criticosPill alto">ALTO</span>
+<span class="criticosPill medio">MEDIO</span>
+<span class="criticosPill bajo">BAJO</span>
+</div>
+<div class="criticosTableWrap">
+<table class="criticosTable" id="criticosTableB">
+<thead id="criticosTableBHead"></thead>
+<tbody id="criticosTableBBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div></div></div></div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -41292,8 +41427,8 @@ function initHallazgosUI(){
   function initOnePagerFloatingBand(){
     var source = document.getElementById('onePagerBand');
     var wrap = document.getElementById('onePagerWrap');
-    var tabsbar = document.querySelector('.tabsbar');
-    if(!source || !wrap || !tabsbar) return;
+    var mainCol = document.querySelector('.ampm-main');
+    if(!source || !wrap) return;
     var host = document.getElementById('onePagerBandFloatHost');
     if(!host){
       host = document.createElement('div');
@@ -41312,6 +41447,14 @@ function initHallazgosUI(){
       var btn = document.querySelector('.tabBtn.active');
       return btn && btn.dataset ? (btn.dataset.tab || '') : '';
     }
+    function getTopOffset(){
+      var base = 10;
+      if(mainCol){
+        var mainRect = mainCol.getBoundingClientRect();
+        if(Number.isFinite(mainRect.top)) base = Math.max(10, Math.round(mainRect.top + 10));
+      }
+      return base;
+    }
     function shouldShow(topOffset){
       if(activeTabName() !== 'onepager') return false;
       var srcRect = source.getBoundingClientRect();
@@ -41319,8 +41462,7 @@ function initHallazgosUI(){
       return srcRect.top < topOffset && wrapRect.bottom > (topOffset + 24) && srcRect.width > 10;
     }
     function update(){
-      var tabsRect = tabsbar.getBoundingClientRect();
-      var topOffset = Math.max(10, Math.round(tabsRect.bottom + 8));
+      var topOffset = getTopOffset();
       if(!shouldShow(topOffset)){
         host.style.display = 'none';
         return;
@@ -51130,71 +51272,6 @@ function innovationOnePagerCreateBrandedShell(){
   }
 })();
 </script>
-<div class="section" data-tabpage="criticos"><h2>Críticos</h2></div>
-<div class="criticosWrap" data-tabpage="criticos" id="criticosWrap">
-<div class="criticosTopbar">
-<div>
-<div class="criticosTitle">Críticos</div>
-<div class="criticosSub" id="criticosSub">Lectura semanal de criticidad por tienda, usando semanas completas seleccionadas en el filtro.</div>
-</div>
-<div class="criticosChips" id="criticosChips"></div>
-</div>
-<div class="criticosStoreTabs" id="criticosStoreTabs"></div>
-<div class="criticosSummary" id="criticosSummary"></div>
-<div class="criticosGrid">
-<div class="criticosCard">
-<div class="criticosCardHead">
-<div>
-<div class="criticosCardTitle" id="criticosCard1Title">Top 30 críticos</div>
-<div class="criticosCardMeta" id="criticosCard1Meta">Ordenado por valor faltante estimado a 1 semana.</div>
-</div>
-<div class="criticosHeadTools">
-<label class="criticosFilterLabel" for="criticosFilterA">Sugerencia</label>
-<select class="criticosFilterSelect" id="criticosFilterA">
-<option value="all">Todos los ítems</option>
-<option value="changes">Solo con cambio de ROP</option>
-</select>
-</div>
-</div>
-<div class="criticosLegend">
-<span class="criticosPill">ROP ideal final = lógica actual de Inventario</span>
-<span class="criticosPill gray">Planimetría incluida como piso</span>
-</div>
-<div class="criticosTableWrap">
-<table class="criticosTable" id="criticosTableA">
-<thead id="criticosTableAHead"></thead>
-<tbody id="criticosTableABody"></tbody>
-</table>
-</div>
-</div>
-<div class="criticosCard">
-<div class="criticosCardHead">
-<div>
-<div class="criticosCardTitle" id="criticosCard2Title">Listado ALTO + MEDIO + BAJO</div>
-<div class="criticosCardMeta" id="criticosCard2Meta">Ordenado de mayor importancia ajustada a menor.</div>
-</div>
-<div class="criticosHeadTools">
-<label class="criticosFilterLabel" for="criticosFilterB">Sugerencia</label>
-<select class="criticosFilterSelect" id="criticosFilterB">
-<option value="all">Todos los ítems</option>
-<option value="changes">Solo con cambio de ROP</option>
-</select>
-</div>
-</div>
-<div class="criticosLegend">
-<span class="criticosPill alto">ALTO</span>
-<span class="criticosPill medio">MEDIO</span>
-<span class="criticosPill bajo">BAJO</span>
-</div>
-<div class="criticosTableWrap">
-<table class="criticosTable" id="criticosTableB">
-<thead id="criticosTableBHead"></thead>
-<tbody id="criticosTableBBody"></tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
 <script id="criticos-module-v1">
 (function(){
   function _txt(v){ return String(v == null ? '' : v).trim(); }
@@ -56532,7 +56609,7 @@ function innovationOnePagerCreateBrandedShell(){
   }
 }
 </style>
-<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Expandir menú lateral':'Colapsar menú lateral';try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script></body>
+<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Mostrar menú lateral':'Ocultar menú lateral';var lbl=btn.querySelector('.ampm-sidebar-toggleLabel');if(lbl)lbl.textContent=collapsed?'Mostrar menú':'Ocultar menú';var ic=btn.querySelector('.ampm-sidebar-toggleIcon path');if(ic)ic.setAttribute('d',collapsed?'M9 6l6 6-6 6':'M15 6l-6 6 6 6');try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script></body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
