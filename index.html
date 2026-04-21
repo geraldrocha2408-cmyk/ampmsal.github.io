@@ -2806,16 +2806,13 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     font-weight:700;
   }
   #ampmFloatingActions{
-    position:fixed;
+    position:absolute;
     top:14px;
     right:14px;
-    z-index:100000;
+    z-index:1000;
     display:none;
     align-items:center;
-    justify-content:flex-end;
-    flex-wrap:wrap;
     gap:10px;
-    max-width:min(720px, calc(100vw - 28px));
   }
   body.auth-ok #ampmFloatingActions{display:flex;}
   #ampmFloatingActions .export-dd{
@@ -2862,6 +2859,14 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     color:#64748b;
   }
 
+  #ampmStoreDock{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:100001;
+    display:none;
+  }
+  body.auth-ok #ampmStoreDock{display:block;}
   #ampmStoreFloatingWrap{
     position:relative;
     display:inline-flex;
@@ -2870,26 +2875,32 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   #ampmStoreFloatingBtn{
     display:inline-flex;
     align-items:center;
-    justify-content:center;
-    gap:8px;
+    justify-content:flex-start;
+    gap:10px;
     width:auto !important;
-    min-width:220px;
-    max-width:min(320px, calc(100vw - 28px)) !important;
-    border:1px solid rgba(15,23,42,.12);
-    background:rgba(255,255,255,.96) !important;
+    min-width:190px;
+    max-width:min(300px, calc(100vw - 24px)) !important;
+    border:1px solid rgba(12,77,143,.18);
+    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(242,247,252,.98)) !important;
     color:#11284A !important;
     border-radius:999px;
-    padding:10px 14px;
+    padding:12px 14px;
     font-size:12px;
     font-weight:1000;
     cursor:pointer;
-    box-shadow:0 12px 24px rgba(2,6,23,.14);
-    backdrop-filter:blur(8px);
+    box-shadow:0 18px 36px rgba(2,6,23,.18), 0 8px 18px rgba(12,77,143,.10);
+    backdrop-filter:blur(12px);
   }
-  #ampmStoreFloatingBtn:hover{ background:#fff !important; }
+  #ampmStoreFloatingBtn:hover{ background:linear-gradient(180deg, #ffffff, rgba(244,248,252,.98)) !important; }
+  #ampmStoreFloatingBtn .ampmStoreFloatingIcon{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    color:#0C4D8F;
+  }
   #ampmStoreFloatingBtn .muted{
-    color:#64748b;
-    font-weight:900;
+    color:#0C4D8F;
+    font-weight:1000;
     flex:0 0 auto;
   }
   #ampmStoreFloatingLabel{
@@ -2903,15 +2914,15 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   #ampmStoreFloatingCaret{ flex:0 0 auto; color:#0C4D8F; font-size:11px; }
   #ampmStoreFloatingMenu{
     position:absolute;
-    top:calc(100% + 10px);
     right:0;
-    width:min(330px, calc(100vw - 28px));
+    bottom:calc(100% + 12px);
+    width:min(340px, calc(100vw - 24px));
     padding:12px;
     border-radius:18px;
-    border:1px solid rgba(148,163,184,.26);
+    border:1px solid rgba(148,163,184,.24);
     background:rgba(255,255,255,.98);
-    box-shadow:0 24px 48px rgba(2,6,23,.16);
-    backdrop-filter:blur(16px);
+    box-shadow:0 24px 48px rgba(2,6,23,.18);
+    backdrop-filter:blur(14px);
     display:none;
   }
   #ampmStoreFloatingMenu.open{ display:block; }
@@ -2981,20 +2992,28 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     flex:0 0 16px;
   }
   @media (max-width: 860px){
+    #ampmStoreDock{
+      right:12px;
+      bottom:12px;
+    }
     #ampmStoreFloatingBtn{
-      min-width:170px;
-      max-width:min(240px, calc(100vw - 20px)) !important;
+      min-width:160px;
+      max-width:min(240px, calc(100vw - 16px)) !important;
     }
     #ampmStoreFloatingMenu{
-      width:min(300px, calc(100vw - 20px));
+      width:min(300px, calc(100vw - 16px));
     }
   }
   @media (max-width: 640px){
+    #ampmStoreDock{
+      right:10px;
+      bottom:10px;
+    }
     #ampmStoreFloatingBtn{
       min-width:0;
       width:auto !important;
       max-width:min(220px, calc(100vw - 20px)) !important;
-      padding:9px 12px;
+      padding:11px 12px;
     }
     #ampmStoreFloatingBtn .muted{ display:none; }
   }
@@ -3008,7 +3027,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
       top:10px;
       right:10px;
       gap:8px;
-      max-width:calc(100vw - 20px);
     }
     #exportBtn,
     #ampmLogoutBtn{
@@ -3699,7 +3717,7 @@ body{
 </div>
 </div>
 </div>
-<div id="ampmFloatingActions"><div id="ampmStoreFloatingWrap"><button id="ampmStoreFloatingBtn" type="button"><span class="muted">Tienda:</span><span id="ampmStoreFloatingLabel">ALL</span><span aria-hidden="true" id="ampmStoreFloatingCaret">▾</span></button><div id="ampmStoreFloatingMenu"><div class="ampmStoreFloatingHead"><div><div class="ampmStoreFloatingTitle">Filtro rápido de tiendas</div><div class="ampmStoreFloatingSub">Siempre visible y sincronizado</div></div></div><div class="ampmStoreFloatingActions"><button class="ampmStoreFloatingActionBtn" data-floating-store-action="all" type="button">Todas</button><button class="ampmStoreFloatingActionBtn" data-floating-store-action="none" type="button">Limpiar</button></div><div id="ampmStoreFloatingList"></div></div></div><div class="export-dd" id="ampmExportWrap">
+<div id="ampmStoreDock"><div id="ampmStoreFloatingWrap"><button id="ampmStoreFloatingBtn" type="button"><svg aria-hidden="true" class="ampmStoreFloatingIcon" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-10ZM7 8h10M9 19v-4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V19" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="muted">Tiendas</span><span id="ampmStoreFloatingLabel">ALL</span><span aria-hidden="true" id="ampmStoreFloatingCaret">▾</span></button><div id="ampmStoreFloatingMenu"><div class="ampmStoreFloatingHead"><div><div class="ampmStoreFloatingTitle">Filtro rápido de tiendas</div><div class="ampmStoreFloatingSub">Disponible en cualquier pestaña</div></div></div><div class="ampmStoreFloatingActions"><button class="ampmStoreFloatingActionBtn" data-floating-store-action="all" type="button">Todas</button><button class="ampmStoreFloatingActionBtn" data-floating-store-action="none" type="button">Limpiar</button></div><div id="ampmStoreFloatingList"></div></div></div></div><div id="ampmFloatingActions"><div class="export-dd" id="ampmExportWrap">
 <button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
 <div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
 <button data-export="excel" type="button">Excel (.xls)</button>
