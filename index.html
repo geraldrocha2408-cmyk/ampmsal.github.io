@@ -3583,17 +3583,7 @@ body{
 
 
 
-<div class="ampm-shell"><aside class="ampm-sidebar"><div class="ampm-sidebar-scroll"><div class="ampm-sidebar-toggleRow"><div class="ampm-sidebar-toggleMeta"><span class="ampm-sidebar-toggleKicker">Panel operativo</span><span class="ampm-sidebar-toggleTitle">Menú lateral</span></div><button aria-expanded="true" class="ampm-sidebar-toggle" id="ampmSidebarToggle" title="Ocultar menú lateral" type="button"><svg aria-hidden="true" class="ampm-sidebar-toggleIcon" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"></path></svg><span class="ampm-sidebar-toggleLabel">Ocultar menú</span></button></div><section class="ampm-sidebar-section ampm-sidebar-brand"><div class="topbar">
-<div class="brand">
-<span class="tag" id="reportTag">Cuadros Diarios</span>
-<h1 id="reportTitle">Reporte Unificado AMPM — Diario / Semanal / Mensual</h1>
-
-</div>
-<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
-<span class="pill"><span>Modo:</span> <b id="mode">—</b></span>
-<span class="pill"><span>Archivo:</span> <b id="filename">—</b></span>
-</div>
-</div></section><section class="ampm-sidebar-section ampm-sidebar-nav"><h3 class="ampm-sidebar-sectionTitle">Navegación</h3><div class="tabsbar" id="ampmTabsBar">
+<div class="ampm-shell"><aside class="ampm-sidebar"><div class="ampm-sidebar-scroll"><div class="ampm-sidebar-toggleRow"><div class="ampm-sidebar-toggleMeta"><span class="ampm-sidebar-toggleKicker">Panel operativo</span><span class="ampm-sidebar-toggleTitle">Menú lateral</span></div><button aria-expanded="true" class="ampm-sidebar-toggle" id="ampmSidebarToggle" title="Ocultar menú lateral" type="button"><svg aria-hidden="true" class="ampm-sidebar-toggleIcon" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"></path></svg><span class="ampm-sidebar-toggleLabel">Ocultar menú</span></button></div><section class="ampm-sidebar-section ampm-sidebar-nav"><h3 class="ampm-sidebar-sectionTitle">Navegación</h3><div class="tabsbar" id="ampmTabsBar">
 <div class="tabsInner">
 <div class="tabsTitle">Cuadros</div>
 <div aria-label="Hojas del reporte" class="tabs" role="tablist">
@@ -56915,6 +56905,9 @@ function innovationOnePagerCreateBrandedShell(){
     }catch(_e){}
     return [];
   }
+  function normalizeKey(v){
+    return txt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+  }
   function activeTabLabel(){
     try{
       var btn = document.querySelector('.tabBtn.active');
@@ -56922,6 +56915,10 @@ function innovationOnePagerCreateBrandedShell(){
       var labelNode = btn.querySelector('.tabLabel');
       return txt(labelNode ? labelNode.textContent : btn.textContent) || 'Resumen';
     }catch(_e){ return 'Resumen'; }
+  }
+  function shouldHideContextHeader(tabLabel){
+    var key = normalizeKey(tabLabel);
+    return ['inventario','merma','prd en cero','cxc','criticos'].indexOf(key) >= 0;
   }
   function currentMode(){
     try{ if(typeof mode === 'function') return mode(); }catch(_e){}
@@ -56998,6 +56995,11 @@ function innovationOnePagerCreateBrandedShell(){
     var modeKey = currentMode();
     var periodKey = currentPeriod();
     var tabLabel = activeTabLabel();
+    if(shouldHideContextHeader(tabLabel)){
+      root.style.display = 'none';
+      return;
+    }
+    root.style.display = '';
     var dowTxt = currentDowLabel();
     var title = buildTitle(modeKey, periodKey, dowTxt);
     var subtitle = buildSubtitle(modeKey, tabLabel, dowTxt);
@@ -57017,7 +57019,6 @@ function innovationOnePagerCreateBrandedShell(){
       chipsEl.appendChild(chip(modeKey === 'mensual' ? 'Mes' : 'Semana', periodText(modeKey, periodKey)));
       if(modeKey === 'diario') chipsEl.appendChild(chip('Días', dowTxt || 'Todos'));
       chipsEl.appendChild(chip('Tiendas', currentStoreLabel()));
-      chipsEl.appendChild(chip('Hoja', tabLabel));
     }
   }
   function schedule(){
