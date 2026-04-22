@@ -4597,7 +4597,7 @@ body{
 </div><div class="section invTitle" data-tabpage="inventario"><h2>Inventario — Por Store (snapshot + COGS 4W)</h2></div><div class="invRow" data-tabpage="inventario">
 <div class="card invChartCard" style="margin-top:10px; padding:12px 12px 2px; height:420px; max-height:420px; position:relative; overflow:hidden;">
 <div class="muted" style="margin:0 0 8px; font-weight:700;">Barras = Monto Inv (Amount). Línea = Días Inv (Inv * 28 / COGS 4W).</div>
-<canvas id="chart_inv_store" style="width:100%; height:360px; max-height:360px;"></canvas>
+<canvas id="chart_inv_store" style="width:100%; height:360px; max-height:360px; background:#ffffff; border-radius:12px;"></canvas>
 </div>
 <div class="invSpacer"></div>
 </div><div class="section invTitle" data-tabpage="inventario">
@@ -16678,6 +16678,15 @@ return;
 
           if(state._chartInvStore){ try{ state._chartInvStore.destroy(); }catch(e){} state._chartInvStore=null; }
 
+          const invAxisMoneyK = (v) => {
+            const n = Number(v);
+            if (!Number.isFinite(n)) return '—';
+            const abs = Math.abs(n);
+            if (abs >= 1000000) return `$${(n/1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '')}M`;
+            if (abs >= 1000) return `$${(n/1000).toFixed(abs >= 100000 ? 0 : 1).replace(/\.0$/, '')}K`;
+            return `$${n.toFixed(0)}`;
+          };
+
           state._chartInvStore = new Chart(canvas.getContext('2d'), {
             type:'bar',
             data:{
@@ -16707,7 +16716,13 @@ return;
               },
               scales:{
                 x:{stacked:false, grid:{display:false}},
-                y:{stacked:false, beginAtZero:true, ticks:{callback:(v)=> money(v)}},
+                y:{
+                  stacked:false,
+                  beginAtZero:true,
+                  ticks:{
+                    callback:(v)=> invAxisMoneyK(v)
+                  }
+                },
                 y1:{position:'right', grid:{drawOnChartArea:false}, border:{ display:true, color: AMPM.orange }, beginAtZero:true, ticks:{ color: '#000000', font:{ size:INNOVATION_UI.axis, weight:'700' }, callback:(v)=> Number(v).toFixed(0)}}
               }
             },
