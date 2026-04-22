@@ -51328,7 +51328,116 @@ function innovationOnePagerCreateBrandedShell(){
   window.exportInnovationOnePagerAsPptx = exportInnovationOnePagerAsPptx;
 })();
 </script>
-<script id="ampm-tab-chart-recovery-v1-disabled">/* disabled by forensic cleanup */</script>
+<script id="ampm-tab-chart-recovery-v1">
+(function(){
+  function activeTab(){
+    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim() || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function isElementVisible(el){
+    try{
+      if(!el) return false;
+      const cs = getComputedStyle(el);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 80 && r.height > 80;
+    }catch(_e){ return false; }
+  }
+  function chartFromCanvas(canvas){
+    try{
+      if(!canvas || typeof Chart === 'undefined') return null;
+      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
+    }catch(_e){}
+    return null;
+  }
+  function canvasesForTab(tab){
+    try{
+      return Array.from(document.querySelectorAll('[data-tabpage="'+ String(tab || '').trim() +'"] canvas')).filter(isElementVisible);
+    }catch(_e){ return []; }
+  }
+  function tabHasMissingCharts(tab){
+    try{
+      const list = canvasesForTab(tab);
+      if(!list.length) return false;
+      return list.some(function(cv){ return !chartFromCanvas(cv); });
+    }catch(_e){ return false; }
+  }
+  function resizeVisibleCharts(tab){
+    try{
+      canvasesForTab(tab).forEach(function(cv){
+        try{
+          const ch = chartFromCanvas(cv);
+          if(!ch) return;
+          if(typeof ch.resize === 'function') ch.resize();
+          if(typeof ch.update === 'function') ch.update('none');
+        }catch(_e){}
+      });
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(_e){}
+  }
+  function recoverTab(tab, force){
+    try{
+      const safeTab = String(tab || activeTab()).trim();
+      if(!safeTab) return;
+      const mustRebuild = !!force || tabHasMissingCharts(safeTab);
+      if(mustRebuild && typeof window.refreshVisibleTabCharts === 'function'){
+        try{ window.refreshVisibleTabCharts(safeTab, true); }catch(_e){}
+      }
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ resizeVisibleCharts(safeTab); });
+      });
+    }catch(_e){}
+  }
+
+  if(typeof window.refreshVisibleTabCharts === 'function' && !window.refreshVisibleTabCharts.__ampmRecoveryWrapped){
+    const _origRefreshVisibleTabCharts = window.refreshVisibleTabCharts;
+    window.refreshVisibleTabCharts = function(tab, forceRebuild){
+      const safeTab = String(tab || activeTab()).trim();
+      const needsRecovery = !!forceRebuild || tabHasMissingCharts(safeTab);
+      const out = _origRefreshVisibleTabCharts.call(this, safeTab, needsRecovery);
+      try{ resizeVisibleCharts(safeTab); }catch(_e){}
+      return out;
+    };
+    window.refreshVisibleTabCharts.__ampmRecoveryWrapped = true;
+  }
+
+  if(typeof window.scheduleVisibleChartRefresh === 'function' && !window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped){
+    const _origScheduleVisibleChartRefresh = window.scheduleVisibleChartRefresh;
+    window.scheduleVisibleChartRefresh = function(tab){
+      const safeTab = String(tab || activeTab()).trim();
+      const out = _origScheduleVisibleChartRefresh.call(this, safeTab);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 40);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 180);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 420);
+      return out;
+    };
+    window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped = true;
+  }
+
+  function onTabShown(ev){
+    const safeTab = String(ev?.detail?.tab || activeTab()).trim();
+    recoverTab(safeTab, false);
+    setTimeout(function(){ recoverTab(safeTab, false); }, 140);
+    setTimeout(function(){ recoverTab(safeTab, false); }, 380);
+  }
+
+  window.addEventListener('ampm:tabshown', onTabShown);
+  window.addEventListener('resize', function(){ recoverTab(activeTab(), false); }, { passive:true });
+  window.addEventListener('focus', function(){ try{ resizeVisibleCharts(activeTab()); }catch(_e){} }, { passive:true });
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
+      setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
+    }, { once:true });
+  }else{
+    setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
+    setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
+  }
+})();
+</script>
 <script id="ampm-export-postcooldown-v1">
 (function(){
   function inCooldown(){
@@ -52225,8 +52334,178 @@ function innovationOnePagerCreateBrandedShell(){
   });
 })();
 </script>
-<script id="ventas-monthly-mam-tab-recovery-v1-disabled">/* disabled by forensic cleanup */</script>
-<script id="sbf-general-chart-recovery-patch-disabled">/* disabled by forensic cleanup */</script>
+<script id="ventas-monthly-mam-tab-recovery-v1">
+(function(){
+  function _txt(v){ return String(v == null ? '' : v).trim(); }
+  function activeTab(){
+    try{ return _txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen') || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function isMonthly(){
+    try{
+      if(typeof getUnifiedReportMode === 'function') return _txt(getUnifiedReportMode()).toLowerCase() === 'mensual';
+      return _txt((typeof state !== 'undefined' && state && state.reportMode) ? state.reportMode : '').toLowerCase() === 'mensual';
+    }catch(_e){ return false; }
+  }
+  function isVisibleCanvas(id){
+    try{
+      var c = document.getElementById(id);
+      if(!c) return false;
+      var cs = getComputedStyle(c);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
+      var r = c.getBoundingClientRect();
+      return r.width > 100 && r.height > 100;
+    }catch(_e){ return false; }
+  }
+  function runVentasMamRecovery(){
+    try{
+      if(activeTab() !== 'ventas') return;
+      if(!isMonthly()) return;
+      if(!isVisibleCanvas('chart_mam')) return;
+      var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) || []);
+      if(typeof renderMamChart === 'function') renderMamChart(stores);
+      if(typeof renderMamStoreCards === 'function') renderMamStoreCards(stores);
+      if(typeof renderStoreMamChart === 'function' && isVisibleCanvas('chart_store_mam')) renderStoreMamChart(stores);
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+    }catch(err){ try{ console.warn('ventas monthly mam recovery failed', err); }catch(_e){} }
+  }
+  function scheduleVentasMamRecovery(){
+    try{
+      requestAnimationFrame(function(){ requestAnimationFrame(runVentasMamRecovery); });
+      setTimeout(runVentasMamRecovery, 90);
+      setTimeout(runVentasMamRecovery, 260);
+      setTimeout(runVentasMamRecovery, 520);
+    }catch(_e){}
+  }
+
+  function runDeliveryMamRecovery(){
+    try{
+      if(activeTab() !== 'delivery') return;
+      if(!isVisibleCanvas('chart_delivery_mam')) return;
+      var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) || []);
+      if(typeof renderDeliveryMamChart === 'function') renderDeliveryMamChart(stores);
+      if(typeof renderDeliveryStoreCards === 'function') renderDeliveryStoreCards(stores);
+      if(typeof renderDeliveryShareMamChart === 'function' && isVisibleCanvas('chart_delivery_share_mam')) renderDeliveryShareMamChart(stores);
+      if(typeof renderDeliveryShareStoreCards === 'function') renderDeliveryShareStoreCards(stores);
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+    }catch(err){ try{ console.warn('delivery mam recovery failed', err); }catch(_e){} }
+  }
+  function scheduleDeliveryMamRecovery(){
+    try{
+      requestAnimationFrame(function(){ requestAnimationFrame(runDeliveryMamRecovery); });
+      setTimeout(runDeliveryMamRecovery, 90);
+      setTimeout(runDeliveryMamRecovery, 260);
+      setTimeout(runDeliveryMamRecovery, 520);
+    }catch(_e){}
+  }
+
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = _txt(ev && ev.detail && ev.detail.tab).toLowerCase();
+      if(tab === 'ventas') scheduleVentasMamRecovery();
+      if(tab === 'delivery') scheduleDeliveryMamRecovery();
+    }catch(_e){}
+  });
+  window.addEventListener('focus', function(){
+    try{
+      var tab = activeTab();
+      if(tab === 'ventas' || tab === 'delivery'){
+        if(typeof resizeCharts === 'function') resizeCharts();
+        if(typeof updateAllChartTitles === 'function') updateAllChartTitles();
+      }
+    }catch(_e){}
+  }, { passive:true });
+})();
+</script>
+<script id="sbf-general-chart-recovery-patch">
+(function(){
+  var _recoverTimer = null;
+  function activeTab(){
+    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim(); }catch(e){ return ''; }
+  }
+  function isVisible(el){
+    try{
+      if(!el) return false;
+      const st = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
+    }catch(e){ return false; }
+  }
+  function getStores(){
+    try{ return (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) ? state.stores : []); }catch(_e){ return []; }
+  }
+  function resizeExistingChart(){
+    try{
+      const chart = (window.state && state.chartSbfMam) ? state.chartSbfMam : null;
+      const canvas = chart && chart.canvas ? chart.canvas : document.getElementById('chart_sbf_mam');
+      if(!chart || !canvas || !isVisible(canvas)) return false;
+      if(typeof chart.resize === 'function') chart.resize();
+      if(typeof chart.update === 'function') chart.update('none');
+      return true;
+    }catch(_e){ return false; }
+  }
+  function rebuildChart(){
+    try{
+      const stores = getStores();
+      const canvas = document.getElementById('chart_sbf_mam');
+      if(!canvas) return;
+      const card = canvas.closest('.chartCard');
+      if(card && card.style.display === 'none') return;
+      try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
+      if(!isVisible(canvas)) return;
+      try{
+        if(window.state && state.chartSbfMam && typeof state.chartSbfMam.destroy === 'function'){
+          state.chartSbfMam.destroy();
+          state.chartSbfMam = null;
+        }
+      }catch(_e){}
+      try{ if(typeof renderSbfMamChart === 'function') renderSbfMamChart(stores); }catch(e){ console.warn('recoverSbfGeneralChart render failed', e); }
+      setTimeout(function(){
+        try{ resizeExistingChart(); }catch(_e){}
+      }, 90);
+    }catch(e){ console.warn('recoverSbfGeneralChart failed', e); }
+  }
+  function runRecover(mode){
+    try{
+      if(activeTab() !== 'sbf') return;
+      const stores = getStores();
+      try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
+      const canvas = document.getElementById('chart_sbf_mam');
+      if(!canvas) return;
+      if(!isVisible(canvas)) return;
+      if(mode === 'rebuild'){
+        rebuildChart();
+        return;
+      }
+      if(!resizeExistingChart()) rebuildChart();
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(e){ console.warn('runRecover SBF failed', e); }
+  }
+  function scheduleRecover(mode){
+    try{ if(_recoverTimer) clearTimeout(_recoverTimer); }catch(_e){}
+    const safeMode = (mode === 'rebuild') ? 'rebuild' : 'light';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ runRecover(safeMode); }); });
+    _recoverTimer = setTimeout(function(){ runRecover(safeMode); }, safeMode === 'rebuild' ? 140 : 90);
+  }
+  document.addEventListener('click', function(ev){
+    const btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab="sbf"]') : null;
+    if(!btn) return;
+    scheduleRecover('light');
+  }, true);
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = String(ev && ev.detail && ev.detail.tab || '').trim().toLowerCase();
+      if(tab === 'sbf') scheduleRecover('light');
+    }catch(_e){}
+  });
+  window.addEventListener('resize', function(){ if(activeTab() === 'sbf') scheduleRecover('light'); }, { passive:true });
+  setTimeout(function(){ try{ if(activeTab() === 'sbf') scheduleRecover('light'); }catch(_e){} }, 400);
+})();
+</script>
 <style id="ampm-biz-style">
 .ampm-biz-section{margin:14px 0 18px;padding:14px;border-radius:18px;background:linear-gradient(180deg,rgba(0,94,167,.05),rgba(245,131,32,.03));border:1px solid rgba(15,23,42,.10);box-shadow:0 14px 34px rgba(2,8,23,.08)}
 .ampm-biz-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -56660,7 +56939,133 @@ function innovationOnePagerCreateBrandedShell(){
   }
 }
 </style>
-<script id="ampm-sidebar-static-script-v3-disabled">/* disabled by forensic cleanup */</script>
+<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Mostrar menú lateral':'Ocultar menú lateral';var lbl=btn.querySelector('.ampm-sidebar-toggleLabel');if(lbl)lbl.textContent=collapsed?'Mostrar menú':'Ocultar menú';var ic=btn.querySelector('.ampm-sidebar-toggleIcon path');if(ic)ic.setAttribute('d',collapsed?'M9 6l6 6-6 6':'M15 6l-6 6 6 6');try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script>
+<script id="ampm-floating-store-filter-v17">(function(){
+  if(window.__ampmFloatingStoreFilterV17) return;
+  window.__ampmFloatingStoreFilterV17 = true;
+  function el(id){ return document.getElementById(id); }
+  function getStoreSel(){ return el('stores'); }
+  function selectedValues(sel){
+    return Array.from((sel && sel.options) || []).filter(function(o){ return o.selected; }).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
+  }
+  function allValues(sel){
+    return Array.from((sel && sel.options) || []).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
+  }
+  function currentLabelText(){
+    try{
+      if(typeof window.storeQuickLabelText === 'function') return window.storeQuickLabelText();
+    }catch(_e){}
+    var sel = getStoreSel();
+    if(!sel) return 'ALL';
+    var all = allValues(sel);
+    var picked = selectedValues(sel);
+    if(!all.length || !picked.length || picked.length === all.length) return 'ALL';
+    if(picked.length <= 2) return picked.join(', ');
+    return picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
+  }
+  function draftValues(){
+    return Array.isArray(window.__ampmStoreDraft) ? window.__ampmStoreDraft.slice() : selectedValues(getStoreSel());
+  }
+  function setDraft(values){
+    window.__ampmStoreDraft = (values || []).map(function(v){ return String(v).trim(); }).filter(Boolean);
+    render(true);
+  }
+  function render(useDraft){
+    var sel = getStoreSel();
+    var btn = el('ampmStoreFloatingBtn');
+    var label = el('ampmStoreFloatingLabel');
+    var list = el('ampmStoreFloatingList');
+    var applyBtn = el('ampmStoreFloatingApply');
+    if(label) label.textContent = currentLabelText();
+    if(!sel || !btn || !list) return;
+    var opts = Array.from(sel.options || []);
+    btn.disabled = !opts.length;
+    var chosen = new Set((useDraft ? draftValues() : selectedValues(sel)).map(function(v){ return String(v).trim(); }));
+    list.innerHTML = opts.map(function(o){
+      var v = String(o.value || '').replace(/"/g, '&quot;');
+      var lbl = String(o.textContent || o.label || o.value || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var checked = chosen.has(String(o.value || '').trim()) ? 'checked' : '';
+      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="' + v + '" ' + checked + '> <span>' + lbl + '</span></label>';
+    }).join('');
+    if(applyBtn){
+      var current = selectedValues(sel);
+      var draft = draftValues();
+      var changed = current.length !== draft.length || current.some(function(v, i){ return draft[i] !== v; });
+      applyBtn.disabled = !changed;
+    }
+  }
+  function applyDraft(){
+    var sel = getStoreSel();
+    if(!sel) return;
+    var draft = new Set(draftValues());
+    Array.from(sel.options || []).forEach(function(o){ o.selected = draft.has(String(o.value || '').trim()); });
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+    sel.dispatchEvent(new Event('change', {bubbles:true}));
+    var refreshBtn = el('refresh');
+    if(refreshBtn){ try{ refreshBtn.click(); }catch(_e){} }
+    render(false);
+    open(false);
+  }
+  function open(force){
+    var menu = el('ampmStoreFloatingMenu');
+    if(!menu) return;
+    var next = (typeof force === 'boolean') ? force : !menu.classList.contains('open');
+    menu.classList.toggle('open', !!next);
+    if(next){
+      window.__ampmStoreDraft = selectedValues(getStoreSel());
+      render(true);
+    }
+  }
+  function bind(){
+    var btn = el('ampmStoreFloatingBtn');
+    var menu = el('ampmStoreFloatingMenu');
+    var list = el('ampmStoreFloatingList');
+    var sel = getStoreSel();
+    var applyBtn = el('ampmStoreFloatingApply');
+    var cancelBtn = el('ampmStoreFloatingCancel');
+    if(!btn || !menu || !list) return;
+    if(!btn.__bound){
+      btn.__bound = true;
+      btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); open(); });
+      menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
+      list.addEventListener('change', function(){
+        var vals = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return String(i.value || '').trim(); });
+        setDraft(vals);
+      });
+      menu.querySelectorAll('[data-floating-store-action]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var act = b.getAttribute('data-floating-store-action');
+          var values = allValues(getStoreSel());
+          if(act === 'all') setDraft(values);
+          if(act === 'none') setDraft([]);
+        });
+      });
+      if(applyBtn) applyBtn.addEventListener('click', function(){ applyDraft(); });
+      if(cancelBtn) cancelBtn.addEventListener('click', function(){
+        window.__ampmStoreDraft = selectedValues(getStoreSel());
+        open(false);
+      });
+      document.addEventListener('click', function(){ open(false); });
+      document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') open(false); });
+    }
+    if(sel && !sel.__floatingStoreBound){
+      sel.__floatingStoreBound = true;
+      sel.addEventListener('change', function(){ render(false); });
+      try{
+        var mo = new MutationObserver(function(){ render(false); });
+        mo.observe(sel, {childList:true, subtree:true, attributes:true, attributeFilter:['selected']});
+        sel.__floatingStoreObserver = mo;
+      }catch(_e){}
+    }
+    render(false);
+    setTimeout(function(){ render(false); }, 120);
+    setTimeout(function(){ render(false); }, 450);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, {once:true});
+  else bind();
+  window.addEventListener('load', function(){ setTimeout(function(){ render(false); }, 120); setTimeout(function(){ render(false); }, 500); }, {once:true});
+})();</script>
+
 <style id="ampm-sidebar-bright-blue-v16">
 .ampm-sidebar{
   background:
@@ -56813,504 +57218,389 @@ function innovationOnePagerCreateBrandedShell(){
 </style>
 
 
-<script id="ampm-chart-recover-v19-disabled">/* disabled by forensic cleanup */</script>
 
-
-<style id="ampm-ui-hotfix-v2">
-  /* Login */
-  #ampmAuthGate .ampmAuthFoot{display:none !important;}
-
-  /* Menú lateral: pestaña activa mucho más visible */
-  .ampm-sidebar .tabsbar button.tabBtn.active,
-  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active{
-    background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
-    border-color:rgba(255,255,255,.18) !important;
-    color:#11284A !important;
-    box-shadow:0 14px 26px rgba(245,131,32,.30), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  }
-  .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
-  .ampm-sidebar .tabsbar button.tabBtn.active .tabLabel,
-  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon{
-    color:#11284A !important;
-  }
-  .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg,
-  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
-    stroke:#11284A !important;
-  }
-
-  /* Inventario: fondo blanco real */
-  .invChartCard{
-    background:#ffffff !important;
-  }
-  #chart_inv_store{
-    background:#ffffff !important;
-    border-radius:12px;
-  }
+<style id="ampm-sidebar-active-orange-v1">
+.ampm-sidebar .tabsbar button.tabBtn.active{
+  background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
+  border:1px solid rgba(255,255,255,.30) !important;
+  color:#11284A !important;
+  box-shadow:
+    0 14px 28px rgba(245,131,32,.34),
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -1px 0 rgba(178,84,12,.18) !important;
+}
+.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
+.ampm-sidebar .tabsbar button.tabBtn.active .tabLabel,
+.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
+  color:#11284A !important;
+  stroke:#11284A !important;
+}
+.ampm-shell:not(.is-collapsed) .ampm-sidebar .tabsbar button.tabBtn.active{
+  position:relative;
+}
+.ampm-shell:not(.is-collapsed) .ampm-sidebar .tabsbar button.tabBtn.active::before{
+  content:'';
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#11284A;
+  box-shadow:0 0 0 4px rgba(17,40,74,.12);
+  margin-right:10px;
+  flex:0 0 8px;
+}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active{
+  background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
+  color:#11284A !important;
+  border:1px solid rgba(255,255,255,.34) !important;
+  box-shadow:
+    0 14px 26px rgba(245,131,32,.34),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 0 0 2px rgba(255,255,255,.10) !important;
+}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
+  color:#11284A !important;
+  stroke:#11284A !important;
+}
 </style>
-<script id="ampm-performance-hotfix-v2-disabled">/* disabled by forensic cleanup */</script>
 
-
-<script id="ampm-forensic-chart-pipeline-v2">
+<script id="ampm-chart-recover-v19">
 (function(){
-  if(window.__ampmForensicChartPipelineV2) return;
-  window.__ampmForensicChartPipelineV2 = true;
+  if(window.__ampmChartRecoverV19) return;
+  window.__ampmChartRecoverV19 = true;
 
-  const RT = window.__ampmForensicRuntime = {
-    isApplyingFilters:false,
-    isSwitchingTab:false,
-    refreshScheduled:false,
-    layoutUpdateScheduled:false,
-    isSidebarTransitioning:false,
-    chartsInitialized:false,
-    pendingReason:'',
-    pendingOpts:null,
-    pendingLayoutTab:'',
-    lastSig:'',
-    lastReason:'',
-    lastRunAt:0,
-    ignoreFocusUntil:0,
-    ignoreVisibilityUntil:0,
-    suppressNestedUntil:0,
-    sidebarTransitionMs:260
-  };
-
-  function now(){ return Date.now ? Date.now() : +new Date(); }
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function arr(v){ return Array.isArray(v) ? v : []; }
-  function uniq(list){ return Array.from(new Set(arr(list).map(txt).filter(Boolean))); }
-  function safe(fn){ try{ return fn && fn(); }catch(_e){} }
-  function selectedValues(sel){
-    try{ return Array.from((sel && sel.selectedOptions) || []).map(o => txt(o.value || o.textContent)).filter(Boolean); }
-    catch(_e){ return []; }
-  }
   function activeTab(){
-    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || state?._lastActiveTab || 'resumen') || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function currentYm(){ return txt(document.getElementById('currentMonth')?.value || ''); }
-  function prevYms(){ return selectedValues(document.getElementById('prevMonths')); }
-  function selectedStores(){
     try{
-      if(typeof getSelectedStoresOrAll === 'function') return uniq(getSelectedStoresOrAll());
-    }catch(_e){}
-    const vals = selectedValues(document.getElementById('stores'));
-    if(vals.length) return vals;
-    try{ return uniq(state && state.stores ? state.stores : []); }catch(_e){ return []; }
+      return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || '').trim();
+    }catch(_e){
+      return '';
+    }
   }
-  function currentDow(){
-    try{ return txt(typeof getGlobalDowFilter === 'function' ? getGlobalDowFilter() : (document.getElementById('dowFilter')?.value || '')); }
-    catch(_e){ return ''; }
-  }
-  function reportMode(){
-    try{ return txt((state && state.reportMode) || (typeof getUnifiedReportMode === 'function' ? getUnifiedReportMode() : '')); }
-    catch(_e){ return ''; }
-  }
-  function hasData(){
-    try{ return typeof hasReportData === 'function' ? !!hasReportData() : !!(state && state.months && state.months.length); }
-    catch(_e){ return false; }
-  }
-  function renderSignature(tab){
-    return [txt(tab || activeTab()), currentYm(), prevYms().join('|'), selectedStores().join('|'), currentDow(), reportMode()].join('||');
-  }
-  function isNodeVisible(node){
+
+  function run(tab, force){
     try{
-      if(!node) return false;
-      let cur = node;
-      while(cur && cur !== document.body){
-        const cs = getComputedStyle(cur);
-        if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
-        cur = cur.parentElement;
-      }
-      const r = node.getBoundingClientRect();
-      return r.width > 40 && r.height > 30;
-    }catch(_e){ return false; }
-  }
-  function canvasReady(id){
-    const cv = document.getElementById(id);
-    return !!(cv && isNodeVisible(cv));
-  }
-  function chartFromCanvas(cv){
-    try{
-      if(!cv || typeof Chart === 'undefined' || typeof Chart.getChart !== 'function') return null;
-      return Chart.getChart(cv) || null;
-    }catch(_e){ return null; }
-  }
-  function expose(name, fn){
-    try{ window[name] = fn; }catch(_e){}
-    try{ globalThis[name] = fn; }catch(_e){}
-  }
+      const current = activeTab();
+      const target = String(tab || current || '').trim();
+      if(!target || current !== target) return;
 
-  const baseRefreshAll = (typeof window.refreshAll === 'function') ? window.refreshAll : null;
-  const baseResizeCharts = (typeof window.resizeCharts === 'function') ? window.resizeCharts : null;
-  const baseUpdateAllChartTitles = (typeof window.updateAllChartTitles === 'function') ? window.updateAllChartTitles : null;
-  const baseScheduleFitTables = (typeof window.scheduleFitTables === 'function') ? window.scheduleFitTables : null;
-
-  function applyTabVisibility(tab){
-    const safeTab = txt(tab || activeTab()) || 'resumen';
-    document.querySelectorAll('.tabBtn').forEach(btn => btn.classList.toggle('active', txt(btn.dataset.tab) === safeTab));
-    document.querySelectorAll('[data-tabpage]').forEach(el => {
-      const isActive = txt(el.dataset.tabpage) === safeTab;
-      if(!isActive){
-        el.style.display = 'none';
-        return;
-      }
-      if(el.id === 'onePagerWrap') el.style.display = 'block';
-      else if(el.classList.contains('onePagerMiniGrid') || el.classList.contains('onePagerDualGrid') || el.classList.contains('innovationGrid')) el.style.display = 'grid';
-      else el.style.display = '';
-    });
-    const labelEl = document.getElementById('ampmTabLabel');
-    const btn = document.querySelector('.tabBtn[data-tab="' + safeTab + '"]');
-    if(labelEl && btn) labelEl.textContent = txt(btn.textContent);
-    safe(() => localStorage.setItem('ampm_tab', safeTab));
-    safe(() => { if(window.state) state._lastActiveTab = safeTab; });
-    return safeTab;
-  }
-
-  function lowLevelVisibleRefresh(tab, forceRebuild){
-    const safeTab = txt(tab || activeTab()) || 'resumen';
-    if(!safeTab) return;
-    const ym = currentYm();
-    const prev = prevYms();
-    const stores = selectedStores();
-    let shouldRender = !!forceRebuild;
-    try{
-      if(!shouldRender && typeof tabChartsNeedRender === 'function'){
-        shouldRender = !!tabChartsNeedRender(safeTab, ym, prev, stores);
-      }
-    }catch(_e){}
-    if(shouldRender){
-      safe(() => { if(typeof destroyTabCharts === 'function') destroyTabCharts(safeTab); });
-    }
-    const call = (fn) => { try{ if(typeof fn === 'function') fn(stores); }catch(err){ console.warn('visible refresh failed', safeTab, err); } };
-    if(shouldRender){
-      if(safeTab === 'onepager'){
-        safe(() => { if(typeof renderOnePager === 'function') renderOnePager(stores, ym, prev); });
-      }else if(safeTab === 'ventas'){
-        if(canvasReady('chart_mam')) call(window.renderMamChart);
-        call(window.renderMamStoreCards);
-        if(canvasReady('chart_store_mam')) call(window.renderStoreMamChart);
-        if(canvasReady('chart_sales_bubble')) call(window.renderSalesBubbleChart);
-        safe(() => { if(typeof renderDeptTrendSection === 'function') renderDeptTrendSection('ventas', stores); });
-      }else if(safeTab === 'delivery'){
-        if(canvasReady('chart_delivery_mam')) call(window.renderDeliveryMamChart);
-        if(canvasReady('chart_delivery_share_mam')) call(window.renderDeliveryShareMamChart);
-        call(window.renderDeliveryShareStoreCards);
-        if(canvasReady('chart_delivery_cat_pya') || canvasReady('chart_delivery_cat_uber')) call(window.renderDeliveryCategoryShareCharts);
-        call(window.renderDeliveryStrategyPanel);
-        if(canvasReady('chart_delivery_bubble')) call(window.renderDeliveryBubbleChart);
-        if(canvasReady('chart_delivery_channel_12w')) call(window.renderDeliveryChannel12wChart);
-        call(window.renderDeliverySplitTables);
-        safe(() => { if(typeof renderDeptTrendSection === 'function') renderDeptTrendSection('delivery', stores); });
-      }else if(safeTab === 'innovacion'){
-        call(window.renderInnovationCharts);
-      }else if(safeTab === 'sbf'){
-        if(canvasReady('chart_sbf_mam')) call(window.renderSbfMamChart);
-        call(window.renderSbfStoreCards);
-        call(window.renderSbfProviderTrendCards);
-        safe(() => {
-          if(typeof refreshExtraTables === 'function' && ym){ refreshExtraTables(ym, prev, stores, 'sbf'); }
-        });
-        safe(() => {
-          if(canvasReady('chart_sbf_hour_s8') && typeof renderSbfHourLastVsS8Chart === 'function'){
-            const baseRows = (state && state._xfBase && state._xfBase.cuboSbfRows) ? state._xfBase.cuboSbfRows : ((state && state.cuboSbfHourRows && state.cuboSbfHourRows.length) ? state.cuboSbfHourRows : (state && state.cuboSbfProvRows ? state.cuboSbfProvRows : []));
-            const scopedRows = (typeof getDowScopedRows === 'function') ? getDowScopedRows(baseRows || []) : (baseRows || []);
-            const xfSbf = (state && state.xf && state.xf.sbf) ? state.xf.sbf : {};
-            const matchXf = function(r){
-              if(!r) return false;
-              for(const k in xfSbf){
-                const v = xfSbf[k];
-                if(Array.isArray(v)){
-                  if(!v.length) continue;
-                  const a = (typeof normalizeXfValue === 'function') ? normalizeXfValue(k, r[k]) : txt(r[k]);
-                  const arr = (typeof normalizeXfValue === 'function') ? normalizeXfValue(k, v) : arr(v).map(txt);
-                  if(!arr.includes(a)) return false;
-                }else{
-                  if(v == null || v === '') continue;
-                  const a = (typeof normalizeXfValue === 'function') ? normalizeXfValue(k, r[k]) : txt(r[k]);
-                  const b = (typeof normalizeXfValue === 'function') ? normalizeXfValue(k, v) : txt(v);
-                  if(a !== b) return false;
-                }
-              }
-              return true;
-            };
-            const sbfRows = arr(scopedRows).filter(matchXf);
-            const sbfHourMap = (typeof buildMap === 'function') ? buildMap(sbfRows || [], r => String(r.hour), r => r.transactions, new Set(stores || [])) : null;
-            renderSbfHourLastVsS8Chart({ currentYm: ym, prevYms: prev, sbfHourMap: sbfHourMap });
-          }
-        });
-      }else if(safeTab === 'cxc'){
-        safe(() => { if(canvasReady('chart_cxc_8w') && typeof renderCxc8wChart === 'function') renderCxc8wChart(stores); });
-      }else if(safeTab === 'inventario'){
-        safe(() => {
-          if((canvasReady('chart_inv_store') || canvasReady('chart_inv_bubble')) && typeof renderInvStoreChart === 'function') renderInvStoreChart(stores);
-          if(canvasReady('chart_inv_bubble') && typeof renderInventoryBubbleChart === 'function') renderInventoryBubbleChart(stores, ym);
-        });
-      }else if(safeTab === 'merma'){
-        safe(() => { if(canvasReady('chart_merma_4m') && typeof renderMermaChart === 'function') renderMermaChart(); });
-      }
-      safe(() => { if(typeof rememberChartRender === 'function') rememberChartRender(safeTab, ym, prev, stores); });
-    }
-    safe(() => { if(window.state) state._lastChartsTab = safeTab; });
-  }
-
-  function runVisibleChartsLayout(tab){
-    const safeTab = txt(tab || activeTab()) || 'resumen';
-    try{
-      document.querySelectorAll('[data-tabpage="' + safeTab + '"] canvas').forEach(cv => {
-        if(!isNodeVisible(cv)) return;
-        const ch = chartFromCanvas(cv);
-        if(!ch) return;
-        try{ if(typeof ch.resize === 'function') ch.resize(); }catch(_e){}
-        try{ if(typeof ch.update === 'function') ch.update('none'); }catch(_e){}
-      });
-    }catch(_e){}
-    safe(() => { if(typeof baseResizeCharts === 'function') baseResizeCharts(); });
-    safe(() => { if(typeof baseUpdateAllChartTitles === 'function') baseUpdateAllChartTitles(); });
-    safe(() => { if(typeof baseScheduleFitTables === 'function') baseScheduleFitTables(); });
-  }
-
-  function queueLayout(tab, delay){
-    RT.pendingLayoutTab = txt(tab || RT.pendingLayoutTab || activeTab()) || 'resumen';
-    if(RT.layoutUpdateScheduled) return;
-    RT.layoutUpdateScheduled = true;
-    const fire = function(){
-      requestAnimationFrame(function(){
-        requestAnimationFrame(function(){
-          RT.layoutUpdateScheduled = false;
-          const target = txt(RT.pendingLayoutTab || activeTab()) || 'resumen';
-          RT.pendingLayoutTab = '';
-          runVisibleChartsLayout(target);
-        });
-      });
-    };
-    if(delay && delay > 0) setTimeout(fire, delay);
-    else fire();
-  }
-
-  function queueCycle(reason, opts){
-    const options = Object.assign({
-      tab: activeTab(),
-      global:false,
-      force:false,
-      immediate:false,
-      delay:0,
-      layoutDelay:0,
-      fromSidebar:false,
-      sidebarFinal:false
-    }, opts || {});
-    options.tab = txt(options.tab || activeTab()) || 'resumen';
-    if(reason === 'focus' && now() < RT.ignoreFocusUntil) return;
-    if(reason === 'visibility' && now() < RT.ignoreVisibilityUntil) return;
-    if(RT.isSidebarTransitioning && !options.sidebarFinal){
-      RT.pendingReason = reason;
-      RT.pendingOpts = Object.assign({}, RT.pendingOpts || {}, options, { tab: options.tab });
-      return;
-    }
-    RT.pendingReason = reason;
-    RT.pendingOpts = Object.assign({}, RT.pendingOpts || {}, options, {
-      tab: options.tab,
-      global: !!(options.global || (RT.pendingOpts && RT.pendingOpts.global)),
-      force: !!(options.force || (RT.pendingOpts && RT.pendingOpts.force)),
-      layoutDelay: Math.max(Number(options.layoutDelay || 0), Number((RT.pendingOpts && RT.pendingOpts.layoutDelay) || 0))
-    });
-    if(RT.refreshScheduled) return;
-    RT.refreshScheduled = true;
-    const fire = function(){
-      requestAnimationFrame(function(){ runCycle(); });
-    };
-    const wait = options.immediate ? 0 : Math.max(0, Number(options.delay || 0));
-    if(wait > 0) setTimeout(fire, wait); else fire();
-  }
-
-  function runCycle(){
-    RT.refreshScheduled = false;
-    const reason = txt(RT.pendingReason || 'refresh');
-    const opts = Object.assign({ tab: activeTab(), global:false, force:false, layoutDelay:0 }, RT.pendingOpts || {});
-    RT.pendingReason = '';
-    RT.pendingOpts = null;
-    const tab = txt(opts.tab || activeTab()) || 'resumen';
-    const sig = renderSignature(tab);
-    if(!opts.force && !opts.global && sig === RT.lastSig && reason === RT.lastReason && (now() - RT.lastRunAt) < 120){
-      queueLayout(tab, opts.layoutDelay);
-      return;
-    }
-    RT.lastSig = sig;
-    RT.lastReason = reason;
-    RT.lastRunAt = now();
-    RT.chartsInitialized = true;
-
-    if(opts.global && typeof baseRefreshAll === 'function'){
-      const prevSchedule = window.scheduleVisibleChartRefresh;
-      const prevVisible = window.refreshVisibleTabCharts;
-      const nestedSchedule = function(tabArg, forceArg){
-        if(now() < RT.suppressNestedUntil) return;
-        queueCycle('nested-schedule', { tab: txt(tabArg || activeTab()) || activeTab(), global:false, force:!!forceArg, delay:20 });
-      };
-      const nestedVisible = function(tabArg, forceArg){
-        if(now() < RT.suppressNestedUntil) return;
-        queueCycle('nested-visible', { tab: txt(tabArg || activeTab()) || activeTab(), global:false, force:!!forceArg, delay:20 });
-      };
-      expose('scheduleVisibleChartRefresh', nestedSchedule);
-      expose('scheduleSettledFullRefresh', nestedSchedule);
-      expose('refreshVisibleTabCharts', nestedVisible);
-      RT.isApplyingFilters = true;
-      RT.suppressNestedUntil = now() + 220;
-      try{ baseRefreshAll.call(window); }
-      catch(err){ try{ console.warn('forensic refreshAll failed', err); }catch(_e){} }
-      finally{
-        RT.isApplyingFilters = false;
-        expose('refreshVisibleTabCharts', publicRefreshVisible);
-        expose('scheduleVisibleChartRefresh', publicScheduleRefresh);
-        expose('scheduleSettledFullRefresh', publicScheduleRefresh);
-      }
-    }else{
-      lowLevelVisibleRefresh(tab, !!opts.force);
-    }
-    queueLayout(tab, opts.layoutDelay);
-  }
-
-  function publicRefreshAll(){
-    queueCycle('refreshAll', { tab: activeTab(), global:true, force:true, immediate:true, layoutDelay:60 });
-  }
-  function publicRefreshVisible(tab, forceRebuild){
-    queueCycle('visible', { tab: txt(tab || activeTab()) || activeTab(), global:false, force:!!forceRebuild, delay:16, layoutDelay:20 });
-  }
-  function publicScheduleRefresh(tab, forceRebuild){
-    queueCycle('schedule', { tab: txt(tab || activeTab()) || activeTab(), global:false, force:!!forceRebuild, delay:24, layoutDelay:24 });
-  }
-  function publicResizeCharts(){ queueLayout(activeTab(), 0); }
-  function publicUpdateTitles(){ queueLayout(activeTab(), 0); }
-  function publicFitTables(){ queueLayout(activeTab(), 0); }
-
-  expose('refreshAll', publicRefreshAll);
-  expose('refreshVisibleTabCharts', publicRefreshVisible);
-  expose('scheduleVisibleChartRefresh', publicScheduleRefresh);
-  expose('scheduleSettledFullRefresh', publicScheduleRefresh);
-  expose('resizeCharts', publicResizeCharts);
-  expose('updateAllChartTitles', publicUpdateTitles);
-  expose('scheduleFitTables', publicFitTables);
-
-  function bindRefreshButton(){
-    const btn = document.getElementById('refresh');
-    if(!btn || btn.__ampmForensicBound) return;
-    const clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.__ampmForensicBound = true;
-    clone.addEventListener('click', function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      publicRefreshAll();
-    });
-  }
-
-  function bindTabs(){
-    document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn){
-      if(btn.__ampmForensicBound) return;
-      const clone = btn.cloneNode(true);
-      btn.parentNode.replaceChild(clone, btn);
-      clone.__ampmForensicBound = true;
-      clone.addEventListener('click', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        const tab = txt(clone.dataset.tab) || 'resumen';
-        if(activeTab() === tab){
-          queueLayout(tab, 0);
-          return;
+      try{
+        if(typeof refreshVisibleTabCharts === 'function'){
+          refreshVisibleTabCharts(target, !!force);
         }
-        RT.isSwitchingTab = true;
-        applyTabVisibility(tab);
-        try{ window.dispatchEvent(new CustomEvent('ampm:tabshown', { detail:{ tab:tab, previousTab: txt(state && state._lastActiveTab) } })); }catch(_e){}
-        queueCycle('tab', { tab:tab, global:false, force:false, immediate:true, layoutDelay:34 });
-        setTimeout(function(){ RT.isSwitchingTab = false; }, 180);
-      });
+      }catch(_e){}
+
+      try{
+        if(typeof scheduleVisibleChartRefresh === 'function'){
+          scheduleVisibleChartRefresh(target);
+        }
+      }catch(_e){}
+
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(_e){}
+  }
+
+  function queue(tab){
+    const target = String(tab || activeTab() || '').trim();
+    if(!target) return;
+    [40, 180, 420, 820, 1300].forEach((ms, i)=>{
+      setTimeout(()=>run(target, i >= 2), ms);
     });
   }
 
-  function bindSidebar(){
-    const btn = document.getElementById('ampmSidebarToggle');
-    const shell = document.querySelector('.ampm-shell');
-    if(!btn || !shell || btn.__ampmForensicBound) return;
-    const clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.__ampmForensicBound = true;
-    const updateUi = function(collapsed){
-      shell.classList.toggle('is-collapsed', !!collapsed);
-      clone.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      clone.title = collapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral';
-      const lbl = clone.querySelector('.ampm-sidebar-toggleLabel');
-      if(lbl) lbl.textContent = collapsed ? 'Mostrar menú' : 'Ocultar menú';
-      const path = clone.querySelector('.ampm-sidebar-toggleIcon path');
-      if(path) path.setAttribute('d', collapsed ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6');
-      safe(() => localStorage.setItem('ampm_sidebar_collapsed', collapsed ? '1' : '0'));
-    };
-    clone.addEventListener('click', function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      const collapsed = !shell.classList.contains('is-collapsed');
-      RT.isSidebarTransitioning = true;
-      RT.ignoreFocusUntil = now() + 420;
-      RT.ignoreVisibilityUntil = now() + 420;
-      updateUi(collapsed);
-      const finish = function(){
-        RT.isSidebarTransitioning = false;
-        queueLayout(activeTab(), 0);
-        queueCycle('sidebar-final', { tab:activeTab(), global:false, force:false, immediate:true, layoutDelay:0, sidebarFinal:true, fromSidebar:true });
-      };
-      setTimeout(finish, RT.sidebarTransitionMs);
-    });
-    const initialCollapsed = safe(() => localStorage.getItem('ampm_sidebar_collapsed') === '1') || false;
-    updateUi(initialCollapsed);
-  }
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      const tab = String(ev && ev.detail && ev.detail.tab || activeTab() || '').trim();
+      queue(tab);
+    }catch(_e){}
+  });
 
-  function bindWindowGuards(){
-    if(window.__ampmForensicWindowBound) return;
-    window.__ampmForensicWindowBound = true;
-    window.addEventListener('resize', function(){
-      if(RT.isSidebarTransitioning) return;
-      queueLayout(activeTab(), 40);
-    }, { passive:true });
-    window.addEventListener('focus', function(){
-      if(now() < RT.ignoreFocusUntil) return;
-      queueLayout(activeTab(), 0);
-    }, { passive:true });
-    document.addEventListener('visibilitychange', function(){
-      if(document.visibilityState !== 'visible') return;
-      if(now() < RT.ignoreVisibilityUntil) return;
-      queueLayout(activeTab(), 0);
-    });
-  }
-
-  function bindStoreApply(){
-    const applyBtn = document.getElementById('ampmStoreFloatingApply');
-    if(!applyBtn || applyBtn.__ampmForensicObserved) return;
-    applyBtn.__ampmForensicObserved = true;
-    applyBtn.addEventListener('click', function(){
-      RT.ignoreFocusUntil = now() + 260;
-      RT.ignoreVisibilityUntil = now() + 260;
-    }, true);
-  }
-
-  function boot(){
-    bindRefreshButton();
-    bindTabs();
-    bindSidebar();
-    bindStoreApply();
-    bindWindowGuards();
-    queueCycle('boot', { tab:activeTab(), global:false, force:false, delay:40, layoutDelay:40 });
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', boot, { once:true });
-  }else{
-    boot();
-  }
   window.addEventListener('load', function(){
-    setTimeout(boot, 40);
-    setTimeout(function(){ queueLayout(activeTab(), 0); }, 120);
+    queue(activeTab());
   }, { once:true });
+
+  document.addEventListener('click', function(ev){
+    const btn = ev.target && ev.target.closest ? ev.target.closest('#ampmStoreFloatingApply, #refresh, .tabBtn[data-tab]') : null;
+    if(!btn) return;
+    setTimeout(()=>queue(activeTab()), 60);
+  }, true);
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      setTimeout(()=>queue(activeTab()), 120);
+    }
+  });
 })();
 </script>
 
+
+<script id="ampm-chart-stability-hardfix-v1">
+(function(){
+  if(window.__ampmChartStabilityHardfixV1) return;
+  window.__ampmChartStabilityHardfixV1 = true;
+
+  function activeTab(){
+    try{
+      return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || '').trim();
+    }catch(_e){
+      return '';
+    }
+  }
+
+  function isVisibleBox(node){
+    try{
+      if(!node) return false;
+      var cs = getComputedStyle(node);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
+      var r = node.getBoundingClientRect();
+      return r.width > 40 && r.height > 40;
+    }catch(_e){
+      return false;
+    }
+  }
+
+  function canvasHost(canvas){
+    try{
+      return canvas && (canvas.closest('.monthly-chart-viewport, .innovationFsExecCanvasWrap, .innovationChartWrap, .innovationFsExecMiniWrap, .innovationChartWrap--combo-wide, .innovationChartWrap--combo-pie, .opCanvasWrap, .deptTrendCard > div[style*="height"], .chartCard') || canvas.parentElement || canvas);
+    }catch(_e){
+      return canvas || null;
+    }
+  }
+
+  function visibleCanvasesForTab(tab){
+    try{
+      var safeTab = String(tab || '').trim();
+      if(!safeTab) return [];
+      return Array.from(document.querySelectorAll('[data-tabpage="' + safeTab + '"] canvas')).filter(function(cv){
+        return isVisibleBox(canvasHost(cv));
+      });
+    }catch(_e){
+      return [];
+    }
+  }
+
+  function tabLayoutReady(tab){
+    try{
+      var canvases = visibleCanvasesForTab(tab);
+      if(!canvases.length) return true;
+      var ready = 0;
+      canvases.forEach(function(cv){
+        try{
+          var host = canvasHost(cv);
+          var r = host.getBoundingClientRect();
+          if(r.width > 140 && r.height > 140) ready += 1;
+        }catch(_e){}
+      });
+      return ready >= Math.max(1, Math.ceil(canvases.length * 0.60));
+    }catch(_e){
+      return true;
+    }
+  }
+
+  function chartFromCanvas(canvas){
+    try{
+      if(!canvas || typeof Chart === 'undefined') return null;
+      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
+    }catch(_e){}
+    return null;
+  }
+
+  function chartLooksHealthy(canvas){
+    try{
+      var host = canvasHost(canvas);
+      if(!isVisibleBox(host)) return true;
+      var rect = canvas.getBoundingClientRect();
+      if(rect.width <= 100 || rect.height <= 100) return false;
+
+      var ch = chartFromCanvas(canvas);
+      if(!ch) return false;
+      var area = ch.chartArea || null;
+      if(!area) return false;
+      var aw = Number(area.right || 0) - Number(area.left || 0);
+      var ah = Number(area.bottom || 0) - Number(area.top || 0);
+      if(aw <= 80 || ah <= 80) return false;
+      if(!Array.isArray(ch.data?.datasets) || !ch.data.datasets.length) return false;
+
+      var hasValues = ch.data.datasets.some(function(ds){
+        return Array.isArray(ds && ds.data) && ds.data.some(function(v){ return v != null && Number.isFinite(Number(v)); });
+      });
+      if(!hasValues) return false;
+
+      var hasMeta = ch.data.datasets.some(function(_ds, idx){
+        try{
+          var meta = typeof ch.getDatasetMeta === 'function' ? ch.getDatasetMeta(idx) : null;
+          return !!(meta && Array.isArray(meta.data) && meta.data.length);
+        }catch(_e){
+          return false;
+        }
+      });
+      return hasMeta;
+    }catch(_e){
+      return false;
+    }
+  }
+
+  function tabNeedsRecovery(tab){
+    try{
+      var canvases = visibleCanvasesForTab(tab);
+      if(!canvases.length) return false;
+      return canvases.some(function(cv){ return !chartLooksHealthy(cv); });
+    }catch(_e){
+      return false;
+    }
+  }
+
+  var baseRefresh = typeof window.refreshVisibleTabCharts === 'function' ? window.refreshVisibleTabCharts : null;
+  var baseSchedule = typeof window.scheduleVisibleChartRefresh === 'function' ? window.scheduleVisibleChartRefresh : null;
+
+  function postRefreshPolish(){
+    try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+    try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+  }
+
+  var queueTokens = Object.create(null);
+
+  function runStableRefresh(tab, force){
+    try{
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return;
+      var current = activeTab();
+      if(current && safeTab !== current) return;
+
+      if(!tabLayoutReady(safeTab)) return;
+
+      var mustForce = !!force || tabNeedsRecovery(safeTab);
+
+      if(baseRefresh){
+        baseRefresh.call(window, safeTab, mustForce);
+      }else if(baseSchedule){
+        baseSchedule.call(window, safeTab);
+      }
+
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ postRefreshPolish(); });
+      });
+    }catch(_e){}
+  }
+
+  function queueStableRefresh(tab, force){
+    try{
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return;
+      var token = Date.now() + Math.random();
+      queueTokens[safeTab] = token;
+      [80, 220, 520, 980].forEach(function(ms, idx){
+        setTimeout(function(){
+          try{
+            if(queueTokens[safeTab] !== token) return;
+            runStableRefresh(safeTab, force || idx >= 1);
+          }catch(_e){}
+        }, ms);
+      });
+    }catch(_e){}
+  }
+
+  if(baseRefresh && !baseRefresh.__ampmStableFinalV1){
+    window.refreshVisibleTabCharts = function(tab, forceRebuild){
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return baseRefresh.apply(this, arguments);
+
+      if(!tabLayoutReady(safeTab)){
+        queueStableRefresh(safeTab, !!forceRebuild);
+        return;
+      }
+
+      var mustForce = !!forceRebuild || tabNeedsRecovery(safeTab);
+      return baseRefresh.call(this, safeTab, mustForce);
+    };
+    window.refreshVisibleTabCharts.__ampmStableFinalV1 = true;
+  }
+
+  if(baseSchedule && !baseSchedule.__ampmStableFinalV1){
+    window.scheduleVisibleChartRefresh = function(tab){
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return baseSchedule.apply(this, arguments);
+
+      if(!tabLayoutReady(safeTab) || tabNeedsRecovery(safeTab)){
+        queueStableRefresh(safeTab, true);
+        return;
+      }
+
+      return baseSchedule.call(this, safeTab);
+    };
+    window.scheduleVisibleChartRefresh.__ampmStableFinalV1 = true;
+  }
+
+  if(typeof window.refreshAll === 'function' && !window.refreshAll.__ampmStableFinalV1){
+    var _prevRefreshAll = window.refreshAll;
+    window.refreshAll = function(){
+      var out = _prevRefreshAll.apply(this, arguments);
+      try{ queueStableRefresh(activeTab(), true); }catch(_e){}
+      return out;
+    };
+    window.refreshAll.__ampmStableFinalV1 = true;
+  }
+
+  if(typeof window.renderMamChart === 'function' && !window.renderMamChart.__ampmStableFinalV1){
+    var _prevRenderMamChart = window.renderMamChart;
+    window.renderMamChart = function(storeList){
+      try{
+        if(activeTab() === 'ventas' && !tabLayoutReady('ventas')){
+          queueStableRefresh('ventas', true);
+          return (typeof state !== 'undefined' && state) ? (state.chartMam || null) : null;
+        }
+      }catch(_e){}
+      return _prevRenderMamChart.apply(this, arguments);
+    };
+    window.renderMamChart.__ampmStableFinalV1 = true;
+  }
+
+  if(window.ResizeObserver && !window.__ampmStableFinalResizeObserver){
+    try{
+      var ro = new ResizeObserver(function(){
+        queueStableRefresh(activeTab(), false);
+      });
+      var mainA = document.querySelector('.ampm-main');
+      var mainB = document.querySelector('.ampm-mainInner');
+      if(mainA) ro.observe(mainA);
+      if(mainB) ro.observe(mainB);
+      window.__ampmStableFinalResizeObserver = ro;
+    }catch(_e){}
+  }
+
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = String(ev && ev.detail && ev.detail.tab || activeTab() || '').trim();
+      queueStableRefresh(tab, true);
+    }catch(_e){}
+  });
+
+  window.addEventListener('load', function(){
+    queueStableRefresh(activeTab(), true);
+  }, { once:true });
+
+  window.addEventListener('resize', function(){
+    queueStableRefresh(activeTab(), false);
+  }, { passive:true });
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      queueStableRefresh(activeTab(), false);
+    }
+  });
+
+  document.addEventListener('click', function(ev){
+    try{
+      var btn = ev.target && ev.target.closest ? ev.target.closest('#ampmStoreFloatingApply, #refresh, .tabBtn[data-tab], #applyFilters, .applyBtn') : null;
+      if(!btn) return;
+      setTimeout(function(){ queueStableRefresh(activeTab(), true); }, 60);
+    }catch(_e){}
+  }, true);
+})();
+</script>
 
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
@@ -57347,332 +57637,3 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 </html>
-
-<script id="ampm-store-unified-pipeline-v22">
-(function(){
-  'use strict';
-  if(window.__ampmStoreUnifiedV22) return;
-  window.__ampmStoreUnifiedV22 = true;
-
-  /* ── utilidades ── */
-  function byId(id){ return document.getElementById(id); }
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function upper(v){ return txt(v).toUpperCase(); }
-  function uniq(arr){ return Array.from(new Set((Array.isArray(arr)?arr:[]).map(txt).filter(Boolean))); }
-  function isAllToken(v){ var s=upper(v); return s==='ALL'||s==='__ALL__'||s==='(ALL)'||s==='TODAS'||s==='TODOS'; }
-
-  /* ── fuente de verdad: state._appliedStores ── */
-  function allStores(){
-    var sel = byId('stores'), vals = [];
-    try{ vals = Array.from(sel&&sel.options||[]).map(function(o){ return txt(o.value||o.textContent); }).filter(Boolean); }catch(_e){}
-    if(vals.length) return uniq(vals);
-    try{ return uniq((window.state&&Array.isArray(state.stores))?state.stores.slice():[]); }catch(_e){ return []; }
-  }
-  function canonicalStores(list){
-    var master = allStores();
-    var masterMap = new Map(master.map(function(v){ return [upper(v), v]; }));
-    var raw = uniq(list);
-    if(!raw.length || raw.some(isAllToken)) return master.slice();
-    var out = raw.map(function(v){ return masterMap.get(upper(v))||txt(v); }).filter(Boolean);
-    return uniq(out);
-  }
-  function readMainSelect(){
-    try{
-      var sel = byId('stores');
-      if(!sel) return [];
-      return Array.from(sel.selectedOptions||[]).map(function(o){ return txt(o.value||o.textContent); }).filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function ensureAppliedStores(){
-    try{
-      if(!window.state) return allStores();
-      if(Array.isArray(state._appliedStores) && state._appliedStores.length){
-        return canonicalStores(state._appliedStores);
-      }
-      var fromSelect = canonicalStores(readMainSelect());
-      var result = fromSelect.length ? fromSelect : allStores();
-      state._appliedStores = result.slice();
-      return result;
-    }catch(_e){ return allStores(); }
-  }
-  function setAppliedStores(list){
-    var applied = canonicalStores(list.length ? list : allStores());
-    try{ if(window.state) state._appliedStores = applied.slice(); }catch(_e){}
-    /* sincronizar select maestro */
-    try{
-      var sel = byId('stores');
-      if(sel){
-        var wanted = new Set(applied.map(upper));
-        Array.from(sel.options||[]).forEach(function(opt){
-          opt.selected = wanted.has(upper(opt.value||opt.textContent));
-        });
-        try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(_e){}
-      }
-    }catch(_e){}
-    return applied;
-  }
-
-  /* ── etiquetas ── */
-  function currentStoreLabel(){
-    var all = allStores(), sel = ensureAppliedStores();
-    if(!all.length||!sel.length||sel.length===all.length) return 'ALL';
-    if(sel.length<=2) return sel.join(', ');
-    return sel.slice(0,2).join(', ') + ' +' + (sel.length-2);
-  }
-  function currentStoreFilterLabel(){
-    var all = allStores(), sel = ensureAppliedStores();
-    if(!sel.length) return 'Tienda=—';
-    if(!all.length||sel.length===all.length) return 'Tienda=ALL';
-    if(sel.length<=3) return 'Tienda='+sel.join(',');
-    return 'Tienda='+sel.slice(0,2).join(',')+' +'+(sel.length-2);
-  }
-  function syncStoreLabels(){
-    try{ var f=byId('ampmStoreFloatingLabel'); if(f) f.textContent=currentStoreLabel(); }catch(_e){}
-    try{ var q=byId('storeQuickLabel'); if(q) q.textContent=currentStoreLabel(); }catch(_e){}
-    try{ if(typeof window.renderStoreQuick==='function') window.renderStoreQuick(); }catch(_e){}
-  }
-
-  /* ── invalidación de caches COMPLETA ── */
-  function clearAllStoreCaches(){
-    try{ if(window.state){
-      state._appliedStores       = state._appliedStores; /* no tocar — es la fuente */
-      state._deptTrendRows       = {};
-      state._deptTrendRowsMeta   = null;
-      state._deliveryStrategyPanelCache    = null;
-      state._deliveryStrategyPanelCacheKey = '';
-      state._deliverySplitCache    = null;
-      state._deliverySplitCacheKey = '';
-      state._chartLongStoreSig   = '';
-      state._xfSummary           = null;
-      state.chartDeptTrendVentas  = {};
-      state.chartDeptTrendDelivery= {};
-      /* CRÍTICO: invalidar chartLong para forzar recalc por tienda */
-      state.chartLong            = null;
-    }}catch(_e){}
-    try{ if(window.__ampmForensicRuntime){
-      var rt = window.__ampmForensicRuntime;
-      rt.lastSig=''; rt.lastReason=''; rt.lastRunAt=0;
-      rt.ignoreFocusUntil = Date.now()+400;
-      rt.ignoreVisibilityUntil = Date.now()+400;
-    }}catch(_e){}
-  }
-
-  /* ── repaint visible ── */
-  function activeTab(){
-    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||(window.state&&state._lastActiveTab)||'resumen')||'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function repaintTab(stores, pass){
-    var tab = activeTab();
-    try{
-      if(tab==='ventas'){
-        if(typeof window.renderMamChart==='function') window.renderMamChart(stores);
-        if(typeof window.renderMamStoreCards==='function') window.renderMamStoreCards(stores);
-        if(typeof window.renderStoreMamChart==='function') window.renderStoreMamChart(stores);
-        if(typeof window.renderSalesBubbleChart==='function') window.renderSalesBubbleChart(stores);
-        if(typeof window.renderDeptTrendSection==='function') window.renderDeptTrendSection('ventas',stores);
-      }else if(tab==='delivery'){
-        if(typeof window.renderDeliveryMamChart==='function') window.renderDeliveryMamChart(stores);
-        if(typeof window.renderDeliveryShareMamChart==='function') window.renderDeliveryShareMamChart(stores);
-        if(typeof window.renderDeliveryShareStoreCards==='function') window.renderDeliveryShareStoreCards(stores);
-        if(typeof window.renderDeliveryCategoryShareCharts==='function') window.renderDeliveryCategoryShareCharts(stores);
-        if(typeof window.renderDeliveryStrategyPanel==='function') window.renderDeliveryStrategyPanel(stores);
-        if(typeof window.renderDeliverySplitTables==='function') window.renderDeliverySplitTables(stores);
-        if(typeof window.renderDeliveryBubbleChart==='function') window.renderDeliveryBubbleChart(stores);
-        if(typeof window.renderDeliveryChannel12wChart==='function') window.renderDeliveryChannel12wChart(stores);
-        if(typeof window.renderDeptTrendSection==='function') window.renderDeptTrendSection('delivery',stores);
-      }
-    }catch(err){ try{ console.warn('v22 repaint pass',pass,err); }catch(_e){} }
-    try{ if(typeof window.refreshVisibleTabCharts==='function') window.refreshVisibleTabCharts(tab,true); }catch(_e){}
-    try{ if(typeof window.resizeCharts==='function') window.resizeCharts(); }catch(_e){}
-    try{ if(typeof window.updateAllChartTitles==='function') window.updateAllChartTitles(); }catch(_e){}
-    try{ if(typeof window.scheduleFitTables==='function') window.scheduleFitTables(); }catch(_e){}
-  }
-
-  /* ── floating menu helpers ── */
-  function checkedFloatingStores(){
-    try{
-      var list = byId('ampmStoreFloatingList');
-      if(!list) return [];
-      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return txt(i.value); }).filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function closeMenu(){ try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){} }
-
-  function renderFloatingList(){
-    var sel = byId('stores');
-    var list = byId('ampmStoreFloatingList');
-    var label = byId('ampmStoreFloatingLabel');
-    var applyBtn = byId('ampmStoreFloatingApply');
-    if(!sel||!list) return;
-    var opts = Array.from(sel.options||[]);
-    var applied = new Set(ensureAppliedStores().map(upper));
-    list.innerHTML = opts.map(function(o){
-      var v = txt(o.value||o.textContent);
-      var checked = applied.has(upper(v)) ? 'checked' : '';
-      var lbl = txt(o.textContent||o.value).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      var vSafe = v.replace(/"/g,'&quot;');
-      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="'+vSafe+'" '+checked+'> <span>'+lbl+'</span></label>';
-    }).join('');
-    if(label) label.textContent = currentStoreLabel();
-    if(applyBtn) applyBtn.disabled = false;
-  }
-
-  /* ── lógica de Apply ── */
-  function handleApply(ev){
-    try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
-    var checked = checkedFloatingStores();
-    var applied = setAppliedStores(checked);
-    syncStoreLabels();
-    clearAllStoreCaches();
-    try{ if(typeof window.markFiltersDirty==='function') window.markFiltersDirty(false); }catch(_e){}
-    try{
-      if(typeof window.refreshAll==='function') window.refreshAll();
-      else{ var rb=byId('refresh'); if(rb) rb.click(); }
-    }catch(_e){}
-    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,1); }, 100);
-    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,2); }, 300);
-    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,3); }, 600);
-    closeMenu();
-  }
-
-  /* ── exponer API global unificada ── */
-  window.getSelectedStoresOrAll = function(){ return ensureAppliedStores().slice(); };
-  window.xfStoreLabel           = function(){ return currentStoreFilterLabel(); };
-  window.storeQuickLabelText    = function(){ return currentStoreLabel(); };
-
-  /* ── wrapper de refreshAll para blindar sincronía ── */
-  function wrapRefreshAll(){
-    if(typeof window.refreshAll!=='function'||window.__ampmV22WrappedRefreshAll) return;
-    window.__ampmV22WrappedRefreshAll = true;
-    var orig = window.refreshAll;
-    window.refreshAll = function(){
-      /* re-sincronizar select maestro con la fuente única antes de cada refresh */
-      try{ setAppliedStores(ensureAppliedStores()); syncStoreLabels(); }catch(_e){}
-      return orig.apply(this, arguments);
-    };
-  }
-
-  /* ── wrap de deptTrendAggregateRows para pasar siempre canonical stores ── */
-  function wrapDeptTrend(){
-    if(typeof window.deptTrendAggregateRowsLegacy==='function' && !window.__ampmV22WrappedDeptTrend){
-      window.__ampmV22WrappedDeptTrend = true;
-      window.deptTrendAggregateRows = function(tab, storeList){
-        var stores = canonicalStores(storeList&&storeList.length ? storeList : ensureAppliedStores());
-        return window.deptTrendAggregateRowsLegacy(tab, stores);
-      };
-    }
-    if(typeof window.deptTrendDeliveryBreakdownMapLegacy==='function'){
-      window.deptTrendDeliveryBreakdownMap = function(storeList){
-        return window.deptTrendDeliveryBreakdownMapLegacy(canonicalStores(storeList&&storeList.length?storeList:ensureAppliedStores()));
-      };
-    }
-    if(typeof window.deptTrendOverallSalesMapLegacy==='function'){
-      window.deptTrendOverallSalesMap = function(tab, storeList){
-        return window.deptTrendOverallSalesMapLegacy(tab, canonicalStores(storeList&&storeList.length?storeList:ensureAppliedStores()));
-      };
-    }
-  }
-
-  /* ── bind único del botón (destruye cualquier listener previo via cloneNode) ── */
-  function bindApplyBtn(){
-    var btn = byId('ampmStoreFloatingApply');
-    if(!btn) return;
-    /* cloneNode elimina todos los listeners anteriores de v17/v18/v19/v21 */
-    var clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.addEventListener('click', handleApply, true);
-  }
-
-  /* ── guard del select maestro (actualiza _appliedStores cuando se usa el select nativo) ── */
-  function bindSelectGuard(){
-    var sel = byId('stores');
-    if(!sel||sel.__ampmV22Guard) return;
-    sel.__ampmV22Guard = true;
-    sel.addEventListener('change', function(){
-      var picked = canonicalStores(readMainSelect());
-      try{ if(window.state) state._appliedStores = (picked.length?picked:allStores()).slice(); }catch(_e){}
-      syncStoreLabels();
-    });
-  }
-
-  /* ── bind toggle del menú flotante (preservando funcionalidad visual) ── */
-  function bindFloatingMenu(){
-    var triggerBtn = byId('ampmStoreFloatingBtn');
-    var menu = byId('ampmStoreFloatingMenu');
-    var list = byId('ampmStoreFloatingList');
-    if(!triggerBtn||!menu||!list) return;
-    if(triggerBtn.__ampmV22MenuBound) return;
-    triggerBtn.__ampmV22MenuBound = true;
-    /* clonar para remover listeners viejos del botón trigger */
-    var cloneTrigger = triggerBtn.cloneNode(true);
-    triggerBtn.parentNode.replaceChild(cloneTrigger, triggerBtn);
-    cloneTrigger.addEventListener('click', function(ev){
-      ev.preventDefault(); ev.stopPropagation();
-      var isOpen = menu.classList.contains('open');
-      menu.classList.toggle('open', !isOpen);
-      if(!isOpen){ renderFloatingList(); }
-    });
-    menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
-    list.addEventListener('change', function(){
-      /* solo actualizar visual, el Apply commit lo hace handleApply */
-    });
-    /* all/none action buttons */
-    menu.querySelectorAll('[data-floating-store-action]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var act = b.getAttribute('data-floating-store-action');
-        var all = allStores();
-        var wanted = act==='all' ? all : [];
-        var wantedSet = new Set(wanted.map(upper));
-        Array.from(list.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
-          cb.checked = wantedSet.has(upper(cb.value));
-        });
-      });
-    });
-    /* cancel */
-    var cancelBtn = byId('ampmStoreFloatingCancel');
-    if(cancelBtn){
-      var cloneCancel = cancelBtn.cloneNode(true);
-      cancelBtn.parentNode.replaceChild(cloneCancel, cancelBtn);
-      cloneCancel.addEventListener('click', function(){
-        renderFloatingList(); /* restaura checkboxes al estado aplicado actual */
-        menu.classList.remove('open');
-      });
-    }
-    document.addEventListener('click', function(){ menu.classList.remove('open'); });
-    document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') menu.classList.remove('open'); });
-  }
-
-  /* ── boot ── */
-  function boot(){
-    /* 1. inicializar _appliedStores si aún no existe */
-    if(window.state && (!Array.isArray(state._appliedStores)||!state._appliedStores.length)){
-      var fromSelect = canonicalStores(readMainSelect());
-      state._appliedStores = (fromSelect.length ? fromSelect : allStores()).slice();
-    }
-    /* 2. sincronizar labels */
-    syncStoreLabels();
-    /* 3. bind select guard */
-    bindSelectGuard();
-    /* 4. bind botón apply (elimina v17/v18/v19/v21) */
-    bindApplyBtn();
-    /* 5. bind menú flotante */
-    bindFloatingMenu();
-    /* 6. wrap refreshAll */
-    wrapRefreshAll();
-    /* 7. wrap dept trend */
-    wrapDeptTrend();
-  }
-
-  /* ejecutar con delays para asegurar que corre DESPUÉS de v17–v21 */
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 350); }, {once:true});
-  } else {
-    setTimeout(boot, 350);
-  }
-  window.addEventListener('load', function(){
-    setTimeout(boot, 450);
-    setTimeout(syncStoreLabels, 600);
-  }, {once:true});
-})();
-</script>
