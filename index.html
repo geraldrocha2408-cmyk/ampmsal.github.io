@@ -3528,6 +3528,19 @@ body{
   padding-top:10px !important;
 }
 </style>
+
+<style id="ampm-tab-isolation-v10">
+body[data-active-tab="prd0"] [data-tabpage="merma"],
+body[data-active-tab="prd0"] #merma,
+body[data-active-tab="prd0"] #mermaDrillWrap,
+body[data-active-tab="prd0"] .section.mermaTitle2,
+body[data-active-tab="prd0"] #chart_merma_4m,
+body[data-active-tab="prd0"] #chart_merma_bubble{display:none !important;}
+body[data-active-tab="merma"] [data-tabpage="prd0"],
+body[data-active-tab="merma"] #prd0,
+body[data-active-tab="merma"] #prd0PedYaAuditCard{display:none !important;}
+</style>
+
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -37513,6 +37526,7 @@ callback:(v)=> axisMoneyCompact1(v)
   function showTab(tab){
     const prevTab = String(state._lastActiveTab || '').trim();
     tabs.forEach(b=> b.classList.toggle('active', b.dataset.tab === tab));
+    try{ if(document.body) document.body.setAttribute('data-active-tab', String(tab || '').trim()); }catch(e){}
     document.querySelectorAll('[data-tabpage]').forEach(el=>{
       const isActive = (el.dataset.tabpage === tab);
       if(!isActive){
@@ -49932,6 +49946,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
     try{
       var buttons = Array.from(document.querySelectorAll('.tabBtn'));
       buttons.forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
+      try{ if(document.body) document.body.setAttribute('data-active-tab', String(tab || '').trim()); }catch(_e){}
       document.querySelectorAll('[data-tabpage]').forEach(function(el){
         var isActive = (el.dataset.tabpage === tab);
         if(!isActive){
