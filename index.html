@@ -7750,7 +7750,7 @@ function toNum(v){
       resetState();
     try{ ensureDeliverySwitches(); }catch(e){}
       state.mode = 'CUBO';
-      el('mode').textContent = 'CUBO';
+      { const _mode = el('mode'); if(_mode) _mode.textContent = 'CUBO'; }
 
       const storesSet = new Set();
       const monthsSet = new Set();
@@ -9004,7 +9004,7 @@ try{
       wb = wb || null;
       resetState();
       state.mode = 'TRANSACCIONAL';
-      el('mode').textContent = 'TRANSACCIONAL';
+      { const _mode = el('mode'); if(_mode) _mode.textContent = 'TRANSACCIONAL'; }
 
       const cols = rows.length ? Object.keys(rows[0]) : [];
       const storeCol = cols.includes('Store') ? 'Store' : (cols.includes('Store Name') ? 'Store Name' : null);
