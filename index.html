@@ -3549,6 +3549,11 @@ body{
 </div>
 <div class="ampmAuthActions">
 <button class="ampmAuthBtn" id="ampmAuthSubmit" type="submit">Entrar al reporte</button>
+</div>
+<div class="ampmAuthMsg" id="ampmAuthMsg"></div>
+<div class="ampmAuthFoot">
+          Esta capa es útil como control de acceso local dentro del HTML. Si luego quieres seguridad real a nivel servidor o dominio, se tendría que montar fuera del archivo cliente.
+        </div>
 </form>
 </div>
 </div>
@@ -3868,7 +3873,7 @@ body{
 
 
 
-</div></section></div></aside><div class="ampm-main"><div class="ampm-mainInner"><div class="note" id="noteBox"><div class="section" data-tabpage="resumen" id="dashboard"><h2>Dashboard</h2></div><div class="kpiBoard" data-tabpage="resumen" id="kpiBoard">
+</div></section></div></aside><div class="ampm-main"><div class="ampm-mainInner"><div class="ampm-context-header" id="ampmContextHeader" aria-live="polite"><div class="ampm-context-copy"><div class="ampm-context-kicker" id="ampmContextKicker">Análisis ejecutivo</div><div class="ampm-context-titleRow"><h2 class="ampm-context-title" id="ampmContextTitle">Análisis semanal — Semana activa</h2><span class="ampm-context-tab" id="ampmContextTab">Resumen</span></div><p class="ampm-context-subtitle" id="ampmContextSubtitle">Referencia activa del panel según la vista y los filtros seleccionados.</p></div><div class="ampm-context-chips" id="ampmContextChips"></div></div><div class="note" id="noteBox"><div class="section" data-tabpage="resumen" id="dashboard"><h2>Dashboard</h2></div><div class="kpiBoard" data-tabpage="resumen" id="kpiBoard">
 <div class="kpiGrid">
 <div class="kpiCard blue" data-kpi="sales_cur"><div class="kpiTitle">Venta Diario</div><div class="kpiValue" id="kpi_sales_cur">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_sales_delta3lm">Delta vs Prom S8: —</span></div></div>
 <div class="kpiCard orange" data-kpi="sales_lm"><div class="kpiTitle">Venta LW</div><div class="kpiValue" id="kpi_sales_lm">—</div><div class="kpiSub" id="kpi_sales_deltalm">Delta vs LW: —</div></div>
@@ -56860,7 +56865,172 @@ function innovationOnePagerCreateBrandedShell(){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
   else boot();
   window.addEventListener('load', function(){ scheduleRefresh(true); }, { once:true });
-})();</script></body>
+})();</script>
+<style id="ampm-context-header-styles">
+.ampm-context-header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 14px;padding:18px 20px;border-radius:22px;background:linear-gradient(135deg, rgba(0,94,167,.16) 0%, rgba(12,77,143,.10) 38%, rgba(245,131,32,.10) 100%);border:1px solid rgba(12,77,143,.14);box-shadow:0 16px 40px rgba(17,40,74,.10);overflow:hidden;isolation:isolate;}
+.ampm-context-header::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 44%);pointer-events:none;z-index:0;}
+.ampm-context-header::after{content:'';position:absolute;right:-70px;top:-70px;width:220px;height:220px;border-radius:999px;background:radial-gradient(circle, rgba(245,131,32,.18) 0%, rgba(245,131,32,0) 68%);pointer-events:none;z-index:0;}
+.ampm-context-copy,.ampm-context-chips{position:relative;z-index:1;}
+.ampm-context-copy{display:flex;flex-direction:column;gap:8px;min-width:min(420px,100%);flex:1 1 520px;}
+.ampm-context-kicker{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;padding:7px 12px;border-radius:999px;background:rgba(17,40,74,.84);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 24px rgba(17,40,74,.14);font-size:11px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.ampm-context-kicker::before{content:'';width:8px;height:8px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18);flex:0 0 8px;}
+.ampm-context-titleRow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ampm-context-title{margin:0;font-size:30px;line-height:1.05;font-weight:1000;color:#11284A;letter-spacing:-.02em;}
+.ampm-context-tab{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;border-radius:999px;background:linear-gradient(135deg, #F58320, #FAA21E);border:1px solid rgba(230,116,37,.18);color:#fff;font-size:12px;font-weight:1000;box-shadow:0 12px 22px rgba(245,131,32,.20);white-space:nowrap;}
+.ampm-context-subtitle{margin:0;max-width:780px;color:#42556f;font-size:13px;line-height:1.45;font-weight:800;}
+.ampm-context-chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;flex:0 1 520px;align-self:center;}
+.ampm-context-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.82);border:1px solid rgba(15,23,42,.10);box-shadow:0 10px 22px rgba(17,40,74,.06);color:#11284A;font-size:12px;font-weight:900;backdrop-filter:blur(8px);}
+.ampm-context-chipKey{color:#64748B;font-size:11px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;}
+.ampm-context-chipValue{color:#11284A;font-weight:1000;}
+@media (max-width: 1080px){.ampm-context-header{padding:16px 16px 14px;}.ampm-context-title{font-size:24px;}.ampm-context-chips{justify-content:flex-start;flex-basis:100%;}}
+@media (max-width: 720px){.ampm-context-header{border-radius:18px;padding:14px 14px 12px;}.ampm-context-copy{min-width:0;}.ampm-context-title{font-size:21px;}.ampm-context-subtitle{font-size:12px;}.ampm-context-chip{font-size:11px;padding:7px 10px;}}
+</style>
+
+<script id="ampm-context-header-script">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function selectedValues(select){
+    if(!select) return [];
+    try{
+      if(typeof getSelectedValues === 'function') return (getSelectedValues(select) || []).map(function(v){ return txt(v); }).filter(Boolean);
+    }catch(_e){}
+    try{
+      return Array.prototype.map.call(select.selectedOptions || [], function(opt){ return txt(opt && opt.value); }).filter(Boolean);
+    }catch(_e){}
+    return [];
+  }
+  function activeTabLabel(){
+    try{
+      var btn = document.querySelector('.tabBtn.active');
+      if(!btn) return 'Resumen';
+      var labelNode = btn.querySelector('.tabLabel');
+      return txt(labelNode ? labelNode.textContent : btn.textContent) || 'Resumen';
+    }catch(_e){ return 'Resumen'; }
+  }
+  function currentMode(){
+    try{ if(typeof mode === 'function') return mode(); }catch(_e){}
+    var sel = byId('reportMode');
+    return txt(sel && sel.value).toLowerCase() || 'semanal';
+  }
+  function currentPeriod(){
+    try{ if(typeof getCurrentPeriod === 'function') return txt(getCurrentPeriod()); }catch(_e){}
+    try{ if(typeof getCurrentYm === 'function') return txt(getCurrentYm()); }catch(_e){}
+    return txt(byId('currentMonth') && byId('currentMonth').value);
+  }
+  function currentDowLabel(){
+    try{
+      if(typeof getDowToken === 'function' && typeof dowLabel === 'function') return txt(dowLabel(getDowToken())) || 'Todos';
+    }catch(_e){}
+    var sel = byId('dowFilter');
+    if(!sel) return 'Todos los días';
+    var vals = selectedValues(sel).filter(function(v){ return v !== '__ALL__'; });
+    if(!vals.length) return 'Todos los días';
+    var map = {'1':'Lunes','2':'Martes','3':'Miércoles','4':'Jueves','5':'Viernes','6':'Sábado','7':'Domingo'};
+    return vals.map(function(v){ return map[v] || v; }).join(', ');
+  }
+  function currentStoreLabel(){
+    var sel = byId('stores');
+    var picked = selectedValues(sel);
+    var all = [];
+    try{ all = Array.isArray(window.state && state.stores) ? state.stores.slice() : []; }catch(_e){ all = []; }
+    var normalizedPicked = picked.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean);
+    var normalizedAll = all.map(function(v){ return txt(v).toUpperCase(); }).filter(Boolean);
+    if(!normalizedPicked.length || (normalizedAll.length && normalizedPicked.length >= normalizedAll.length)) return 'Todas las tiendas';
+    if(normalizedPicked.length === 1) return normalizedPicked[0];
+    if(normalizedPicked.length === 2) return normalizedPicked.join(' · ');
+    return normalizedPicked.length + ' tiendas';
+  }
+  function periodText(modeKey, periodKey){
+    if(!periodKey) return 'Período activo';
+    if(modeKey === 'mensual'){
+      try{ if(typeof monthDisplay === 'function') return monthDisplay(periodKey); }catch(_e){}
+      return periodKey;
+    }
+    try{ if(typeof weekKeyDisplay === 'function') return weekKeyDisplay(periodKey); }catch(_e){}
+    return periodKey;
+  }
+  function buildTitle(modeKey, periodKey, dowTxt){
+    var label = periodText(modeKey, periodKey);
+    if(modeKey === 'mensual') return 'Análisis mensual — ' + label;
+    if(modeKey === 'diario'){
+      var daysLabel = txt(dowTxt || 'Todos los días');
+      return 'Análisis diario — ' + daysLabel + ' · Semana ' + label;
+    }
+    return 'Análisis semanal — Semana ' + label;
+  }
+  function buildSubtitle(modeKey, tabLabel, dowTxt){
+    if(modeKey === 'mensual') return 'Panel sincronizado con el mes seleccionado y la hoja activa del reporte.';
+    if(modeKey === 'diario') return 'Panel sincronizado con ' + txt(dowTxt || 'Todos los días').toLowerCase() + ', la semana activa y la hoja ' + tabLabel.toLowerCase() + '.';
+    return 'Panel sincronizado con la semana seleccionada y la hoja ' + tabLabel.toLowerCase() + '.';
+  }
+  function chip(key, value){
+    var wrap = document.createElement('span');
+    wrap.className = 'ampm-context-chip';
+    var k = document.createElement('span');
+    k.className = 'ampm-context-chipKey';
+    k.textContent = key;
+    var v = document.createElement('span');
+    v.className = 'ampm-context-chipValue';
+    v.textContent = value;
+    wrap.appendChild(k);
+    wrap.appendChild(v);
+    return wrap;
+  }
+  function render(){
+    var root = byId('ampmContextHeader');
+    if(!root) return;
+    var modeKey = currentMode();
+    var periodKey = currentPeriod();
+    var tabLabel = activeTabLabel();
+    var dowTxt = currentDowLabel();
+    var title = buildTitle(modeKey, periodKey, dowTxt);
+    var subtitle = buildSubtitle(modeKey, tabLabel, dowTxt);
+    var kicker = modeKey === 'mensual' ? 'Análisis ejecutivo mensual' : (modeKey === 'diario' ? 'Análisis ejecutivo diario' : 'Análisis ejecutivo semanal');
+    var kickerEl = byId('ampmContextKicker');
+    var titleEl = byId('ampmContextTitle');
+    var subtitleEl = byId('ampmContextSubtitle');
+    var tabEl = byId('ampmContextTab');
+    var chipsEl = byId('ampmContextChips');
+    if(kickerEl) kickerEl.textContent = kicker;
+    if(titleEl) titleEl.textContent = title;
+    if(subtitleEl) subtitleEl.textContent = subtitle;
+    if(tabEl) tabEl.textContent = tabLabel;
+    if(chipsEl){
+      chipsEl.innerHTML = '';
+      chipsEl.appendChild(chip('Vista', modeKey === 'mensual' ? 'Mensual' : (modeKey === 'diario' ? 'Diaria' : 'Semanal')));
+      chipsEl.appendChild(chip(modeKey === 'mensual' ? 'Mes' : 'Semana', periodText(modeKey, periodKey)));
+      if(modeKey === 'diario') chipsEl.appendChild(chip('Días', dowTxt || 'Todos'));
+      chipsEl.appendChild(chip('Tiendas', currentStoreLabel()));
+      chipsEl.appendChild(chip('Hoja', tabLabel));
+    }
+  }
+  function schedule(){
+    try{ window.requestAnimationFrame(render); }catch(_e){ render(); }
+  }
+  function bind(){
+    ['reportMode','currentMonth','prevMonths','stores','dowFilter'].forEach(function(id){
+      var node = byId(id);
+      if(node && !node.dataset.contextBound){
+        node.addEventListener('change', schedule);
+        node.dataset.contextBound = '1';
+      }
+    });
+    var applyBtn = byId('refresh');
+    if(applyBtn && !applyBtn.dataset.contextBound){
+      applyBtn.addEventListener('click', function(){ setTimeout(schedule, 40); setTimeout(schedule, 220); });
+      applyBtn.dataset.contextBound = '1';
+    }
+    window.addEventListener('ampm:tabshown', schedule);
+    window.addEventListener('load', schedule);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) schedule(); });
+    schedule();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
+  else bind();
+})();
+</script>
+</body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
