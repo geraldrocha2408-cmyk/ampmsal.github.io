@@ -53517,6 +53517,16 @@ function innovationOnePagerCreateBrandedShell(){
   }
 
 
+  function sortDetailRowsBySalesDesc(rows){
+    return (rows || []).slice().sort(function(a,b){
+      var curDiff = num(b && b.cur) - num(a && a.cur);
+      if(Math.abs(curDiff) > 0.01) return curDiff;
+      var absDiff = Math.abs(num(b && b.diff)) - Math.abs(num(a && a.diff));
+      if(Math.abs(absDiff) > 0.01) return absDiff;
+      return txt((a && (a.store || a.label)) || '').localeCompare(txt((b && (b.store || b.label)) || ''));
+    });
+  }
+
   function detailListHtml(rows, emptyText, asDriver, filterKind, refLabel){
     rows = rows || [];
     if(!rows.length) return '<div class="ampm-biz-empty">' + esc(emptyText || 'Sin selección activa.') + '</div>';
@@ -53722,12 +53732,12 @@ function innovationOnePagerCreateBrandedShell(){
       pill(item.breadth.label, 'orange')
     ].concat(activeDrill.map(function(x){ return chip(detailFilterBadgeLabel(x.kind) + ': ' + x.value, 'blue'); })).join('');
     summary.innerHTML = composeNarrative(item, payload.stores || []) + (activeDrill.length ? (' <span class="ampm-biz-drill-note">Drill down activo sobre ' + esc(activeDrill.map(function(x){ return detailFilterBadgeLabel(x.kind).toLowerCase() + ' ' + x.value; }).join(', ')) + '.</span>') : '');
-    support.innerHTML = detailListHtml(activeSupportRows.slice(0, 10), mode() === 'mensual' ? 'No hay tiendas que acompañen materialmente en el mes filtrado.' : 'No hay tiendas que acompañen materialmente en el scope actual.', false, 'store', item.refLabel);
-    risk.innerHTML = detailListHtml(activeRiskRows.slice(0, 10), (payload.stores || []).length <= 1 ? 'No aplica lectura de homogeneidad con una sola tienda.' : 'No hay tiendas que rompan la señal.', false, 'store', item.refLabel);
-    a.innerHTML = detailListHtml((filtered.drivers.daypart || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'daypart', item.refLabel);
-    b.innerHTML = detailListHtml((filtered.drivers.supplier || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'supplier', item.refLabel);
-    c.innerHTML = detailListHtml((filtered.drivers.brand || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'brand', item.refLabel);
-    p.innerHTML = detailListHtml((filtered.drivers.product || []).slice(0, 12), 'Sin drill down de producto confiable con los filtros activos.', true, 'product', item.refLabel);
+    support.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(activeSupportRows).slice(0, 10), mode() === 'mensual' ? 'No hay tiendas que acompañen materialmente en el mes filtrado.' : 'No hay tiendas que acompañen materialmente en el scope actual.', false, 'store', item.refLabel);
+    risk.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(activeRiskRows).slice(0, 10), (payload.stores || []).length <= 1 ? 'No aplica lectura de homogeneidad con una sola tienda.' : 'No hay tiendas que rompan la señal.', false, 'store', item.refLabel);
+    a.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(filtered.drivers.daypart || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'daypart', item.refLabel);
+    b.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(filtered.drivers.supplier || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'supplier', item.refLabel);
+    c.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(filtered.drivers.brand || []).slice(0, 8), 'Sin detalle material con los filtros drill down activos.', true, 'brand', item.refLabel);
+    p.innerHTML = detailListHtml(sortDetailRowsBySalesDesc(filtered.drivers.product || []).slice(0, 12), 'Sin drill down de producto confiable con los filtros activos.', true, 'product', item.refLabel);
 
     Array.prototype.forEach.call(document.querySelectorAll('#ampmBizSection .ampm-biz-row.is-drill-filter'), function(node){
       node.onmousedown = function(ev){
