@@ -4792,8 +4792,8 @@ body{
 <canvas aria-label="SBF TX por Hora vs promedio comparable" id="chart_sbf_hour_s8"></canvas>
 </div>
 </div><div class="section invTitle" data-tabpage="inventario"><h2>Inventario — Por Store (snapshot + COGS 4W)</h2></div><div class="invRow" data-tabpage="inventario">
-<div class="card invChartCard" style="margin-top:10px; padding:12px 12px 2px; height:420px; max-height:420px; position:relative; overflow:hidden;">
-<div class="muted" style="margin:0 0 8px; font-weight:700;">Barras = Monto Inv (Amount). Línea = Días Inv (Inv * 28 / COGS 4W).</div>
+<div class="card invChartCard" style="margin-top:10px; padding:12px 12px 2px; height:420px; max-height:420px; position:relative; overflow:hidden; background:#ffffff; border:1px solid rgba(15,23,42,.10); border-radius:14px; box-shadow:0 8px 20px rgba(15,23,42,.05);">
+<div class="muted" style="margin:0 0 8px; font-weight:700;">Barras = Monto Inv (Amount). Línea = Días Inv (Inv * 28 / COGS 4W). Eje izquierdo en millares.</div>
 <canvas id="chart_inv_store" style="width:100%; height:360px; max-height:360px;"></canvas>
 </div>
 <div class="invSpacer"></div>
@@ -16904,11 +16904,11 @@ return;
               },
               scales:{
                 x:{stacked:false, grid:{display:false}},
-                y:{stacked:false, beginAtZero:true, ticks:{callback:(v)=> money(v)}},
+                y:{stacked:false, beginAtZero:true, ticks:{callback:(v)=>{ const n = Number(v); if(!Number.isFinite(n)) return '—'; return `$${(n/1000).toLocaleString('en-US',{minimumFractionDigits:0, maximumFractionDigits:0})}K`; }}},
                 y1:{position:'right', grid:{drawOnChartArea:false}, border:{ display:true, color: AMPM.orange }, beginAtZero:true, ticks:{ color: '#000000', font:{ size:INNOVATION_UI.axis, weight:'700' }, callback:(v)=> Number(v).toFixed(0)}}
               }
             },
-            plugins:[ValueLabels]
+            plugins:[ValueLabels,{id:'invStoreSolidWhiteBg',beforeDraw(chart){const {ctx,canvas}=chart;ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}]
           });
         }
       }catch(e){ console.warn('Inv chart failed', e); }
@@ -57218,6 +57218,53 @@ function innovationOnePagerCreateBrandedShell(){
 </style>
 
 
+
+<style id="ampm-sidebar-active-orange-v1">
+.ampm-sidebar .tabsbar button.tabBtn.active{
+  background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
+  border:1px solid rgba(255,255,255,.30) !important;
+  color:#11284A !important;
+  box-shadow:
+    0 14px 28px rgba(245,131,32,.34),
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -1px 0 rgba(178,84,12,.18) !important;
+}
+.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
+.ampm-sidebar .tabsbar button.tabBtn.active .tabLabel,
+.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
+  color:#11284A !important;
+  stroke:#11284A !important;
+}
+.ampm-shell:not(.is-collapsed) .ampm-sidebar .tabsbar button.tabBtn.active{
+  position:relative;
+}
+.ampm-shell:not(.is-collapsed) .ampm-sidebar .tabsbar button.tabBtn.active::before{
+  content:'';
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#11284A;
+  box-shadow:0 0 0 4px rgba(17,40,74,.12);
+  margin-right:10px;
+  flex:0 0 8px;
+}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active{
+  background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
+  color:#11284A !important;
+  border:1px solid rgba(255,255,255,.34) !important;
+  box-shadow:
+    0 14px 26px rgba(245,131,32,.34),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 0 0 2px rgba(255,255,255,.10) !important;
+}
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
+.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
+  color:#11284A !important;
+  stroke:#11284A !important;
+}
+</style>
+
 <script id="ampm-chart-recover-v19">
 (function(){
   if(window.__ampmChartRecoverV19) return;
@@ -57285,6 +57332,273 @@ function innovationOnePagerCreateBrandedShell(){
       setTimeout(()=>queue(activeTab()), 120);
     }
   });
+})();
+</script>
+
+
+<script id="ampm-chart-stability-hardfix-v1">
+(function(){
+  if(window.__ampmChartStabilityHardfixV1) return;
+  window.__ampmChartStabilityHardfixV1 = true;
+
+  function activeTab(){
+    try{
+      return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || '').trim();
+    }catch(_e){
+      return '';
+    }
+  }
+
+  function isVisibleBox(node){
+    try{
+      if(!node) return false;
+      var cs = getComputedStyle(node);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
+      var r = node.getBoundingClientRect();
+      return r.width > 40 && r.height > 40;
+    }catch(_e){
+      return false;
+    }
+  }
+
+  function canvasHost(canvas){
+    try{
+      return canvas && (canvas.closest('.monthly-chart-viewport, .innovationFsExecCanvasWrap, .innovationChartWrap, .innovationFsExecMiniWrap, .innovationChartWrap--combo-wide, .innovationChartWrap--combo-pie, .opCanvasWrap, .deptTrendCard > div[style*="height"], .chartCard') || canvas.parentElement || canvas);
+    }catch(_e){
+      return canvas || null;
+    }
+  }
+
+  function visibleCanvasesForTab(tab){
+    try{
+      var safeTab = String(tab || '').trim();
+      if(!safeTab) return [];
+      return Array.from(document.querySelectorAll('[data-tabpage="' + safeTab + '"] canvas')).filter(function(cv){
+        return isVisibleBox(canvasHost(cv));
+      });
+    }catch(_e){
+      return [];
+    }
+  }
+
+  function tabLayoutReady(tab){
+    try{
+      var canvases = visibleCanvasesForTab(tab);
+      if(!canvases.length) return true;
+      var ready = 0;
+      canvases.forEach(function(cv){
+        try{
+          var host = canvasHost(cv);
+          var r = host.getBoundingClientRect();
+          if(r.width > 140 && r.height > 140) ready += 1;
+        }catch(_e){}
+      });
+      return ready >= Math.max(1, Math.ceil(canvases.length * 0.60));
+    }catch(_e){
+      return true;
+    }
+  }
+
+  function chartFromCanvas(canvas){
+    try{
+      if(!canvas || typeof Chart === 'undefined') return null;
+      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
+    }catch(_e){}
+    return null;
+  }
+
+  function chartLooksHealthy(canvas){
+    try{
+      var host = canvasHost(canvas);
+      if(!isVisibleBox(host)) return true;
+      var rect = canvas.getBoundingClientRect();
+      if(rect.width <= 100 || rect.height <= 100) return false;
+
+      var ch = chartFromCanvas(canvas);
+      if(!ch) return false;
+      var area = ch.chartArea || null;
+      if(!area) return false;
+      var aw = Number(area.right || 0) - Number(area.left || 0);
+      var ah = Number(area.bottom || 0) - Number(area.top || 0);
+      if(aw <= 80 || ah <= 80) return false;
+      if(!Array.isArray(ch.data?.datasets) || !ch.data.datasets.length) return false;
+
+      var hasValues = ch.data.datasets.some(function(ds){
+        return Array.isArray(ds && ds.data) && ds.data.some(function(v){ return v != null && Number.isFinite(Number(v)); });
+      });
+      if(!hasValues) return false;
+
+      var hasMeta = ch.data.datasets.some(function(_ds, idx){
+        try{
+          var meta = typeof ch.getDatasetMeta === 'function' ? ch.getDatasetMeta(idx) : null;
+          return !!(meta && Array.isArray(meta.data) && meta.data.length);
+        }catch(_e){
+          return false;
+        }
+      });
+      return hasMeta;
+    }catch(_e){
+      return false;
+    }
+  }
+
+  function tabNeedsRecovery(tab){
+    try{
+      var canvases = visibleCanvasesForTab(tab);
+      if(!canvases.length) return false;
+      return canvases.some(function(cv){ return !chartLooksHealthy(cv); });
+    }catch(_e){
+      return false;
+    }
+  }
+
+  var baseRefresh = typeof window.refreshVisibleTabCharts === 'function' ? window.refreshVisibleTabCharts : null;
+  var baseSchedule = typeof window.scheduleVisibleChartRefresh === 'function' ? window.scheduleVisibleChartRefresh : null;
+
+  function postRefreshPolish(){
+    try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+    try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+  }
+
+  var queueTokens = Object.create(null);
+
+  function runStableRefresh(tab, force){
+    try{
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return;
+      var current = activeTab();
+      if(current && safeTab !== current) return;
+
+      if(!tabLayoutReady(safeTab)) return;
+
+      var mustForce = !!force || tabNeedsRecovery(safeTab);
+
+      if(baseRefresh){
+        baseRefresh.call(window, safeTab, mustForce);
+      }else if(baseSchedule){
+        baseSchedule.call(window, safeTab);
+      }
+
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ postRefreshPolish(); });
+      });
+    }catch(_e){}
+  }
+
+  function queueStableRefresh(tab, force){
+    try{
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return;
+      var token = Date.now() + Math.random();
+      queueTokens[safeTab] = token;
+      [80, 220, 520, 980].forEach(function(ms, idx){
+        setTimeout(function(){
+          try{
+            if(queueTokens[safeTab] !== token) return;
+            runStableRefresh(safeTab, force || idx >= 1);
+          }catch(_e){}
+        }, ms);
+      });
+    }catch(_e){}
+  }
+
+  if(baseRefresh && !baseRefresh.__ampmStableFinalV1){
+    window.refreshVisibleTabCharts = function(tab, forceRebuild){
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return baseRefresh.apply(this, arguments);
+
+      if(!tabLayoutReady(safeTab)){
+        queueStableRefresh(safeTab, !!forceRebuild);
+        return;
+      }
+
+      var mustForce = !!forceRebuild || tabNeedsRecovery(safeTab);
+      return baseRefresh.call(this, safeTab, mustForce);
+    };
+    window.refreshVisibleTabCharts.__ampmStableFinalV1 = true;
+  }
+
+  if(baseSchedule && !baseSchedule.__ampmStableFinalV1){
+    window.scheduleVisibleChartRefresh = function(tab){
+      var safeTab = String(tab || activeTab() || '').trim();
+      if(!safeTab) return baseSchedule.apply(this, arguments);
+
+      if(!tabLayoutReady(safeTab) || tabNeedsRecovery(safeTab)){
+        queueStableRefresh(safeTab, true);
+        return;
+      }
+
+      return baseSchedule.call(this, safeTab);
+    };
+    window.scheduleVisibleChartRefresh.__ampmStableFinalV1 = true;
+  }
+
+  if(typeof window.refreshAll === 'function' && !window.refreshAll.__ampmStableFinalV1){
+    var _prevRefreshAll = window.refreshAll;
+    window.refreshAll = function(){
+      var out = _prevRefreshAll.apply(this, arguments);
+      try{ queueStableRefresh(activeTab(), true); }catch(_e){}
+      return out;
+    };
+    window.refreshAll.__ampmStableFinalV1 = true;
+  }
+
+  if(typeof window.renderMamChart === 'function' && !window.renderMamChart.__ampmStableFinalV1){
+    var _prevRenderMamChart = window.renderMamChart;
+    window.renderMamChart = function(storeList){
+      try{
+        if(activeTab() === 'ventas' && !tabLayoutReady('ventas')){
+          queueStableRefresh('ventas', true);
+          return (typeof state !== 'undefined' && state) ? (state.chartMam || null) : null;
+        }
+      }catch(_e){}
+      return _prevRenderMamChart.apply(this, arguments);
+    };
+    window.renderMamChart.__ampmStableFinalV1 = true;
+  }
+
+  if(window.ResizeObserver && !window.__ampmStableFinalResizeObserver){
+    try{
+      var ro = new ResizeObserver(function(){
+        queueStableRefresh(activeTab(), false);
+      });
+      var mainA = document.querySelector('.ampm-main');
+      var mainB = document.querySelector('.ampm-mainInner');
+      if(mainA) ro.observe(mainA);
+      if(mainB) ro.observe(mainB);
+      window.__ampmStableFinalResizeObserver = ro;
+    }catch(_e){}
+  }
+
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = String(ev && ev.detail && ev.detail.tab || activeTab() || '').trim();
+      queueStableRefresh(tab, true);
+    }catch(_e){}
+  });
+
+  window.addEventListener('load', function(){
+    queueStableRefresh(activeTab(), true);
+  }, { once:true });
+
+  window.addEventListener('resize', function(){
+    queueStableRefresh(activeTab(), false);
+  }, { passive:true });
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      queueStableRefresh(activeTab(), false);
+    }
+  });
+
+  document.addEventListener('click', function(ev){
+    try{
+      var btn = ev.target && ev.target.closest ? ev.target.closest('#ampmStoreFloatingApply, #refresh, .tabBtn[data-tab], #applyFilters, .applyBtn') : null;
+      if(!btn) return;
+      setTimeout(function(){ queueStableRefresh(activeTab(), true); }, 60);
+    }catch(_e){}
+  }, true);
 })();
 </script>
 
