@@ -57551,4 +57551,353 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
+
+<script id="ampm-forensic-chart-stability-patch-v1">
+(function(){
+  if(window.__ampmForensicChartStabilityPatchV1) return;
+  window.__ampmForensicChartStabilityPatchV1 = true;
+
+  try{
+    window.AMPM_RUNTIME = window.AMPM_RUNTIME || {};
+    window.AMPM_RUNTIME.chartRefreshDelays = [];
+    window.AMPM_RUNTIME.fitTablesDelay = 90;
+  }catch(_e){}
+
+  var core = window.__ampmRenderCore = window.__ampmRenderCore || {
+    isApplyingFilters:false,
+    isSwitchingTab:false,
+    refreshScheduled:false,
+    layoutUpdateScheduled:false,
+    isSidebarTransitioning:false,
+    chartsInitialized:false,
+    lastUserGestureAt:0,
+    suppressNoiseUntil:0,
+    lastFilterSig:'',
+    lastFilterAt:0,
+    filterRunning:false,
+    filterPending:false,
+    filterPendingArgs:null,
+    pendingTab:'',
+    pendingForce:false,
+    tabRaf:0,
+    layoutRaf:0,
+    titleTimer:0,
+    tableTimer:0,
+    switchTimer:0,
+    applyTimer:0,
+    sidebarToken:0,
+    lastTabRunKey:'',
+    lastTabRunAt:0,
+    lastLayoutKey:'',
+    lastLayoutAt:0
+  };
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function nowMs(){ return Date.now ? Date.now() : +new Date(); }
+  function activeTab(){
+    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen') || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function selectedValues(sel){
+    try{
+      return Array.from((sel && sel.selectedOptions) || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function filterSig(){
+    try{
+      var currentYm = txt(document.getElementById('currentMonth')?.value || '');
+      var prev = selectedValues(document.getElementById('prevMonths')).join('|');
+      var stores = selectedValues(document.getElementById('stores')).join('|');
+      var dow = txt((typeof window.getGlobalDowFilter === 'function') ? window.getGlobalDowFilter() : (document.getElementById('dowFilter')?.value || ''));
+      var mode = txt((window.state && window.state.reportMode) || '');
+      return [currentYm, prev, stores, dow, mode].join('||');
+    }catch(_e){ return ''; }
+  }
+  function noteUserGesture(){
+    core.lastUserGestureAt = nowMs();
+  }
+  function markSwitching(){
+    core.isSwitchingTab = true;
+    try{ clearTimeout(core.switchTimer); }catch(_e){}
+    core.switchTimer = setTimeout(function(){ core.isSwitchingTab = false; }, 260);
+  }
+  function markApplying(){
+    core.isApplyingFilters = true;
+    try{ clearTimeout(core.applyTimer); }catch(_e){}
+    core.applyTimer = setTimeout(function(){ core.isApplyingFilters = false; }, 700);
+  }
+  function suppressNoise(ms){
+    core.suppressNoiseUntil = Math.max(Number(core.suppressNoiseUntil || 0), nowMs() + Math.max(0, Number(ms || 0) || 0));
+  }
+  function shouldSuppressNoise(){
+    var t = nowMs();
+    if(t >= Number(core.suppressNoiseUntil || 0)) return false;
+    if(core.isApplyingFilters || core.isSwitchingTab || core.isSidebarTransitioning) return false;
+    return (t - Number(core.lastUserGestureAt || 0)) > 140;
+  }
+  function isVisibleElement(el){
+    try{
+      if(!el) return false;
+      var st = window.getComputedStyle ? getComputedStyle(el) : null;
+      if(st && (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity || 1) === 0)) return false;
+      var r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if(!r) return false;
+      return r.width > 10 && r.height > 10;
+    }catch(_e){ return false; }
+  }
+  function chartFromCanvas(canvas){
+    try{
+      if(!canvas || !window.Chart) return null;
+      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
+      var instances = Chart.instances || {};
+      var keys = Object.keys(instances);
+      for(var i=0;i<keys.length;i++){
+        var ch = instances[keys[i]];
+        if(ch && ch.canvas === canvas) return ch;
+      }
+    }catch(_e){}
+    return null;
+  }
+  function visibleCanvasesForTab(tab){
+    var safeTab = txt(tab || activeTab()) || 'resumen';
+    try{
+      var page = document.querySelector('[data-tabpage="' + safeTab + '"]');
+      if(!page) return [];
+      return Array.from(page.querySelectorAll('canvas')).filter(isVisibleElement);
+    }catch(_e){ return []; }
+  }
+  function resizeVisibleChartInstances(tab){
+    var list = visibleCanvasesForTab(tab);
+    for(var i=0;i<list.length;i++){
+      try{
+        var ch = chartFromCanvas(list[i]);
+        if(!ch) continue;
+        if(typeof ch.resize === 'function') ch.resize();
+        if(typeof ch.update === 'function') ch.update('none');
+      }catch(_e){}
+    }
+  }
+  function hasMissingVisibleCharts(tab){
+    try{
+      if(typeof window.tabHasMissingCharts === 'function') return !!window.tabHasMissingCharts(txt(tab || activeTab()));
+      var list = visibleCanvasesForTab(tab);
+      for(var i=0;i<list.length;i++){
+        if(!chartFromCanvas(list[i])) return true;
+      }
+    }catch(_e){}
+    return false;
+  }
+
+  var baseRefreshAll = (typeof window.refreshAll === 'function') ? window.refreshAll : null;
+  var baseRefreshVisible = (typeof window.refreshVisibleTabCharts === 'function') ? window.refreshVisibleTabCharts : null;
+  var baseResizeCharts = (typeof window.resizeCharts === 'function') ? window.resizeCharts : null;
+  var baseUpdateTitles = (typeof window.updateAllChartTitles === 'function') ? window.updateAllChartTitles : null;
+  var baseFitTables = (typeof window.scheduleFitTables === 'function') ? window.scheduleFitTables : null;
+
+  function queueTitles(){
+    try{ clearTimeout(core.titleTimer); }catch(_e){}
+    core.titleTimer = setTimeout(function(){
+      try{
+        if(typeof baseUpdateTitles === 'function') baseUpdateTitles.call(window);
+      }catch(_e){}
+    }, 80);
+  }
+  function queueTables(){
+    try{ clearTimeout(core.tableTimer); }catch(_e){}
+    core.tableTimer = setTimeout(function(){
+      try{
+        if(typeof baseFitTables === 'function') baseFitTables.call(window);
+      }catch(_e){}
+    }, 90);
+  }
+  function queueLayout(tab, meta){
+    var safeTab = txt(tab || activeTab()) || 'resumen';
+    if(core.isSidebarTransitioning && !(meta && meta.allowDuringSidebar)) return;
+    core.layoutUpdateScheduled = true;
+    core.pendingLayoutTab = safeTab;
+    if(core.layoutRaf) return;
+    core.layoutRaf = requestAnimationFrame(function(){
+      core.layoutRaf = 0;
+      var targetTab = txt(core.pendingLayoutTab || safeTab) || 'resumen';
+      core.pendingLayoutTab = '';
+      core.layoutUpdateScheduled = false;
+      var key = targetTab + '|' + filterSig();
+      var t = nowMs();
+      if(key === core.lastLayoutKey && (t - Number(core.lastLayoutAt || 0)) < 90) return;
+      core.lastLayoutKey = key;
+      core.lastLayoutAt = t;
+      try{ resizeVisibleChartInstances(targetTab); }catch(_e){}
+      try{
+        if(typeof baseResizeCharts === 'function' && !shouldSuppressNoise()){
+          baseResizeCharts.call(window);
+        }
+      }catch(_e){}
+      queueTitles();
+      queueTables();
+    });
+  }
+
+  function queueVisibleRefresh(tab, forceRebuild, source){
+    var safeTab = txt(tab || activeTab()) || 'resumen';
+    if(!safeTab) return;
+    if(shouldSuppressNoise() && !forceRebuild) return;
+    if(core.isSidebarTransitioning && !forceRebuild){
+      queueLayout(safeTab, { reason:'sidebar-soft' });
+      return;
+    }
+    core.refreshScheduled = true;
+    core.pendingTab = safeTab;
+    core.pendingForce = !!core.pendingForce || !!forceRebuild;
+    if(core.tabRaf) return;
+    core.tabRaf = requestAnimationFrame(function(){
+      core.tabRaf = 0;
+      var runTab = txt(core.pendingTab || safeTab) || 'resumen';
+      var runForce = !!core.pendingForce;
+      core.pendingTab = '';
+      core.pendingForce = false;
+      core.refreshScheduled = false;
+
+      var key = runTab + '|' + filterSig() + '|' + (runForce ? '1' : '0');
+      var t = nowMs();
+      if(!runForce && key === core.lastTabRunKey && (t - Number(core.lastTabRunAt || 0)) < 140){
+        queueLayout(runTab, { reason:'refresh-dedupe' });
+        return;
+      }
+      core.lastTabRunKey = key;
+      core.lastTabRunAt = t;
+
+      try{
+        var mustRebuild = !!runForce || hasMissingVisibleCharts(runTab);
+        if(mustRebuild && typeof baseRefreshVisible === 'function'){
+          baseRefreshVisible.call(window, runTab, true);
+        }else{
+          resizeVisibleChartInstances(runTab);
+        }
+      }catch(e){
+        try{ console.warn('ampm forensic visible refresh failed', runTab, e); }catch(_e){}
+      }
+
+      requestAnimationFrame(function(){ queueLayout(runTab, { reason:source || 'visible-refresh', allowDuringSidebar:false }); });
+    });
+  }
+
+  function wrappedRefreshAll(){
+    noteUserGesture();
+    markApplying();
+    var sig = filterSig();
+    var t = nowMs();
+
+    if(core.filterRunning){
+      core.filterPending = true;
+      core.filterPendingArgs = Array.prototype.slice.call(arguments);
+      return;
+    }
+    if(sig === core.lastFilterSig && (t - Number(core.lastFilterAt || 0)) < 120){
+      return;
+    }
+
+    core.filterRunning = true;
+    core.lastFilterSig = sig;
+    core.lastFilterAt = t;
+
+    try{
+      if(typeof baseRefreshAll === 'function'){
+        return baseRefreshAll.apply(window, arguments);
+      }
+    } finally {
+      core.filterRunning = false;
+      requestAnimationFrame(function(){ queueLayout(activeTab(), { reason:'after-refreshAll' }); });
+      if(core.filterPending){
+        var args = core.filterPendingArgs || [];
+        core.filterPending = false;
+        core.filterPendingArgs = null;
+        requestAnimationFrame(function(){ try{ wrappedRefreshAll.apply(window, args); }catch(_e){} });
+      }
+    }
+  }
+
+  window.refreshAll = wrappedRefreshAll;
+  window.refreshVisibleTabCharts = function(tab, forceRebuild){
+    queueVisibleRefresh(tab, !!forceRebuild, 'refreshVisibleTabCharts');
+  };
+  window.scheduleVisibleChartRefresh = function(tab, forceRebuild){
+    queueVisibleRefresh(tab, !!forceRebuild, 'scheduleVisibleChartRefresh');
+  };
+  window.scheduleSettledFullRefresh = window.scheduleVisibleChartRefresh;
+  window.resizeCharts = function(){
+    if(shouldSuppressNoise()) return;
+    queueLayout(activeTab(), { reason:'resizeCharts' });
+  };
+  window.updateAllChartTitles = function(){
+    if(shouldSuppressNoise()) return;
+    queueTitles();
+  };
+  window.scheduleFitTables = function(){
+    if(shouldSuppressNoise()) return;
+    queueTables();
+  };
+
+  window.addEventListener('focus', function(){
+    suppressNoise(280);
+  }, true);
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      suppressNoise(420);
+    }
+  }, true);
+
+  document.addEventListener('pointerdown', noteUserGesture, true);
+  document.addEventListener('keydown', noteUserGesture, true);
+
+  document.addEventListener('click', function(ev){
+    var target = ev.target && ev.target.closest ? ev.target.closest('#ampmSidebarToggle, .tabBtn[data-tab], #refresh, #ampmStoreFloatingApply') : null;
+    if(!target) return;
+    noteUserGesture();
+
+    if(target.matches('.tabBtn[data-tab]')){
+      markSwitching();
+      requestAnimationFrame(function(){ queueVisibleRefresh(txt(target.getAttribute('data-tab') || activeTab()), false, 'tab-click'); });
+      return;
+    }
+
+    if(target.matches('#refresh') || target.matches('#ampmStoreFloatingApply')){
+      markApplying();
+      return;
+    }
+
+    if(target.matches('#ampmSidebarToggle')){
+      core.isSidebarTransitioning = true;
+      core.sidebarToken = Number(core.sidebarToken || 0) + 1;
+      var token = core.sidebarToken;
+      suppressNoise(260);
+      setTimeout(function(){
+        if(Number(core.sidebarToken || 0) !== token) return;
+        core.isSidebarTransitioning = false;
+        queueLayout(activeTab(), { reason:'sidebar-settle', allowDuringSidebar:true });
+        queueVisibleRefresh(activeTab(), false, 'sidebar-settle');
+      }, 260);
+    }
+  }, true);
+
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = txt(ev && ev.detail && ev.detail.tab) || activeTab();
+      markSwitching();
+      queueVisibleRefresh(tab, false, 'ampm:tabshown');
+    }catch(_e){}
+  });
+
+  window.addEventListener('resize', function(){
+    if(core.isSidebarTransitioning) return;
+    queueLayout(activeTab(), { reason:'window-resize' });
+  }, { passive:true, capture:true });
+
+  requestAnimationFrame(function(){
+    core.chartsInitialized = true;
+    queueLayout(activeTab(), { reason:'boot', allowDuringSidebar:true });
+  });
+})();
+</script>
+
 </html>
