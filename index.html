@@ -57110,6 +57110,96 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-store-filter-hard-refresh-v11">
+(function(){
+  function _safeTab(){
+    try{ return String((typeof getActiveAmpmTab === 'function' ? getActiveAmpmTab() : (document.querySelector('.tabBtn.active')?.dataset?.tab || '')) || '').trim().toLowerCase(); }catch(e){ return ''; }
+  }
+  function _safeStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function'){
+        return (getSelectedStoresOrAll() || []).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean);
+      }
+    }catch(e){}
+    try{ return (state && Array.isArray(state.stores) ? state.stores : []).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean); }catch(e){}
+    return [];
+  }
+  function _safeDow(){
+    try{ return String((typeof getGlobalDowFilter === 'function' ? getGlobalDowFilter() : '__ALL__') || '__ALL__').trim(); }catch(e){ return '__ALL__'; }
+  }
+  function _storeSig(){
+    var stores = _safeStores().slice().sort().join('|');
+    return stores + '||' + _safeDow();
+  }
+  function _markDirty(tab){
+    try{ if(typeof markTabsDirty === 'function') markTabsDirty(tab); }catch(e){}
+    try{ if(state && state._lastChartRenderSig) state._lastChartRenderSig[String(tab || '').trim()] = ''; }catch(e){}
+    try{ if(state && state._lastRenderedTabSig) state._lastRenderedTabSig[String(tab || '').trim()] = ''; }catch(e){}
+  }
+  function _hardRefreshActiveTab(reason){
+    var tab = _safeTab();
+    if(!tab) return;
+    _markDirty(tab);
+    var run = function(){
+      try{
+        if(tab === 'innovacion'){
+          try{
+            if(typeof renderInnovationCharts === 'function') renderInnovationCharts(_safeStores());
+          }catch(e){ console.warn('v11 innovation hard refresh failed', reason, e); }
+        }
+        if(typeof refreshVisibleTabCharts === 'function'){
+          try{ refreshVisibleTabCharts(tab, true); }catch(e){ console.warn('v11 refreshVisibleTabCharts failed', tab, reason, e); }
+        }else if(typeof scheduleVisibleChartRefresh === 'function'){
+          try{ scheduleVisibleChartRefresh(tab); }catch(e){ console.warn('v11 scheduleVisibleChartRefresh failed', tab, reason, e); }
+        }
+        try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(e){}
+        try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(e){}
+      }catch(e){ console.warn('v11 hard refresh run failed', tab, reason, e); }
+    };
+    [0, 120, 360, 720].forEach(function(ms){ setTimeout(run, ms); });
+  }
+  function _wrapRefreshAll(){
+    if(typeof window.refreshAll !== 'function' || window.refreshAll.__ampmStoreHardRefreshV11) return;
+    var _base = window.refreshAll;
+    window.refreshAll = function(){
+      var prevSig = String(window.__ampmLastStoreFilterSig || '');
+      var out = _base.apply(this, arguments);
+      var nextSig = _storeSig();
+      var tab = _safeTab();
+      var triggerTabs = ['ventas','delivery','innovacion','sbf','onepager'];
+      if(prevSig !== nextSig && triggerTabs.indexOf(tab) >= 0){
+        _hardRefreshActiveTab('store-filter-change');
+      }
+      window.__ampmLastStoreFilterSig = nextSig;
+      return out;
+    };
+    window.refreshAll.__ampmStoreHardRefreshV11 = true;
+  }
+  function _bindStoreSelectors(){
+    try{
+      var storeSel = document.getElementById('stores');
+      if(storeSel && !storeSel.__ampmStoreHardRefreshV11){
+        storeSel.addEventListener('change', function(){
+          window.__ampmPendingStoreFilterSig = _storeSig();
+        });
+        storeSel.__ampmStoreHardRefreshV11 = true;
+      }
+    }catch(e){}
+  }
+  function _bootstrap(){
+    try{ window.__ampmLastStoreFilterSig = _storeSig(); }catch(e){}
+    _wrapRefreshAll();
+    _bindStoreSelectors();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bootstrap, {once:true});
+  }else{
+    _bootstrap();
+  }
+})();
+</script>
+
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
