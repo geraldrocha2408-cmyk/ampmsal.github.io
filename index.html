@@ -25066,15 +25066,11 @@ const options = {
 
     function buildMap(rows, dimGetter, valGetter, storeSet, filterFn=null){
       const map = new Map();
-      const normalizedStoreSet = storeSet
-        ? new Set(Array.from(storeSet).map(v => String(v ?? '').trim().toUpperCase()).filter(Boolean))
-        : null;
       rows.forEach(r => {
-        const rowStore = String(r?.store ?? '').trim().toUpperCase();
-        if (normalizedStoreSet && !normalizedStoreSet.has(rowStore)) return;
+        if (storeSet && !storeSet.has(r.store)) return;
         if (filterFn && !filterFn(r)) return;
-        const dim = String(dimGetter(r) ?? '').trim() || '(Sin dato)';
-        const ym = String(r?.ym ?? '').trim();
+        const dim = (dimGetter(r) || '').trim() || '(Sin dato)';
+        const ym = r.ym;
         if (!ym) return;
         const val = Number(valGetter(r) ?? 0) || 0;
         if (!map.has(dim)) map.set(dim, new Map());
@@ -27092,9 +27088,7 @@ renderShareTable({
     function applyStoreQuickSelection(values){
       const sel = el('stores');
       if(!sel) return;
-      const all = Array.from(sel.options || []).map(o=>String(o.value||'').trim()).filter(Boolean);
-      const wantedList = Array.isArray(values) && values.length ? values : all;
-      const wanted = new Set(wantedList.map(v=>String(v).trim()).filter(Boolean));
+      const wanted = new Set((values || []).map(v=>String(v).trim()));
       Array.from(sel.options || []).forEach(o=>{ o.selected = wanted.has(String(o.value||'').trim()); });
       renderStoreQuick();
       sel.dispatchEvent(new Event('change', {bubbles:true}));
@@ -37015,6 +37009,10 @@ function initAmpmTabPages(){
   }
 
   function deptTrendAggregateRows(tab, storeList){
+    if(!deptTrendHasActiveXf(tab)){
+      const helper = deptTrendAggregateFromHelpers(tab, storeList);
+      if(helper && helper.periods && helper.periods.length) return helper;
+    }
     return deptTrendAggregateRowsLegacy(tab, storeList);
   }
 
@@ -37104,6 +37102,10 @@ function initAmpmTabPages(){
   }
 
   function deptTrendDeliveryBreakdownMap(storeList){
+    if(!deptTrendHasActiveXf('delivery')){
+      const helper = deptTrendDeliveryBreakdownMapFromHelpers(storeList);
+      if(helper) return helper;
+    }
     return deptTrendDeliveryBreakdownMapLegacy(storeList);
   }
 
@@ -37178,6 +37180,10 @@ function initAmpmTabPages(){
   }
 
   function deptTrendOverallSalesMap(tab, storeList){
+    if(!deptTrendHasActiveXf(tab)){
+      const helper = deptTrendOverallSalesMapFromHelpers(storeList);
+      if(helper) return helper;
+    }
     return deptTrendOverallSalesMapLegacy(tab, storeList);
   }
 
@@ -56655,7 +56661,7 @@ function innovationOnePagerCreateBrandedShell(){
 }
 </style>
 <script id="ampm-sidebar-static-script-v3-disabled">/* disabled by forensic cleanup */</script>
-<script type="application/disabled" id="ampm-floating-store-filter-v17-disabled">(function(){
+<script id="ampm-floating-store-filter-v17">(function(){
   if(window.__ampmFloatingStoreFilterV17) return;
   window.__ampmFloatingStoreFilterV17 = true;
   function el(id){ return document.getElementById(id); }
@@ -57432,7 +57438,7 @@ function innovationOnePagerCreateBrandedShell(){
 </script>
 
 
-<script type="application/disabled" id="ampm-floating-store-hardfix-v18-disabled">
+<script id="ampm-floating-store-hardfix-v18">
 (function(){
   if(window.__ampmFloatingStoreHardfixV18) return;
   window.__ampmFloatingStoreHardfixV18 = true;
@@ -57626,7 +57632,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 </html>
-<script type="application/disabled" id="ampm-store-apply-single-pipeline-v19-disabled">
+<script id="ampm-store-apply-single-pipeline-v19">
 (function(){
   if(window.__ampmStoreApplySinglePipelineV19) return;
   window.__ampmStoreApplySinglePipelineV19 = true;
@@ -57754,239 +57760,240 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 </script>
 
 
-<script id="ampm-floating-store-pipeline-clean-v20">
+<script id="ampm-store-authority-hotfix-v20">
 (function(){
-  if(window.__ampmFloatingStorePipelineCleanV20) return;
-  window.__ampmFloatingStorePipelineCleanV20 = true;
+  if(window.__ampmStoreAuthorityHotfixV20) return;
+  window.__ampmStoreAuthorityHotfixV20 = true;
 
   function byId(id){ return document.getElementById(id); }
   function txt(v){ return String(v == null ? '' : v).trim(); }
   function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
-  function getStoreSelect(){ return byId('stores'); }
-  function allStoreValues(){
-    var sel = getStoreSelect();
-    return Array.from((sel && sel.options) || []).map(function(opt){ return txt(opt.value || opt.textContent); }).filter(Boolean);
+  function allStores(){
+    try{
+      var sel = byId('stores');
+      var vals = Array.from((sel && sel.options) || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+      if(vals.length) return uniq(vals);
+    }catch(_e){}
+    try{ return uniq((window.state && Array.isArray(state.stores)) ? state.stores.slice() : []); }catch(_e){ return []; }
   }
-  function rawSelectedStoreValues(){
-    var sel = getStoreSelect();
-    return Array.from((sel && sel.selectedOptions) || []).map(function(opt){ return txt(opt.value || opt.textContent); }).filter(Boolean);
-  }
-  function appliedStoreValues(){
-    var all = allStoreValues();
-    var picked = rawSelectedStoreValues();
-    return picked.length ? uniq(picked) : all;
-  }
-  function normalizeStoreValues(values){
-    var all = allStoreValues();
-    var lookup = new Map(all.map(function(v){ return [v.toUpperCase(), v]; }));
-    var out = [];
-    uniq(values).forEach(function(v){
-      var key = txt(v).toUpperCase();
-      if(lookup.has(key)) out.push(lookup.get(key));
+  function normalizeStoreList(list){
+    var vals = uniq(list);
+    var all = allStores();
+    if(!vals.length) return all.slice();
+    var allSet = new Set(all.map(function(v){ return txt(v).toUpperCase(); }));
+    var wantsAll = vals.some(function(v){
+      var s = txt(v).toUpperCase();
+      return s === 'ALL' || s === '__ALL__' || s === '(ALL)' || s === 'TODAS' || s === 'TODOS';
     });
-    if(!out.length) return all.slice();
-    return all.filter(function(v){ return out.indexOf(v) >= 0; });
-  }
-  function ensureExplicitAllSelection(){
-    var sel = getStoreSelect();
-    if(!sel) return [];
-    var all = allStoreValues();
-    var picked = rawSelectedStoreValues();
-    if(all.length && !picked.length){
-      Array.from(sel.options || []).forEach(function(opt){ opt.selected = true; });
-      picked = all.slice();
+    if(wantsAll) return all.slice();
+    if(all.length){
+      vals = vals.filter(function(v){ return allSet.has(txt(v).toUpperCase()); });
     }
-    return picked.length ? picked : all;
+    return vals.length ? vals : all.slice();
   }
-  function setMainStoreSelection(values, emitChange){
-    var sel = getStoreSelect();
-    if(!sel) return [];
-    var wanted = new Set(normalizeStoreValues(values));
-    Array.from(sel.options || []).forEach(function(opt){
-      var val = txt(opt.value || opt.textContent);
-      opt.selected = wanted.has(val);
-    });
-    var selected = rawSelectedStoreValues();
-    if(!selected.length){
-      Array.from(sel.options || []).forEach(function(opt){ opt.selected = true; });
-      selected = rawSelectedStoreValues();
-    }
-    if(emitChange !== false){
-      try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
-    }
-    return selected;
+  function readDomStores(){
+    try{
+      var sel = byId('stores');
+      if(!sel) return [];
+      var picked = Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+      return normalizeStoreList(picked);
+    }catch(_e){ return normalizeStoreList([]); }
   }
-  function getDraftStores(){
-    var draft = window.__ampmFloatingStoreDraftValues;
-    return Array.isArray(draft) && draft.length ? normalizeStoreValues(draft) : appliedStoreValues();
+  function getAppliedStores(){
+    try{
+      var cached = (window.state && Array.isArray(state._appliedStores)) ? state._appliedStores.slice() : [];
+      if(cached.length) return normalizeStoreList(cached);
+    }catch(_e){}
+    return readDomStores();
   }
-  function setDraftStores(values){
-    window.__ampmFloatingStoreDraftValues = normalizeStoreValues(values);
+  function domMatches(list){
+    try{
+      var sel = byId('stores');
+      if(!sel) return false;
+      var cur = Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+      var want = normalizeStoreList(list);
+      var a = uniq(cur).join('||');
+      var b = uniq(want).join('||');
+      return a === b;
+    }catch(_e){ return false; }
   }
-  function labelForValues(values){
-    var all = allStoreValues();
-    var picked = normalizeStoreValues(values);
+  function syncDomStores(list, fireChange){
+    try{
+      var sel = byId('stores');
+      if(!sel) return normalizeStoreList(list);
+      var want = new Set(normalizeStoreList(list));
+      Array.from(sel.options || []).forEach(function(opt){
+        var v = txt(opt.value || opt.textContent);
+        opt.selected = want.has(v);
+      });
+      if(fireChange){
+        try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
+      }
+    }catch(_e){}
+    return normalizeStoreList(list);
+  }
+  function setAppliedStores(list, opts){
+    opts = opts || {};
+    var normalized = normalizeStoreList(list);
+    try{ if(window.state) state._appliedStores = normalized.slice(); }catch(_e){}
+    if(opts.syncDom){ syncDomStores(normalized, !!opts.fireChange); }
+    return normalized;
+  }
+  function renderFloatingLabel(){
+    try{
+      var labelEl = byId('ampmStoreFloatingLabel');
+      if(labelEl){
+        var all = allStores();
+        var stores = getAppliedStores();
+        labelEl.textContent = (!all.length || !stores.length || stores.length === all.length)
+          ? 'ALL'
+          : (stores.length <= 2 ? stores.join(', ') : (stores.slice(0,2).join(', ') + ' +' + (stores.length - 2)));
+      }
+    }catch(_e){}
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+  }
+  function clearStoreScopedCaches(){
+    try{ if(window.state){ state._deptTrendRows = {}; state._deptTrendRowsMeta = null; } }catch(_e){}
+    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._xfSummary = null; } }catch(_e){}
+    try{ if(window.state){ state.chartDeptTrendVentas = {}; state.chartDeptTrendDelivery = {}; } }catch(_e){}
+    try{ if(window.state){ state._lastGlobalRefreshSig = ''; } }catch(_e){}
+    try{ if(typeof window.markTabsDirty === 'function') window.markTabsDirty(['ventas','delivery']); }catch(_e){}
+  }
+
+  var originalGetSelectedStoresOrAll = (typeof window.getSelectedStoresOrAll === 'function') ? window.getSelectedStoresOrAll : null;
+  window.getSelectedStoresOrAll = function(){
+    return getAppliedStores();
+  };
+
+  var originalStoreQuickLabelText = (typeof window.storeQuickLabelText === 'function') ? window.storeQuickLabelText : null;
+  window.storeQuickLabelText = function(){
+    var all = allStores();
+    var picked = getAppliedStores();
     if(!all.length || !picked.length || picked.length === all.length) return 'ALL';
     if(picked.length <= 2) return picked.join(', ');
     return picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
+  };
+
+  window.xfStoreLabel = function(){
+    var all = allStores();
+    var use = getAppliedStores();
+    if(!use.length) return 'Tienda=—';
+    if(!all.length || use.length === all.length) return 'Tienda=ALL';
+    if(use.length <= 3) return 'Tienda=' + use.join(',');
+    return 'Tienda=' + use.slice(0,2).join(',') + ' +' + (use.length - 2);
+  };
+
+  var originalApplyStoreQuickSelection = (typeof window.applyStoreQuickSelection === 'function') ? window.applyStoreQuickSelection : null;
+  window.applyStoreQuickSelection = function(values){
+    var stores = setAppliedStores(values, { syncDom:true, fireChange:true });
+    renderFloatingLabel();
+    return stores;
+  };
+
+  var originalRefreshAll = (typeof window.refreshAll === 'function') ? window.refreshAll : null;
+  if(typeof originalRefreshAll === 'function'){
+    window.refreshAll = function(){
+      var stores = getAppliedStores();
+      if(!domMatches(stores)) syncDomStores(stores, false);
+      try{ if(window.state) state._appliedStores = stores.slice(); }catch(_e){}
+      return originalRefreshAll.apply(this, arguments);
+    };
   }
-  function syncLabels(){
-    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
-    var label = byId('ampmStoreFloatingLabel');
-    if(label) label.textContent = labelForValues(appliedStoreValues());
+
+  if(typeof window.deptTrendAggregateRowsLegacy === 'function'){
+    window.deptTrendAggregateRows = function(tab, storeList){
+      return window.deptTrendAggregateRowsLegacy(tab, Array.isArray(storeList) && storeList.length ? storeList : getAppliedStores());
+    };
   }
-  function renderFloatingMenu(fromDraft){
-    var sel = getStoreSelect();
-    var btn = byId('ampmStoreFloatingBtn');
-    var list = byId('ampmStoreFloatingList');
-    var applyBtn = byId('ampmStoreFloatingApply');
-    if(!sel || !btn || !list) return;
-    var all = allStoreValues();
-    var chosen = new Set((fromDraft ? getDraftStores() : appliedStoreValues()).map(function(v){ return txt(v); }));
-    btn.disabled = !all.length;
-    list.innerHTML = all.map(function(v){
-      var safeVal = v.replace(/"/g, '&quot;');
-      var safeLbl = v.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      var checked = chosen.has(v) ? 'checked' : '';
-      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="' + safeVal + '" ' + checked + '> <span>' + safeLbl + '</span></label>';
-    }).join('');
-    if(applyBtn){
-      var current = appliedStoreValues();
-      var draft = getDraftStores();
-      var changed = current.length !== draft.length || current.some(function(v, i){ return draft[i] !== v; });
-      applyBtn.disabled = !changed;
-    }
-    syncLabels();
+  if(typeof window.deptTrendDeliveryBreakdownMapLegacy === 'function'){
+    window.deptTrendDeliveryBreakdownMap = function(storeList){
+      return window.deptTrendDeliveryBreakdownMapLegacy(Array.isArray(storeList) && storeList.length ? storeList : getAppliedStores());
+    };
   }
-  function setMenuOpen(force){
-    var menu = byId('ampmStoreFloatingMenu');
-    if(!menu) return;
-    var next = (typeof force === 'boolean') ? force : !menu.classList.contains('open');
-    menu.classList.toggle('open', !!next);
-    if(next){
-      setDraftStores(appliedStoreValues());
-      renderFloatingMenu(true);
-    }
+  if(typeof window.deptTrendOverallSalesMapLegacy === 'function'){
+    window.deptTrendOverallSalesMap = function(tab, storeList){
+      return window.deptTrendOverallSalesMapLegacy(tab, Array.isArray(storeList) && storeList.length ? storeList : getAppliedStores());
+    };
   }
-  function clearStoreScopedState(){
+
+  function checkedFloatingStores(){
     try{
-      if(!window.state) return;
-      state._deptTrendRows = {};
-      state._deptTrendRowsMeta = null;
-      state._deliveryStrategyPanelCache = null;
-      state._deliveryStrategyPanelCacheKey = '';
-      state._deliverySplitCache = null;
-      state._deliverySplitCacheKey = '';
-      state._chartLongStoreSig = '';
-      state._xfSummary = null;
-      state.__lastGlobalRefreshSig = '';
-      state.chartDeptTrendVentas = {};
-      state.chartDeptTrendDelivery = {};
-      state._lastRenderedTabSig = Object.assign({}, state._lastRenderedTabSig || {}, { ventas:'', delivery:'' });
-      state._lastChartRenderSig = Object.assign({}, state._lastChartRenderSig || {}, { ventas:'', delivery:'' });
-      if(typeof markTabsDirty === 'function') markTabsDirty(['ventas','delivery']);
-    }catch(_e){}
+      var list = byId('ampmStoreFloatingList');
+      if(!list) return [];
+      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return txt(i.value); }).filter(Boolean);
+    }catch(_e){ return []; }
   }
-  function activeTab(){
-    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || 'resumen') || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function repaintStoreScopedTabs(){
-    var tab = activeTab();
+  function repaintActiveTab(){
+    var stores = getAppliedStores();
+    var tab = txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || '');
     try{
-      if(typeof window.scheduleVisibleChartRefresh === 'function') window.scheduleVisibleChartRefresh(tab);
-    }catch(_e){}
-    if(tab === 'ventas' || tab === 'delivery'){
-      try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab, true); }catch(_e){}
-    }
-    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
-    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
-    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
-  }
-  function applyFloatingSelection(ev){
-    try{ ev && ev.preventDefault && ev.preventDefault(); ev && ev.stopPropagation && ev.stopPropagation(); }catch(_e){}
-    var applied = setMainStoreSelection(getDraftStores(), false);
-    clearStoreScopedState();
-    try{ if(typeof window.markFiltersDirty === 'function') window.markFiltersDirty(false); }catch(_e){}
-    try{
-      var rt = window.__ampmForensicRuntime;
-      if(rt){
-        var ts = Date.now();
-        rt.ignoreFocusUntil = ts + 380;
-        rt.ignoreVisibilityUntil = ts + 380;
-        rt.lastSig = '';
-        rt.lastReason = '';
+      if(tab === 'ventas' && typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores);
+      if(tab === 'delivery' && typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores);
+      if(tab === 'delivery'){
+        if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores);
+        if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores);
+        if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores);
+        if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores);
       }
-    }catch(_e){}
-    try{ setMainStoreSelection(applied, true); }catch(_e){}
-    syncLabels();
-    setMenuOpen(false);
+      if(tab === 'ventas'){
+        if(typeof window.renderMamChart === 'function') window.renderMamChart(stores);
+        if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores);
+        if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores);
+      }
+    }catch(err){ try{ console.warn('v20 repaint error', err); }catch(_e){} }
+    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab || 'ventas', true); }catch(_e){}
+    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
+  }
+  function handleFloatingApply(ev){
+    try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
+    var checked = checkedFloatingStores();
+    var stores = setAppliedStores(checked, { syncDom:true, fireChange:true });
+    clearStoreScopedCaches();
+    renderFloatingLabel();
+    try{ if(typeof window.markFiltersDirty === 'function') window.markFiltersDirty(false); }catch(_e){}
     try{
       if(typeof window.refreshAll === 'function') window.refreshAll();
       else byId('refresh')?.click();
     }catch(_e){}
-    setTimeout(repaintStoreScopedTabs, 100);
-    setTimeout(repaintStoreScopedTabs, 280);
+    setTimeout(repaintActiveTab, 90);
+    setTimeout(repaintActiveTab, 260);
+    try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){}
+    return stores;
   }
-  function bind(){
-    var btn = byId('ampmStoreFloatingBtn');
-    var menu = byId('ampmStoreFloatingMenu');
-    var list = byId('ampmStoreFloatingList');
-    var applyBtn = byId('ampmStoreFloatingApply');
-    var cancelBtn = byId('ampmStoreFloatingCancel');
-    var sel = getStoreSelect();
-    if(!btn || !menu || !list || !applyBtn || !cancelBtn || !sel) return;
-    if(btn.__ampmStorePipelineBound) return;
-    btn.__ampmStorePipelineBound = true;
-
-    ensureExplicitAllSelection();
-    syncLabels();
-    renderFloatingMenu(false);
-
-    btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); setMenuOpen(); });
-    menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
-    list.addEventListener('change', function(){
-      var vals = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(input){ return txt(input.value); }).filter(Boolean);
-      setDraftStores(vals);
-      renderFloatingMenu(true);
-    });
-    menu.querySelectorAll('[data-floating-store-action]').forEach(function(actionBtn){
-      actionBtn.addEventListener('click', function(){
-        var act = txt(actionBtn.getAttribute('data-floating-store-action')).toLowerCase();
-        if(act === 'all' || act === 'none'){
-          setDraftStores(allStoreValues());
-          renderFloatingMenu(true);
-        }
-      });
-    });
-    applyBtn.addEventListener('click', applyFloatingSelection);
-    cancelBtn.addEventListener('click', function(ev){
-      try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
-      setDraftStores(appliedStoreValues());
-      setMenuOpen(false);
-    });
-    document.addEventListener('click', function(){ setMenuOpen(false); });
-    document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') setMenuOpen(false); });
+  function bindFloatingApply(){
+    var btn = byId('ampmStoreFloatingApply');
+    if(!btn) return;
+    var clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.addEventListener('click', handleFloatingApply);
+  }
+  function bindMainStoreSelect(){
+    var sel = byId('stores');
+    if(!sel || sel.__ampmStoreAuthorityBound) return;
+    sel.__ampmStoreAuthorityBound = true;
     sel.addEventListener('change', function(){
-      ensureExplicitAllSelection();
-      syncLabels();
-      if(menu.classList.contains('open')) renderFloatingMenu(true);
-      else renderFloatingMenu(false);
-    });
-    try{
-      var mo = new MutationObserver(function(){
-        ensureExplicitAllSelection();
-        syncLabels();
-        if(menu.classList.contains('open')) renderFloatingMenu(true);
-        else renderFloatingMenu(false);
-      });
-      mo.observe(sel, { childList:true, subtree:true, attributes:true, attributeFilter:['selected'] });
-      sel.__ampmFloatingStoreMutationObserver = mo;
-    }catch(_e){}
+      setAppliedStores(Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean), { syncDom:false });
+      renderFloatingLabel();
+    }, true);
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
-  else bind();
-  window.addEventListener('load', function(){ setTimeout(bind, 80); }, { once:true });
+  function seedAppliedStores(){
+    var stores = normalizeStoreList([]);
+    try{ if(window.state && Array.isArray(state._appliedStores) && state._appliedStores.length) stores = normalizeStoreList(state._appliedStores); else stores = readDomStores(); }catch(_e){ stores = readDomStores(); }
+    setAppliedStores(stores, { syncDom:true, fireChange:false });
+    renderFloatingLabel();
+  }
+  function boot(){
+    bindMainStoreSelect();
+    bindFloatingApply();
+    seedAppliedStores();
+    setTimeout(seedAppliedStores, 120);
+    setTimeout(bindFloatingApply, 180);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
+  window.addEventListener('load', function(){ setTimeout(boot, 120); }, { once:true });
 })();
 </script>
-
