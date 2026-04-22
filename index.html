@@ -5948,11 +5948,12 @@ body{
       return map[k] || k;
     }
     function xfStoreLabel(){
-      const all = Array.isArray(state.stores) ? state.stores : [];
-      const sel = getSelectedValues(el('stores'));
-      const use = sel.length ? sel : all;
+      const all = (Array.isArray(state.stores) ? state.stores : []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
+      const use = (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : all)
+        .map(s=>String(s||'').trim().toUpperCase())
+        .filter(Boolean);
       if(!use.length) return 'Tienda=—';
-      if(!sel.length || sel.length === all.length) return 'Tienda=ALL';
+      if(!all.length || use.length === all.length) return 'Tienda=ALL';
       if(use.length <= 3) return `Tienda=${use.join(',')}`;
       return `Tienda=${use.slice(0,2).join(',')} +${use.length-2}`;
     }
@@ -11588,7 +11589,9 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
 
       const currentYm = el('currentMonth').value;
       const prevYms = getSelectedValues(el('prevMonths'));
-      const selectedStores = getSelectedValues(el('stores'));
+      const selectedStores = (typeof getSelectedStoresOrAll === 'function')
+        ? getSelectedStoresOrAll()
+        : getSelectedValues(el('stores'));
       const storeList = selectedStores.length ? selectedStores : state.stores;
       const channels = state.channels.length ? state.channels : ["Pedido, YA","Uber, Eats"];
       const delMode = state.deliveryMode || 'TOTAL';
@@ -15297,8 +15300,12 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
     function fmtWeekLabel(k){ return String(k||'—').replace('-W','-S'); }
 
     function getSelectedStoresOrAll(){
-      const selectedStores = getSelectedValues(el('stores'));
-      return selectedStores.length ? selectedStores : (state.stores || []);
+      const sel = el('stores');
+      const selectedStores = (sel ? getSelectedValues(sel) : []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
+      const appliedStores = (Array.isArray(state._appliedStores) ? state._appliedStores : []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
+      const allStores = (state.stores || []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
+      const effective = selectedStores.length ? selectedStores : (appliedStores.length ? appliedStores : allStores);
+      return Array.from(new Set(effective));
     }
 
     function prd0GetStrictSelectedStores(){
@@ -26060,13 +26067,29 @@ function refreshExtraTables(currentYm, prevYms, storeList, scope){
 
       try{
         const storeKeyOk = (r)=> storeSet.has(String(r?.store || '').trim().toUpperCase());
+        const scopedStores = Array.from(storeSet).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean).sort();
+        const prevSig = (Array.isArray(prevYms) ? prevYms.slice() : []).map(v=>String(v||'').trim()).filter(Boolean).join('|');
+        const dowSig = String(state.dowFilter || '__ALL__').trim();
+        const deliveryModeSig = String(state.deliveryMode || 'TOTAL').trim().toUpperCase();
         state._deptTrendRows = state._deptTrendRows || {};
+        state._deptTrendRowsMeta = state._deptTrendRowsMeta || {};
         state._deptTrendRows.ventas = salesRowsVentas.filter(storeKeyOk);
         state._deptTrendRows.delivery = salesRowsDelivery.filter(r => storeKeyOk(r) && deliveryRowOk(r));
-        state._deptTrendRowsMeta = {
-          currentYm: currentYm || '',
-          prevYms: Array.isArray(prevYms) ? prevYms.slice() : [],
-          stores: Array.isArray(stores) ? stores.slice() : []
+        state._deptTrendRowsMeta.ventas = {
+          currentYm: String(currentYm || '').trim(),
+          prevSig,
+          stores: scopedStores.slice(),
+          dowFilter: dowSig,
+          deliveryMode: deliveryModeSig,
+          xfSig: JSON.stringify(state.xf?.ventas || {})
+        };
+        state._deptTrendRowsMeta.delivery = {
+          currentYm: String(currentYm || '').trim(),
+          prevSig,
+          stores: scopedStores.slice(),
+          dowFilter: dowSig,
+          deliveryMode: deliveryModeSig,
+          xfSig: JSON.stringify(state.xf?.delivery || {})
         };
       }catch(e){}
 
@@ -27060,10 +27083,10 @@ renderShareTable({
     }
 
     function storeQuickLabelText(){
-      const sel = el('stores');
-      if(!sel) return 'ALL';
-      const all = Array.from(sel.options || []).map(o=>String(o.value||'').trim()).filter(Boolean);
-      const picked = getSelectedValues(sel).map(v=>String(v).trim()).filter(Boolean);
+      const all = (state.stores || []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
+      const picked = (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : all)
+        .map(v=>String(v||'').trim().toUpperCase())
+        .filter(Boolean);
       if(!all.length || !picked.length || picked.length === all.length) return 'ALL';
       if(picked.length <= 2) return picked.join(', ');
       return `${picked.slice(0,2).join(', ')} +${picked.length-2}`;
@@ -36877,7 +36900,23 @@ function initAmpmTabPages(){
     const maps = Object.fromEntries(DEPT_TREND_GROUPS.map(g=>[g.key, new Map()]));
     const presentPeriods = new Set();
 
-    const scopedCache = (state._deptTrendRows && Array.isArray(state._deptTrendRows[tab]) && state._deptTrendRows[tab].length)
+    const requestedStores = Array.from(storeSet).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean).sort();
+    const currentYmKey = String(el('currentMonth')?.value || '').trim();
+    const prevSig = (typeof getSelectedValues === 'function' && typeof el === 'function' && el('prevMonths'))
+      ? getSelectedValues(el('prevMonths')).map(v=>String(v||'').trim()).filter(Boolean).join('|')
+      : '';
+    const meta = (state._deptTrendRowsMeta && state._deptTrendRowsMeta[tab]) ? state._deptTrendRowsMeta[tab] : null;
+    const scopedCacheValid = !!(
+      meta &&
+      Array.isArray(meta.stores) &&
+      JSON.stringify(meta.stores.slice().sort()) === JSON.stringify(requestedStores) &&
+      String(meta.currentYm || '') === currentYmKey &&
+      String(meta.prevSig || '') === prevSig &&
+      String(meta.dowFilter || '__ALL__') === String(state.dowFilter || '__ALL__') &&
+      String(meta.deliveryMode || 'TOTAL') === String(state.deliveryMode || 'TOTAL').trim().toUpperCase() &&
+      String(meta.xfSig || '') === JSON.stringify((state.xf && state.xf[tab]) ? state.xf[tab] : {})
+    );
+    const scopedCache = (scopedCacheValid && state._deptTrendRows && Array.isArray(state._deptTrendRows[tab]) && state._deptTrendRows[tab].length)
       ? state._deptTrendRows[tab]
       : null;
     const rowsSource = scopedCache || (Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows : []);
@@ -56661,131 +56700,7 @@ function innovationOnePagerCreateBrandedShell(){
 }
 </style>
 <script id="ampm-sidebar-static-script-v3-disabled">/* disabled by forensic cleanup */</script>
-<script id="ampm-floating-store-filter-v17">(function(){
-  if(window.__ampmFloatingStoreFilterV17) return;
-  window.__ampmFloatingStoreFilterV17 = true;
-  function el(id){ return document.getElementById(id); }
-  function getStoreSel(){ return el('stores'); }
-  function selectedValues(sel){
-    return Array.from((sel && sel.options) || []).filter(function(o){ return o.selected; }).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
-  }
-  function allValues(sel){
-    return Array.from((sel && sel.options) || []).map(function(o){ return String(o.value || '').trim(); }).filter(Boolean);
-  }
-  function currentLabelText(){
-    try{
-      if(typeof window.storeQuickLabelText === 'function') return window.storeQuickLabelText();
-    }catch(_e){}
-    var sel = getStoreSel();
-    if(!sel) return 'ALL';
-    var all = allValues(sel);
-    var picked = selectedValues(sel);
-    if(!all.length || !picked.length || picked.length === all.length) return 'ALL';
-    if(picked.length <= 2) return picked.join(', ');
-    return picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
-  }
-  function draftValues(){
-    return Array.isArray(window.__ampmStoreDraft) ? window.__ampmStoreDraft.slice() : selectedValues(getStoreSel());
-  }
-  function setDraft(values){
-    window.__ampmStoreDraft = (values || []).map(function(v){ return String(v).trim(); }).filter(Boolean);
-    render(true);
-  }
-  function render(useDraft){
-    var sel = getStoreSel();
-    var btn = el('ampmStoreFloatingBtn');
-    var label = el('ampmStoreFloatingLabel');
-    var list = el('ampmStoreFloatingList');
-    var applyBtn = el('ampmStoreFloatingApply');
-    if(label) label.textContent = currentLabelText();
-    if(!sel || !btn || !list) return;
-    var opts = Array.from(sel.options || []);
-    btn.disabled = !opts.length;
-    var chosen = new Set((useDraft ? draftValues() : selectedValues(sel)).map(function(v){ return String(v).trim(); }));
-    list.innerHTML = opts.map(function(o){
-      var v = String(o.value || '').replace(/"/g, '&quot;');
-      var lbl = String(o.textContent || o.label || o.value || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      var checked = chosen.has(String(o.value || '').trim()) ? 'checked' : '';
-      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="' + v + '" ' + checked + '> <span>' + lbl + '</span></label>';
-    }).join('');
-    if(applyBtn){
-      var current = selectedValues(sel);
-      var draft = draftValues();
-      var changed = current.length !== draft.length || current.some(function(v, i){ return draft[i] !== v; });
-      applyBtn.disabled = !changed;
-    }
-  }
-  function applyDraft(){
-    var sel = getStoreSel();
-    if(!sel) return;
-    var draft = new Set(draftValues());
-    Array.from(sel.options || []).forEach(function(o){ o.selected = draft.has(String(o.value || '').trim()); });
-    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
-    sel.dispatchEvent(new Event('change', {bubbles:true}));
-    var refreshBtn = el('refresh');
-    if(refreshBtn){ try{ refreshBtn.click(); }catch(_e){} }
-    render(false);
-    open(false);
-  }
-  function open(force){
-    var menu = el('ampmStoreFloatingMenu');
-    if(!menu) return;
-    var next = (typeof force === 'boolean') ? force : !menu.classList.contains('open');
-    menu.classList.toggle('open', !!next);
-    if(next){
-      window.__ampmStoreDraft = selectedValues(getStoreSel());
-      render(true);
-    }
-  }
-  function bind(){
-    var btn = el('ampmStoreFloatingBtn');
-    var menu = el('ampmStoreFloatingMenu');
-    var list = el('ampmStoreFloatingList');
-    var sel = getStoreSel();
-    var applyBtn = el('ampmStoreFloatingApply');
-    var cancelBtn = el('ampmStoreFloatingCancel');
-    if(!btn || !menu || !list) return;
-    if(!btn.__bound){
-      btn.__bound = true;
-      btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); open(); });
-      menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
-      list.addEventListener('change', function(){
-        var vals = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return String(i.value || '').trim(); });
-        setDraft(vals);
-      });
-      menu.querySelectorAll('[data-floating-store-action]').forEach(function(b){
-        b.addEventListener('click', function(){
-          var act = b.getAttribute('data-floating-store-action');
-          var values = allValues(getStoreSel());
-          if(act === 'all') setDraft(values);
-          if(act === 'none') setDraft([]);
-        });
-      });
-      if(applyBtn) applyBtn.addEventListener('click', function(){ applyDraft(); });
-      if(cancelBtn) cancelBtn.addEventListener('click', function(){
-        window.__ampmStoreDraft = selectedValues(getStoreSel());
-        open(false);
-      });
-      document.addEventListener('click', function(){ open(false); });
-      document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') open(false); });
-    }
-    if(sel && !sel.__floatingStoreBound){
-      sel.__floatingStoreBound = true;
-      sel.addEventListener('change', function(){ render(false); });
-      try{
-        var mo = new MutationObserver(function(){ render(false); });
-        mo.observe(sel, {childList:true, subtree:true, attributes:true, attributeFilter:['selected']});
-        sel.__floatingStoreObserver = mo;
-      }catch(_e){}
-    }
-    render(false);
-    setTimeout(function(){ render(false); }, 120);
-    setTimeout(function(){ render(false); }, 450);
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, {once:true});
-  else bind();
-  window.addEventListener('load', function(){ setTimeout(function(){ render(false); }, 120); setTimeout(function(){ render(false); }, 500); }, {once:true});
-})();</script>
+<script id="ampm-floating-store-filter-v17">/* disabled by forensic store pipeline cleanup */</script>
 
 <style id="ampm-sidebar-bright-blue-v16">
 .ampm-sidebar{
@@ -57438,166 +57353,8 @@ function innovationOnePagerCreateBrandedShell(){
 </script>
 
 
-<script id="ampm-floating-store-hardfix-v18">
-(function(){
-  if(window.__ampmFloatingStoreHardfixV18) return;
-  window.__ampmFloatingStoreHardfixV18 = true;
+<script id="ampm-floating-store-hardfix-v18">/* disabled by forensic store pipeline cleanup */</script>
 
-  function byId(id){ return document.getElementById(id); }
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
-  function activeTab(){
-    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || 'resumen') || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function selectedStoresFromMainSelect(){
-    try{
-      var sel = byId('stores');
-      if(!sel) return [];
-      return Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function allStores(){
-    try{
-      var sel = byId('stores');
-      if(sel){
-        var vals = Array.from(sel.options || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
-        if(vals.length) return uniq(vals);
-      }
-    }catch(_e){}
-    try{
-      if(window.state && Array.isArray(state.stores) && state.stores.length) return uniq(state.stores.slice());
-    }catch(_e){}
-    return [];
-  }
-  function checkedStoresFromFloating(){
-    try{
-      var list = byId('ampmStoreFloatingList');
-      if(!list) return [];
-      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked'))
-        .map(function(i){ return txt(i.value); })
-        .filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function setMainStoreSelection(values){
-    var sel = byId('stores');
-    if(!sel) return [];
-    var wanted = new Set(uniq(values));
-    Array.from(sel.options || []).forEach(function(o){
-      o.selected = wanted.has(txt(o.value || o.textContent));
-    });
-    try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
-    return selectedStoresFromMainSelect();
-  }
-  function syncStoreLabels(){
-    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
-    try{
-      var label = byId('ampmStoreFloatingLabel');
-      if(label){
-        if(typeof window.storeQuickLabelText === 'function') label.textContent = window.storeQuickLabelText();
-        else{
-          var picked = selectedStoresFromMainSelect();
-          var all = allStores();
-          if(!picked.length || picked.length === all.length) label.textContent = 'ALL';
-          else if(picked.length <= 2) label.textContent = picked.join(', ');
-          else label.textContent = picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
-        }
-      }
-    }catch(_e){}
-  }
-  function clearStoreScopedCaches(){
-    try{ if(window.state){ state._deptTrendRows = {}; state._deptTrendRowsMeta = null; } }catch(_e){}
-    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
-    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
-    try{ if(window.state){ state._chartLongStoreSig = ''; } }catch(_e){}
-    try{ if(window.state){ state._xfSummary = null; } }catch(_e){}
-  }
-  function runVisibleStoreRefresh(stores, pass){
-    var tab = activeTab();
-    try{
-      if(tab === 'delivery'){
-        if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores);
-        if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores);
-        if(typeof window.renderDeliveryShareStoreCards === 'function') window.renderDeliveryShareStoreCards(stores);
-        if(typeof window.renderDeliveryCategoryShareCharts === 'function') window.renderDeliveryCategoryShareCharts(stores);
-        if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores);
-        if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores);
-        if(typeof window.renderDeliveryBubbleChart === 'function') window.renderDeliveryBubbleChart(stores);
-        if(typeof window.renderDeliveryChannel12wChart === 'function') window.renderDeliveryChannel12wChart(stores);
-        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores);
-      }else if(tab === 'ventas'){
-        if(typeof window.renderMamChart === 'function') window.renderMamChart(stores);
-        if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores);
-        if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores);
-        if(typeof window.renderSalesBubbleChart === 'function') window.renderSalesBubbleChart(stores);
-        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores);
-      }else if(tab === 'onepager'){
-        try{
-          var ym = byId('currentMonth')?.value || '';
-          var prev = Array.from((byId('prevMonths')?.selectedOptions || [])).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
-          if(typeof window.renderOnePager === 'function') window.renderOnePager(stores, ym, prev);
-        }catch(_e){}
-      }
-    }catch(err){
-      try{ console.warn('store hardfix visible refresh failed', pass, tab, err); }catch(_e){}
-    }
-    try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab, true); }catch(_e){}
-    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
-    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
-    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
-  }
-  function forceStoreApply(){
-    var next = checkedStoresFromFloating();
-    var selected = setMainStoreSelection(next);
-    var stores = selected.length ? selected : allStores();
-
-    try{ window.__ampmStoreDraft = stores.slice(); }catch(_e){}
-    syncStoreLabels();
-    clearStoreScopedCaches();
-
-    try{
-      var rt = window.__ampmForensicRuntime;
-      if(rt){
-        var ts = Date.now();
-        rt.ignoreFocusUntil = ts + 380;
-        rt.ignoreVisibilityUntil = ts + 380;
-        rt.lastSig = '';
-        rt.lastReason = '';
-      }
-    }catch(_e){}
-
-    try{
-      if(typeof window.refreshAll === 'function') window.refreshAll();
-      else{
-        var btn = byId('refresh');
-        if(btn && typeof btn.click === 'function') btn.click();
-      }
-    }catch(_e){}
-
-    setTimeout(function(){ runVisibleStoreRefresh(stores, 1); }, 80);
-    setTimeout(function(){ runVisibleStoreRefresh(stores, 2); }, 260);
-
-    try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){}
-  }
-  function bind(){
-    var btn = byId('ampmStoreFloatingApply');
-    if(!btn || btn.__ampmStoreHardfixBound) return;
-    var clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.__ampmStoreHardfixBound = true;
-    clone.addEventListener('click', function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      forceStoreApply();
-    });
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
-  else bind();
-  window.addEventListener('load', function(){ setTimeout(bind, 60); }, { once:true });
-})();
-</script>
-
-</body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
@@ -57631,133 +57388,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
-</html>
-<script id="ampm-store-apply-single-pipeline-v19">
-(function(){
-  if(window.__ampmStoreApplySinglePipelineV19) return;
-  window.__ampmStoreApplySinglePipelineV19 = true;
-
-  function byId(id){ return document.getElementById(id); }
-  function txt(v){ return String(v == null ? '' : v).trim(); }
-  function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
-  function activeTab(){
-    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || 'resumen') || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function checkedFloatingStores(){
-    try{
-      var list = byId('ampmStoreFloatingList');
-      if(!list) return [];
-      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return txt(i.value); }).filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function applyToMainSelect(values){
-    var sel = byId('stores');
-    if(!sel) return [];
-    var wanted = new Set(uniq(values));
-    Array.from(sel.options || []).forEach(function(opt){
-      var val = txt(opt.value || opt.textContent);
-      opt.selected = wanted.has(val);
-    });
-    try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
-    return Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
-  }
-  function selectedStores(){
-    try{
-      if(typeof window.getSelectedStoresOrAll === 'function') return uniq(window.getSelectedStoresOrAll() || []);
-    }catch(_e){}
-    var sel = byId('stores');
-    if(!sel) return [];
-    var picked = Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
-    if(picked.length) return uniq(picked);
-    try{ return uniq((window.state && state.stores) ? state.stores.slice() : []); }catch(_e){ return []; }
-  }
-  function syncLabels(){
-    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
-    try{
-      var floatingLabel = byId('ampmStoreFloatingLabel');
-      if(floatingLabel){
-        if(typeof window.storeQuickLabelText === 'function') floatingLabel.textContent = window.storeQuickLabelText();
-        else{
-          var stores = selectedStores();
-          floatingLabel.textContent = !stores.length ? 'ALL' : stores.join(', ');
-        }
-      }
-    }catch(_e){}
-  }
-  function clearCaches(){
-    try{ if(window.state){ state._deptTrendRows = {}; state._deptTrendRowsMeta = null; } }catch(_e){}
-    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
-    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
-    try{ if(window.state){ state._chartLongStoreSig = ''; } }catch(_e){}
-    try{ if(window.state){ state._xfSummary = null; } }catch(_e){}
-    try{ if(window.state){ state.chartDeptTrendVentas = {}; state.chartDeptTrendDelivery = {}; } }catch(_e){}
-    try{ if(window.__ampmForensicRuntime){
-      window.__ampmForensicRuntime.lastSig = '';
-      window.__ampmForensicRuntime.lastReason = '';
-      window.__ampmForensicRuntime.lastRunAt = 0;
-      window.__ampmForensicRuntime.ignoreFocusUntil = Date.now() + 380;
-      window.__ampmForensicRuntime.ignoreVisibilityUntil = Date.now() + 380;
-    } }catch(_e){}
-  }
-  function forceActiveTabRepaint(pass){
-    var tab = activeTab();
-    var stores = selectedStores();
-    try{
-      if(tab === 'delivery'){
-        if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores);
-        if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores);
-        if(typeof window.renderDeliveryShareStoreCards === 'function') window.renderDeliveryShareStoreCards(stores);
-        if(typeof window.renderDeliveryCategoryShareCharts === 'function') window.renderDeliveryCategoryShareCharts(stores);
-        if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores);
-        if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores);
-        if(typeof window.renderDeliveryBubbleChart === 'function') window.renderDeliveryBubbleChart(stores);
-        if(typeof window.renderDeliveryChannel12wChart === 'function') window.renderDeliveryChannel12wChart(stores);
-        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores);
-      }else if(tab === 'ventas'){
-        if(typeof window.renderMamChart === 'function') window.renderMamChart(stores);
-        if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores);
-        if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores);
-        if(typeof window.renderSalesBubbleChart === 'function') window.renderSalesBubbleChart(stores);
-        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores);
-      }
-    }catch(err){ try{ console.warn('v19 store apply repaint failed', pass, err); }catch(_e){} }
-    try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab, true); }catch(_e){}
-    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
-    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
-    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
-  }
-  function closeMenu(){
-    try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){}
-  }
-  function handleApply(ev){
-    try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
-    var checked = checkedFloatingStores();
-    applyToMainSelect(checked);
-    syncLabels();
-    clearCaches();
-    try{ if(typeof window.markFiltersDirty === 'function') window.markFiltersDirty(false); }catch(_e){}
-    try{
-      if(typeof window.refreshAll === 'function') window.refreshAll();
-      else byId('refresh')?.click();
-    }catch(_e){}
-    setTimeout(function(){ forceActiveTabRepaint(1); }, 120);
-    setTimeout(function(){ forceActiveTabRepaint(2); }, 320);
-    closeMenu();
-  }
-  function bind(){
-    var btn = byId('ampmStoreFloatingApply');
-    if(!btn) return;
-    var clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    clone.__ampmStoreApplySinglePipelineBound = true;
-    clone.addEventListener('click', handleApply);
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(bind, 120); }, { once:true });
-  else setTimeout(bind, 120);
-  window.addEventListener('load', function(){ setTimeout(bind, 180); }, { once:true });
-})();
-</script>
+<script id="ampm-store-apply-single-pipeline-v19">/* disabled by forensic store pipeline cleanup */</script>
 
 
 <script id="ampm-store-root-fix-v21">
@@ -57988,3 +57619,273 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   window.addEventListener('load', function(){ setTimeout(boot, 320); }, { once:true });
 })();
 </script>
+
+<script id="ampm-store-root-pipeline-v22">
+(function(){
+  if(window.__ampmStoreRootPipelineV22) return;
+  window.__ampmStoreRootPipelineV22 = true;
+
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function upper(v){ return txt(v).toUpperCase(); }
+  function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
+  function isAllToken(v){
+    var s = upper(v);
+    return s === 'ALL' || s === '__ALL__' || s === '(ALL)' || s === 'TODAS' || s === 'TODOS';
+  }
+  function allStores(){
+    var sel = byId('stores');
+    var vals = [];
+    try{
+      vals = Array.from((sel && sel.options) || []).map(function(o){ return upper(o.value || o.textContent); }).filter(Boolean);
+    }catch(_e){}
+    if(vals.length) return Array.from(new Set(vals));
+    try{
+      return Array.from(new Set(((window.state && Array.isArray(state.stores)) ? state.stores : []).map(upper).filter(Boolean)));
+    }catch(_e){ return []; }
+  }
+  function canonicalStores(list){
+    var master = allStores();
+    var masterSet = new Set(master);
+    var raw = uniq(list).map(upper).filter(Boolean);
+    if(!raw.length || raw.some(isAllToken)) return master.slice();
+    return Array.from(new Set(raw.filter(function(v){ return !master.length || masterSet.has(v); })));
+  }
+  function readMainSelect(){
+    try{
+      var sel = byId('stores');
+      if(!sel) return [];
+      return canonicalStores(Array.from(sel.selectedOptions || []).map(function(o){ return o.value || o.textContent; }));
+    }catch(_e){ return []; }
+  }
+  function ensureAppliedStores(){
+    try{
+      var selected = readMainSelect();
+      if(selected.length){
+        if(window.state) state._appliedStores = selected.slice();
+        return selected;
+      }
+      var applied = canonicalStores((window.state && Array.isArray(state._appliedStores)) ? state._appliedStores : []);
+      if(applied.length){
+        return applied;
+      }
+    }catch(_e){}
+    var all = allStores();
+    try{ if(window.state) state._appliedStores = all.slice(); }catch(_e){}
+    return all;
+  }
+  function syncMainSelectFromApplied(){
+    var sel = byId('stores');
+    if(!sel) return ensureAppliedStores();
+    var applied = ensureAppliedStores();
+    var wanted = new Set(applied.map(upper));
+    Array.from(sel.options || []).forEach(function(opt){
+      opt.selected = wanted.has(upper(opt.value || opt.textContent));
+    });
+    return applied;
+  }
+  function setAppliedStores(list){
+    var applied = canonicalStores(list);
+    if(!applied.length) applied = allStores();
+    try{ if(window.state) state._appliedStores = applied.slice(); }catch(_e){}
+    syncMainSelectFromApplied();
+    return applied;
+  }
+  function currentStoreLabel(){
+    var all = allStores();
+    var sel = ensureAppliedStores();
+    if(!all.length || !sel.length || sel.length === all.length) return 'ALL';
+    if(sel.length <= 2) return sel.join(', ');
+    return sel.slice(0,2).join(', ') + ' +' + (sel.length - 2);
+  }
+  function currentStoreFilterLabel(){
+    var all = allStores();
+    var sel = ensureAppliedStores();
+    if(!sel.length) return 'Tienda=—';
+    if(!all.length || sel.length === all.length) return 'Tienda=ALL';
+    if(sel.length <= 3) return 'Tienda=' + sel.join(',');
+    return 'Tienda=' + sel.slice(0,2).join(',') + ' +' + (sel.length - 2);
+  }
+  function syncLabels(){
+    try{
+      var floating = byId('ampmStoreFloatingLabel');
+      if(floating) floating.textContent = currentStoreLabel();
+    }catch(_e){}
+    try{
+      var quick = byId('storeQuickLabel');
+      if(quick) quick.textContent = currentStoreLabel();
+    }catch(_e){}
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+  }
+  function clearStoreScopedCaches(){
+    try{ if(window.state){ state._deptTrendRows = {}; } }catch(_e){}
+    try{ if(window.state){ state._deptTrendRowsMeta = {}; } }catch(_e){}
+    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._chartLongStoreSig = ''; state._xfSummary = null; } }catch(_e){}
+    try{ if(window.state){ state.chartDeptTrendVentas = {}; state.chartDeptTrendDelivery = {}; } }catch(_e){}
+    try{ if(window.state && state._lastChartRenderSig){ delete state._lastChartRenderSig.ventas; delete state._lastChartRenderSig.delivery; } }catch(_e){}
+    try{ if(window.state && state._lastRenderedTabSig){ delete state._lastRenderedTabSig.ventas; delete state._lastRenderedTabSig.delivery; } }catch(_e){}
+    try{ if(typeof window.markTabsDirty === 'function') window.markTabsDirty(['ventas','delivery']); }catch(_e){}
+  }
+  function refreshVentasDeliveryCaches(stores){
+    try{
+      var currentYm = byId('currentMonth') ? byId('currentMonth').value : '';
+      var prevYms = (typeof window.getSelectedValues === 'function' && byId('prevMonths'))
+        ? window.getSelectedValues(byId('prevMonths'))
+        : [];
+      if(typeof window.refreshExtraTables === 'function' && currentYm){
+        window.refreshExtraTables(currentYm, prevYms, stores, 'ventas');
+        window.refreshExtraTables(currentYm, prevYms, stores, 'delivery');
+      }
+    }catch(_e){}
+  }
+  function reflowVentasDelivery(stores){
+    refreshVentasDeliveryCaches(stores);
+    try{ if(typeof window.renderMamChart === 'function') window.renderMamChart(stores); }catch(_e){}
+    try{ if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores); }catch(_e){}
+    try{ if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores); }catch(_e){}
+    try{ if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryStoreCards === 'function') window.renderDeliveryStoreCards(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryShareStoreCards === 'function') window.renderDeliveryShareStoreCards(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryCategoryShareCharts === 'function') window.renderDeliveryCategoryShareCharts(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores); }catch(_e){}
+    try{ if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores); }catch(_e){}
+    try{ if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores); }catch(_e){}
+    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.refreshVisibleTabCharts === 'function'){ window.refreshVisibleTabCharts('ventas', true); window.refreshVisibleTabCharts('delivery', true); } }catch(_e){}
+    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
+    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
+  }
+  function renderFloatingList(){
+    var list = byId('ampmStoreFloatingList');
+    var btn = byId('ampmStoreFloatingBtn');
+    if(!list || !btn) return;
+    var stores = allStores();
+    var applied = ensureAppliedStores();
+    var chosen = new Set((Array.isArray(window.__ampmStoreDraft) ? window.__ampmStoreDraft : applied).map(upper));
+    btn.disabled = !stores.length;
+    list.innerHTML = stores.map(function(store){
+      var checked = chosen.has(upper(store)) ? 'checked' : '';
+      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="' + store.replace(/"/g,'&quot;') + '" ' + checked + '> <span>' + store + '</span></label>';
+    }).join('');
+    var applyBtn = byId('ampmStoreFloatingApply');
+    if(applyBtn){
+      var draft = canonicalStores(Array.from(chosen));
+      var appliedKey = ensureAppliedStores().join('|');
+      var draftKey = draft.join('|');
+      applyBtn.disabled = appliedKey === draftKey;
+    }
+  }
+  function openFloating(force){
+    var menu = byId('ampmStoreFloatingMenu');
+    if(!menu) return;
+    var next = (typeof force === 'boolean') ? force : !menu.classList.contains('open');
+    menu.classList.toggle('open', !!next);
+    if(next){
+      window.__ampmStoreDraft = ensureAppliedStores().slice();
+      renderFloatingList();
+    }
+  }
+  function checkedFloatingStores(){
+    try{
+      var list = byId('ampmStoreFloatingList');
+      if(!list) return [];
+      return canonicalStores(Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return i.value; }));
+    }catch(_e){ return []; }
+  }
+  function bindFloating(){
+    var btn = byId('ampmStoreFloatingBtn');
+    var menu = byId('ampmStoreFloatingMenu');
+    var list = byId('ampmStoreFloatingList');
+    var applyBtn = byId('ampmStoreFloatingApply');
+    var cancelBtn = byId('ampmStoreFloatingCancel');
+    if(!btn || !menu || !list || btn.__ampmStoreRootBoundV22) return;
+    btn.__ampmStoreRootBoundV22 = true;
+
+    btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); openFloating(); });
+    menu.addEventListener('click', function(ev){ ev.stopPropagation(); });
+    list.addEventListener('change', function(){
+      window.__ampmStoreDraft = checkedFloatingStores();
+      renderFloatingList();
+    });
+    menu.querySelectorAll('[data-floating-store-action]').forEach(function(actionBtn){
+      actionBtn.addEventListener('click', function(){
+        var act = txt(actionBtn.getAttribute('data-floating-store-action')).toLowerCase();
+        window.__ampmStoreDraft = (act === 'all') ? allStores().slice() : [];
+        renderFloatingList();
+      });
+    });
+    if(cancelBtn){
+      cancelBtn.addEventListener('click', function(){
+        window.__ampmStoreDraft = ensureAppliedStores().slice();
+        openFloating(false);
+      });
+    }
+    if(applyBtn){
+      var clone = applyBtn.cloneNode(true);
+      applyBtn.parentNode.replaceChild(clone, applyBtn);
+      clone.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        var applied = setAppliedStores(checkedFloatingStores());
+        syncLabels();
+        clearStoreScopedCaches();
+        try{ if(typeof window.markFiltersDirty === 'function') window.markFiltersDirty(false); }catch(_e){}
+        refreshVentasDeliveryCaches(applied);
+        try{ if(typeof window.refreshAll === 'function') window.refreshAll(); }catch(_e){}
+        setTimeout(function(){ reflowVentasDelivery(applied); }, 40);
+        setTimeout(function(){ reflowVentasDelivery(applied); }, 180);
+        setTimeout(function(){ reflowVentasDelivery(applied); }, 420);
+        openFloating(false);
+      });
+    }
+
+    document.addEventListener('click', function(){ openFloating(false); });
+    document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') openFloating(false); });
+    renderFloatingList();
+  }
+  function bindMainSelectGuard(){
+    var sel = byId('stores');
+    if(!sel || sel.__ampmStoreRootMainGuardV22) return;
+    sel.__ampmStoreRootMainGuardV22 = true;
+    sel.addEventListener('change', function(){
+      var picked = readMainSelect();
+      try{ if(window.state) state._appliedStores = (picked.length ? picked : allStores()).slice(); }catch(_e){}
+      syncLabels();
+      renderFloatingList();
+    }, true);
+    try{
+      var mo = new MutationObserver(function(){
+        syncLabels();
+        renderFloatingList();
+      });
+      mo.observe(sel, { childList:true, subtree:true, attributes:true, attributeFilter:['selected'] });
+    }catch(_e){}
+  }
+
+  // authoritative store helpers
+  window.getSelectedStoresOrAll = function(){ return ensureAppliedStores().slice(); };
+  window.xfStoreLabel = function(){ return currentStoreFilterLabel(); };
+  window.storeQuickLabelText = function(){ return currentStoreLabel(); };
+
+  function boot(){
+    syncMainSelectFromApplied();
+    syncLabels();
+    bindMainSelectGuard();
+    bindFloating();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 120); }, { once:true });
+  }else{
+    setTimeout(boot, 120);
+  }
+  window.addEventListener('load', function(){ setTimeout(boot, 220); }, { once:true });
+})();
+</script>
+
+</body>
+</html>
