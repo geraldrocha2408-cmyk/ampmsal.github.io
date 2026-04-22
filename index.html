@@ -57437,6 +57437,166 @@ function innovationOnePagerCreateBrandedShell(){
 })();
 </script>
 
+
+<script id="ampm-floating-store-hardfix-v18">
+(function(){
+  if(window.__ampmFloatingStoreHardfixV18) return;
+  window.__ampmFloatingStoreHardfixV18 = true;
+
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
+  function activeTab(){
+    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || 'resumen') || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function selectedStoresFromMainSelect(){
+    try{
+      var sel = byId('stores');
+      if(!sel) return [];
+      return Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function allStores(){
+    try{
+      var sel = byId('stores');
+      if(sel){
+        var vals = Array.from(sel.options || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+        if(vals.length) return uniq(vals);
+      }
+    }catch(_e){}
+    try{
+      if(window.state && Array.isArray(state.stores) && state.stores.length) return uniq(state.stores.slice());
+    }catch(_e){}
+    return [];
+  }
+  function checkedStoresFromFloating(){
+    try{
+      var list = byId('ampmStoreFloatingList');
+      if(!list) return [];
+      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(function(i){ return txt(i.value); })
+        .filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function setMainStoreSelection(values){
+    var sel = byId('stores');
+    if(!sel) return [];
+    var wanted = new Set(uniq(values));
+    Array.from(sel.options || []).forEach(function(o){
+      o.selected = wanted.has(txt(o.value || o.textContent));
+    });
+    try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
+    return selectedStoresFromMainSelect();
+  }
+  function syncStoreLabels(){
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+    try{
+      var label = byId('ampmStoreFloatingLabel');
+      if(label){
+        if(typeof window.storeQuickLabelText === 'function') label.textContent = window.storeQuickLabelText();
+        else{
+          var picked = selectedStoresFromMainSelect();
+          var all = allStores();
+          if(!picked.length || picked.length === all.length) label.textContent = 'ALL';
+          else if(picked.length <= 2) label.textContent = picked.join(', ');
+          else label.textContent = picked.slice(0,2).join(', ') + ' +' + (picked.length - 2);
+        }
+      }
+    }catch(_e){}
+  }
+  function clearStoreScopedCaches(){
+    try{ if(window.state){ state._deptTrendRows = {}; state._deptTrendRowsMeta = null; } }catch(_e){}
+    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._chartLongStoreSig = ''; } }catch(_e){}
+    try{ if(window.state){ state._xfSummary = null; } }catch(_e){}
+  }
+  function runVisibleStoreRefresh(stores, pass){
+    var tab = activeTab();
+    try{
+      if(tab === 'delivery'){
+        if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores);
+        if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores);
+        if(typeof window.renderDeliveryShareStoreCards === 'function') window.renderDeliveryShareStoreCards(stores);
+        if(typeof window.renderDeliveryCategoryShareCharts === 'function') window.renderDeliveryCategoryShareCharts(stores);
+        if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores);
+        if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores);
+        if(typeof window.renderDeliveryBubbleChart === 'function') window.renderDeliveryBubbleChart(stores);
+        if(typeof window.renderDeliveryChannel12wChart === 'function') window.renderDeliveryChannel12wChart(stores);
+        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores);
+      }else if(tab === 'ventas'){
+        if(typeof window.renderMamChart === 'function') window.renderMamChart(stores);
+        if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores);
+        if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores);
+        if(typeof window.renderSalesBubbleChart === 'function') window.renderSalesBubbleChart(stores);
+        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores);
+      }else if(tab === 'onepager'){
+        try{
+          var ym = byId('currentMonth')?.value || '';
+          var prev = Array.from((byId('prevMonths')?.selectedOptions || [])).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+          if(typeof window.renderOnePager === 'function') window.renderOnePager(stores, ym, prev);
+        }catch(_e){}
+      }
+    }catch(err){
+      try{ console.warn('store hardfix visible refresh failed', pass, tab, err); }catch(_e){}
+    }
+    try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab, true); }catch(_e){}
+    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
+    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
+  }
+  function forceStoreApply(){
+    var next = checkedStoresFromFloating();
+    var selected = setMainStoreSelection(next);
+    var stores = selected.length ? selected : allStores();
+
+    try{ window.__ampmStoreDraft = stores.slice(); }catch(_e){}
+    syncStoreLabels();
+    clearStoreScopedCaches();
+
+    try{
+      var rt = window.__ampmForensicRuntime;
+      if(rt){
+        var ts = Date.now();
+        rt.ignoreFocusUntil = ts + 380;
+        rt.ignoreVisibilityUntil = ts + 380;
+        rt.lastSig = '';
+        rt.lastReason = '';
+      }
+    }catch(_e){}
+
+    try{
+      if(typeof window.refreshAll === 'function') window.refreshAll();
+      else{
+        var btn = byId('refresh');
+        if(btn && typeof btn.click === 'function') btn.click();
+      }
+    }catch(_e){}
+
+    setTimeout(function(){ runVisibleStoreRefresh(stores, 1); }, 80);
+    setTimeout(function(){ runVisibleStoreRefresh(stores, 2); }, 260);
+
+    try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){}
+  }
+  function bind(){
+    var btn = byId('ampmStoreFloatingApply');
+    if(!btn || btn.__ampmStoreHardfixBound) return;
+    var clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.__ampmStoreHardfixBound = true;
+    clone.addEventListener('click', function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      forceStoreApply();
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
+  else bind();
+  window.addEventListener('load', function(){ setTimeout(bind, 60); }, { once:true });
+})();
+</script>
+
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
