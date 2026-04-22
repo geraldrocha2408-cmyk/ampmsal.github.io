@@ -56742,244 +56742,130 @@ function innovationOnePagerCreateBrandedShell(){
   }
 }
 </style>
-<script id="ampm-sidebar-static-script-v4">
-(function(){
+<script id="ampm-sidebar-static-script-v4">(function(){
   if(window.__ampmSidebarStaticV4) return;
   window.__ampmSidebarStaticV4 = true;
 
-  var MAIN_REFRESH_DELAYS = [0, 90, 220];
-  var RECOVERY_DELAY = 420;
-  var refreshToken = 0;
-  var resizeObserver = null;
+  var REFRESH_DELAY = 180;
+  var refreshTimer = 0;
+  var lastObservedW = 0;
+  var lastObservedH = 0;
+  var layoutObserver = null;
+  var suspendObserverUntil = 0;
 
+  function now(){ return Date.now ? Date.now() : +new Date(); }
   function activeTab(){
     try{
-      return String(
-        document.querySelector('.tabBtn.active')?.dataset?.tab ||
-        localStorage.getItem('ampm_tab') ||
-        'resumen'
-      ).trim() || 'resumen';
-    }catch(_e){
-      return 'resumen';
-    }
+      return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim() || 'resumen';
+    }catch(_e){ return 'resumen'; }
   }
-
-  function chartKeysForTabSafe(tab){
-    var safeTab = String(tab || '').trim();
-    var map = {
-      resumen: ['chartOpSalesTotal','chartOpDeliveryTotal','chartOpSbfMtd','chartOpDept','chartOpDaySales','chartOpDayTx','chartOpCat'],
-      onepager: ['chartOpSalesTotal','chartOpDeliveryTotal','chartOpSbfMtd','chartOpDept','chartOpDaySales','chartOpDayTx','chartOpCat'],
-      ventas: ['chartMam','chartStoreMam','chartSalesBubble'],
-      delivery: ['chartDeliveryMam','chartDeliveryShareMam','chartDeliveryCatUber','chartDeliveryCatPya','chartDeliveryBubble','chartDeliveryChannel12w'],
-      innovacion: ['chartInnovationDouble','chartInnovationMix','chartInnovationBurritos','chartInnovationMatahambrita','chartInnovationComboDay','chartInnovationComboPie','chartInnovationPostresShare','chartInnovationPostresParent','chartInnovationFsExecSalesCat','chartInnovationFsExecLinesStore','chartInnovationFsExecSalesStore','chartInnovationFsExecHistory','chartInnovationFsExecMarginStore','chartInnovationFsExecMarginCat','chartInnovationMetaFsCompliance','chartInnovationMetaFsProj','chartInnovationMetaFsLy'],
-      sbf: ['chartSbfMam','chartSbfHourS8'],
-      inventario: ['_chartInvStore','_chartInvBubble'],
-      merma: ['chartMerma4m','chartMermaBubble'],
-      cxc: ['chartCxc8w']
-    };
-    return map[safeTab] ? map[safeTab].slice() : [];
+  function hasDataLoaded(){
+    try{
+      if(window.state && (
+        Array.isArray(window.state.cuboSalesRows) ||
+        Array.isArray(window.state.salesRowsVentas) ||
+        Array.isArray(window.state.salesRowsDelivery) ||
+        Array.isArray(window.state.invDetail)
+      )) return true;
+    }catch(_e){}
+    return !!document.querySelector('canvas');
   }
-
-  function chartLooksBroken(chart){
-    try{
-      if(!chart || !chart.canvas) return false;
-      var c = chart.canvas;
-      var st = getComputedStyle(c);
-      if(st.display === 'none' || st.visibility === 'hidden') return false;
-
-      var rect = c.getBoundingClientRect();
-      if(!(rect.width > 120 && rect.height > 120)) return false;
-
-      var area = chart.chartArea || null;
-      if(!area) return true;
-
-      var areaW = Number(area.right || 0) - Number(area.left || 0);
-      var areaH = Number(area.bottom || 0) - Number(area.top || 0);
-      if(!(areaW > 40 && areaH > 40)) return true;
-
-      var cw = Number(chart.width || c.width || 0);
-      var ch = Number(chart.height || c.height || 0);
-      if(!(cw > 120 && ch > 120)) return true;
-
-      return false;
-    }catch(_e){
-      return false;
-    }
-  }
-
-  function tabNeedsRecovery(tab){
-    try{
-      if(typeof window.state === 'undefined' || !window.state) return false;
-      var keys = chartKeysForTabSafe(tab);
-      for(var i = 0; i < keys.length; i += 1){
-        if(chartLooksBroken(window.state[keys[i]])) return true;
-      }
-      return false;
-    }catch(_e){
-      return false;
-    }
-  }
-
-  function applyStickyVars(){
-    try{
-      document.documentElement.style.setProperty('--panelStickyTop','10px');
-      document.documentElement.style.setProperty('--tabsbarH','0px');
-    }catch(_e){}
-  }
-
-  function runResizePass(tab, allowRecovery){
-    try{
-      if(typeof window.resizeCharts === 'function') window.resizeCharts();
-    }catch(_e){}
-    try{
-      if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles();
-    }catch(_e){}
-    try{
-      if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables();
-    }catch(_e){}
-
-    if(!allowRecovery) return;
-
-    try{
-      if(tabNeedsRecovery(tab) && typeof window.refreshVisibleTabCharts === 'function'){
-        window.refreshVisibleTabCharts(tab, true);
-      }
-    }catch(_e){}
-
-    try{
-      if(typeof window.resizeCharts === 'function') window.resizeCharts();
-    }catch(_e){}
-    try{
-      if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles();
-    }catch(_e){}
-    try{
-      if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables();
-    }catch(_e){}
-  }
-
-  function scheduleStableRefresh(reason){
-    var tab = activeTab();
-    refreshToken += 1;
-    var token = refreshToken;
-
-    applyStickyVars();
-
-    MAIN_REFRESH_DELAYS.forEach(function(ms){
-      setTimeout(function(){
-        if(token !== refreshToken) return;
-        requestAnimationFrame(function(){
-          if(token !== refreshToken) return;
-          runResizePass(tab, false);
-        });
-      }, ms);
-    });
-
-    setTimeout(function(){
-      if(token !== refreshToken) return;
-      requestAnimationFrame(function(){
-        if(token !== refreshToken) return;
-        runResizePass(tab, true);
-      });
-    }, RECOVERY_DELAY);
-  }
-
-  function apply(collapsed){
-    var shell = document.querySelector('.ampm-shell');
+  function updateButtonUi(collapsed){
     var btn = document.getElementById('ampmSidebarToggle');
-    if(!shell || !btn) return;
-
-    shell.classList.toggle('is-collapsed', !!collapsed);
+    if(!btn) return;
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     btn.title = collapsed ? 'Mostrar menú lateral' : 'Ocultar menú lateral';
-
     var lbl = btn.querySelector('.ampm-sidebar-toggleLabel');
     if(lbl) lbl.textContent = collapsed ? 'Mostrar menú' : 'Ocultar menú';
-
-    var ic = btn.querySelector('.ampm-sidebar-toggleIcon path');
-    if(ic) ic.setAttribute('d', collapsed ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6');
-
+    var path = btn.querySelector('.ampm-sidebar-toggleIcon path');
+    if(path) path.setAttribute('d', collapsed ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6');
+  }
+  function resizeOnly(){
+    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
+    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
+    try{ if(typeof window.deptTrendResizeMap === 'function'){ window.deptTrendResizeMap('ventas'); window.deptTrendResizeMap('delivery'); } }catch(_e){}
+  }
+  function rebuildActiveTab(forceRebuild){
+    var tab = activeTab();
+    if(!tab || !hasDataLoaded()) return;
+    resizeOnly();
     try{
-      localStorage.setItem('ampm_sidebar_collapsed', collapsed ? '1' : '0');
-    }catch(_e){}
-
-    scheduleStableRefresh('toggle');
+      if(typeof window.refreshVisibleTabCharts === 'function'){
+        window.refreshVisibleTabCharts(tab, !!forceRebuild);
+      }else if(typeof window.scheduleVisibleChartRefresh === 'function'){
+        window.scheduleVisibleChartRefresh(tab);
+      }
+    }catch(e){ console.warn('sidebar rebuildActiveTab failed', tab, e); }
+    resizeOnly();
   }
-
-  function bindResizeObserver(){
-    if(typeof ResizeObserver === 'undefined') return;
-    var target = document.querySelector('.ampm-main') || document.querySelector('.ampm-shell');
+  function scheduleRefresh(forceRebuild){
+    if(!hasDataLoaded()) return;
+    try{ clearTimeout(refreshTimer); }catch(_e){}
+    refreshTimer = setTimeout(function(){
+      rebuildActiveTab(!!forceRebuild);
+    }, REFRESH_DELAY);
+  }
+  function apply(collapsed, opts){
+    var shell = document.querySelector('.ampm-shell');
+    if(!shell) return;
+    shell.classList.toggle('is-collapsed', !!collapsed);
+    updateButtonUi(!!collapsed);
+    try{ localStorage.setItem('ampm_sidebar_collapsed', collapsed ? '1' : '0'); }catch(_e){}
+    suspendObserverUntil = now() + 260;
+    if(!opts || opts.refresh !== false) scheduleRefresh(true);
+  }
+  function installObserver(){
+    if(typeof ResizeObserver !== 'function') return;
+    var target = document.querySelector('.ampm-main') || document.querySelector('.ampm-mainInner') || document.querySelector('.ampm-shell');
     if(!target) return;
-    if(resizeObserver){
-      try{ resizeObserver.disconnect(); }catch(_e){}
-      resizeObserver = null;
-    }
-
-    var lastWidth = 0;
-    resizeObserver = new ResizeObserver(function(entries){
-      try{
-        var entry = entries && entries[0];
-        var box = entry && entry.contentRect ? entry.contentRect : null;
-        var width = box ? Math.round(Number(box.width || 0)) : 0;
-        if(!width) return;
-        if(width === lastWidth) return;
-        lastWidth = width;
-        scheduleStableRefresh('observer');
-      }catch(_e){}
+    try{
+      var rect = target.getBoundingClientRect();
+      lastObservedW = Math.round(rect.width || 0);
+      lastObservedH = Math.round(rect.height || 0);
+    }catch(_e){}
+    layoutObserver = new ResizeObserver(function(entries){
+      if(!entries || !entries.length) return;
+      if(now() < suspendObserverUntil) return;
+      var rect = entries[0].contentRect || target.getBoundingClientRect();
+      var w = Math.round(rect.width || 0);
+      var h = Math.round(rect.height || 0);
+      if(!w && !h) return;
+      var dw = Math.abs(w - lastObservedW);
+      var dh = Math.abs(h - lastObservedH);
+      if(dw < 8 && dh < 8) return;
+      lastObservedW = w;
+      lastObservedH = h;
+      scheduleRefresh(dw >= 24);
     });
-
-    try{ resizeObserver.observe(target); }catch(_e){}
+    try{ layoutObserver.observe(target); }catch(_e){}
   }
-
   function boot(){
     var btn = document.getElementById('ampmSidebarToggle');
     if(!btn) return;
-
-    var shortMap = {
-      resumen:'Res', onepager:'OP', ventas:'Vta', delivery:'Del', innovacion:'Inn',
-      sbf:'SBF', inventario:'Inv', merma:'Mer', prd0:'PRD', cxc:'CXC',
-      hallazgos:'Hal', criticos:'Cri'
-    };
-
-    document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){
-      var key = String(btn2.dataset.tab || '').trim();
-      btn2.setAttribute('data-short', shortMap[key] || key.slice(0,3).toUpperCase());
-    });
-
-    var collapsed = false;
     try{
-      collapsed = localStorage.getItem('ampm_sidebar_collapsed') === '1';
-    }catch(_e){}
-
-    applyStickyVars();
-    bindResizeObserver();
-    apply(collapsed);
-
-    if(!btn.__ampmSidebarBound){
-      btn.__ampmSidebarBound = true;
-      btn.addEventListener('click', function(){
-        var shell = document.querySelector('.ampm-shell');
-        apply(!(shell && shell.classList.contains('is-collapsed')));
+      var shortMap = {resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};
+      document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){
+        var key = String(btn2.dataset.tab || '').trim();
+        btn2.setAttribute('data-short', shortMap[key] || key.slice(0,3).toUpperCase());
       });
-    }
-
-    setTimeout(function(){ scheduleStableRefresh('boot-1'); }, 100);
-    setTimeout(function(){ scheduleStableRefresh('boot-2'); }, 280);
+    }catch(_e){}
+    var collapsed = false;
+    try{ collapsed = localStorage.getItem('ampm_sidebar_collapsed') === '1'; }catch(_e){}
+    apply(collapsed, { refresh:false });
+    installObserver();
+    btn.addEventListener('click', function(){
+      var shell = document.querySelector('.ampm-shell');
+      var next = !(shell && shell.classList.contains('is-collapsed'));
+      apply(next, { refresh:true });
+    });
+    scheduleRefresh(true);
+    setTimeout(function(){ scheduleRefresh(true); }, 320);
   }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', boot, { once:true });
-  }else{
-    boot();
-  }
-
-  window.addEventListener('load', function(){
-    setTimeout(function(){ scheduleStableRefresh('load-1'); }, 80);
-    setTimeout(function(){ scheduleStableRefresh('load-2'); }, 260);
-  }, { once:true });
-
-  window.ampmSidebarStableRefresh = scheduleStableRefresh;
-})();
-</script></body>
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
+  window.addEventListener('load', function(){ scheduleRefresh(true); }, { once:true });
+})();</script></body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
