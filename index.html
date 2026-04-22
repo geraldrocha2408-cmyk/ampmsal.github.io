@@ -3725,40 +3725,6 @@ body{
   padding-top:10px !important;
 }
 </style>
-
-<style id="ampm-safe-ui-fixes-v1">
-/* Safe UI fixes without touching the chart refresh pipeline */
-.ampmAuthFoot{display:none !important;}
-
-.ampm-sidebar .tabsbar button.tabBtn.active{
-  background:linear-gradient(180deg,#FAA21E 0%, #F58320 100%) !important;
-  border-color:rgba(255,255,255,0) !important;
-  color:#11284A !important;
-  box-shadow:
-    0 12px 24px rgba(245,131,32,.24),
-    inset 0 1px 0 rgba(255,255,255,.22) !important;
-}
-.ampm-sidebar .tabsbar button.tabBtn.active:hover{
-  background:linear-gradient(180deg,#FAA21E 0%, #F58320 100%) !important;
-  color:#11284A !important;
-}
-.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
-.ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg,
-.ampm-sidebar .tabsbar button.tabBtn.active .tabLabel,
-.ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active{
-  color:#11284A !important;
-}
-
-[data-tabpage="inventario"] .invChartCard{
-  background:#ffffff !important;
-  background-image:none !important;
-}
-#chart_inv_store{
-  background:#ffffff !important;
-  border-radius:12px !important;
-}
-</style>
-
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -16938,7 +16904,7 @@ return;
               },
               scales:{
                 x:{stacked:false, grid:{display:false}},
-                y:{stacked:false, beginAtZero:true, title:{ display:true, text:'Millares', color:'#000000', font:{ weight:'700' } }, ticks:{callback:(v)=> compact(v)}},
+                y:{stacked:false, beginAtZero:true, ticks:{callback:(v)=> money(v)}},
                 y1:{position:'right', grid:{drawOnChartArea:false}, border:{ display:true, color: AMPM.orange }, beginAtZero:true, ticks:{ color: '#000000', font:{ size:INNOVATION_UI.axis, weight:'700' }, callback:(v)=> Number(v).toFixed(0)}}
               }
             },
@@ -57319,6 +57285,235 @@ function innovationOnePagerCreateBrandedShell(){
       setTimeout(()=>queue(activeTab()), 120);
     }
   });
+})();
+</script>
+
+
+<style id="ampm-ui-hotfix-v2">
+  /* Login */
+  #ampmAuthGate .ampmAuthFoot{display:none !important;}
+
+  /* Menú lateral: pestaña activa mucho más visible */
+  .ampm-sidebar .tabsbar button.tabBtn.active,
+  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active{
+    background:linear-gradient(180deg, #FAA21E 0%, #F58320 55%, #E67425 100%) !important;
+    border-color:rgba(255,255,255,.18) !important;
+    color:#11284A !important;
+    box-shadow:0 14px 26px rgba(245,131,32,.30), inset 0 1px 0 rgba(255,255,255,.28) !important;
+  }
+  .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon,
+  .ampm-sidebar .tabsbar button.tabBtn.active .tabLabel,
+  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon{
+    color:#11284A !important;
+  }
+  .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg,
+  .ampm-shell.is-collapsed .ampm-sidebar .tabsbar button.tabBtn.active .tabIcon svg{
+    stroke:#11284A !important;
+  }
+
+  /* Inventario: fondo blanco real */
+  .invChartCard{
+    background:#ffffff !important;
+  }
+  #chart_inv_store{
+    background:#ffffff !important;
+    border-radius:12px;
+  }
+</style>
+<script id="ampm-performance-hotfix-v2">
+(function(){
+  if(window.__ampmPerformanceHotfixV2) return;
+  window.__ampmPerformanceHotfixV2 = true;
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function activeTab(){
+    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen') || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function selectedValues(sel){
+    try{ return Array.from((sel && sel.selectedOptions) || []).map(o => txt(o.value)).filter(Boolean); }catch(_e){ return []; }
+  }
+  function filterSig(tab){
+    try{
+      var currentYm = txt(document.getElementById('currentMonth')?.value || '');
+      var prev = selectedValues(document.getElementById('prevMonths')).join('|');
+      var stores = selectedValues(document.getElementById('stores')).join('|');
+      var dow = txt((typeof window.getGlobalDowFilter === 'function') ? window.getGlobalDowFilter() : (document.getElementById('dowFilter')?.value || ''));
+      var mode = txt((window.state && window.state.reportMode) || '');
+      return [txt(tab || activeTab()), currentYm, prev, stores, dow, mode].join('||');
+    }catch(_e){
+      return txt(tab || activeTab());
+    }
+  }
+
+  try{
+    window.AMPM_RUNTIME = window.AMPM_RUNTIME || {};
+    window.AMPM_RUNTIME.chartRefreshDelays = [];
+    window.AMPM_RUNTIME.fitTablesDelay = 120;
+  }catch(_e){}
+
+  window.__ampmUiChangeVersion = Number(window.__ampmUiChangeVersion || 0) || 0;
+  function bump(reason){
+    try{
+      window.__ampmUiChangeVersion = (Number(window.__ampmUiChangeVersion || 0) || 0) + 1;
+      window.__ampmUiChangeReason = txt(reason || '');
+    }catch(_e){}
+  }
+
+  document.addEventListener('click', function(ev){
+    try{
+      var t = ev.target;
+      if(!t) return;
+      if(t.closest('#refresh')){ bump('filters'); return; }
+      var tabBtn = t.closest('.tabBtn[data-tab]');
+      if(tabBtn){ bump('tab:' + txt(tabBtn.dataset.tab)); return; }
+      if(t.closest('#ampmStoreFloatingApply')){ bump('stores'); return; }
+      if(t.closest('#ampmSidebarToggle')){ bump('sidebar'); }
+    }catch(_e){}
+  }, true);
+
+  document.addEventListener('change', function(ev){
+    try{
+      var id = txt(ev.target && ev.target.id);
+      if(['currentMonth','prevMonths','stores','dowFilter','viewMode'].includes(id)) bump('filters:' + id);
+    }catch(_e){}
+  }, true);
+
+  window.addEventListener('ampm:fileloaded', function(){ bump('fileloaded'); });
+
+  var baseRefreshVisible = (typeof window.refreshVisibleTabCharts === 'function') ? window.refreshVisibleTabCharts : null;
+  var baseUpdateTitles = (typeof window.updateAllChartTitles === 'function') ? window.updateAllChartTitles : null;
+  var baseFitTables = (typeof window.scheduleFitTables === 'function') ? window.scheduleFitTables : null;
+  var baseRefreshAll = (typeof window.refreshAll === 'function') ? window.refreshAll : null;
+
+  if(baseRefreshAll && !baseRefreshAll.__ampmPerfWrappedV2){
+    var wrappedRefreshAll = function(){
+      bump('refreshAll');
+      return baseRefreshAll.apply(this, arguments);
+    };
+    wrappedRefreshAll.__ampmPerfWrappedV2 = true;
+    window.refreshAll = refreshAll = wrappedRefreshAll;
+  }
+
+  var refreshTimers = Object.create(null);
+  var lastDone = Object.create(null);
+  function allowRefresh(tab, force){
+    var key = filterSig(tab) + '||v=' + String(window.__ampmUiChangeVersion || 0);
+    if(force) return key;
+    if(lastDone[tab] === key) return '';
+    lastDone[tab] = key;
+    return key;
+  }
+  function runRefresh(tab, forceRebuild){
+    tab = txt(tab || activeTab()) || 'resumen';
+    if(document.hidden) return;
+    if(!baseRefreshVisible) return;
+    var allowKey = allowRefresh(tab, !!forceRebuild);
+    if(!allowKey) return;
+    try{ baseRefreshVisible.call(window, tab, !!forceRebuild); }catch(e){ try{ console.warn('perf hotfix refresh', e); }catch(_e){} }
+    try{ if(baseUpdateTitles) baseUpdateTitles.call(window); }catch(_e){}
+    try{ if(baseFitTables) baseFitTables.call(window); }catch(_e){}
+  }
+  function queueRefresh(tab, forceRebuild, delay){
+    tab = txt(tab || activeTab()) || 'resumen';
+    clearTimeout(refreshTimers[tab]);
+    refreshTimers[tab] = setTimeout(function(){ runRefresh(tab, forceRebuild); }, delay == null ? 120 : delay);
+  }
+
+  if(baseRefreshVisible && !baseRefreshVisible.__ampmPerfOverrideV2){
+    var minimalRefreshVisible = function(tab, forceRebuild){
+      queueRefresh(tab, forceRebuild, forceRebuild ? 60 : 100);
+    };
+    minimalRefreshVisible.__ampmPerfOverrideV2 = true;
+    window.refreshVisibleTabCharts = refreshVisibleTabCharts = minimalRefreshVisible;
+  }
+
+  var minimalSchedule = function(tab, forceRebuild){
+    queueRefresh(tab, forceRebuild, 130);
+  };
+  minimalSchedule.__ampmPerfOverrideV2 = true;
+  window.scheduleVisibleChartRefresh = scheduleVisibleChartRefresh = minimalSchedule;
+  window.scheduleSettledFullRefresh = scheduleSettledFullRefresh = minimalSchedule;
+
+  if(baseUpdateTitles && !baseUpdateTitles.__ampmPerfDebouncedV2){
+    var titleTimer = null;
+    var debouncedTitles = function(){
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(function(){ try{ baseUpdateTitles.call(window); }catch(_e){} }, 90);
+    };
+    debouncedTitles.__ampmPerfDebouncedV2 = true;
+    window.updateAllChartTitles = updateAllChartTitles = debouncedTitles;
+  }
+
+  if(baseFitTables && !baseFitTables.__ampmPerfDebouncedV2){
+    var fitTimer = null;
+    var debouncedFit = function(){
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(function(){ try{ baseFitTables.call(window); }catch(_e){} }, 110);
+    };
+    debouncedFit.__ampmPerfDebouncedV2 = true;
+    window.scheduleFitTables = scheduleFitTables = debouncedFit;
+  }
+
+  function fixInventoryChart(){
+    try{
+      var card = document.querySelector('.invChartCard');
+      if(card) card.style.background = '#ffffff';
+      var note = card ? card.querySelector('.muted') : null;
+      if(note) note.textContent = 'Barras = Monto Inv (Amount) en millares. Línea = Días Inv (Inv * 28 / COGS 4W).';
+      var chart = window.state && state._chartInvStore;
+      if(!chart) return;
+      var bgPlugin = window.__ampmInvWhiteBgPlugin;
+      if(!bgPlugin){
+        bgPlugin = {
+          id:'ampmInvWhiteBgPlugin',
+          beforeDraw:function(c){
+            try{
+              var area = c.chartArea;
+              if(!area) return;
+              var ctx = c.ctx;
+              ctx.save();
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+              ctx.restore();
+            }catch(_e){}
+          }
+        };
+        window.__ampmInvWhiteBgPlugin = bgPlugin;
+      }
+      chart.config.plugins = Array.isArray(chart.config.plugins) ? chart.config.plugins : [];
+      if(!chart.config.plugins.some(function(p){ return p && p.id === 'ampmInvWhiteBgPlugin'; })) chart.config.plugins.push(bgPlugin);
+      if(chart.options && chart.options.scales && chart.options.scales.y){
+        chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+        chart.options.scales.y.ticks.callback = function(v){
+          var n = Number(v) || 0;
+          if(n === 0) return '$0';
+          var k = n / 1000;
+          var dec = Math.abs(k - Math.round(k)) < 0.001 ? 0 : 1;
+          return '$' + k.toFixed(dec) + 'K';
+        };
+      }
+      chart.update('none');
+    }catch(_e){}
+  }
+
+  var baseRefreshInventoryModule = (typeof window.refreshInventoryModule === 'function') ? window.refreshInventoryModule : null;
+  if(baseRefreshInventoryModule && !baseRefreshInventoryModule.__ampmPerfInvWrappedV2){
+    var wrappedInv = function(){
+      var out = baseRefreshInventoryModule.apply(this, arguments);
+      setTimeout(fixInventoryChart, 0);
+      setTimeout(fixInventoryChart, 120);
+      return out;
+    };
+    wrappedInv.__ampmPerfInvWrappedV2 = true;
+    window.refreshInventoryModule = refreshInventoryModule = wrappedInv;
+  } else {
+    setTimeout(fixInventoryChart, 600);
+  }
+
+  setTimeout(function(){
+    try{ fixInventoryChart(); }catch(_e){}
+  }, 800);
 })();
 </script>
 
