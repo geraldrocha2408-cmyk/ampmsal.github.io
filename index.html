@@ -57632,3 +57632,129 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 </html>
+<script id="ampm-store-apply-single-pipeline-v19">
+(function(){
+  if(window.__ampmStoreApplySinglePipelineV19) return;
+  window.__ampmStoreApplySinglePipelineV19 = true;
+
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function uniq(arr){ return Array.from(new Set((Array.isArray(arr) ? arr : []).map(txt).filter(Boolean))); }
+  function activeTab(){
+    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || (window.state && state._lastActiveTab) || 'resumen') || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function checkedFloatingStores(){
+    try{
+      var list = byId('ampmStoreFloatingList');
+      if(!list) return [];
+      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return txt(i.value); }).filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function applyToMainSelect(values){
+    var sel = byId('stores');
+    if(!sel) return [];
+    var wanted = new Set(uniq(values));
+    Array.from(sel.options || []).forEach(function(opt){
+      var val = txt(opt.value || opt.textContent);
+      opt.selected = wanted.has(val);
+    });
+    try{ sel.dispatchEvent(new Event('change', { bubbles:true })); }catch(_e){}
+    return Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+  }
+  function selectedStores(){
+    try{
+      if(typeof window.getSelectedStoresOrAll === 'function') return uniq(window.getSelectedStoresOrAll() || []);
+    }catch(_e){}
+    var sel = byId('stores');
+    if(!sel) return [];
+    var picked = Array.from(sel.selectedOptions || []).map(function(o){ return txt(o.value || o.textContent); }).filter(Boolean);
+    if(picked.length) return uniq(picked);
+    try{ return uniq((window.state && state.stores) ? state.stores.slice() : []); }catch(_e){ return []; }
+  }
+  function syncLabels(){
+    try{ if(typeof window.renderStoreQuick === 'function') window.renderStoreQuick(); }catch(_e){}
+    try{
+      var floatingLabel = byId('ampmStoreFloatingLabel');
+      if(floatingLabel){
+        if(typeof window.storeQuickLabelText === 'function') floatingLabel.textContent = window.storeQuickLabelText();
+        else{
+          var stores = selectedStores();
+          floatingLabel.textContent = !stores.length ? 'ALL' : stores.join(', ');
+        }
+      }
+    }catch(_e){}
+  }
+  function clearCaches(){
+    try{ if(window.state){ state._deptTrendRows = {}; state._deptTrendRowsMeta = null; } }catch(_e){}
+    try{ if(window.state){ state._deliveryStrategyPanelCache = null; state._deliveryStrategyPanelCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._deliverySplitCache = null; state._deliverySplitCacheKey = ''; } }catch(_e){}
+    try{ if(window.state){ state._chartLongStoreSig = ''; } }catch(_e){}
+    try{ if(window.state){ state._xfSummary = null; } }catch(_e){}
+    try{ if(window.state){ state.chartDeptTrendVentas = {}; state.chartDeptTrendDelivery = {}; } }catch(_e){}
+    try{ if(window.__ampmForensicRuntime){
+      window.__ampmForensicRuntime.lastSig = '';
+      window.__ampmForensicRuntime.lastReason = '';
+      window.__ampmForensicRuntime.lastRunAt = 0;
+      window.__ampmForensicRuntime.ignoreFocusUntil = Date.now() + 380;
+      window.__ampmForensicRuntime.ignoreVisibilityUntil = Date.now() + 380;
+    } }catch(_e){}
+  }
+  function forceActiveTabRepaint(pass){
+    var tab = activeTab();
+    var stores = selectedStores();
+    try{
+      if(tab === 'delivery'){
+        if(typeof window.renderDeliveryMamChart === 'function') window.renderDeliveryMamChart(stores);
+        if(typeof window.renderDeliveryShareMamChart === 'function') window.renderDeliveryShareMamChart(stores);
+        if(typeof window.renderDeliveryShareStoreCards === 'function') window.renderDeliveryShareStoreCards(stores);
+        if(typeof window.renderDeliveryCategoryShareCharts === 'function') window.renderDeliveryCategoryShareCharts(stores);
+        if(typeof window.renderDeliveryStrategyPanel === 'function') window.renderDeliveryStrategyPanel(stores);
+        if(typeof window.renderDeliverySplitTables === 'function') window.renderDeliverySplitTables(stores);
+        if(typeof window.renderDeliveryBubbleChart === 'function') window.renderDeliveryBubbleChart(stores);
+        if(typeof window.renderDeliveryChannel12wChart === 'function') window.renderDeliveryChannel12wChart(stores);
+        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('delivery', stores);
+      }else if(tab === 'ventas'){
+        if(typeof window.renderMamChart === 'function') window.renderMamChart(stores);
+        if(typeof window.renderMamStoreCards === 'function') window.renderMamStoreCards(stores);
+        if(typeof window.renderStoreMamChart === 'function') window.renderStoreMamChart(stores);
+        if(typeof window.renderSalesBubbleChart === 'function') window.renderSalesBubbleChart(stores);
+        if(typeof window.renderDeptTrendSection === 'function') window.renderDeptTrendSection('ventas', stores);
+      }
+    }catch(err){ try{ console.warn('v19 store apply repaint failed', pass, err); }catch(_e){} }
+    try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(tab, true); }catch(_e){}
+    try{ if(typeof window.resizeCharts === 'function') window.resizeCharts(); }catch(_e){}
+    try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
+  }
+  function closeMenu(){
+    try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){}
+  }
+  function handleApply(ev){
+    try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
+    var checked = checkedFloatingStores();
+    applyToMainSelect(checked);
+    syncLabels();
+    clearCaches();
+    try{ if(typeof window.markFiltersDirty === 'function') window.markFiltersDirty(false); }catch(_e){}
+    try{
+      if(typeof window.refreshAll === 'function') window.refreshAll();
+      else byId('refresh')?.click();
+    }catch(_e){}
+    setTimeout(function(){ forceActiveTabRepaint(1); }, 120);
+    setTimeout(function(){ forceActiveTabRepaint(2); }, 320);
+    closeMenu();
+  }
+  function bind(){
+    var btn = byId('ampmStoreFloatingApply');
+    if(!btn) return;
+    var clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.__ampmStoreApplySinglePipelineBound = true;
+    clone.addEventListener('click', handleApply);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(bind, 120); }, { once:true });
+  else setTimeout(bind, 120);
+  window.addEventListener('load', function(){ setTimeout(bind, 180); }, { once:true });
+})();
+</script>
