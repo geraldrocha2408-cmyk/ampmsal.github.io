@@ -3626,9 +3626,12 @@ body{
 </div>
 <div class="grid gridHero">
 <div class="fieldCard primary">
-<label>1) Cargar cubo publicado</label>
+<label>1) Cargar cubo de datos</label>
 <input class="textInput mini" id="remoteDataUrl" placeholder="./Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;" type="text" value="./Cubo_Semanal_Compactado.xlsx"/>
-<div class="row" style="margin-top:8px"><button class="btn secondary" id="remoteLoadBtn" style="max-width:none" type="button">Cargar cubo publicado</button></div>
+<div class="row" style="margin-top:8px; display:grid; grid-template-columns:1fr; gap:8px;">
+  <button class="btn secondary" id="remoteLoadBtn" style="max-width:none" type="button">Cargar cubo publicado</button>
+</div>
+<div class="note" id="filenameStatus" style="margin-top:8px; padding:9px 10px; font-size:12px;">Fuente actual: <b id="filename">./Cubo_Semanal_Compactado.xlsx</b></div>
 <div class="loading" id="loading">
 <div class="loadingTop"><span class="loadingText" id="loadingText">Preparando carga…</span><span class="loadingPct" id="loadingPct">0%</span></div>
 <div class="loadingBar"><div class="loadingFill" id="loadingFill"></div></div>
@@ -26814,7 +26817,7 @@ renderShareTable({
     }
 
     async function handleFile(file){
-      el('filename').textContent = file?.name || '—';
+      { const _fn = el('filename'); if(_fn) _fn.textContent = file?.name || '—'; }
       startLoadingProgress('Leyendo archivo principal…');
       await uiYield(20);
       try{
@@ -26834,7 +26837,7 @@ renderShareTable({
         alert('La ruta del cubo publicado está vacía. Usá ./Cubo_Semanal_Compactado.xlsx o pegá un link público válido.');
         return;
       }
-      el('filename').textContent = rawUrl;
+      { const _fn = el('filename'); if(_fn) _fn.textContent = rawUrl; }
       startLoadingProgress('Leyendo fuente web remota…');
       await uiYield(20);
       try{
@@ -26937,6 +26940,7 @@ renderShareTable({
     setSelectOptions(el('dowFilter'), [{value:'__ALL__', label:'Todos'},{value:'1', label:'Lunes'},{value:'2', label:'Martes'},{value:'3', label:'Miércoles'},{value:'4', label:'Jueves'},{value:'5', label:'Viernes'},{value:'6', label:'Sábado'},{value:'7', label:'Domingo'}], parseDowFilterValues(state.dowFilter).length ? parseDowFilterValues(state.dowFilter) : ['__ALL__']);
 
     const fileInput = el('file'); if(fileInput) fileInput.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
+    const openLocalCubeBtn = el('openLocalCubeBtn'); if(openLocalCubeBtn) openLocalCubeBtn.addEventListener('click', ()=>{ try{ if(fileInput) fileInput.click(); }catch(e){ console.warn('open local cube failed', e); } });
     const remoteBtn = el('remoteLoadBtn'); if(remoteBtn) remoteBtn.addEventListener('click', ()=>{ handleRemoteSource(); });
     const remoteInp = el('remoteDataUrl'); if(remoteInp) remoteInp.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); handleRemoteSource(); } });
 
@@ -56908,6 +56912,14 @@ function innovationOnePagerCreateBrandedShell(){
   function normalizeKey(v){
     return txt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
   }
+  function activeTabKey(){
+    try{
+      return txt((window.state && state._lastActiveTab) || (document.querySelector('.tabBtn.active') || {}).dataset && document.querySelector('.tabBtn.active').dataset.tab).toLowerCase();
+    }catch(_e){
+      try{ return txt((document.querySelector('.tabBtn.active') || {}).dataset && document.querySelector('.tabBtn.active').dataset.tab).toLowerCase(); }catch(__e){}
+    }
+    return 'resumen';
+  }
   function activeTabLabel(){
     try{
       var btn = document.querySelector('.tabBtn.active');
@@ -56916,9 +56928,10 @@ function innovationOnePagerCreateBrandedShell(){
       return txt(labelNode ? labelNode.textContent : btn.textContent) || 'Resumen';
     }catch(_e){ return 'Resumen'; }
   }
-  function shouldHideContextHeader(tabLabel){
-    var key = normalizeKey(tabLabel);
-    return ['inventario','merma','prd en cero','cxc','criticos'].indexOf(key) >= 0;
+  function shouldHideContextHeader(tabKey, tabLabel){
+    var key = normalizeKey(tabKey);
+    var labelKey = normalizeKey(tabLabel);
+    return ['inventario','merma','prd0','cxc','criticos'].indexOf(key) >= 0 || ['inventario','merma','prd en cero','cxc','criticos'].indexOf(labelKey) >= 0;
   }
   function currentMode(){
     try{ if(typeof mode === 'function') return mode(); }catch(_e){}
@@ -56994,8 +57007,9 @@ function innovationOnePagerCreateBrandedShell(){
     if(!root) return;
     var modeKey = currentMode();
     var periodKey = currentPeriod();
+    var tabKey = activeTabKey();
     var tabLabel = activeTabLabel();
-    if(shouldHideContextHeader(tabLabel)){
+    if(shouldHideContextHeader(tabKey, tabLabel)){
       root.style.display = 'none';
       return;
     }
@@ -57046,6 +57060,41 @@ function innovationOnePagerCreateBrandedShell(){
   else bind();
 })();
 </script>
+<script id="ampm-special-tab-guard-script">
+(function(){
+  function safeActiveTab(){
+    try{ return String((window.state && state._lastActiveTab) || document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim().toLowerCase(); }catch(_e){ return 'resumen'; }
+  }
+  function displayFor(el){
+    if(!el) return '';
+    if(el.id === 'onePagerWrap') return 'block';
+    if(el.classList.contains('onePagerMiniGrid') || el.classList.contains('onePagerDualGrid') || el.classList.contains('innovationGrid')) return 'grid';
+    return '';
+  }
+  function enforce(){
+    var active = safeActiveTab();
+    document.querySelectorAll('[data-tabpage]').forEach(function(el){
+      var owner = String(el.getAttribute('data-tabpage') || '').trim().toLowerCase();
+      if(!owner) return;
+      if(owner === active){
+        el.style.display = displayFor(el);
+      }else{
+        el.style.display = 'none';
+      }
+    });
+    if(active === 'prd0'){
+      document.querySelectorAll('[data-tabpage="merma"]').forEach(function(el){ el.style.display = 'none'; });
+      document.querySelectorAll('[data-tabpage="prd0"]').forEach(function(el){ if(el.style.display === 'none') el.style.display = displayFor(el); });
+      var ctx = document.getElementById('ampmContextHeader');
+      if(ctx) ctx.style.display = 'none';
+    }
+  }
+  window.addEventListener('ampm:tabshown', function(){ setTimeout(enforce, 0); setTimeout(enforce, 80); });
+  window.addEventListener('load', function(){ setTimeout(enforce, 0); setTimeout(enforce, 120); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ setTimeout(enforce, 0); } });
+})();
+</script>
+
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
