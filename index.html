@@ -2809,7 +2809,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     position:absolute;
     top:14px;
     right:14px;
-    z-index:100000;
+    z-index:1000;
     display:none;
     align-items:center;
     gap:10px;
@@ -2857,6 +2857,203 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
     font-size:11px;
     font-weight:900;
     color:#64748b;
+  }
+
+  #ampmStoreDock{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:100001;
+    display:none;
+  }
+  body.auth-ok #ampmStoreDock{display:block;}
+  #ampmStoreFloatingWrap{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+  }
+  #ampmStoreFloatingBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:10px;
+    width:auto !important;
+    min-width:190px;
+    max-width:min(300px, calc(100vw - 24px)) !important;
+    border:1px solid rgba(12,77,143,.18);
+    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(242,247,252,.98)) !important;
+    color:#11284A !important;
+    border-radius:999px;
+    padding:12px 14px;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:0 18px 36px rgba(2,6,23,.18), 0 8px 18px rgba(12,77,143,.10);
+    backdrop-filter:blur(12px);
+  }
+  #ampmStoreFloatingBtn:hover{ background:linear-gradient(180deg, #ffffff, rgba(244,248,252,.98)) !important; }
+  #ampmStoreFloatingBtn .ampmStoreFloatingIcon{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    color:#0C4D8F;
+  }
+  #ampmStoreFloatingBtn .muted{
+    color:#0C4D8F;
+    font-weight:1000;
+    flex:0 0 auto;
+  }
+  #ampmStoreFloatingLabel{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:left;
+    flex:1 1 auto;
+  }
+  #ampmStoreFloatingCaret{ flex:0 0 auto; color:#0C4D8F; font-size:11px; }
+  #ampmStoreFloatingMenu{
+    position:absolute;
+    right:0;
+    bottom:calc(100% + 12px);
+    width:min(340px, calc(100vw - 24px));
+    padding:12px;
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,.24);
+    background:rgba(255,255,255,.98);
+    box-shadow:0 24px 48px rgba(2,6,23,.18);
+    backdrop-filter:blur(14px);
+    display:none;
+  }
+  #ampmStoreFloatingMenu.open{ display:block; }
+  .ampmStoreFloatingHead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid rgba(148,163,184,.20);
+  }
+  .ampmStoreFloatingTitle{
+    font-size:12px;
+    font-weight:1000;
+    color:#11284A;
+    letter-spacing:.02em;
+  }
+  .ampmStoreFloatingSub{
+    font-size:11px;
+    font-weight:800;
+    color:#64748b;
+  }
+  .ampmStoreFloatingActions{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  .ampmStoreFloatingActionBtn{
+    appearance:none;
+    border:1px solid rgba(12,77,143,.16);
+    background:linear-gradient(180deg, rgba(243,247,252,.98), rgba(232,240,248,.98));
+    color:#0C4D8F;
+    border-radius:999px;
+    padding:8px 12px;
+    font-size:11px;
+    font-weight:1000;
+    cursor:pointer;
+  }
+  .ampmStoreFloatingActionBtn:hover{filter:brightness(.99);}
+  .ampmStoreFloatingHint{
+    margin:0 0 10px;
+    font-size:11px;
+    font-weight:800;
+    color:#64748b;
+    line-height:1.35;
+  }
+  .ampmStoreFloatingFooter{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid rgba(148,163,184,.18);
+  }
+  .ampmStoreFloatingFooterBtn{
+    appearance:none;
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+    border:1px solid rgba(148,163,184,.24);
+    background:linear-gradient(180deg, rgba(243,247,252,.98), rgba(232,240,248,.98));
+    color:#0C4D8F;
+  }
+  .ampmStoreFloatingFooterBtn.primary{
+    border-color:rgba(245,131,32,.22);
+    background:linear-gradient(180deg, #FAA21E, #F58320);
+    color:#fff;
+    box-shadow:0 12px 24px rgba(245,131,32,.18);
+  }
+  .ampmStoreFloatingFooterBtn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+  #ampmStoreFloatingList{
+    max-height:min(44vh, 300px);
+    overflow:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding-right:2px;
+  }
+  .ampmStoreFloatingItem{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,.18);
+    background:rgba(244,248,252,.72);
+    color:#11284A;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .ampmStoreFloatingItem:hover{ background:rgba(230,240,250,.88); }
+  .ampmStoreFloatingItem input{
+    width:16px;
+    height:16px;
+    accent-color:#F58320;
+    flex:0 0 16px;
+  }
+  @media (max-width: 860px){
+    #ampmStoreDock{
+      right:12px;
+      bottom:12px;
+    }
+    #ampmStoreFloatingBtn{
+      min-width:160px;
+      max-width:min(240px, calc(100vw - 16px)) !important;
+    }
+    #ampmStoreFloatingMenu{
+      width:min(300px, calc(100vw - 16px));
+    }
+  }
+  @media (max-width: 640px){
+    #ampmStoreDock{
+      right:10px;
+      bottom:10px;
+    }
+    #ampmStoreFloatingBtn{
+      min-width:0;
+      width:auto !important;
+      max-width:min(220px, calc(100vw - 20px)) !important;
+      padding:11px 12px;
+    }
+    #ampmStoreFloatingBtn .muted{ display:none; }
   }
   @media (max-width: 640px){
     #ampmAuthGate{padding:14px;}
@@ -3558,7 +3755,7 @@ body{
 </div>
 </div>
 </div>
-<div id="ampmFloatingActions"><div class="export-dd" id="ampmExportWrap">
+<div id="ampmStoreDock"><div id="ampmStoreFloatingWrap"><button id="ampmStoreFloatingBtn" type="button"><svg aria-hidden="true" class="ampmStoreFloatingIcon" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-10ZM7 8h10M9 19v-4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V19" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="muted">Tiendas</span><span id="ampmStoreFloatingLabel">ALL</span><span aria-hidden="true" id="ampmStoreFloatingCaret">▾</span></button><div id="ampmStoreFloatingMenu"><div class="ampmStoreFloatingHead"><div><div class="ampmStoreFloatingTitle">Filtro rápido de tiendas</div><div class="ampmStoreFloatingSub">Disponible en cualquier pestaña</div></div></div><div class="ampmStoreFloatingActions"><button class="ampmStoreFloatingActionBtn" data-floating-store-action="all" type="button">Todas</button><button class="ampmStoreFloatingActionBtn" data-floating-store-action="none" type="button">Limpiar</button></div><div class="ampmStoreFloatingHint">Selecciona una o varias tiendas y luego presiona <b>Aplicar cambios</b>.</div><div id="ampmStoreFloatingList"></div><div class="ampmStoreFloatingFooter"><button class="ampmStoreFloatingFooterBtn" id="ampmStoreFloatingCancel" type="button">Cancelar</button><button class="ampmStoreFloatingFooterBtn primary" id="ampmStoreFloatingApply" type="button">Aplicar cambios</button></div></div></div></div><div id="ampmFloatingActions"><div class="export-dd" id="ampmExportWrap">
 <button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
 <div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
 <button data-export="excel" type="button">Excel (.xls)</button>
@@ -51131,116 +51328,7 @@ function innovationOnePagerCreateBrandedShell(){
   window.exportInnovationOnePagerAsPptx = exportInnovationOnePagerAsPptx;
 })();
 </script>
-<script id="ampm-tab-chart-recovery-v1">
-(function(){
-  function activeTab(){
-    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim() || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function isElementVisible(el){
-    try{
-      if(!el) return false;
-      const cs = getComputedStyle(el);
-      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
-      const r = el.getBoundingClientRect();
-      return r.width > 80 && r.height > 80;
-    }catch(_e){ return false; }
-  }
-  function chartFromCanvas(canvas){
-    try{
-      if(!canvas || typeof Chart === 'undefined') return null;
-      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
-    }catch(_e){}
-    return null;
-  }
-  function canvasesForTab(tab){
-    try{
-      return Array.from(document.querySelectorAll('[data-tabpage="'+ String(tab || '').trim() +'"] canvas')).filter(isElementVisible);
-    }catch(_e){ return []; }
-  }
-  function tabHasMissingCharts(tab){
-    try{
-      const list = canvasesForTab(tab);
-      if(!list.length) return false;
-      return list.some(function(cv){ return !chartFromCanvas(cv); });
-    }catch(_e){ return false; }
-  }
-  function resizeVisibleCharts(tab){
-    try{
-      canvasesForTab(tab).forEach(function(cv){
-        try{
-          const ch = chartFromCanvas(cv);
-          if(!ch) return;
-          if(typeof ch.resize === 'function') ch.resize();
-          if(typeof ch.update === 'function') ch.update('none');
-        }catch(_e){}
-      });
-      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
-      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
-      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
-    }catch(_e){}
-  }
-  function recoverTab(tab, force){
-    try{
-      const safeTab = String(tab || activeTab()).trim();
-      if(!safeTab) return;
-      const mustRebuild = !!force || tabHasMissingCharts(safeTab);
-      if(mustRebuild && typeof window.refreshVisibleTabCharts === 'function'){
-        try{ window.refreshVisibleTabCharts(safeTab, true); }catch(_e){}
-      }
-      requestAnimationFrame(function(){
-        requestAnimationFrame(function(){ resizeVisibleCharts(safeTab); });
-      });
-    }catch(_e){}
-  }
-
-  if(typeof window.refreshVisibleTabCharts === 'function' && !window.refreshVisibleTabCharts.__ampmRecoveryWrapped){
-    const _origRefreshVisibleTabCharts = window.refreshVisibleTabCharts;
-    window.refreshVisibleTabCharts = function(tab, forceRebuild){
-      const safeTab = String(tab || activeTab()).trim();
-      const needsRecovery = !!forceRebuild || tabHasMissingCharts(safeTab);
-      const out = _origRefreshVisibleTabCharts.call(this, safeTab, needsRecovery);
-      try{ resizeVisibleCharts(safeTab); }catch(_e){}
-      return out;
-    };
-    window.refreshVisibleTabCharts.__ampmRecoveryWrapped = true;
-  }
-
-  if(typeof window.scheduleVisibleChartRefresh === 'function' && !window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped){
-    const _origScheduleVisibleChartRefresh = window.scheduleVisibleChartRefresh;
-    window.scheduleVisibleChartRefresh = function(tab){
-      const safeTab = String(tab || activeTab()).trim();
-      const out = _origScheduleVisibleChartRefresh.call(this, safeTab);
-      setTimeout(function(){ recoverTab(safeTab, false); }, 40);
-      setTimeout(function(){ recoverTab(safeTab, false); }, 180);
-      setTimeout(function(){ recoverTab(safeTab, false); }, 420);
-      return out;
-    };
-    window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped = true;
-  }
-
-  function onTabShown(ev){
-    const safeTab = String(ev?.detail?.tab || activeTab()).trim();
-    recoverTab(safeTab, false);
-    setTimeout(function(){ recoverTab(safeTab, false); }, 140);
-    setTimeout(function(){ recoverTab(safeTab, false); }, 380);
-  }
-
-  window.addEventListener('ampm:tabshown', onTabShown);
-  window.addEventListener('resize', function(){ recoverTab(activeTab(), false); }, { passive:true });
-  window.addEventListener('focus', function(){ try{ resizeVisibleCharts(activeTab()); }catch(_e){} }, { passive:true });
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
-      setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
-    }, { once:true });
-  }else{
-    setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
-    setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
-  }
-})();
-</script>
+<script id="ampm-tab-chart-recovery-v1-disabled">/* disabled by forensic cleanup */</script>
 <script id="ampm-export-postcooldown-v1">
 (function(){
   function inCooldown(){
@@ -52137,178 +52225,8 @@ function innovationOnePagerCreateBrandedShell(){
   });
 })();
 </script>
-<script id="ventas-monthly-mam-tab-recovery-v1">
-(function(){
-  function _txt(v){ return String(v == null ? '' : v).trim(); }
-  function activeTab(){
-    try{ return _txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen') || 'resumen'; }
-    catch(_e){ return 'resumen'; }
-  }
-  function isMonthly(){
-    try{
-      if(typeof getUnifiedReportMode === 'function') return _txt(getUnifiedReportMode()).toLowerCase() === 'mensual';
-      return _txt((typeof state !== 'undefined' && state && state.reportMode) ? state.reportMode : '').toLowerCase() === 'mensual';
-    }catch(_e){ return false; }
-  }
-  function isVisibleCanvas(id){
-    try{
-      var c = document.getElementById(id);
-      if(!c) return false;
-      var cs = getComputedStyle(c);
-      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
-      var r = c.getBoundingClientRect();
-      return r.width > 100 && r.height > 100;
-    }catch(_e){ return false; }
-  }
-  function runVentasMamRecovery(){
-    try{
-      if(activeTab() !== 'ventas') return;
-      if(!isMonthly()) return;
-      if(!isVisibleCanvas('chart_mam')) return;
-      var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) || []);
-      if(typeof renderMamChart === 'function') renderMamChart(stores);
-      if(typeof renderMamStoreCards === 'function') renderMamStoreCards(stores);
-      if(typeof renderStoreMamChart === 'function' && isVisibleCanvas('chart_store_mam')) renderStoreMamChart(stores);
-      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
-      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
-    }catch(err){ try{ console.warn('ventas monthly mam recovery failed', err); }catch(_e){} }
-  }
-  function scheduleVentasMamRecovery(){
-    try{
-      requestAnimationFrame(function(){ requestAnimationFrame(runVentasMamRecovery); });
-      setTimeout(runVentasMamRecovery, 90);
-      setTimeout(runVentasMamRecovery, 260);
-      setTimeout(runVentasMamRecovery, 520);
-    }catch(_e){}
-  }
-
-  function runDeliveryMamRecovery(){
-    try{
-      if(activeTab() !== 'delivery') return;
-      if(!isVisibleCanvas('chart_delivery_mam')) return;
-      var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) || []);
-      if(typeof renderDeliveryMamChart === 'function') renderDeliveryMamChart(stores);
-      if(typeof renderDeliveryStoreCards === 'function') renderDeliveryStoreCards(stores);
-      if(typeof renderDeliveryShareMamChart === 'function' && isVisibleCanvas('chart_delivery_share_mam')) renderDeliveryShareMamChart(stores);
-      if(typeof renderDeliveryShareStoreCards === 'function') renderDeliveryShareStoreCards(stores);
-      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
-      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
-    }catch(err){ try{ console.warn('delivery mam recovery failed', err); }catch(_e){} }
-  }
-  function scheduleDeliveryMamRecovery(){
-    try{
-      requestAnimationFrame(function(){ requestAnimationFrame(runDeliveryMamRecovery); });
-      setTimeout(runDeliveryMamRecovery, 90);
-      setTimeout(runDeliveryMamRecovery, 260);
-      setTimeout(runDeliveryMamRecovery, 520);
-    }catch(_e){}
-  }
-
-  window.addEventListener('ampm:tabshown', function(ev){
-    try{
-      var tab = _txt(ev && ev.detail && ev.detail.tab).toLowerCase();
-      if(tab === 'ventas') scheduleVentasMamRecovery();
-      if(tab === 'delivery') scheduleDeliveryMamRecovery();
-    }catch(_e){}
-  });
-  window.addEventListener('focus', function(){
-    try{
-      var tab = activeTab();
-      if(tab === 'ventas' || tab === 'delivery'){
-        if(typeof resizeCharts === 'function') resizeCharts();
-        if(typeof updateAllChartTitles === 'function') updateAllChartTitles();
-      }
-    }catch(_e){}
-  }, { passive:true });
-})();
-</script>
-<script id="sbf-general-chart-recovery-patch">
-(function(){
-  var _recoverTimer = null;
-  function activeTab(){
-    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim(); }catch(e){ return ''; }
-  }
-  function isVisible(el){
-    try{
-      if(!el) return false;
-      const st = getComputedStyle(el);
-      const r = el.getBoundingClientRect();
-      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
-    }catch(e){ return false; }
-  }
-  function getStores(){
-    try{ return (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) ? state.stores : []); }catch(_e){ return []; }
-  }
-  function resizeExistingChart(){
-    try{
-      const chart = (window.state && state.chartSbfMam) ? state.chartSbfMam : null;
-      const canvas = chart && chart.canvas ? chart.canvas : document.getElementById('chart_sbf_mam');
-      if(!chart || !canvas || !isVisible(canvas)) return false;
-      if(typeof chart.resize === 'function') chart.resize();
-      if(typeof chart.update === 'function') chart.update('none');
-      return true;
-    }catch(_e){ return false; }
-  }
-  function rebuildChart(){
-    try{
-      const stores = getStores();
-      const canvas = document.getElementById('chart_sbf_mam');
-      if(!canvas) return;
-      const card = canvas.closest('.chartCard');
-      if(card && card.style.display === 'none') return;
-      try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
-      if(!isVisible(canvas)) return;
-      try{
-        if(window.state && state.chartSbfMam && typeof state.chartSbfMam.destroy === 'function'){
-          state.chartSbfMam.destroy();
-          state.chartSbfMam = null;
-        }
-      }catch(_e){}
-      try{ if(typeof renderSbfMamChart === 'function') renderSbfMamChart(stores); }catch(e){ console.warn('recoverSbfGeneralChart render failed', e); }
-      setTimeout(function(){
-        try{ resizeExistingChart(); }catch(_e){}
-      }, 90);
-    }catch(e){ console.warn('recoverSbfGeneralChart failed', e); }
-  }
-  function runRecover(mode){
-    try{
-      if(activeTab() !== 'sbf') return;
-      const stores = getStores();
-      try{ if(typeof syncSbfMamVisibility === 'function') syncSbfMamVisibility(stores); }catch(e){}
-      const canvas = document.getElementById('chart_sbf_mam');
-      if(!canvas) return;
-      if(!isVisible(canvas)) return;
-      if(mode === 'rebuild'){
-        rebuildChart();
-        return;
-      }
-      if(!resizeExistingChart()) rebuildChart();
-      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
-      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
-      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
-    }catch(e){ console.warn('runRecover SBF failed', e); }
-  }
-  function scheduleRecover(mode){
-    try{ if(_recoverTimer) clearTimeout(_recoverTimer); }catch(_e){}
-    const safeMode = (mode === 'rebuild') ? 'rebuild' : 'light';
-    requestAnimationFrame(function(){ requestAnimationFrame(function(){ runRecover(safeMode); }); });
-    _recoverTimer = setTimeout(function(){ runRecover(safeMode); }, safeMode === 'rebuild' ? 140 : 90);
-  }
-  document.addEventListener('click', function(ev){
-    const btn = ev.target && ev.target.closest ? ev.target.closest('.tabBtn[data-tab="sbf"]') : null;
-    if(!btn) return;
-    scheduleRecover('light');
-  }, true);
-  window.addEventListener('ampm:tabshown', function(ev){
-    try{
-      var tab = String(ev && ev.detail && ev.detail.tab || '').trim().toLowerCase();
-      if(tab === 'sbf') scheduleRecover('light');
-    }catch(_e){}
-  });
-  window.addEventListener('resize', function(){ if(activeTab() === 'sbf') scheduleRecover('light'); }, { passive:true });
-  setTimeout(function(){ try{ if(activeTab() === 'sbf') scheduleRecover('light'); }catch(_e){} }, 400);
-})();
-</script>
+<script id="ventas-monthly-mam-tab-recovery-v1-disabled">/* disabled by forensic cleanup */</script>
+<script id="sbf-general-chart-recovery-patch-disabled">/* disabled by forensic cleanup */</script>
 <style id="ampm-biz-style">
 .ampm-biz-section{margin:14px 0 18px;padding:14px;border-radius:18px;background:linear-gradient(180deg,rgba(0,94,167,.05),rgba(245,131,32,.03));border:1px solid rgba(15,23,42,.10);box-shadow:0 14px 34px rgba(2,8,23,.08)}
 .ampm-biz-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -56742,7 +56660,9 @@ function innovationOnePagerCreateBrandedShell(){
   }
 }
 </style>
-<script id="ampm-sidebar-static-script-v3">(function(){if(window.__ampmSidebarStaticV3)return;window.__ampmSidebarStaticV3=true;function activeTab(){try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen').trim()||'resumen';}catch(_e){return 'resumen';}}function refresh(){var tab=activeTab();try{document.documentElement.style.setProperty('--panelStickyTop','10px');document.documentElement.style.setProperty('--tabsbarH','0px');}catch(_e){}try{window.dispatchEvent(new Event('resize'));}catch(_e){}setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(_e){}try{if(typeof window.scheduleVisibleChartRefresh==='function')window.scheduleVisibleChartRefresh(tab);}catch(_e){}try{if(typeof window.scheduleFitTables==='function')window.scheduleFitTables();}catch(_e){}try{if(typeof window.refreshVisibleTabCharts==='function')window.refreshVisibleTabCharts(tab,false);}catch(_e){}},180);}function apply(collapsed){var shell=document.querySelector('.ampm-shell');var btn=document.getElementById('ampmSidebarToggle');if(!shell||!btn)return;shell.classList.toggle('is-collapsed',!!collapsed);btn.setAttribute('aria-expanded',collapsed?'false':'true');btn.title=collapsed?'Mostrar menú lateral':'Ocultar menú lateral';var lbl=btn.querySelector('.ampm-sidebar-toggleLabel');if(lbl)lbl.textContent=collapsed?'Mostrar menú':'Ocultar menú';var ic=btn.querySelector('.ampm-sidebar-toggleIcon path');if(ic)ic.setAttribute('d',collapsed?'M9 6l6 6-6 6':'M15 6l-6 6 6 6');try{localStorage.setItem('ampm_sidebar_collapsed',collapsed?'1':'0');}catch(_e){}refresh();}function boot(){var btn=document.getElementById('ampmSidebarToggle');if(!btn)return;var shortMap={resumen:'Res',onepager:'OP',ventas:'Vta',delivery:'Del',innovacion:'Inn',sbf:'SBF',inventario:'Inv',merma:'Mer',prd0:'PRD',cxc:'CXC',hallazgos:'Hal',criticos:'Cri'};document.querySelectorAll('.tabBtn[data-tab]').forEach(function(btn2){var key=String(btn2.dataset.tab||'').trim();btn2.setAttribute('data-short',shortMap[key]||key.slice(0,3).toUpperCase());});var collapsed=false;try{collapsed=localStorage.getItem('ampm_sidebar_collapsed')==='1';}catch(_e){}apply(collapsed);btn.addEventListener('click',function(){apply(!document.querySelector('.ampm-shell').classList.contains('is-collapsed'));});setTimeout(refresh,120);setTimeout(refresh,420);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',function(){setTimeout(refresh,80);setTimeout(refresh,420);},{once:true});})();</script></body>
+<script id="ampm-sidebar-static-script-v3-disabled">/* disabled by forensic cleanup */</script>
+
+</body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
@@ -56776,4 +56696,310 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
 }
 </style>
+
+<script id="ampm-store-unified-pipeline-v22">
+(function(){
+  'use strict';
+  if(window.__ampmStoreUnifiedV22) return;
+  window.__ampmStoreUnifiedV22 = true;
+
+  /* ── utilidades ── */
+  function byId(id){ return document.getElementById(id); }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function upper(v){ return txt(v).toUpperCase(); }
+  function uniq(arr){ return Array.from(new Set((Array.isArray(arr)?arr:[]).map(txt).filter(Boolean))); }
+  function isAllToken(v){ var s=upper(v); return s==='ALL'||s==='__ALL__'||s==='(ALL)'||s==='TODAS'||s==='TODOS'; }
+
+  /* ── fuente única de verdad: state._appliedStores ── */
+  function allStores(){
+    var sel=byId('stores'), vals=[];
+    try{ vals=Array.from(sel&&sel.options||[]).map(function(o){ return txt(o.value||o.textContent); }).filter(Boolean); }catch(_e){}
+    if(vals.length) return uniq(vals);
+    try{ return uniq((window.state&&Array.isArray(state.stores))?state.stores.slice():[]); }catch(_e){ return []; }
+  }
+  function canonicalStores(list){
+    var master=allStores();
+    var masterMap=new Map(master.map(function(v){ return [upper(v),v]; }));
+    var raw=uniq(list);
+    if(!raw.length||raw.some(isAllToken)) return master.slice();
+    var out=raw.map(function(v){ return masterMap.get(upper(v))||txt(v); }).filter(Boolean);
+    return uniq(out);
+  }
+  function readMainSelect(){
+    try{
+      var sel=byId('stores');
+      if(!sel) return [];
+      return Array.from(sel.selectedOptions||[]).map(function(o){ return txt(o.value||o.textContent); }).filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function ensureAppliedStores(){
+    try{
+      if(!window.state) return allStores();
+      if(Array.isArray(state._appliedStores)&&state._appliedStores.length)
+        return canonicalStores(state._appliedStores);
+      var fromSelect=canonicalStores(readMainSelect());
+      var result=fromSelect.length?fromSelect:allStores();
+      state._appliedStores=result.slice();
+      return result;
+    }catch(_e){ return allStores(); }
+  }
+  function setAppliedStores(list){
+    var applied=canonicalStores(list&&list.length?list:allStores());
+    try{ if(window.state) state._appliedStores=applied.slice(); }catch(_e){}
+    try{
+      var sel=byId('stores');
+      if(sel){
+        var wanted=new Set(applied.map(upper));
+        Array.from(sel.options||[]).forEach(function(opt){
+          opt.selected=wanted.has(upper(opt.value||opt.textContent));
+        });
+        try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(_e){}
+      }
+    }catch(_e){}
+    return applied;
+  }
+
+  /* ── etiquetas ── */
+  function currentStoreLabel(){
+    var all=allStores(), sel=ensureAppliedStores();
+    if(!all.length||!sel.length||sel.length===all.length) return 'ALL';
+    if(sel.length<=2) return sel.join(', ');
+    return sel.slice(0,2).join(', ')+' +'+(sel.length-2);
+  }
+  function currentStoreFilterLabel(){
+    var all=allStores(), sel=ensureAppliedStores();
+    if(!sel.length) return 'Tienda=—';
+    if(!all.length||sel.length===all.length) return 'Tienda=ALL';
+    if(sel.length<=3) return 'Tienda='+sel.join(',');
+    return 'Tienda='+sel.slice(0,2).join(',')+' +'+(sel.length-2);
+  }
+  function syncStoreLabels(){
+    try{ var f=byId('ampmStoreFloatingLabel'); if(f) f.textContent=currentStoreLabel(); }catch(_e){}
+    try{ var q=byId('storeQuickLabel'); if(q) q.textContent=currentStoreLabel(); }catch(_e){}
+    try{ if(typeof window.renderStoreQuick==='function') window.renderStoreQuick(); }catch(_e){}
+  }
+
+  /* ── invalidacion COMPLETA de caches (incluyendo chartLong) ── */
+  function clearAllStoreCaches(){
+    try{ if(window.state){
+      state._deptTrendRows={};
+      state._deptTrendRowsMeta=null;
+      state._deliveryStrategyPanelCache=null;
+      state._deliveryStrategyPanelCacheKey='';
+      state._deliverySplitCache=null;
+      state._deliverySplitCacheKey='';
+      state._chartLongStoreSig='';
+      state._xfSummary=null;
+      state.chartDeptTrendVentas={};
+      state.chartDeptTrendDelivery={};
+      /* CRITICO: chartLong almacena helpers precalculados con ALL-stores; null fuerza recalc filtrado */
+      state.chartLong=null;
+    }}catch(_e){}
+    try{ if(window.__ampmForensicRuntime){
+      var rt=window.__ampmForensicRuntime;
+      rt.lastSig=''; rt.lastReason=''; rt.lastRunAt=0;
+      rt.ignoreFocusUntil=Date.now()+400;
+      rt.ignoreVisibilityUntil=Date.now()+400;
+    }}catch(_e){}
+  }
+
+  /* ── repaint de la pestana activa ── */
+  function activeTab(){
+    try{ return txt(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||(window.state&&state._lastActiveTab)||'resumen')||'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function repaintTab(stores,pass){
+    var tab=activeTab();
+    try{
+      if(tab==='ventas'){
+        if(typeof window.renderMamChart==='function') window.renderMamChart(stores);
+        if(typeof window.renderMamStoreCards==='function') window.renderMamStoreCards(stores);
+        if(typeof window.renderStoreMamChart==='function') window.renderStoreMamChart(stores);
+        if(typeof window.renderSalesBubbleChart==='function') window.renderSalesBubbleChart(stores);
+        if(typeof window.renderDeptTrendSection==='function') window.renderDeptTrendSection('ventas',stores);
+      }else if(tab==='delivery'){
+        if(typeof window.renderDeliveryMamChart==='function') window.renderDeliveryMamChart(stores);
+        if(typeof window.renderDeliveryShareMamChart==='function') window.renderDeliveryShareMamChart(stores);
+        if(typeof window.renderDeliveryShareStoreCards==='function') window.renderDeliveryShareStoreCards(stores);
+        if(typeof window.renderDeliveryCategoryShareCharts==='function') window.renderDeliveryCategoryShareCharts(stores);
+        if(typeof window.renderDeliveryStrategyPanel==='function') window.renderDeliveryStrategyPanel(stores);
+        if(typeof window.renderDeliverySplitTables==='function') window.renderDeliverySplitTables(stores);
+        if(typeof window.renderDeliveryBubbleChart==='function') window.renderDeliveryBubbleChart(stores);
+        if(typeof window.renderDeliveryChannel12wChart==='function') window.renderDeliveryChannel12wChart(stores);
+        if(typeof window.renderDeptTrendSection==='function') window.renderDeptTrendSection('delivery',stores);
+      }
+    }catch(err){ try{ console.warn('v22 repaint pass',pass,err); }catch(_e){} }
+    try{ if(typeof window.refreshVisibleTabCharts==='function') window.refreshVisibleTabCharts(tab,true); }catch(_e){}
+    try{ if(typeof window.resizeCharts==='function') window.resizeCharts(); }catch(_e){}
+    try{ if(typeof window.updateAllChartTitles==='function') window.updateAllChartTitles(); }catch(_e){}
+    try{ if(typeof window.scheduleFitTables==='function') window.scheduleFitTables(); }catch(_e){}
+  }
+
+  /* ── floating menu helpers ── */
+  function checkedFloatingStores(){
+    try{
+      var list=byId('ampmStoreFloatingList');
+      if(!list) return [];
+      return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(i){ return txt(i.value); }).filter(Boolean);
+    }catch(_e){ return []; }
+  }
+  function closeMenu(){ try{ byId('ampmStoreFloatingMenu')?.classList.remove('open'); }catch(_e){} }
+  function renderFloatingList(){
+    var sel=byId('stores');
+    var list=byId('ampmStoreFloatingList');
+    if(!sel||!list) return;
+    var opts=Array.from(sel.options||[]);
+    var applied=new Set(ensureAppliedStores().map(upper));
+    list.innerHTML=opts.map(function(o){
+      var v=txt(o.value||o.textContent);
+      var checked=applied.has(upper(v))?'checked':'';
+      var lbl=txt(o.textContent||o.value).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var vSafe=v.replace(/"/g,'&quot;');
+      return '<label class="ampmStoreFloatingItem"><input type="checkbox" value="'+vSafe+'" '+checked+'> <span>'+lbl+'</span></label>';
+    }).join('');
+    try{ byId('ampmStoreFloatingApply').disabled=false; }catch(_e){}
+  }
+
+  /* ── Apply: handler unico canonico ── */
+  function handleApply(ev){
+    try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
+    var checked=checkedFloatingStores();
+    var applied=setAppliedStores(checked);
+    syncStoreLabels();
+    clearAllStoreCaches();
+    try{ if(typeof window.markFiltersDirty==='function') window.markFiltersDirty(false); }catch(_e){}
+    try{
+      if(typeof window.refreshAll==='function') window.refreshAll();
+      else{ var rb=byId('refresh'); if(rb) rb.click(); }
+    }catch(_e){}
+    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,1); },100);
+    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,2); },320);
+    setTimeout(function(){ syncStoreLabels(); repaintTab(applied,3); },620);
+    closeMenu();
+  }
+
+  /* ── API global unificada ── */
+  window.getSelectedStoresOrAll=function(){ return ensureAppliedStores().slice(); };
+  window.xfStoreLabel=function(){ return currentStoreFilterLabel(); };
+  window.storeQuickLabelText=function(){ return currentStoreLabel(); };
+
+  /* ── wrapper refreshAll: sincroniza select maestro antes de cada llamada ── */
+  function wrapRefreshAll(){
+    if(typeof window.refreshAll!=='function'||window.__ampmV22WrappedRefreshAll) return;
+    window.__ampmV22WrappedRefreshAll=true;
+    var orig=window.refreshAll;
+    window.refreshAll=function(){
+      try{ setAppliedStores(ensureAppliedStores()); syncStoreLabels(); }catch(_e){}
+      return orig.apply(this,arguments);
+    };
+  }
+
+  /* ── wrappers deptTrend: siempre canonical stores ── */
+  function wrapDeptTrend(){
+    if(typeof window.deptTrendAggregateRowsLegacy==='function'&&!window.__ampmV22WrappedDeptTrend){
+      window.__ampmV22WrappedDeptTrend=true;
+      window.deptTrendAggregateRows=function(tab,storeList){
+        var stores=canonicalStores(storeList&&storeList.length?storeList:ensureAppliedStores());
+        return window.deptTrendAggregateRowsLegacy(tab,stores);
+      };
+    }
+    if(typeof window.deptTrendDeliveryBreakdownMapLegacy==='function'){
+      window.deptTrendDeliveryBreakdownMap=function(storeList){
+        return window.deptTrendDeliveryBreakdownMapLegacy(canonicalStores(storeList&&storeList.length?storeList:ensureAppliedStores()));
+      };
+    }
+    if(typeof window.deptTrendOverallSalesMapLegacy==='function'){
+      window.deptTrendOverallSalesMap=function(tab,storeList){
+        return window.deptTrendOverallSalesMapLegacy(tab,canonicalStores(storeList&&storeList.length?storeList:ensureAppliedStores()));
+      };
+    }
+  }
+
+  /* ── bind Apply: cloneNode destruye listeners de v17/v18/v19/v21 ── */
+  function bindApplyBtn(){
+    var btn=byId('ampmStoreFloatingApply');
+    if(!btn) return;
+    var clone=btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone,btn);
+    clone.addEventListener('click',handleApply,true);
+  }
+
+  /* ── guard select maestro nativo ── */
+  function bindSelectGuard(){
+    var sel=byId('stores');
+    if(!sel||sel.__ampmV22Guard) return;
+    sel.__ampmV22Guard=true;
+    sel.addEventListener('change',function(){
+      var picked=canonicalStores(readMainSelect());
+      try{ if(window.state) state._appliedStores=(picked.length?picked:allStores()).slice(); }catch(_e){}
+      syncStoreLabels();
+    });
+  }
+
+  /* ── bind menu flotante completo ── */
+  function bindFloatingMenu(){
+    var triggerBtn=byId('ampmStoreFloatingBtn');
+    var menu=byId('ampmStoreFloatingMenu');
+    var list=byId('ampmStoreFloatingList');
+    if(!triggerBtn||!menu||!list||triggerBtn.__ampmV22MenuBound) return;
+    triggerBtn.__ampmV22MenuBound=true;
+    var cloneTrigger=triggerBtn.cloneNode(true);
+    triggerBtn.parentNode.replaceChild(cloneTrigger,triggerBtn);
+    cloneTrigger.addEventListener('click',function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      var isOpen=menu.classList.contains('open');
+      menu.classList.toggle('open',!isOpen);
+      if(!isOpen) renderFloatingList();
+    });
+    menu.addEventListener('click',function(ev){ ev.stopPropagation(); });
+    menu.querySelectorAll('[data-floating-store-action]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var act=b.getAttribute('data-floating-store-action');
+        var all=allStores();
+        var wanted=act==='all'?all:[];
+        var wantedSet=new Set(wanted.map(upper));
+        Array.from(list.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
+          cb.checked=wantedSet.has(upper(cb.value));
+        });
+      });
+    });
+    var cancelBtn=byId('ampmStoreFloatingCancel');
+    if(cancelBtn){
+      var cloneCancel=cancelBtn.cloneNode(true);
+      cancelBtn.parentNode.replaceChild(cloneCancel,cancelBtn);
+      cloneCancel.addEventListener('click',function(){
+        renderFloatingList();
+        menu.classList.remove('open');
+      });
+    }
+    document.addEventListener('click',function(){ menu.classList.remove('open'); });
+    document.addEventListener('keydown',function(ev){ if(ev.key==='Escape') menu.classList.remove('open'); });
+  }
+
+  /* ── boot ── */
+  function boot(){
+    if(window.state&&(!Array.isArray(state._appliedStores)||!state._appliedStores.length)){
+      var fromSelect=canonicalStores(readMainSelect());
+      state._appliedStores=(fromSelect.length?fromSelect:allStores()).slice();
+    }
+    syncStoreLabels();
+    bindSelectGuard();
+    bindApplyBtn();
+    bindFloatingMenu();
+    wrapRefreshAll();
+    wrapDeptTrend();
+  }
+
+  /* Delay 400ms: corre DESPUES de v17(0ms) v18(60ms) v19(120ms) v21(220ms) */
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){ setTimeout(boot,400); },{once:true});
+  }else{
+    setTimeout(boot,400);
+  }
+  window.addEventListener('load',function(){
+    setTimeout(boot,500);
+    setTimeout(syncStoreLabels,700);
+  },{once:true});
+})();
+</script>
 </html>
