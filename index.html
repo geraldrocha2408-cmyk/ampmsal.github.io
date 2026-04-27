@@ -36651,10 +36651,18 @@ function initAmpmTabPages(){
   function chartCanvasVisible(chart){
     try{
       const c = chart && chart.canvas;
-      if(!c) return false;
+      if(!c || !c.isConnected) return false;
+      const activeTab = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim();
+      const ownerTab = String(c.closest('[data-tabpage]')?.dataset?.tabpage || '').trim();
+      if(ownerTab && activeTab && ownerTab !== activeTab) return false;
+      let node = c;
+      while(node && node !== document.body){
+        const st = getComputedStyle(node);
+        if(st.display === 'none' || st.visibility === 'hidden') return false;
+        node = node.parentElement;
+      }
       const r = c.getBoundingClientRect();
-      const st = getComputedStyle(c);
-      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
+      return r.width > 0 && r.height > 0;
     }catch(e){ return false; }
   }
 
@@ -36789,10 +36797,36 @@ function initAmpmTabPages(){
   function canvasIsReady(id){
     try{
       const c = document.getElementById(id);
-      if(!c) return false;
-      const r = c.getBoundingClientRect();
-      return r.width > 80 && r.height > 80 && getComputedStyle(c).display !== 'none';
-    }catch(e){ return false; }
+      if(!c || !c.isConnected) return false;
+      const activeTab = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim();
+      const owner = c.closest('[data-tabpage]');
+      const ownerTab = String(owner?.dataset?.tabpage || '').trim();
+      if(ownerTab && activeTab && ownerTab !== activeTab) return false;
+
+      let node = c;
+      while(node && node !== document.body){
+        const st = window.getComputedStyle ? getComputedStyle(node) : null;
+        if(st && (st.display === 'none' || st.visibility === 'hidden')) return false;
+        node = node.parentElement;
+      }
+
+      // Importante: NO exigir ancho/alto > 80 aquí.
+      // Al cambiar de pestaña, algunos canvas existen pero todavía no terminaron layout;
+      // si se destruye el chart y este guard devuelve false, la gráfica desaparece.
+      try{
+        const parent = c.parentElement;
+        if(parent && !parent.style.minHeight){
+          const h = c.getAttribute('height') || c.style.height || '';
+          parent.style.minHeight = /\d/.test(String(h)) ? '' : '180px';
+        }
+        c.style.display = 'block';
+        c.style.maxWidth = '100%';
+        c.style.pointerEvents = 'auto';
+      }catch(_e){}
+      return true;
+    }catch(e){
+      return !!document.getElementById(id);
+    }
   }
 
 
@@ -37737,7 +37771,26 @@ callback:(v)=> axisMoneyCompact1(v)
         }else if(activeTab === 'merma'){
           if(canvasIsReady('chart_merma_4m')){ try{ if (typeof renderMermaChart === 'function') renderMermaChart(); }catch(e){} }
         }
-        rememberChartRender(activeTab, currentYm, prevYms, storeList);
+        // Solo marcar como renderizado si las referencias mínimas de la pestaña existen.
+        // Antes se marcaba aunque algunos canvas fueran saltados por layout, dejando gráficas desaparecidas.
+        if(tabChartsReady(activeTab)){
+          rememberChartRender(activeTab, currentYm, prevYms, storeList);
+        }else{
+          try{ if(state && state._lastChartRenderSig) state._lastChartRenderSig[activeTab] = ''; }catch(_e){}
+          try{
+            const retryKey = '__chartRetry_' + activeTab;
+            state[retryKey] = (state[retryKey] || 0) + 1;
+            if(state[retryKey] <= 2){
+              requestAnimationFrame(function(){
+                requestAnimationFrame(function(){
+                  try{ refreshVisibleTabCharts(activeTab, true); }catch(_e){}
+                });
+              });
+            }else{
+              state[retryKey] = 0;
+            }
+          }catch(_e){}
+        }
       }
 
       try{ resizeCharts(); }catch(e){}
@@ -57559,6 +57612,90 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   window.addEventListener('ampm:refresh', scheduleRestore);
 
   window.ampmRestoreTableFiltersEtapa6 = restoreAll;
+})();
+</script>
+
+
+<style id="ampm-chart-visibility-hotfix-v10">
+  [data-tabpage] canvas{
+    max-width:100% !important;
+    pointer-events:auto !important;
+  }
+  [data-tabpage] .chartCard canvas{
+    display:block !important;
+  }
+  [data-tabpage] .chartCard > div:has(> canvas),
+  [data-tabpage] .monthly-chart-viewport,
+  [data-tabpage] .opCanvasWrap,
+  [data-tabpage] .innovationChartWrap,
+  [data-tabpage] .innovationFsExecCanvasWrap,
+  [data-tabpage] .innovationMetaFsCanvasWrap,
+  [data-tabpage] .innovationIngredMermaCanvasWrap{
+    min-height:180px;
+  }
+</style>
+<script id="ampm-chart-visibility-hotfix-v10">
+(function(){
+  if(window.__ampmChartVisibilityHotfixV10) return;
+  window.__ampmChartVisibilityHotfixV10 = true;
+
+  function activeTab(){
+    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim(); }
+    catch(_e){ return 'resumen'; }
+  }
+
+  function isVisible(node){
+    try{
+      if(!node || !node.isConnected) return false;
+      var cur = node;
+      while(cur && cur !== document.body){
+        var st = getComputedStyle(cur);
+        if(st.display === 'none' || st.visibility === 'hidden') return false;
+        cur = cur.parentElement;
+      }
+      return true;
+    }catch(_e){ return false; }
+  }
+
+  function normalizeCanvasLayout(tab){
+    try{
+      var safe = String(tab || activeTab()).trim();
+      document.querySelectorAll('[data-tabpage="' + safe.replace(/"/g,'\"') + '"] canvas').forEach(function(cv){
+        try{
+          cv.style.display = 'block';
+          cv.style.maxWidth = '100%';
+          cv.style.pointerEvents = 'auto';
+          var parent = cv.parentElement;
+          if(parent && isVisible(parent)){
+            var r = parent.getBoundingClientRect();
+            if((!r.height || r.height < 80) && !parent.style.minHeight) parent.style.minHeight = '180px';
+          }
+        }catch(_e){}
+      });
+    }catch(_e){}
+  }
+
+  var pending = false;
+  function schedule(tab, force){
+    if(pending) return;
+    pending = true;
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        pending = false;
+        var safe = String(tab || activeTab()).trim();
+        normalizeCanvasLayout(safe);
+        try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+        try{ if(typeof window.ampmResizeVisibleChartsEtapa3 === 'function') window.ampmResizeVisibleChartsEtapa3(safe); }catch(_e){}
+        if(force){
+          try{ if(typeof window.refreshVisibleTabCharts === 'function') window.refreshVisibleTabCharts(safe, false); }catch(_e){}
+        }
+      });
+    });
+  }
+
+  window.addEventListener('ampm:tabshown', function(ev){ schedule(ev && ev.detail && ev.detail.tab, false); });
+  window.addEventListener('load', function(){ schedule(activeTab(), false); }, {once:true});
+  window.addEventListener('resize', function(){ schedule(activeTab(), false); }, {passive:true});
 })();
 </script>
 
