@@ -16788,7 +16788,7 @@ return;
         const __activeInvTab = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim();
         const __bubbleCanvas = document.getElementById('chart_inv_bubble');
         const __bubbleRect = __bubbleCanvas ? __bubbleCanvas.getBoundingClientRect() : {width:0,height:0};
-        if (__activeInvTab === 'inventario' || (__bubbleCanvas && __bubbleRect.width > 1 && __bubbleRect.height > 1)) {
+        if (__activeInvTab === 'inventario' || (__bubbleCanvas && __bubbleRect.width > 80 && __bubbleRect.height > 80)) {
           renderInventoryBubbleChart(Array.from(storeSet), currentYm);
         }
       }catch(e){ console.warn('Inv bubble chart failed', e); }
@@ -28989,7 +28989,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
             await _sleep(220);
           }
           try{ if(typeof refreshAll === 'function' && hasReportData()) refreshAll(); }catch(e){}
-          try{ refreshVisibleTabCharts('onepager', false); }catch(e){}
+          try{ refreshVisibleTabCharts('onepager', true); }catch(e){}
           await _sleep(260);
         }catch(e){}
         if(!hasReportData()){
@@ -29012,7 +29012,7 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
             await _sleep(220);
           }
 
-          try{ refreshVisibleTabCharts('onepager', false); }catch(e){}
+          try{ refreshVisibleTabCharts('onepager', true); }catch(e){}
           await _sleep(260);
           try{ resizeCharts(); }catch(e){}
           await _sleep(180);
@@ -31017,8 +31017,7 @@ async function exportInnovationAsPptx(){
     }
 
 const AMPM_RUNTIME = window.__AMPM_RUNTIME || Object.freeze({
-  // Gobernanza: no usar pasadas diferidas destructivas; el render se controla por requestAnimationFrame.
-  chartRefreshDelays: [],
+  chartRefreshDelays: [120, 360, 900, 1500],
   fitTablesDelay: 60
 });
 
@@ -36411,17 +36410,10 @@ function initAmpmTabPages(){
   function chartCanvasVisible(chart){
     try{
       const c = chart && chart.canvas;
-      if(!c || !c.isConnected) return false;
-      const st = getComputedStyle(c);
-      if(st.display === 'none' || st.visibility === 'hidden') return false;
-      const page = c.closest('[data-tabpage]');
-      if(page){
-        const ps = getComputedStyle(page);
-        if(ps.display === 'none' || ps.visibility === 'hidden') return false;
-      }
+      if(!c) return false;
       const r = c.getBoundingClientRect();
-      const host = c.parentElement ? c.parentElement.getBoundingClientRect() : r;
-      return (r.width > 1 && r.height > 1) || (host.width > 20 && host.height > 20);
+      const st = getComputedStyle(c);
+      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
     }catch(e){ return false; }
   }
 
@@ -36556,18 +36548,9 @@ function initAmpmTabPages(){
   function canvasIsReady(id){
     try{
       const c = document.getElementById(id);
-      if(!c || !c.isConnected) return false;
-      const st = getComputedStyle(c);
-      if(st.display === 'none' || st.visibility === 'hidden') return false;
-      const page = c.closest('[data-tabpage]');
-      if(page){
-        const ps = getComputedStyle(page);
-        if(ps.display === 'none' || ps.visibility === 'hidden') return false;
-      }
+      if(!c) return false;
       const r = c.getBoundingClientRect();
-      const host = c.parentElement ? c.parentElement.getBoundingClientRect() : r;
-      // No exigir 80px: durante cambio de pestaña/sidebar el canvas puede estar recién recalculando.
-      return (r.width > 1 && r.height > 1) || (host.width > 20 && host.height > 20);
+      return r.width > 80 && r.height > 80 && getComputedStyle(c).display !== 'none';
     }catch(e){ return false; }
   }
 
@@ -37440,9 +37423,7 @@ callback:(v)=> axisMoneyCompact1(v)
       const currentYm = el('currentMonth')?.value;
       const prevYms = getSelectedValues(el('prevMonths'));
       const storeList = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state?.stores || []);
-      const sigNeedsRender = tabChartsNeedRender(activeTab, currentYm, prevYms, storeList);
-      // forceRebuild ya no destruye charts si la firma de filtros/data no cambió y la pestaña ya tiene charts.
-      const shouldRender = !!sigNeedsRender || (!!forceRebuild && !tabChartsReady(activeTab));
+      const shouldRender = !!forceRebuild || tabChartsNeedRender(activeTab, currentYm, prevYms, storeList);
       if(shouldRender) destroyTabCharts(activeTab);
       const safeRender = (fn)=>{ try{ if (typeof fn === 'function') fn(storeList); }catch(e){ console.warn('chart render failed', activeTab, e); } };
       if(shouldRender){
@@ -37515,11 +37496,7 @@ callback:(v)=> axisMoneyCompact1(v)
         }else if(activeTab === 'merma'){
           if(canvasIsReady('chart_merma_4m')){ try{ if (typeof renderMermaChart === 'function') renderMermaChart(); }catch(e){} }
         }
-        if(tabChartsReady(activeTab)){
-          rememberChartRender(activeTab, currentYm, prevYms, storeList);
-        }else{
-          try{ markTabsDirty(activeTab); }catch(_e){}
-        }
+        rememberChartRender(activeTab, currentYm, prevYms, storeList);
       }
 
       try{ resizeCharts(); }catch(e){}
@@ -37549,6 +37526,7 @@ callback:(v)=> axisMoneyCompact1(v)
         }catch(e){}
       };
       requestAnimationFrame(()=> requestAnimationFrame(run));
+      (AMPM_RUNTIME.chartRefreshDelays || []).forEach(ms => setTimeout(run, ms));
     }catch(e){}
   }
 
@@ -37628,7 +37606,7 @@ callback:(v)=> axisMoneyCompact1(v)
     if(hasReportData() && tabNeedsRender(tab, el('currentMonth')?.value, getSelectedValues(el('prevMonths')), getSelectedStoresOrAll())){
       try{
         refreshAll();
-        requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ try{ resizeCharts(); }catch(_e){}; scheduleVisibleChartRefresh(tab); }); });
+        requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scheduleVisibleChartRefresh(tab); }); });
         if(didChangeTab){
           setTimeout(queueActiveTabTopScroll, 120);
         }
@@ -51236,7 +51214,7 @@ function innovationOnePagerCreateBrandedShell(){
       const cs = getComputedStyle(el);
       if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
       const r = el.getBoundingClientRect();
-      return r.width > 1 && r.height > 1;
+      return r.width > 80 && r.height > 80;
     }catch(_e){ return false; }
   }
   function chartFromCanvas(canvas){
@@ -51279,7 +51257,7 @@ function innovationOnePagerCreateBrandedShell(){
       if(!safeTab) return;
       const mustRebuild = !!force || tabHasMissingCharts(safeTab);
       if(mustRebuild && typeof window.refreshVisibleTabCharts === 'function'){
-        try{ window.refreshVisibleTabCharts(safeTab, false); }catch(_e){}
+        try{ window.refreshVisibleTabCharts(safeTab, true); }catch(_e){}
       }
       requestAnimationFrame(function(){
         requestAnimationFrame(function(){ resizeVisibleCharts(safeTab); });
@@ -51291,7 +51269,7 @@ function innovationOnePagerCreateBrandedShell(){
     const _origRefreshVisibleTabCharts = window.refreshVisibleTabCharts;
     window.refreshVisibleTabCharts = function(tab, forceRebuild){
       const safeTab = String(tab || activeTab()).trim();
-      const needsRecovery = tabHasMissingCharts(safeTab);
+      const needsRecovery = !!forceRebuild || tabHasMissingCharts(safeTab);
       const out = _origRefreshVisibleTabCharts.call(this, safeTab, needsRecovery);
       try{ resizeVisibleCharts(safeTab); }catch(_e){}
       return out;
@@ -52326,7 +52304,7 @@ function innovationOnePagerCreateBrandedShell(){
       if(!el) return false;
       const st = getComputedStyle(el);
       const r = el.getBoundingClientRect();
-      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 1 && r.height > 1;
+      return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 80 && r.height > 80;
     }catch(e){ return false; }
   }
   function getStores(){
@@ -56894,11 +56872,10 @@ function innovationOnePagerCreateBrandedShell(){
     if(!tab || !hasDataLoaded()) return;
     resizeOnly();
     try{
-      // El sidebar solo cambia layout; no debe destruir/reconstruir charts.
-      if(typeof window.scheduleVisibleChartRefresh === 'function'){
+      if(typeof window.refreshVisibleTabCharts === 'function'){
+        window.refreshVisibleTabCharts(tab, !!forceRebuild);
+      }else if(typeof window.scheduleVisibleChartRefresh === 'function'){
         window.scheduleVisibleChartRefresh(tab);
-      }else if(typeof window.refreshVisibleTabCharts === 'function'){
-        window.refreshVisibleTabCharts(tab, false);
       }
     }catch(e){ console.warn('sidebar rebuildActiveTab failed', tab, e); }
     resizeOnly();
@@ -56931,7 +56908,7 @@ function innovationOnePagerCreateBrandedShell(){
     }
     try{ localStorage.setItem('ampm_sidebar_collapsed', collapsed ? '1' : '0'); }catch(_e){}
     suspendObserverUntil = now() + 260;
-    if(!opts || opts.refresh !== false) scheduleRefresh(false);
+    if(!opts || opts.refresh !== false) scheduleRefresh(true);
   }
   function installObserver(){
     if(typeof ResizeObserver !== 'function') return;
@@ -56954,7 +56931,7 @@ function innovationOnePagerCreateBrandedShell(){
       if(dw < 8 && dh < 8) return;
       lastObservedW = w;
       lastObservedH = h;
-      scheduleRefresh(false);
+      scheduleRefresh(dw >= 24);
     });
     try{ layoutObserver.observe(target); }catch(_e){}
   }
@@ -56977,12 +56954,12 @@ function innovationOnePagerCreateBrandedShell(){
       var next = !(shell && shell.classList.contains('is-collapsed'));
       apply(next, { refresh:true, restoreScroll:true });
     });
-    scheduleRefresh(false);
-    setTimeout(function(){ scheduleRefresh(false); }, 320);
+    scheduleRefresh(true);
+    setTimeout(function(){ scheduleRefresh(true); }, 320);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
   else boot();
-  window.addEventListener('load', function(){ scheduleRefresh(false); }, { once:true });
+  window.addEventListener('load', function(){ scheduleRefresh(true); }, { once:true });
 })();</script>
 <style id="ampm-context-header-styles">
 .ampm-context-header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 14px;padding:18px 20px;border-radius:22px;background:linear-gradient(135deg, rgba(0,94,167,.16) 0%, rgba(12,77,143,.10) 38%, rgba(245,131,32,.10) 100%);border:1px solid rgba(12,77,143,.14);box-shadow:0 16px 40px rgba(17,40,74,.10);overflow:hidden;isolation:isolate;}
@@ -57243,7 +57220,7 @@ function innovationOnePagerCreateBrandedShell(){
           }catch(e){ console.warn('v11 innovation hard refresh failed', reason, e); }
         }
         if(typeof refreshVisibleTabCharts === 'function'){
-          try{ refreshVisibleTabCharts(tab, false); }catch(e){ console.warn('v11 refreshVisibleTabCharts failed', tab, reason, e); }
+          try{ refreshVisibleTabCharts(tab, true); }catch(e){ console.warn('v11 refreshVisibleTabCharts failed', tab, reason, e); }
         }else if(typeof scheduleVisibleChartRefresh === 'function'){
           try{ scheduleVisibleChartRefresh(tab); }catch(e){ console.warn('v11 scheduleVisibleChartRefresh failed', tab, reason, e); }
         }
@@ -57251,7 +57228,7 @@ function innovationOnePagerCreateBrandedShell(){
         try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(e){}
       }catch(e){ console.warn('v11 hard refresh run failed', tab, reason, e); }
     };
-    try{ requestAnimationFrame(function(){ requestAnimationFrame(run); }); }catch(_e){ setTimeout(run, 0); }
+    [0, 120, 360, 720].forEach(function(ms){ setTimeout(run, ms); });
   }
   function _wrapRefreshAll(){
     if(typeof window.refreshAll !== 'function' || window.refreshAll.__ampmStoreHardRefreshV11) return;
@@ -57291,134 +57268,6 @@ function innovationOnePagerCreateBrandedShell(){
   }else{
     _bootstrap();
   }
-})();
-</script>
-
-
-<script id="ampm-final-render-governor-v12">
-(function(){
-  if(window.__ampmFinalRenderGovernorV12) return;
-  window.__ampmFinalRenderGovernorV12 = true;
-
-  function activeTab(){
-    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim(); }catch(_e){ return 'resumen'; }
-  }
-  function isVisible(el){
-    try{
-      if(!el || !el.isConnected) return false;
-      var st = getComputedStyle(el);
-      if(st.display === 'none' || st.visibility === 'hidden') return false;
-      var page = el.closest('[data-tabpage]');
-      if(page){
-        var ps = getComputedStyle(page);
-        if(ps.display === 'none' || ps.visibility === 'hidden') return false;
-      }
-      var r = el.getBoundingClientRect();
-      var host = el.parentElement ? el.parentElement.getBoundingClientRect() : r;
-      return (r.width > 1 && r.height > 1) || (host.width > 20 && host.height > 20);
-    }catch(_e){ return false; }
-  }
-  function chartFromCanvas(cv){
-    try{ if(window.Chart && typeof Chart.getChart === 'function') return Chart.getChart(cv); }catch(_e){}
-    try{
-      if(!window.Chart || !Chart.instances) return null;
-      var inst = Chart.instances;
-      var vals = Array.isArray(inst) ? inst : Object.keys(inst).map(function(k){ return inst[k]; });
-      for(var i=0;i<vals.length;i++){ if(vals[i] && vals[i].canvas === cv) return vals[i]; }
-    }catch(_e){}
-    return null;
-  }
-  function canvasesForTab(tab){
-    try{
-      var safe = String(tab || activeTab()).trim();
-      var scope = document.querySelector('[data-tabpage="' + safe.replace(/"/g,'') + '"]') || document;
-      return Array.prototype.slice.call(scope.querySelectorAll('canvas')).filter(isVisible);
-    }catch(_e){ return []; }
-  }
-  function missingCharts(tab){
-    try{
-      var list = canvasesForTab(tab);
-      if(!list.length) return [];
-      return list.filter(function(cv){ return !chartFromCanvas(cv); });
-    }catch(_e){ return []; }
-  }
-  function resizeTab(tab){
-    try{
-      canvasesForTab(tab).forEach(function(cv){
-        var ch = chartFromCanvas(cv);
-        if(ch){
-          try{ if(typeof ch.resize === 'function') ch.resize(); }catch(_e){}
-          try{ if(typeof ch.update === 'function') ch.update('none'); }catch(_e){}
-        }
-      });
-      try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
-      try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
-    }catch(_e){}
-  }
-  function filtersNeedRender(tab){
-    try{
-      if(typeof window.tabChartsNeedRender !== 'function') return false;
-      var currentYm = document.getElementById('currentMonth')?.value;
-      var prevYms = typeof window.getSelectedValues === 'function' ? window.getSelectedValues(document.getElementById('prevMonths')) : [];
-      var stores = typeof window.getSelectedStoresOrAll === 'function' ? window.getSelectedStoresOrAll() : (window.state && Array.isArray(state.stores) ? state.stores : []);
-      return !!window.tabChartsNeedRender(tab, currentYm, prevYms, stores);
-    }catch(_e){ return false; }
-  }
-  function controlledRetry(tab, tries){
-    var safe = String(tab || activeTab()).trim();
-    var n = tries || 0;
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        resizeTab(safe);
-        var miss = missingCharts(safe);
-        if(miss.length && n < 3 && typeof window.refreshVisibleTabCharts === 'function'){
-          try{ window.refreshVisibleTabCharts(safe, false); }catch(_e){}
-          setTimeout(function(){ controlledRetry(safe, n + 1); }, 90 + (n * 120));
-        }
-      });
-    });
-  }
-
-  if(typeof window.refreshVisibleTabCharts === 'function' && !window.refreshVisibleTabCharts.__ampmFinalGovernorV12){
-    var baseRefresh = window.refreshVisibleTabCharts;
-    window.refreshVisibleTabCharts = function(tab, forceRebuild){
-      var safe = String(tab || activeTab()).trim();
-      var missing = missingCharts(safe).length > 0;
-      var filterDirty = filtersNeedRender(safe);
-      // Solo permitir rebuild destructivo por cambio real de data/filtros o chart faltante.
-      var allowForce = !!forceRebuild && (filterDirty || missing);
-      var out = baseRefresh.call(this, safe, allowForce);
-      controlledRetry(safe, 0);
-      return out;
-    };
-    window.refreshVisibleTabCharts.__ampmFinalGovernorV12 = true;
-  }
-
-  if(typeof window.scheduleVisibleChartRefresh === 'function' && !window.scheduleVisibleChartRefresh.__ampmFinalGovernorV12){
-    var baseSchedule = window.scheduleVisibleChartRefresh;
-    window.scheduleVisibleChartRefresh = function(tab){
-      var safe = String(tab || activeTab()).trim();
-      var out = baseSchedule.call(this, safe);
-      controlledRetry(safe, 0);
-      return out;
-    };
-    window.scheduleVisibleChartRefresh.__ampmFinalGovernorV12 = true;
-  }
-
-  var scheduleResize = null;
-  function onLayoutOnly(){
-    clearTimeout(scheduleResize);
-    scheduleResize = setTimeout(function(){
-      var tab = activeTab();
-      resizeTab(tab);
-      controlledRetry(tab, 0);
-    }, 80);
-  }
-  window.addEventListener('resize', onLayoutOnly, {passive:true});
-  window.addEventListener('ampm:tabshown', function(ev){ controlledRetry(ev && ev.detail && ev.detail.tab || activeTab(), 0); }, {passive:true});
-  document.addEventListener('click', function(ev){
-    try{ if(ev.target && ev.target.closest && ev.target.closest('#ampmSidebarToggle')) onLayoutOnly(); }catch(_e){}
-  }, true);
 })();
 </script>
 
