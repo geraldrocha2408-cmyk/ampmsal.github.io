@@ -1345,7 +1345,7 @@ tr.invFocus{ outline:2px solid rgba(237,117,35,.25); outline-offset:-2px; }
   box-shadow: 0 10px 24px rgba(2,6,23,.28);
 }
 
-    .invRow{ display:flex; align-items:flex-start; gap:18px; padding:0 16px 18px; }
+    .invRow{ display:flex !important; align-items:flex-start; gap:18px; padding:0 16px 18px; }
     .invChartCard{ flex:0 0 62% !important; max-width:62% !important; }
     .invSpacer{ display:block !important; flex:1 1 auto !important; }
 
@@ -2294,67 +2294,6 @@ body.report-mode-mensual #sbf_provider_trend_cards{
 @media (max-width: 860px){
   :root{ --panelStickyTop: 66px; }
   [data-tabpage="hallazgos"] .hallPanelHead{ top:calc(var(--panelStickyTop) + 84px); }
-}
-
-
-/* === Inventario: semáforo de cobertura por ROP === */
-.invSemaphorePanel{
-  flex:1 1 38%;
-  max-width:38%;
-  min-width:340px;
-  height:420px;
-  max-height:420px;
-  margin:10px 0 0 0;
-  padding:12px;
-  background:rgba(255,255,255,.94);
-  border:1px solid rgba(15,23,42,.10);
-  border-radius:14px;
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-.invSemaphoreHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
-.invSemaphoreTitle{font-size:15px;font-weight:1000;color:#11284A;line-height:1.1;}
-.invSemaphoreSub{margin-top:3px;font-size:11px;font-weight:800;color:#64748b;line-height:1.25;}
-.invSemaphoreBadge{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;background:rgba(245,131,32,.14);border:1px solid rgba(245,131,32,.26);color:#9a4a0d;font-size:11px;font-weight:1000;letter-spacing:.04em;}
-.invSemaphoreGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px;}
-.invSemaphoreCard{border-radius:14px;padding:9px 9px 8px;border:1px solid rgba(15,23,42,.10);background:#fff;min-width:0;}
-.invSemaphoreCard.black{background:linear-gradient(180deg,#111827,#020617);color:#fff;border-color:rgba(15,23,42,.32);}
-.invSemaphoreCard.red{background:linear-gradient(180deg,#fff5f5,#ffffff);border-color:rgba(220,38,38,.22);}
-.invSemaphoreCard.yellow{background:linear-gradient(180deg,#fff8db,#ffffff);border-color:rgba(245,158,11,.30);}
-.invSemaphoreCard .k{font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;line-height:1.1;color:#64748b;}
-.invSemaphoreCard.black .k{color:rgba(255,255,255,.72);}
-.invSemaphoreCard.red .k{color:#991b1b;}
-.invSemaphoreCard.yellow .k{color:#92400e;}
-.invSemaphoreCard .v{font-size:24px;line-height:1;font-weight:1000;margin-top:5px;color:#11284A;}
-.invSemaphoreCard.black .v{color:#fff;}
-.invSemaphoreCard.red .v{color:#b91c1c;}
-.invSemaphoreCard.yellow .v{color:#b45309;}
-.invSemaphoreCard .s{font-size:10.5px;font-weight:800;line-height:1.2;margin-top:5px;color:#64748b;}
-.invSemaphoreCard.black .s{color:rgba(255,255,255,.78);}
-.invSemaphoreListHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px;margin-bottom:6px;font-size:12px;font-weight:1000;color:#11284A;}
-.invSemaphoreListHead small{font-size:10.5px;font-weight:900;color:#64748b;white-space:nowrap;}
-.invSemaphoreList{flex:1 1 auto;min-height:0;overflow:auto;border:1px solid rgba(15,23,42,.08);border-radius:12px;background:#fff;}
-.invSemaphoreItem{display:grid;grid-template-columns:70px minmax(0,1fr) 78px;gap:8px;align-items:center;padding:7px 9px;border-bottom:1px solid rgba(226,232,240,.82);font-size:11px;line-height:1.16;}
-.invSemaphoreItem:last-child{border-bottom:0;}
-.invSemaphoreStatus{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:4px 7px;font-size:9.5px;font-weight:1000;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
-.invSemaphoreStatus.black{background:#111827;color:#fff;}
-.invSemaphoreStatus.red{background:#fee2e2;color:#991b1b;border:1px solid rgba(220,38,38,.18);}
-.invSemaphoreStatus.yellow{background:#fef3c7;color:#92400e;border:1px solid rgba(245,158,11,.24);}
-.invSemaphoreName{min-width:0;color:#11284A;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.invSemaphoreStore{display:block;margin-top:2px;color:#64748b;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.invSemaphoreQty{text-align:right;font-weight:1000;color:#0f172a;font-variant-numeric:tabular-nums;}
-.invSemaphoreEmpty{padding:14px 12px;color:#64748b;font-size:12px;font-weight:800;line-height:1.35;}
-@media (max-width:1180px){
-  .invRow{display:block !important;}
-  .invChartCard{max-width:100% !important;flex:0 0 auto !important;}
-  .invSemaphorePanel{max-width:100%;min-width:0;margin:12px 0 0;height:auto;max-height:none;}
-  .invSemaphoreList{max-height:260px;}
-}
-@media (max-width:760px){
-  .invSemaphoreGrid{grid-template-columns:1fr;}
-  .invSemaphoreItem{grid-template-columns:64px minmax(0,1fr) 70px;}
 }
 </style>
 <style id="execV7Override">
@@ -3647,712 +3586,6 @@ body[data-active-tab="merma"] #prd0PedYaAuditCard{display:none !important;}
 }
 </style>
 
-
-
-<style id="criticos-no-horizontal-scroll-v5">
-/* v5: Críticos sin scroll horizontal. La tabla ocupa el ancho disponible y solo mantiene scroll vertical. */
-[data-tabpage="criticos"] .criticosWrap{
-  padding-left:10px !important;
-  padding-right:10px !important;
-}
-[data-tabpage="criticos"] .criticosCard{
-  overflow:hidden !important;
-}
-[data-tabpage="criticos"] .criticosCardHead{
-  padding:12px 14px 8px !important;
-}
-[data-tabpage="criticos"] .criticosLegend{
-  padding:0 14px 8px !important;
-}
-[data-tabpage="criticos"] .criticosTableWrap{
-  overflow-x:hidden !important;
-  overflow-y:auto !important;
-  max-height:min(70vh, 590px) !important;
-  width:100% !important;
-}
-[data-tabpage="criticos"] .criticosTable{
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  table-layout:fixed !important;
-  border-collapse:separate !important;
-  border-spacing:0 !important;
-}
-[data-tabpage="criticos"] .criticosTable thead th{
-  font-size:9.6px !important;
-  line-height:1.08 !important;
-  padding:6px 4px !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:anywhere !important;
-  text-align:center !important;
-  vertical-align:middle !important;
-}
-[data-tabpage="criticos"] .criticosTable tbody td{
-  font-size:10px !important;
-  line-height:1.12 !important;
-  padding:5px 4px !important;
-  white-space:normal !important;
-  overflow-wrap:anywhere !important;
-  word-break:normal !important;
-  vertical-align:middle !important;
-}
-[data-tabpage="criticos"] .criticosTable tbody td:first-child,
-[data-tabpage="criticos"] .criticosTable tbody td:nth-child(2),
-[data-tabpage="criticos"] .criticosTable tbody td:nth-child(3){
-  text-align:left !important;
-}
-[data-tabpage="criticos"] .criticosTable tbody td:nth-child(2){
-  word-break:break-all !important;
-}
-[data-tabpage="criticos"] .criticosTable tbody td:nth-child(3){
-  font-size:10px !important;
-  line-height:1.14 !important;
-}
-[data-tabpage="criticos"] .criticosTable .tag{
-  padding:2px 5px !important;
-  font-size:8.8px !important;
-  line-height:1.05 !important;
-  max-width:100% !important;
-  white-space:normal !important;
-  text-align:center !important;
-}
-[data-tabpage="criticos"] .criticosTransferBtn{
-  padding:4px 6px !important;
-  font-size:9px !important;
-  line-height:1.05 !important;
-  white-space:normal !important;
-  max-width:100% !important;
-  border-radius:10px !important;
-}
-[data-tabpage="criticos"] .criticosTransferHint{
-  font-size:8.8px !important;
-  line-height:1.08 !important;
-  margin-top:2px !important;
-  white-space:normal !important;
-}
-[data-tabpage="criticos"] .criticosPill{
-  font-size:10px !important;
-  padding:4px 7px !important;
-}
-
-/* Tabla A: Top críticos */
-[data-tabpage="criticos"] #criticosTableA th:nth-child(1),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(1){width:3.2% !important; min-width:0 !important; text-align:center !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(2),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(2){width:9.2% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(3),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(3){width:20.8% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(4),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(4){width:5.7% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(5),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(5){width:6.5% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(6),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(6){width:6.2% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(7),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(7){width:7.2% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(8),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(8){width:7.8% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(9),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(9){width:5.7% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(10),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(10){width:6.7% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(11),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(11){width:12.2% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableA th:nth-child(12),
-[data-tabpage="criticos"] #criticosTableA td:nth-child(12){width:8.8% !important; min-width:0 !important; text-align:center !important;}
-
-/* Tabla B: listado ajustado */
-[data-tabpage="criticos"] #criticosTableB th:nth-child(1),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(1){width:3.2% !important; min-width:0 !important; text-align:center !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(2),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(2){width:9.1% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(3),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(3){width:21.6% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(4),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(4){width:4.6% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(5),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(5){width:5.6% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(6),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(6){width:8.1% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(7),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(7){width:7.8% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(8),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(8){width:6.6% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(9),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(9){width:7.7% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(10),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(10){width:6.7% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(11),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(11){width:11.2% !important; min-width:0 !important;}
-[data-tabpage="criticos"] #criticosTableB th:nth-child(12),
-[data-tabpage="criticos"] #criticosTableB td:nth-child(12){width:7.8% !important; min-width:0 !important; text-align:center !important;}
-
-@media (max-width: 1180px){
-  [data-tabpage="criticos"] .criticosTable thead th{font-size:8.8px !important; padding:5px 3px !important;}
-  [data-tabpage="criticos"] .criticosTable tbody td{font-size:9.2px !important; padding:4px 3px !important;}
-  [data-tabpage="criticos"] .criticosTransferBtn{font-size:8.4px !important; padding:3px 5px !important;}
-  [data-tabpage="criticos"] .criticosTransferHint{font-size:8.2px !important;}
-  [data-tabpage="criticos"] .criticosTable .tag{font-size:8.2px !important; padding:2px 4px !important;}
-}
-</style>
-
-<style id="inventory-semaphore-tab-scope-fix-v11">
-/* v11: el bloque principal de Inventario y su semáforo no deben filtrarse a Delivery ni a otras pestañas.
-   La causa era una regla .invRow con display:flex!important que ganaba sobre el display:none de showTab(). */
-body:not([data-active-tab="inventario"]) .invRow[data-tabpage="inventario"]{display:none !important;}
-body:not([data-active-tab="inventario"]) #invSemaphorePanel{display:none !important;}
-body[data-active-tab="inventario"] .invRow[data-tabpage="inventario"]{display:flex !important; align-items:flex-start;}
-@media (max-width:920px){body[data-active-tab="inventario"] .invRow[data-tabpage="inventario"]{display:block !important;}}
-</style>
-
-<style id="inv-stock-search-v14">
-/* v14 Inventario: drill reducido + buscador de existencias por tienda */
-.invDrillStockLayout{
-  display:grid;
-  grid-template-columns:minmax(640px, 1.6fr) minmax(330px, .72fr);
-  gap:14px;
-  align-items:start;
-  width:calc(100% - 32px);
-  margin:0 16px 18px;
-}
-.invDrillStockLayout .invDrillCard{
-  width:100% !important;
-  max-width:none !important;
-  margin:0 !important;
-  padding:12px !important;
-}
-.invDrillStockLayout .invDrillCard .section{
-  padding:0 !important;
-}
-.invDrillStockLayout .invDrillHead{
-  align-items:flex-start;
-  gap:10px;
-}
-.invDrillStockLayout .invDrillHead h2{
-  font-size:12.5px !important;
-  line-height:1.18 !important;
-  white-space:normal;
-}
-.invDrillStockLayout .invDrillActions{
-  flex:0 0 180px;
-  justify-content:flex-end;
-  gap:6px;
-}
-.invDrillStockLayout .invDrillActions .btn.mini{
-  padding:7px 10px !important;
-  font-size:11px !important;
-  width:100% !important;
-  border-radius:999px !important;
-}
-.invDrillStockLayout #invDrillCount{
-  width:100%;
-  text-align:right;
-  font-size:11px;
-}
-.invDrillStockLayout .invBreadcrumb,
-.invDrillStockLayout .invLegend{
-  gap:5px;
-  margin-top:6px;
-}
-.invDrillStockLayout .invLegend .invLegendItem,
-.invDrillStockLayout .invBreadcrumb .invChip{
-  font-size:10.5px !important;
-}
-.invDrillStockLayout .tablewrap.inv{
-  padding:0 !important;
-  margin-top:8px !important;
-}
-.invDrillStockLayout .tablewrap.inv > div{
-  overflow-x:hidden !important;
-  overflow-y:auto !important;
-  max-height:520px;
-  border-radius:14px;
-}
-.invDrillStockLayout #t_inv_dept{
-  table-layout:fixed !important;
-  width:100% !important;
-  min-width:0 !important;
-  border-radius:14px !important;
-}
-.invDrillStockLayout #t_inv_dept th,
-.invDrillStockLayout #t_inv_dept td{
-  padding:6px 7px !important;
-  font-size:10.7px !important;
-  line-height:1.14 !important;
-  white-space:normal !important;
-  word-break:break-word;
-}
-.invDrillStockLayout #t_inv_dept th:first-child,
-.invDrillStockLayout #t_inv_dept td:first-child{
-  width:28%;
-  min-width:0 !important;
-}
-.invDrillStockLayout #t_inv_dept th:not(:first-child),
-.invDrillStockLayout #t_inv_dept td:not(:first-child){
-  text-align:right;
-}
-.invDrillStockLayout #t_inv_dept th:nth-child(2),
-.invDrillStockLayout #t_inv_dept td:nth-child(2),
-.invDrillStockLayout #t_inv_dept th:nth-child(3),
-.invDrillStockLayout #t_inv_dept td:nth-child(3),
-.invDrillStockLayout #t_inv_dept th:nth-child(4),
-.invDrillStockLayout #t_inv_dept td:nth-child(4),
-.invDrillStockLayout #t_inv_dept th:nth-child(5),
-.invDrillStockLayout #t_inv_dept td:nth-child(5){ width:10%; }
-.invDrillStockLayout #t_inv_dept th:nth-child(6),
-.invDrillStockLayout #t_inv_dept td:nth-child(6),
-.invDrillStockLayout #t_inv_dept th:nth-child(7),
-.invDrillStockLayout #t_inv_dept td:nth-child(7),
-.invDrillStockLayout #t_inv_dept th:nth-child(8),
-.invDrillStockLayout #t_inv_dept td:nth-child(8),
-.invDrillStockLayout #t_inv_dept th:nth-child(9),
-.invDrillStockLayout #t_inv_dept td:nth-child(9){ width:10.5%; }
-.invDrillStockLayout .invRowCell{
-  gap:6px !important;
-}
-.invDrillStockLayout .invToggleBtn{
-  width:20px !important;
-  height:20px !important;
-  border-radius:7px !important;
-  font-size:11px !important;
-}
-.invDrillStockLayout .invLvlBadge{
-  min-width:40px !important;
-  height:20px !important;
-  padding:0 7px !important;
-  font-size:10px !important;
-}
-.invStockSearchCard{
-  background:#fff;
-  border:1px solid rgba(15,23,42,.10);
-  border-radius:18px;
-  box-shadow:0 10px 24px rgba(15,23,42,.06);
-  padding:14px 14px 12px;
-  min-width:0;
-  position:sticky;
-  top:82px;
-}
-.invStockSearchHead{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-.invStockSearchTitle{
-  margin:0;
-  font-size:16px;
-  line-height:1.12;
-  font-weight:1000;
-  color:#11284A;
-}
-.invStockSearchSub{
-  margin-top:4px;
-  color:#64748b;
-  font-size:11.5px;
-  line-height:1.25;
-  font-weight:800;
-}
-.invStockSearchBadge{
-  flex:0 0 auto;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:7px 10px;
-  border-radius:999px;
-  background:rgba(0,94,167,.10);
-  color:#0C4D8F;
-  border:1px solid rgba(0,94,167,.20);
-  font-size:11px;
-  font-weight:1000;
-}
-.invStockSearchControls{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin-bottom:8px;
-}
-.invStockSearchInput{
-  width:100%;
-  border:1px solid rgba(148,163,184,.32);
-  border-radius:14px;
-  padding:10px 12px;
-  font-size:13px;
-  font-weight:800;
-  color:#11284A;
-  outline:none;
-  background:#fff;
-}
-.invStockSearchInput:focus{
-  border-color:rgba(0,94,167,.45);
-  box-shadow:0 0 0 4px rgba(0,94,167,.11);
-}
-.invStockSearchClear{
-  flex:0 0 auto;
-  width:auto !important;
-  max-width:none !important;
-  border:1px solid rgba(245,131,32,.20);
-  background:rgba(245,131,32,.08);
-  color:#9A4A0D;
-  border-radius:999px;
-  padding:9px 11px;
-  font-size:11px;
-  font-weight:1000;
-  cursor:pointer;
-}
-.invStockSearchMeta{
-  color:#64748b;
-  font-size:11.5px;
-  font-weight:900;
-  margin:0 0 8px;
-}
-.invStockSearchTableWrap{
-  overflow:auto;
-  max-height:430px;
-  border:1px solid rgba(226,232,240,.95);
-  border-radius:14px;
-  background:#fff;
-}
-.invStockSearchTable{
-  width:100%;
-  min-width:0 !important;
-  table-layout:fixed;
-  border:0 !important;
-  border-radius:0 !important;
-  overflow:visible !important;
-}
-.invStockSearchTable th,
-.invStockSearchTable td{
-  padding:7px 6px !important;
-  font-size:11px !important;
-  line-height:1.14 !important;
-  border-top:1px solid #e2e8f0;
-  vertical-align:top;
-}
-.invStockSearchTable thead th{
-  position:sticky;
-  top:0;
-  z-index:3;
-  background:#0C4D8F;
-  color:#fff;
-  font-weight:1000;
-  text-align:center;
-  white-space:normal !important;
-}
-.invStockSearchTable th:first-child,
-.invStockSearchTable td:first-child{
-  width:44%;
-  text-align:left !important;
-}
-.invStockSearchTable th:not(:first-child),
-.invStockSearchTable td:not(:first-child){
-  text-align:center !important;
-  font-variant-numeric:tabular-nums;
-  font-weight:900;
-}
-.invStockProductName{
-  display:block;
-  color:#11284A;
-  font-weight:1000;
-  line-height:1.15;
-  word-break:break-word;
-}
-.invStockProductMeta{
-  display:block;
-  margin-top:3px;
-  color:#64748b;
-  font-size:10px;
-  font-weight:800;
-  line-height:1.14;
-  word-break:break-word;
-}
-.invStockQtyNeg{color:#B91C1C !important; background:#fff1f2 !important;}
-.invStockQtyZero{color:#64748b !important;}
-.invStockQtyPos{color:#11284A !important;}
-.invStockEmpty{
-  padding:16px 14px;
-  color:#64748b;
-  font-size:12px;
-  font-weight:800;
-  line-height:1.35;
-  background:#f8fafc;
-}
-@media (max-width:1320px){
-  .invDrillStockLayout{ grid-template-columns:1fr; }
-  .invStockSearchCard{ position:relative; top:auto; }
-  .invDrillStockLayout .invDrillActions{ flex:0 0 auto; }
-}
-@media (max-width:760px){
-  .invDrillStockLayout{ width:calc(100% - 20px); margin:0 10px 16px; }
-  .invDrillStockLayout .invDrillHead{ display:block; }
-  .invDrillStockLayout .invDrillActions{ margin-top:10px; justify-content:stretch; }
-  .invDrillStockLayout .invDrillActions .btn.mini{ width:auto !important; }
-  .invStockSearchControls{ flex-direction:column; align-items:stretch; }
-  .invStockSearchClear{ width:100% !important; }
-}
-</style>
-
-
-<style id="inv-stock-search-v16-cards">
-/* v16: Existencias por producto en formato tarjetas para evitar que descripción y cantidades se monten */
-.invStockSearchTableWrap{
-  overflow-x:hidden !important;
-  overflow-y:auto !important;
-  max-height:430px;
-  border:0 !important;
-  background:transparent !important;
-  border-radius:0 !important;
-}
-.invStockSearchTable{
-  display:block !important;
-  width:100% !important;
-  border:0 !important;
-  background:transparent !important;
-}
-.invStockSearchTable thead{ display:none !important; }
-.invStockSearchTable tbody{ display:flex !important; flex-direction:column !important; gap:8px !important; width:100% !important; }
-.invStockSearchTable tr.invStockProductRow{ display:block !important; width:100% !important; }
-.invStockSearchTable tr.invStockProductRow td{
-  display:block !important;
-  width:100% !important;
-  padding:0 !important;
-  border:0 !important;
-  background:transparent !important;
-}
-.invStockCardItem{
-  border:1px solid rgba(226,232,240,.95);
-  border-radius:14px;
-  background:#fff;
-  overflow:hidden;
-  box-shadow:0 6px 14px rgba(15,23,42,.035);
-}
-.invStockCardTop{
-  display:block;
-  padding:8px 10px 7px;
-  border-bottom:1px solid rgba(226,232,240,.95);
-}
-.invStockCardTotal{
-  flex:0 0 auto;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:2px;
-  min-width:64px;
-  padding-left:8px;
-}
-.invStockCardTotal .lbl{
-  color:#64748b;
-  font-size:9.5px;
-  font-weight:1000;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-.invStockCardTotal .val{
-  color:#11284A;
-  font-size:13px;
-  font-weight:1000;
-  line-height:1;
-  font-variant-numeric:tabular-nums;
-}
-.invStockCardTotal .val.invStockQtyNeg{ background:transparent !important; }
-.invStockStoreGrid{
-  display:grid;
-  grid-template-columns:repeat(var(--inv-stock-cols,4), minmax(0,1fr));
-  gap:0;
-  background:#f8fafc;
-}
-.invStockStoreCell{
-  min-width:0;
-  padding:7px 6px;
-  border-right:1px solid rgba(226,232,240,.95);
-  text-align:center;
-}
-.invStockStoreCell:last-child{ border-right:0; }
-.invStockStoreCell .lbl{
-  display:block;
-  margin-bottom:3px;
-  color:#64748b;
-  font-size:9.5px;
-  font-weight:1000;
-  letter-spacing:.04em;
-}
-.invStockStoreCell .val{
-  display:block;
-  color:#11284A;
-  font-size:12px;
-  font-weight:1000;
-  line-height:1.05;
-  font-variant-numeric:tabular-nums;
-  white-space:nowrap;
-}
-.invStockStoreCell.total{
-  background:rgba(0,94,167,.06);
-}
-.invStockStoreCell.total .lbl,
-.invStockStoreCell.total .val{ color:#0C4D8F; }
-.invStockProductName{
-  font-size:12px !important;
-  line-height:1.18 !important;
-  overflow-wrap:anywhere;
-  word-break:normal !important;
-}
-.invStockProductMeta{
-  font-size:9.8px !important;
-  line-height:1.18 !important;
-  overflow-wrap:anywhere;
-  word-break:normal !important;
-}
-.invStockQtyNeg{color:#B91C1C !important; background:transparent !important;}
-.invStockQtyZero{color:#64748b !important;}
-.invStockQtyPos{color:#11284A !important;}
-.invStockEmpty{
-  border:1px dashed rgba(148,163,184,.35);
-  border-radius:14px;
-  background:#f8fafc;
-}
-@media (max-width:760px){
-  .invStockCardTop{ grid-template-columns:1fr; }
-  .invStockCardTotal{ align-items:flex-start; padding-left:0; }
-  .invStockStoreCell .val{ font-size:11px; }
-}
-</style>
-
-<style id="inv-stock-search-v17-clean-total">
-/* v17: El total superior se elimina; queda solo el total inferior por producto. */
-.invStockCardTop{ display:block !important; }
-.invStockCardTotal{ display:none !important; }
-</style>
-<style id="inv-stock-search-v18-height-align">
-/* v18: alinear el card de Existencias con el alto del Drill Down a la par */
-.invDrillStockLayout{
-  align-items:stretch !important;
-}
-.invDrillStockLayout > .invDrillCard,
-.invDrillStockLayout > .invStockSearchCard{
-  align-self:stretch !important;
-}
-.invStockSearchCard{
-  display:flex !important;
-  flex-direction:column !important;
-  height:100% !important;
-  min-height:0 !important;
-}
-.invStockSearchHead,
-.invStockSearchControls,
-.invStockSearchMeta{
-  flex:0 0 auto !important;
-}
-.invStockSearchTableWrap{
-  flex:1 1 auto !important;
-  min-height:520px !important;
-  max-height:none !important;
-  height:auto !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-}
-.invStockSearchTable tbody{
-  padding-bottom:10px !important;
-}
-.invStockCardTotal{
-  display:none !important;
-}
-@media (max-width:1320px){
-  .invDrillStockLayout{ align-items:start !important; }
-  .invStockSearchCard{ height:auto !important; }
-  .invStockSearchTableWrap{ min-height:360px !important; max-height:520px !important; }
-}
-</style>
-
-<style id="inv-stock-search-v19-real-height-sync">
-body[data-active-tab="inventario"] .invDrillStockLayout{align-items:start !important;}
-body[data-active-tab="inventario"] .invDrillStockLayout > .invDrillCard,
-body[data-active-tab="inventario"] .invDrillStockLayout > .invStockSearchCard{align-self:start !important;}
-body[data-active-tab="inventario"] .invStockSearchCard{position:relative !important;top:auto !important;height:var(--inv-stock-card-h, auto) !important;max-height:var(--inv-stock-card-h, none) !important;min-height:0 !important;overflow:hidden !important;display:flex !important;flex-direction:column !important;}
-body[data-active-tab="inventario"] .invStockSearchHead,
-body[data-active-tab="inventario"] .invStockSearchControls,
-body[data-active-tab="inventario"] .invStockSearchMeta{flex:0 0 auto !important;}
-body[data-active-tab="inventario"] .invStockSearchTableWrap{flex:1 1 auto !important;min-height:0 !important;height:auto !important;max-height:none !important;overflow-y:auto !important;overflow-x:hidden !important;overscroll-behavior:contain;padding-right:2px;}
-body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px !important;}
-@media (max-width:1320px){body[data-active-tab="inventario"] .invStockSearchCard{height:auto !important;max-height:none !important;overflow:visible !important;}body[data-active-tab="inventario"] .invStockSearchTableWrap{min-height:360px !important;max-height:520px !important;}}
-</style>
-
-<style id="inv-stock-brand-colors-v20">
-/* v20: Colores AMPM en los títulos de tienda del módulo Existencias por producto */
-.invStockSearchCard{
-  border-color:rgba(0,94,167,.14) !important;
-  box-shadow:0 14px 34px rgba(17,40,74,.08) !important;
-}
-.invStockSearchTitle{ color:#11284A !important; }
-.invStockSearchBadge{
-  background:linear-gradient(135deg, rgba(0,94,167,.12), rgba(12,77,143,.08)) !important;
-  border-color:rgba(0,94,167,.26) !important;
-  color:#005EA7 !important;
-}
-.invStockSearchClear{
-  border-color:rgba(245,131,32,.28) !important;
-  color:#B55F14 !important;
-  background:linear-gradient(180deg,#fff7ed,#ffffff) !important;
-}
-.invStockProductName{ color:#11284A !important; }
-.invStockStoreGrid{
-  border-top:1px solid rgba(0,94,167,.10) !important;
-  background:#f8fbff !important;
-}
-.invStockStoreCell{
-  background:linear-gradient(180deg,#ffffff,#f8fbff) !important;
-  border-right:1px solid rgba(0,94,167,.10) !important;
-}
-.invStockStoreCell .lbl{
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  min-width:42px !important;
-  padding:3px 8px !important;
-  margin-bottom:4px !important;
-  border-radius:999px !important;
-  font-size:9.8px !important;
-  line-height:1 !important;
-  letter-spacing:.02em !important;
-  color:#fff !important;
-  background:linear-gradient(135deg,#005EA7,#0C4D8F) !important;
-  box-shadow:0 3px 9px rgba(0,94,167,.14) !important;
-}
-.invStockStoreCell:nth-child(2) .lbl{
-  background:linear-gradient(135deg,#F58320,#E67425) !important;
-  box-shadow:0 3px 9px rgba(245,131,32,.16) !important;
-}
-.invStockStoreCell:nth-child(3) .lbl{
-  background:linear-gradient(135deg,#11284A,#0C4D8F) !important;
-  box-shadow:0 3px 9px rgba(17,40,74,.14) !important;
-}
-.invStockStoreCell.total{
-  background:linear-gradient(180deg,rgba(0,94,167,.10),rgba(0,94,167,.04)) !important;
-}
-.invStockStoreCell.total .lbl{
-  background:linear-gradient(135deg,#11284A,#005EA7) !important;
-  color:#fff !important;
-}
-.invStockStoreCell.total .val{ color:#005EA7 !important; }
-.invStockStoreCell .val.invStockQtyPos{ color:#11284A !important; }
-.invStockStoreCell .val.invStockQtyZero{ color:#64748b !important; }
-.invStockStoreCell .val.invStockQtyNeg{ color:#B91C1C !important; }
-</style>
-<style id="inv-stock-zero-red-v22">
-/* v22: En Existencias por producto, solo el número en cero o negativo se muestra en rojo, sin fondo ni cápsula. */
-.invStockStoreCell .val.invStockQtyZero,
-.invStockStoreCell .val.invStockQtyNeg,
-.invStockStoreCell.total .val.invStockQtyZero,
-.invStockStoreCell.total .val.invStockQtyNeg{
-  color:#B91C1C !important;
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
-  border-radius:0 !important;
-  padding:0 !important;
-  min-width:0 !important;
-}
-</style>
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -4419,7 +3652,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <button class="tabBtn" data-tab="ventas" title="Ventas" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19V9"></path><path d="M12 19V5"></path><path d="M19 19v-8"></path></svg></span><span class="tabLabel">Ventas</span></button>
 <button class="tabBtn" data-tab="delivery" title="Delivery" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 16h2l2-5h6l3 5h2"></path><path d="M14 11h3l3 3"></path><circle cx="8" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span><span class="tabLabel">Delivery</span></button>
 <button class="tabBtn" data-tab="innovacion" title="Innovación" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a6 6 0 0 0-4 10c1 1 2 2 2 4h4c0-2 1-3 2-4a6 6 0 0 0-4-10z"></path></svg></span><span class="tabLabel">Innovación</span></button>
-<button class="tabBtn" data-tab="sbf" title="SBF" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 9 12 4l9 5"></path><path d="M5 10h14"></path><path d="M6.5 10v7"></path><path d="M10 10v7"></path><path d="M14 10v7"></path><path d="M17.5 10v7"></path><path d="M4 18h16"></path><path d="M3 20h18"></path></svg></span><span class="tabLabel">SBF</span></button>
+<button class="tabBtn" data-tab="sbf" title="SBF" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="M8 12h8"></path></svg></span><span class="tabLabel">SBF</span></button>
 <button class="tabBtn" data-tab="inventario" title="Inventario" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4-8-4z"></path><path d="M4 12l8 4 8-4"></path><path d="M4 17l8 4 8-4"></path></svg></span><span class="tabLabel">Inventario</span></button>
 <button class="tabBtn" data-tab="merma" title="Merma" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3C8 8 6 11 6 14a6 6 0 0 0 12 0c0-3-2-6-6-11z"></path></svg></span><span class="tabLabel">Merma</span></button>
 <button class="tabBtn" data-tab="prd0" title="PRD en cero" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14"></path><path d="M5 12h8"></path><path d="M5 17h10"></path><circle cx="18" cy="12" r="3"></circle></svg></span><span class="tabLabel">PRD en cero</span></button>
@@ -4453,15 +3686,10 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 </div>
 <div class="grid gridHero">
 <div class="fieldCard primary">
-<label>1) Fuente de datos</label>
+<label>1) Cargar cubo de datos</label>
 <input class="textInput mini" id="remoteDataUrl" placeholder="./Cubo_Semanal_Compactado.xlsx" style="width:100%; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:900;" type="text" value="./Cubo_Semanal_Compactado.xlsx"/>
 <div class="row" style="margin-top:8px; display:grid; grid-template-columns:1fr; gap:8px;">
   <button class="btn secondary" id="remoteLoadBtn" style="max-width:none" type="button">Cargar cubo publicado</button>
-</div>
-<div style="margin-top:10px; padding-top:10px; border-top:1px dashed rgba(148,163,184,.45);">
-  <label for="file" style="font-weight:900; color:#11284A;">O subir Excel local con la data</label>
-  <input accept=".xlsx,.xls,.json" id="file" type="file"/>
-  <div class="fieldHint">Acepta <strong>.xlsx</strong>, <strong>.xls</strong> o <strong>.json</strong> compatible. La carga local reemplaza la fuente publicada y refresca filtros, KPIs, tablas y gráficas.</div>
 </div>
 <div class="note" id="filenameStatus" style="margin-top:8px; padding:9px 10px; font-size:12px;">Fuente actual: <b id="filename">./Cubo_Semanal_Compactado.xlsx</b></div>
 <div class="loading" id="loading">
@@ -4469,7 +3697,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="loadingBar"><div class="loadingFill" id="loadingFill"></div></div>
 <div class="loadingHint" id="loadingHint">El porcentaje es estimado y avanza por etapas.</div>
 </div>
-<div class="fieldHint">Puedes usar la ruta publicada del cubo o subir manualmente un Excel local con la misma estructura de datos compactada.</div>
+<div class="fieldHint">El dashboard leerá directamente el cubo publicado <strong>.xlsx</strong> desde esta ruta.</div>
 </div>
 <div class="fieldCard primary">
 <label>0) Vista del dashboard</label>
@@ -5424,21 +4652,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="muted" style="margin:0 0 8px; font-weight:700;">Barras = Monto Inv (Amount). Línea = Días Inv (Inv * 28 / COGS 4W).</div>
 <canvas id="chart_inv_store" style="width:100%; height:360px; max-height:360px; background:#ffffff; border-radius:12px;"></canvas>
 </div>
-<div class="invSemaphorePanel" id="invSemaphorePanel">
-  <div class="invSemaphoreHead">
-    <div>
-      <div class="invSemaphoreTitle">Semáforo de inventario</div>
-      <div class="invSemaphoreSub" id="invSemaphoreMeta">Pendiente de carga</div>
-    </div>
-    <span class="invSemaphoreBadge">ROP</span>
-  </div>
-  <div class="invSemaphoreGrid" id="invSemaphoreCards"></div>
-  <div class="invSemaphoreListHead">
-    <span>Top alertas</span>
-    <small id="invSemaphoreListMeta">—</small>
-  </div>
-  <div class="invSemaphoreList" id="invSemaphoreList"></div>
-</div>
+<div class="invSpacer"></div>
 </div><div class="section invTitle" data-tabpage="inventario">
 <div class="section-head">
 <h2>Inventario — Dispersión</h2>
@@ -5457,8 +4671,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div style="position:relative; width:100%; height:470px">
 <canvas aria-label="Dispersión Inventario" id="chart_inv_bubble"></canvas>
 </div>
-</div><div class="invDrillStockLayout" data-tabpage="inventario">
-<div class="invDrillCard" data-tabpage="inventario">
+</div><div class="invDrillCard" data-tabpage="inventario">
 <div class="section invTitle" data-tabpage="inventario">
 <div class="invDrillHead">
 <h2 style="margin:0">Inventario — Drill Down (Depto → Proveedor → Categoría → Marca → Description)</h2>
@@ -5491,28 +4704,6 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <tbody id="tbody_inv_dept"></tbody>
 </table>
 </div>
-</div>
-</div>
-
-<div class="invStockSearchCard" data-tabpage="inventario">
-  <div class="invStockSearchHead">
-    <div>
-      <h2 class="invStockSearchTitle">Existencias por producto</h2>
-      <div class="invStockSearchSub">Busca descripción, SKU, proveedor o categoría. Las columnas muestran existencia actual por tienda.</div>
-    </div>
-    <span class="invStockSearchBadge">Stock</span>
-  </div>
-  <div class="invStockSearchControls">
-    <input class="invStockSearchInput" id="invStockSearchInput" type="search" placeholder="Buscar producto: ej. Regia" autocomplete="off"/>
-    <button class="invStockSearchClear" id="invStockSearchClear" type="button">Limpiar</button>
-  </div>
-  <div class="invStockSearchMeta" id="invStockSearchMeta">Pendiente de carga</div>
-  <div class="invStockSearchTableWrap">
-    <table class="invStockSearchTable" id="invStockSearchTable">
-      <thead id="invStockSearchHead"></thead>
-      <tbody id="invStockSearchBody"><tr><td><div class="invStockEmpty">Carga el Excel para buscar existencias.</div></td></tr></tbody>
-    </table>
-  </div>
 </div>
 </div><div class="invRopCard" data-tabpage="inventario">
 <div class="section invTitle" data-tabpage="inventario" style="padding:0;">
@@ -5750,6 +4941,11 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <canvas aria-label="Delivery MaM / SaS AMPM ESA" id="chart_delivery_mam"></canvas>
 </div>
 <div class="chartBottomRank monthly-chart-rank" data-tabpage="delivery" id="rank_delivery_mam"></div>
+</div><div class="section" data-tabpage="delivery"><h2>Delivery Vs LY por tienda</h2></div><div class="chartCard" data-tabpage="delivery" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px; padding:14px; margin-top:14px">
+<div class="muted" style="margin-bottom:8px">
+          Barras = Sales Delivery por tienda (Pedido Ya rojo + Uber Eats verde). Línea = Delta vs LY por semana. Se muestra la(s) sucursal(es) filtrada(s); si hay más de una, también se mantiene el gráfico general.
+        </div>
+<div id="delivery_store_cards" style="display:grid; grid-template-columns:1fr; gap:14px"></div>
 </div><div class="section" data-tabpage="delivery"><h2>Share Delivery (Delivery / Total)</h2></div><div class="chartCard" data-tabpage="delivery" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px; padding:14px">
 <div class="muted" style="margin-bottom:8px">
           Barras = Sales Delivery (Pedido Ya rojo + Uber Eats verde). Línea = % Delivery / Venta total por semana.
@@ -7253,7 +6449,7 @@ function applyUnifiedModeUI(){
       };
       const titleEl = el('reportTitle'); if(titleEl) titleEl.textContent = titleMap[mode];
       try{ document.title = titleMap[mode]; }catch(e){}
-      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML puede trabajar con el cubo publicado o con un Excel local compatible. Usá <b>./Cubo_Semanal_Compactado.xlsx</b> o subí el archivo desde la opción de carga local. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.';
+      const subEl = el('reportSub'); if(subEl) subEl.innerHTML = 'Este HTML trabaja solo con el cubo publicado. Usá <b>./Cubo_Semanal_Compactado.xlsx</b>. Si trae la hoja KPI + Meta, el dashboard la usa automáticamente.';
       const lCur = el('labelCurrentPeriod'); if(lCur) lCur.textContent = `2) ${getModePeriodNoun()} actual (${getCurrentPeriodFormatHint()})`;
       const lyWrap = el('lyWeekOverrideWrap'); if(lyWrap) lyWrap.style.display = isMonthlyReport() ? 'none' : '';
       const lLy = el('labelLyWeekOverride'); if(lLy) lLy.textContent = isMonthlyReport() ? '2b) Comparativo LY (oculto en mensual)' : '2b) Semana comparativa LY (opcional)';
@@ -16817,9 +16013,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       const headers2 = ['Store','Supplier','Description','Amount','Qty','QTY Sales S4','Days (Qty)','ROP','Planimetría'];
       if(nHead) nHead.innerHTML = headers2.map(h=>`<th>${h}</th>`).join('');
 
-      // No comprar: usar anchos proporcionales para que encabezados y datos queden alineados
-      // sin forzar scroll horizontal ni dejar números pegados al extremo derecho de cada columna.
-      const nbColW = ['7%','20%','31%','7%','5%','9%','8%','5%','8%'];
+      const nbColW = ['100px','330px','420px','110px','84px','126px','110px','92px','126px'];
       const nbColHtml = nbColW.map(w=>`<col style="width:${w}">`).join('');
       const nbCg1 = document.getElementById('colgrp_nobuy');
       const nbCg2 = document.getElementById('colgrp_nobuy_head');
@@ -16829,8 +16023,9 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       const nbBodyX = document.getElementById('nobuyBodyX');
       const nbHeadTable = document.getElementById('t_nobuy_head');
       const nbBodyTable = document.getElementById('t_nobuy');
-      if(nbHeadTable){ nbHeadTable.style.width = '100%'; nbHeadTable.style.minWidth = '0'; nbHeadTable.style.tableLayout = 'fixed'; }
-      if(nbBodyTable){ nbBodyTable.style.width = '100%'; nbBodyTable.style.minWidth = '0'; nbBodyTable.style.tableLayout = 'fixed'; }
+      const nbTotalWidth = nbColW.reduce((acc, w)=> acc + parseInt(String(w).replace(/px$/,''),10), 0);
+      if(nbHeadTable) nbHeadTable.style.width = nbTotalWidth + 'px';
+      if(nbBodyTable) nbBodyTable.style.width = nbTotalWidth + 'px';
       const syncNoBuyGeometry = ()=>{
         if(!nbHeadX || !nbBodyX) return;
         const sbw = Math.max(0, nbBodyX.offsetWidth - nbBodyX.clientWidth);
@@ -17474,338 +16669,6 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       }
     }
 
-
-
-    function renderInventorySemaphorePanel(storeList){
-      const host = document.getElementById('invSemaphorePanel');
-      if(!host) return;
-      const cardsEl = document.getElementById('invSemaphoreCards');
-      const listEl = document.getElementById('invSemaphoreList');
-      const metaEl = document.getElementById('invSemaphoreMeta');
-      const listMetaEl = document.getElementById('invSemaphoreListMeta');
-      const invRows = Array.isArray(state.invItems) ? state.invItems : [];
-      const stores = (Array.isArray(storeList) && storeList.length)
-        ? storeList
-        : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
-      const storeSet = new Set((stores || []).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean));
-      const isInvSemaphoreFoodService = (it)=>{
-        const raw = [
-          it && it.department,
-          it && it.departamento,
-          it && it.dept,
-          it && it.deptRaw,
-          it && it.deptKey
-        ].map(v=>String(v||'').trim()).filter(Boolean).join(' ');
-        const norm = (typeof stripAccents === 'function' ? stripAccents(raw) : raw)
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g,'');
-        return norm === 'FOODSERVICE' || norm.includes('FOODSERVICE');
-      };
-      const scoped = invRows.filter(it=>
-        it
-        && (!storeSet.size || storeSet.has(String(it.store||'').trim().toUpperCase()))
-      );
-
-      const buckets = {black:[], red:[], yellow:[]};
-      const invSemaphoreUniqueKey = (it)=>[
-        String(it && it.store || '').trim().toUpperCase(),
-        String((it && (it.lookup || it.desc_key || it.description)) || '').trim().toUpperCase(),
-        String((it && (it.supplier_key || it.supplier)) || '').trim().toUpperCase()
-      ].join('||');
-      const seenFallbackRed = new Set();
-      scoped.forEach(it=>{
-        const qtyRaw = Number(it.qty ?? 0);
-        const ropRaw = Number(it.rop ?? 0);
-        const qty = Number.isFinite(qtyRaw) ? qtyRaw : 0;
-        const ropActual = Number.isFinite(ropRaw) ? ropRaw : 0;
-        const inactiveCompra = Number(it.inactive_compra ?? 0) || 0;
-        const isActiveCompra = Math.abs(inactiveCompra) < 0.000001;
-        const isFoodService = isInvSemaphoreFoodService(it);
-        const isQtyNegative = qty < 0;
-        const isQtyZero = Math.abs(qty) < 0.000001;
-        const isQtyPositive = qty > 0.000001;
-        const hasRopActual = ropActual > 0.000001;
-
-        // Semáforos exclusivos:
-        // Negro incluye Food Service si el inventario está en negativo.
-        // Rojo se alinea con PRD en cero: Qty = 0 + ROP actual > 0 + compra activa.
-        // Amarillo exige Qty > 0, ROP actual > 0 y Qty <= 25% del ROP actual.
-        if(isQtyNegative){
-          buckets.black.push({...it, _qty:qty, _rop:ropActual, _sev:'black', _isFoodService:isFoodService});
-        }else if(!isFoodService && isQtyZero && hasRopActual && isActiveCompra){
-          const kRed = invSemaphoreUniqueKey(it);
-          if(kRed && !seenFallbackRed.has(kRed)){
-            seenFallbackRed.add(kRed);
-            buckets.red.push({...it, _qty:0, _rop:ropActual, _sev:'red', _isFoodService:false});
-          }
-        }else if(!isFoodService && isActiveCompra && isQtyPositive && hasRopActual && qty <= (ropActual * 0.25)){
-          buckets.yellow.push({...it, _qty:qty, _rop:ropActual, _sev:'yellow', _isFoodService:false});
-        }
-      });
-
-      const buildPrd0RedRows = ()=>{
-        const out = [];
-        const seen = new Set();
-        const detailMap = state && state.prd0DetailBySup;
-        if(!(detailMap && detailMap.size)) return out;
-        detailMap.forEach((list)=>{
-          (Array.isArray(list) ? list : []).forEach(r=>{
-            const st = String(r && r.store || '').trim().toUpperCase();
-            if(!st || (storeSet.size && !storeSet.has(st))) return;
-            const rop = Number((r && r.rop) ?? 0) || 0;
-            if(!(rop > 0.000001)) return;
-            const desc = String(r && (r.desc || r.description) || '').trim();
-            if(!desc) return;
-            const key = [st, String(r.lookup || r.descKey || desc).trim().toUpperCase(), String(r.supKey || r.supplier || '').trim().toUpperCase()].join('||');
-            if(seen.has(key)) return;
-            seen.add(key);
-            out.push({
-              store: st,
-              supplier: String(r && r.supplier || '').trim(),
-              description: desc,
-              lookup: String(r && r.lookup || '').trim(),
-              department: String(r && r.dept || '').trim(),
-              category: String(r && r.cat || '').trim(),
-              qty: 0,
-              amount: 0,
-              rop,
-              _qty: 0,
-              _rop: rop,
-              _sev: 'red',
-              _fromPrd0: true
-            });
-          });
-        });
-        return out;
-      };
-
-      const prd0RedRows = buildPrd0RedRows();
-      if(prd0RedRows.length){
-        // PRD en cero es la fuente ya depurada para Qty=0 + ROP>0 por tienda.
-        buckets.red = prd0RedRows;
-      }
-
-      const prd0RedCountFromStoreTotals = ()=>{
-        const m = state && state.prd0ByStore;
-        if(!(m && m.size)) return null;
-        const selectedStores = storeSet.size ? Array.from(storeSet) : Array.from(m.keys());
-        let total = 0;
-        selectedStores.forEach(st=>{ total += Number(m.get(String(st||'').trim().toUpperCase()) ?? 0) || 0; });
-        return total;
-      };
-      const redCountAuthoritative = prd0RedCountFromStoreTotals();
-      const redCount = (redCountAuthoritative !== null) ? redCountAuthoritative : buckets.red.length;
-
-      const riskTotal = buckets.black.length + redCount + buckets.yellow.length;
-      const storeLabel = storeSet.size && state.stores && storeSet.size < state.stores.length
-        ? Array.from(storeSet).join(', ')
-        : 'Todas las tiendas';
-      if(metaEl){
-        metaEl.textContent = `${fmtInt(scoped.length)} items evaluados · ${storeLabel} · Rojo alineado a PRD en cero`;
-      }
-
-      const amountSum = (arr)=> arr.reduce((acc,it)=>acc + (Number(it.amount ?? 0) || 0), 0);
-      if(cardsEl){
-        cardsEl.innerHTML = [
-          {k:'black', label:'Negativo', sub:'Qty < 0', count:buckets.black.length, amount:amountSum(buckets.black)},
-          {k:'red', label:'Cero + ROP', sub:'PRD en cero: Qty = 0 y ROP > 0', count:redCount, amount:amountSum(buckets.red)},
-          {k:'yellow', label:'≤ 25% ROP', sub:'Qty > 0 y ≤ 25% del ROP', count:buckets.yellow.length, amount:amountSum(buckets.yellow)},
-        ].map(x=>{
-          return `<div class="invSemaphoreCard ${x.k}">
-            <div class="k">${esc(x.label)}</div>
-            <div class="v">${fmtInt(x.count)}</div>
-            <div class="s">${esc(x.sub)}<br>${money(x.amount)} inv.</div>
-          </div>`;
-        }).join('');
-      }
-
-      const rows = buckets.black.concat(buckets.red, buckets.yellow)
-        .sort((a,b)=>{
-          const pri = {black:0, red:1, yellow:2};
-          const pa = pri[a._sev] ?? 9, pb = pri[b._sev] ?? 9;
-          if(pa !== pb) return pa - pb;
-          const gapA = Math.max(0, Number(a._rop||0) - Number(a._qty||0));
-          const gapB = Math.max(0, Number(b._rop||0) - Number(b._qty||0));
-          if(gapB !== gapA) return gapB - gapA;
-          return (Number(b.amount||0) - Number(a.amount||0));
-        });
-      if(listMetaEl){ listMetaEl.textContent = riskTotal ? `${fmtInt(riskTotal)} alertas únicas` : 'Sin alertas'; }
-      if(listEl){
-        if(!scoped.length){
-          listEl.innerHTML = '<div class="invSemaphoreEmpty">Sin Inventario_Items para evaluar el semáforo en la tienda seleccionada.</div>';
-        }else if(!rows.length){
-          listEl.innerHTML = '<div class="invSemaphoreEmpty">Sin productos en semáforo negro, rojo o amarillo para la tienda seleccionada.</div>';
-        }else{
-          listEl.innerHTML = rows.slice(0, 18).map(it=>{
-            const sevLabel = it._sev === 'black' ? 'Negro' : (it._sev === 'red' ? 'Rojo' : 'Amarillo');
-            const desc = String(it.description || it.lookup || '(Sin descripción)').trim();
-            const store = String(it.store || '').trim();
-            const supplier = String(it.supplier || '').trim();
-            const meta = [store, supplier].filter(Boolean).join(' · ');
-            return `<div class="invSemaphoreItem" title="${esc(desc)}">
-              <span class="invSemaphoreStatus ${it._sev}">${sevLabel}</span>
-              <span class="invSemaphoreName">${esc(desc)}<span class="invSemaphoreStore">${esc(meta)}</span></span>
-              <span class="invSemaphoreQty">${fmtInt(it._qty)} / ${fmtInt(it._rop)}</span>
-            </div>`;
-          }).join('');
-        }
-      }
-    }
-
-
-    function renderInventoryStockSearch(storeList){
-      const input = document.getElementById('invStockSearchInput');
-      const clearBtn = document.getElementById('invStockSearchClear');
-      const headEl = document.getElementById('invStockSearchHead');
-      const bodyEl = document.getElementById('invStockSearchBody');
-      const metaEl = document.getElementById('invStockSearchMeta');
-      if(!headEl || !bodyEl) return;
-
-      if(input && !input.__invStockSearchBound){
-        input.__invStockSearchBound = true;
-        let t = null;
-        input.addEventListener('input', ()=>{
-          clearTimeout(t);
-          t = setTimeout(()=>renderInventoryStockSearch(), 110);
-        });
-      }
-      if(clearBtn && !clearBtn.__invStockSearchBound){
-        clearBtn.__invStockSearchBound = true;
-        clearBtn.addEventListener('click', ()=>{
-          const i = document.getElementById('invStockSearchInput');
-          if(i) i.value = '';
-          renderInventoryStockSearch();
-        });
-      }
-
-      const invRows = Array.isArray(state.invItems) ? state.invItems : [];
-      const selectedStores = (Array.isArray(storeList) && storeList.length)
-        ? storeList
-        : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
-      const stores = (selectedStores && selectedStores.length ? selectedStores : (state.stores || []))
-        .map(s=>String(s||'').trim().toUpperCase()).filter(Boolean);
-      const storeSet = new Set(stores);
-      const storeCols = stores.length ? stores : Array.from(new Set(invRows.map(r=>String(r.store||'').trim().toUpperCase()).filter(Boolean))).sort();
-      const queryRaw = input ? String(input.value || '').trim() : '';
-      const norm = (v)=>{
-        const raw = String(v == null ? '' : v);
-        const noAcc = (typeof stripAccents === 'function') ? stripAccents(raw) : raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        return noAcc.toUpperCase().replace(/\s+/g,' ').trim();
-      };
-      const q = norm(queryRaw);
-      const safe = (v)=> (typeof esc === 'function') ? esc(v) : String(v == null ? '' : v).replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-      const fmtQtyLocal = (v)=>{
-        const n = Number(v || 0);
-        if(!Number.isFinite(n)) return '0';
-        if(Math.abs(n - Math.round(n)) < 0.0001) return n.toLocaleString('en-US', {maximumFractionDigits:0});
-        return n.toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:2});
-      };
-      const shortStoreLabel = (st)=>{
-        const raw = String(st == null ? '' : st).trim().toUpperCase();
-        const m = raw.match(/(?:AMPM|TIENDA)?0*([0-9]{1,2})$/i);
-        if(m) return 'A' + String(m[1]).padStart(2, '0');
-        return raw || 'Tienda';
-      };
-      const keyFor = (r)=>{
-        const sku = String(r.lookup || '').trim();
-        const descKey = String(r.desc_key || '').trim();
-        const desc = String(r.description || '').trim();
-        const supplier = String(r.supplier || '').trim();
-        const brand = String(r.brand || '').trim();
-        return [sku || descKey || norm(desc), norm(desc), norm(supplier), norm(brand)].join('||');
-      };
-
-      const grouped = new Map();
-      invRows.forEach(r=>{
-        const st = String(r && r.store || '').trim().toUpperCase();
-        if(!st || (storeSet.size && !storeSet.has(st))) return;
-        const desc = String(r && r.description || '').trim();
-        if(!desc) return;
-        const haystack = norm([
-          r.lookup, r.description, r.supplier, r.category, r.department, r.brand, r.desc_key, r.supplier_key
-        ].filter(Boolean).join(' '));
-        if(q && !haystack.includes(q)) return;
-        const key = keyFor(r);
-        if(!grouped.has(key)){
-          grouped.set(key, {
-            lookup:String(r.lookup || '').trim(),
-            description:desc,
-            supplier:String(r.supplier || '').trim(),
-            category:String(r.category || '').trim(),
-            brand:String(r.brand || '').trim(),
-            qtyByStore:new Map(),
-            total:0
-          });
-        }
-        const item = grouped.get(key);
-        const qty = Number(r.qty || 0) || 0;
-        item.qtyByStore.set(st, (Number(item.qtyByStore.get(st) || 0) || 0) + qty);
-        item.total += qty;
-        if(!item.lookup && r.lookup) item.lookup = String(r.lookup || '').trim();
-        if(!item.supplier && r.supplier) item.supplier = String(r.supplier || '').trim();
-        if(!item.category && r.category) item.category = String(r.category || '').trim();
-        if(!item.brand && r.brand) item.brand = String(r.brand || '').trim();
-      });
-
-      let rows = Array.from(grouped.values());
-      rows.sort((a,b)=>{
-        if(q) return String(a.description).localeCompare(String(b.description), 'es') || String(a.supplier).localeCompare(String(b.supplier), 'es');
-        return Math.abs(b.total) - Math.abs(a.total) || String(a.description).localeCompare(String(b.description), 'es');
-      });
-      const totalMatches = rows.length;
-      rows = rows.slice(0, q ? 80 : 30);
-
-      // v16: se renderiza como tarjetas compactas; se oculta el encabezado para evitar cruces visuales.
-      headEl.innerHTML = '';
-
-      if(!invRows.length){
-        bodyEl.innerHTML = `<tr><td colspan="${storeCols.length + 2}"><div class="invStockEmpty">Sin Inventario_Items cargado en el Excel.</div></td></tr>`;
-        if(metaEl) metaEl.textContent = 'Sin data disponible.';
-        return;
-      }
-      if(!totalMatches){
-        bodyEl.innerHTML = `<tr><td colspan="${storeCols.length + 2}"><div class="invStockEmpty">No encontré productos con “${safe(queryRaw)}”.</div></td></tr>`;
-        if(metaEl) metaEl.textContent = q ? '0 productos encontrados.' : 'Sin productos para la tienda seleccionada.';
-        return;
-      }
-
-      bodyEl.innerHTML = rows.map(item=>{
-        const metaParts = [];
-        if(item.lookup) metaParts.push(item.lookup);
-        if(item.supplier) metaParts.push(item.supplier);
-        if(item.category) metaParts.push(item.category);
-        const storeCells = storeCols.map(st=>{
-          const v = Number(item.qtyByStore.get(st) || 0) || 0;
-          const cls = v < 0 ? 'invStockQtyNeg' : (Math.abs(v) < 0.00001 ? 'invStockQtyZero' : 'invStockQtyPos');
-          return `<div class="invStockStoreCell" title="${safe(st)}"><span class="lbl">${safe(shortStoreLabel(st))}</span><span class="val ${cls}">${fmtQtyLocal(v)}</span></div>`;
-        }).join('');
-        const totalCls = item.total < 0 ? 'invStockQtyNeg' : (Math.abs(item.total) < 0.00001 ? 'invStockQtyZero' : 'invStockQtyPos');
-        const colCount = Math.max(1, storeCols.length + 1);
-        return `<tr class="invStockProductRow"><td colspan="${storeCols.length + 2}">
-          <div class="invStockCardItem">
-            <div class="invStockCardTop">
-              <div>
-                <span class="invStockProductName">${safe(item.description)}</span>
-                <span class="invStockProductMeta">${safe(metaParts.join(' · ') || 'Sin proveedor')}</span>
-              </div>
-            </div>
-            <div class="invStockStoreGrid" style="--inv-stock-cols:${colCount}">
-              ${storeCells}
-              <div class="invStockStoreCell total"><span class="lbl">Total</span><span class="val ${totalCls}">${fmtQtyLocal(item.total)}</span></div>
-            </div>
-          </div>
-        </td></tr>`;
-      }).join('');
-
-      const storeLabel = storeCols.length ? storeCols.map(shortStoreLabel).join(', ') : 'Todas';
-      if(metaEl){
-        const shown = rows.length;
-        metaEl.textContent = q
-          ? `${shown} de ${totalMatches} productos encontrados · Tiendas: ${storeLabel}`
-          : `Top ${shown} por existencia absoluta · Tiendas: ${storeLabel}`;
-      }
-    }
-
     function refreshInventoryModule(currentYm, storeList){
       const tbodyStore = document.getElementById('tbody_inv_store');
       const tbodyDept  = document.getElementById('tbody_inv_dept');
@@ -17813,8 +16676,6 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       const hasInv = state.invStoreDept && state.invStoreDept.size;
       const hasCogs = state.cogsStoreWeek && state.cogsStoreWeek.size;
       const storeSet = new Set(storeList && storeList.length ? storeList : state.stores);
-      try{ renderInventorySemaphorePanel(Array.from(storeSet)); }catch(e){ console.warn('Inventory semaphore failed', e); }
-      try{ renderInventoryStockSearch(Array.from(storeSet)); }catch(e){ console.warn('Inventory stock search failed', e); }
       const basePeriods = getInvWeeks(currentYm);
       const weeks = getInvCogsWeeks(storeSet, basePeriods);
 
@@ -21407,7 +20268,7 @@ function getMonthlyTotalSeries(storeList){
           responsive: true,
           maintainAspectRatio: false,
           layout: { padding: { top: 10, right: 8, bottom: 8, left: 4 } },
-          interaction: { mode: 'index', axis: 'x', intersect: false },
+          interaction: { mode: 'nearest', axis: 'x', intersect: true },
           animation: { duration: 350, easing: 'easeOutQuart' },
           onHover: (evt, elements, chart) => {
             const c = chart?.canvas;
@@ -23145,23 +22006,6 @@ function getDeliveryBubbleData(storeList, currentYm){
       const canvas = document.getElementById('chart_mam');
       if (!showGeneral){ return; }
       if (!canvas || typeof Chart === 'undefined') return;
-      try{
-        const vp = canvas.closest('.monthly-chart-viewport') || canvas.parentElement;
-        if(vp){
-          vp.style.position = 'relative';
-          vp.style.width = '100%';
-          vp.style.minWidth = '0';
-          vp.style.maxWidth = '100%';
-          vp.style.height = '420px';
-          vp.style.minHeight = '420px';
-          vp.style.overflow = 'hidden';
-        }
-        canvas.style.display = 'block';
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.minHeight = '0';
-        canvas.style.maxHeight = 'none';
-      }catch(_e){}
 
       let months = getChartPeriods('sales');
 
@@ -23486,12 +22330,19 @@ function getDeliveryBubbleData(storeList, currentYm){
       const options = {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { mode: 'index', axis: 'x', intersect: false },
-        hover: { mode: 'index', axis: 'x', intersect: false },
+        interaction: { mode: 'nearest', axis: 'x', intersect: true },
         events: ['mousemove', 'mouseout', 'mouseleave', 'click', 'touchstart', 'touchmove', 'touchend'],
         onHover: (event, activeEls, chart) => {
           try{
-            if (chart?.canvas) chart.canvas.style.cursor = activeEls?.length ? 'crosshair' : 'default';
+            if (chart?.canvas) chart.canvas.style.cursor = activeEls?.length ? 'pointer' : 'default';
+            if (!activeEls || !activeEls.length){
+              const tooltip = chart?.tooltip;
+              if (tooltip){
+                tooltip.setActiveElements([], {x:0, y:0});
+                chart.setActiveElements([]);
+                chart.update('none');
+              }
+            }
           }catch(e){}
         },
         animation: { duration: 420, easing: 'easeOutQuart' },
@@ -23534,10 +22385,8 @@ function getDeliveryBubbleData(storeList, currentYm){
           },
           title: { display: true, text: mamTitle, color: '#000000', font:{weight:'800', size:15}, padding:{top:4,bottom:8} },
           tooltip: {
-            enabled: true,
-            mode: 'index',
-            axis: 'x',
-            intersect: false,
+            mode: 'nearest',
+            intersect: true,
             callbacks: {
               title: (items) => flattenLabel(items?.[0]?.label || ''),
               label: (ctx) => {
@@ -23560,31 +22409,12 @@ function getDeliveryBubbleData(storeList, currentYm){
         }
       };
 
-      try{
-        const attachedChart = (typeof Chart !== 'undefined' && Chart.getChart) ? (Chart.getChart(canvas) || Chart.getChart('chart_mam')) : null;
-        if(attachedChart && attachedChart !== state.chartMam && typeof attachedChart.destroy === 'function') attachedChart.destroy();
-      }catch(e){}
-      try{ if (state.chartMam && typeof state.chartMam.destroy === 'function') state.chartMam.destroy(); }catch(e){}
-      state.chartMam = null;
+      try{ if (state.chartMam) state.chartMam.destroy(); }catch(e){}
       state.chartMam = new Chart(canvas.getContext('2d'), {
         data,
         options,
         plugins: [stackLabelPlugin, deltaLabelPlugin]
       });
-      try{
-        const vp = canvas.closest('.monthly-chart-viewport') || canvas.parentElement;
-        const w = Math.max(320, Math.floor((vp && (vp.clientWidth || vp.getBoundingClientRect().width)) || canvas.getBoundingClientRect().width || 0));
-        if(state.chartMam && typeof state.chartMam.resize === 'function') state.chartMam.resize(w, 420);
-        if(state.chartMam && typeof state.chartMam.update === 'function') state.chartMam.update('none');
-      }catch(_e){}
-
-      try{
-        if (typeof window !== 'undefined' && typeof window.__ampmVentasSdyaTooltipBindV28 === 'function') {
-          window.__ampmVentasSdyaTooltipBindV28('renderMamChart');
-        } else if (typeof window !== 'undefined' && typeof window.__ampmVentasSdyaTooltipBindV27 === 'function') {
-          window.__ampmVentasSdyaTooltipBindV27();
-        }
-      }catch(_e){}
 
       try{
         const clearMamTooltip = () => {
@@ -23884,9 +22714,8 @@ function getDeliveryBubbleData(storeList, currentYm){
             padding: { top: 10, bottom: 12 }
           },
           tooltip: {
-            enabled: false,
-            mode: 'index',
-            intersect: false,
+            mode: 'nearest',
+            intersect: true,
             callbacks: {
               label: (ctx) => {
                 const label = String(ctx.dataset.label || '');
@@ -24445,11 +23274,6 @@ const options = {
           legend: { display: true, position: 'bottom', labels: { color: '#000000', boxWidth: 26, boxHeight: 10, padding: 14, font:{weight:'700', size:INNOVATION_UI.legend} } },
           title: { display: true, text: delTitle, color: '#000000', font:{weight:'800', size:15}, padding:{top:12,bottom:12} },
           tooltip: {
-            enabled: true,
-            mode: 'index',
-            intersect: false,
-            position: 'nearest',
-            displayColors: true,
             callbacks: {
               label: (ctx) => {
                 if (ctx.dataset.label === 'Pedido Ya' || ctx.dataset.label === 'Uber Eats'){
@@ -27976,7 +26800,7 @@ renderShareTable({
       ){
         buildFromCube(wb);
       } else {
-        throw new Error('El Excel cargado no trae la estructura compactada esperada. Usá el cubo compacto .xlsx generado por Python, un .json compatible o un link público al mismo archivo.');
+        throw new Error('Este HTML ya no carga Excel transaccional normal. Usá el cubo compacto .xlsx generado por Python o un link público al mismo archivo.');
       }
 
       try{
@@ -28049,7 +26873,7 @@ renderShareTable({
           }
         }));
       }catch(e){ console.warn('ampm:fileloaded dispatch failed', e); }
-      stopLoadingProgress('Fuente cargada');
+      stopLoadingProgress('Fuente web cargada');
     }
 
     async function handleFile(file){
@@ -28175,7 +26999,7 @@ renderShareTable({
 
     setSelectOptions(el('dowFilter'), [{value:'__ALL__', label:'Todos'},{value:'1', label:'Lunes'},{value:'2', label:'Martes'},{value:'3', label:'Miércoles'},{value:'4', label:'Jueves'},{value:'5', label:'Viernes'},{value:'6', label:'Sábado'},{value:'7', label:'Domingo'}], parseDowFilterValues(state.dowFilter).length ? parseDowFilterValues(state.dowFilter) : ['__ALL__']);
 
-    const fileInput = el('file'); if(fileInput) fileInput.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f).finally(()=>{ try{ e.target.value = ''; }catch(_e){} }); });
+    const fileInput = el('file'); if(fileInput) fileInput.addEventListener('change', (e) => { const f=e.target.files?.[0]; if(f) handleFile(f); });
     const openLocalCubeBtn = el('openLocalCubeBtn'); if(openLocalCubeBtn) openLocalCubeBtn.addEventListener('click', ()=>{ try{ if(fileInput) fileInput.click(); }catch(e){ console.warn('open local cube failed', e); } });
     const remoteBtn = el('remoteLoadBtn'); if(remoteBtn) remoteBtn.addEventListener('click', ()=>{ handleRemoteSource(); });
     const remoteInp = el('remoteDataUrl'); if(remoteInp) remoteInp.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); handleRemoteSource(); } });
@@ -30108,88 +28932,6 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 
 .hallTable thead th{ z-index:6; }
 .hallSavedMatrix thead th{ z-index:4; }
-</style>
-
-
-<style id="nobuy-alignment-v6">
-/* v6: compactar y alinear Top 30 No comprar sin scroll horizontal */
-#nobuyHeadX,
-#nobuyBodyX{
-  overflow-x:hidden !important;
-}
-#t_nobuy_head,
-#t_nobuy{
-  width:100% !important;
-  min-width:0 !important;
-  table-layout:fixed !important;
-}
-#t_nobuy_head th,
-#t_nobuy td{
-  padding:6px 6px !important;
-  font-size:11px !important;
-  line-height:1.12 !important;
-  vertical-align:middle !important;
-}
-#t_nobuy_head th{
-  text-align:center !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:anywhere !important;
-}
-#t_nobuy td{
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-}
-#t_nobuy_head th:nth-child(1),
-#t_nobuy td:nth-child(1){
-  text-align:center !important;
-  font-weight:900 !important;
-}
-#t_nobuy_head th:nth-child(2),
-#t_nobuy td:nth-child(2){
-  text-align:left !important;
-  white-space:normal !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-  overflow-wrap:anywhere !important;
-  word-break:break-word !important;
-}
-#t_nobuy_head th:nth-child(3),
-#t_nobuy td:nth-child(3){
-  text-align:left !important;
-  white-space:normal !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-  overflow-wrap:anywhere !important;
-  word-break:break-word !important;
-}
-#t_nobuy_head th:nth-child(n+4),
-#t_nobuy td:nth-child(n+4){
-  text-align:center !important;
-}
-#t_nobuy td:nth-child(4),
-#t_nobuy td:nth-child(7),
-#t_nobuy td:nth-child(8),
-#t_nobuy td:nth-child(9){
-  font-weight:900 !important;
-}
-#t_nobuy td:nth-child(4) b,
-#t_nobuy td:nth-child(7) b{
-  display:inline-block !important;
-  min-width:auto !important;
-  text-align:center !important;
-}
-#t_nobuy_head th:nth-child(6){
-  font-size:10px !important;
-}
-@media (max-width:1200px){
-  #t_nobuy_head th,
-  #t_nobuy td{
-    padding:5px 4px !important;
-    font-size:10.5px !important;
-  }
-}
 </style>
 
 </head>
@@ -38862,38 +37604,6 @@ callback:(v)=> axisMoneyCompact1(v)
     try{ window.dispatchEvent(new CustomEvent('ampm:tabshown', { detail:{ tab, previousTab: prevTab } })); }catch(e){}
 
     if(hasReportData() && tabNeedsRender(tab, el('currentMonth')?.value, getSelectedValues(el('prevMonths')), getSelectedStoresOrAll())){
-      if(String(tab || '').trim() === 'hallazgos'){
-        /* Hallazgos: mostrar la pestaña primero y diferir el cálculo pesado para que el click responda de inmediato. */
-        try{
-          const meta = document.getElementById('hallMeta');
-          const body = document.getElementById('hallTableBody');
-          const hasVisibleRows = !!(body && body.children && body.children.length && String(body.textContent || '').trim());
-          if(meta) meta.textContent = hasVisibleRows ? 'Actualizando Hallazgos en segundo plano…' : 'Preparando Hallazgos…';
-          if(body && !hasVisibleRows){
-            body.innerHTML = '<tr><td colspan="14" class="muted">Preparando Hallazgos… la pestaña ya abrió; los datos se actualizan en segundo plano.</td></tr>';
-          }
-        }catch(_e){}
-        try{ clearTimeout(state.__hallDeferredRefreshTimer); }catch(_e){}
-        try{
-          state.__hallDeferredRefreshTimer = setTimeout(function(){
-            try{
-              const active = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim();
-              if(active !== 'hallazgos') return;
-              refreshAll();
-              requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scheduleVisibleChartRefresh('hallazgos'); scheduleFitTables(); }); });
-            }catch(e){
-              console.warn('deferred Hallazgos refresh error', e);
-              scheduleVisibleChartRefresh('hallazgos');
-            }
-          }, 40);
-        }catch(e){
-          console.warn('schedule Hallazgos deferred refresh error', e);
-        }
-        if(didChangeTab){
-          setTimeout(queueActiveTabTopScroll, 120);
-        }
-        return;
-      }
       try{
         refreshAll();
         requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scheduleVisibleChartRefresh(tab); }); });
@@ -38906,11 +37616,7 @@ callback:(v)=> axisMoneyCompact1(v)
       }
       return;
     }
-    if(String(tab || '').trim() !== 'hallazgos'){
-      scheduleVisibleChartRefresh(tab);
-    }else{
-      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ scheduleFitTables(); }); });
-    }
+    scheduleVisibleChartRefresh(tab);
     if(didChangeTab){
       setTimeout(queueActiveTabTopScroll, 120);
     }
@@ -45936,8 +44642,11 @@ function initHallazgosUI(){
       setTimeout(__runDeliveryReasonPatchV7, 1200);
     });
 
-    /* AMPM stable v2: no refrescar gráficas al volver a la ventana del navegador.
-       Este módulo ya se ejecuta en carga y en cambios reales de filtro/data. */
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState === 'visible'){
+        setTimeout(__runDeliveryReasonPatchV7, 250);
+      }
+    });
   }catch(e){
     console.warn('delivery tooltip reason v7 init failed', e);
   }
@@ -52493,8 +51202,115 @@ function innovationOnePagerCreateBrandedShell(){
   window.exportInnovationOnePagerAsPptx = exportInnovationOnePagerAsPptx;
 })();
 </script>
-<script id="ampm-tab-chart-recovery-v1" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
+<script id="ampm-tab-chart-recovery-v1">
+(function(){
+  function activeTab(){
+    try{ return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim() || 'resumen'; }
+    catch(_e){ return 'resumen'; }
+  }
+  function isElementVisible(el){
+    try{
+      if(!el) return false;
+      const cs = getComputedStyle(el);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity || 1) === 0) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 80 && r.height > 80;
+    }catch(_e){ return false; }
+  }
+  function chartFromCanvas(canvas){
+    try{
+      if(!canvas || typeof Chart === 'undefined') return null;
+      if(typeof Chart.getChart === 'function') return Chart.getChart(canvas) || null;
+    }catch(_e){}
+    return null;
+  }
+  function canvasesForTab(tab){
+    try{
+      return Array.from(document.querySelectorAll('[data-tabpage="'+ String(tab || '').trim() +'"] canvas')).filter(isElementVisible);
+    }catch(_e){ return []; }
+  }
+  function tabHasMissingCharts(tab){
+    try{
+      const list = canvasesForTab(tab);
+      if(!list.length) return false;
+      return list.some(function(cv){ return !chartFromCanvas(cv); });
+    }catch(_e){ return false; }
+  }
+  function resizeVisibleCharts(tab){
+    try{
+      canvasesForTab(tab).forEach(function(cv){
+        try{
+          const ch = chartFromCanvas(cv);
+          if(!ch) return;
+          if(typeof ch.resize === 'function') ch.resize();
+          if(typeof ch.update === 'function') ch.update('none');
+        }catch(_e){}
+      });
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      try{ if(typeof scheduleFitTables === 'function') scheduleFitTables(); }catch(_e){}
+    }catch(_e){}
+  }
+  function recoverTab(tab, force){
+    try{
+      const safeTab = String(tab || activeTab()).trim();
+      if(!safeTab) return;
+      const mustRebuild = !!force || tabHasMissingCharts(safeTab);
+      if(mustRebuild && typeof window.refreshVisibleTabCharts === 'function'){
+        try{ window.refreshVisibleTabCharts(safeTab, true); }catch(_e){}
+      }
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ resizeVisibleCharts(safeTab); });
+      });
+    }catch(_e){}
+  }
+
+  if(typeof window.refreshVisibleTabCharts === 'function' && !window.refreshVisibleTabCharts.__ampmRecoveryWrapped){
+    const _origRefreshVisibleTabCharts = window.refreshVisibleTabCharts;
+    window.refreshVisibleTabCharts = function(tab, forceRebuild){
+      const safeTab = String(tab || activeTab()).trim();
+      const needsRecovery = !!forceRebuild || tabHasMissingCharts(safeTab);
+      const out = _origRefreshVisibleTabCharts.call(this, safeTab, needsRecovery);
+      try{ resizeVisibleCharts(safeTab); }catch(_e){}
+      return out;
+    };
+    window.refreshVisibleTabCharts.__ampmRecoveryWrapped = true;
+  }
+
+  if(typeof window.scheduleVisibleChartRefresh === 'function' && !window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped){
+    const _origScheduleVisibleChartRefresh = window.scheduleVisibleChartRefresh;
+    window.scheduleVisibleChartRefresh = function(tab){
+      const safeTab = String(tab || activeTab()).trim();
+      const out = _origScheduleVisibleChartRefresh.call(this, safeTab);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 40);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 180);
+      setTimeout(function(){ recoverTab(safeTab, false); }, 420);
+      return out;
+    };
+    window.scheduleVisibleChartRefresh.__ampmRecoveryWrapped = true;
+  }
+
+  function onTabShown(ev){
+    const safeTab = String(ev?.detail?.tab || activeTab()).trim();
+    recoverTab(safeTab, false);
+    setTimeout(function(){ recoverTab(safeTab, false); }, 140);
+    setTimeout(function(){ recoverTab(safeTab, false); }, 380);
+  }
+
+  window.addEventListener('ampm:tabshown', onTabShown);
+  window.addEventListener('resize', function(){ recoverTab(activeTab(), false); }, { passive:true });
+  window.addEventListener('focus', function(){ try{ resizeVisibleCharts(activeTab()); }catch(_e){} }, { passive:true });
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
+      setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
+    }, { once:true });
+  }else{
+    setTimeout(function(){ recoverTab(activeTab(), false); }, 80);
+    setTimeout(function(){ recoverTab(activeTab(), false); }, 320);
+  }
+})();
 </script>
 <script id="ampm-export-postcooldown-v1">
 (function(){
@@ -53459,8 +52275,22 @@ function innovationOnePagerCreateBrandedShell(){
     }catch(_e){}
   }
 
-  /* AMPM stable v2: no reconstruir Ventas/Delivery por navegación de pestañas o foco de Chrome.
-     Los cambios reales pasan por refreshAll / filtros / carga de Excel. */
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = _txt(ev && ev.detail && ev.detail.tab).toLowerCase();
+      if(tab === 'ventas') scheduleVentasMamRecovery();
+      if(tab === 'delivery') scheduleDeliveryMamRecovery();
+    }catch(_e){}
+  });
+  window.addEventListener('focus', function(){
+    try{
+      var tab = activeTab();
+      if(tab === 'ventas' || tab === 'delivery'){
+        if(typeof resizeCharts === 'function') resizeCharts();
+        if(typeof updateAllChartTitles === 'function') updateAllChartTitles();
+      }
+    }catch(_e){}
+  }, { passive:true });
 })();
 </script>
 <script id="sbf-general-chart-recovery-patch">
@@ -55420,12 +54250,109 @@ function innovationOnePagerCreateBrandedShell(){
       setTimeout(_rerenderVentasSdya, 480);
     }catch(_e){}
   }
-  /* AMPM stable v2: se desactiva rerender forzado al volver de Delivery a Ventas.
-     Si el gráfico estuviera roto, ventas-sdya-self-heal-v2 aún puede repararlo sin reconstruir por rutina. */
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = _txt(ev && ev.detail && ev.detail.tab);
+      var prev = _txt(ev && ev.detail && ev.detail.previousTab);
+      if(tab === 'ventas' && prev === 'delivery') _schedule();
+    }catch(_e){}
+  });
 })();
 </script>
-<script id="ventas-sdya-self-heal-v2" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
+<script id="ventas-sdya-self-heal-v2">
+(function(){
+  function _txt(v){ return String(v == null ? '' : v).trim().toLowerCase(); }
+  function _activeTab(){
+    try{ return _txt(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || ''); }
+    catch(_e){ return ''; }
+  }
+  function _selectedStores(){
+    try{
+      if(typeof getSelectedStoresOrAll === 'function') return getSelectedStoresOrAll() || [];
+      if(typeof state !== 'undefined' && state && Array.isArray(state.stores)) return state.stores;
+    }catch(_e){}
+    return [];
+  }
+  function _generalCardVisible(){
+    try{
+      var canvas = document.getElementById('chart_mam');
+      if(!canvas) return false;
+      var card = canvas.closest('.chartCard');
+      if(!card) return false;
+      var cs = getComputedStyle(card);
+      if(cs.display === 'none' || cs.visibility === 'hidden') return false;
+      var rect = card.getBoundingClientRect();
+      return rect.width > 120 && rect.height > 140;
+    }catch(_e){ return false; }
+  }
+  function _chartLooksBroken(){
+    try{
+      if(_activeTab() !== 'ventas') return false;
+      if(!_generalCardVisible()) return false;
+      var stores = _selectedStores();
+      if(Array.isArray(stores) && stores.length === 1) return false;
+      var canvas = document.getElementById('chart_mam');
+      if(!canvas) return false;
+      var rect = canvas.getBoundingClientRect();
+      if(rect.width <= 120 || rect.height <= 120) return true;
+      if(typeof state === 'undefined' || !state || !state.chartMam) return true;
+      var ch = state.chartMam;
+      var area = ch.chartArea || null;
+      if(!area) return true;
+      var aw = Number(area.right || 0) - Number(area.left || 0);
+      var ah = Number(area.bottom || 0) - Number(area.top || 0);
+      if(aw <= 120 || ah <= 120) return true;
+      if(!ch.data || !Array.isArray(ch.data.labels) || !ch.data.labels.length) return true;
+      if(!Array.isArray(ch.data.datasets) || !ch.data.datasets.length) return true;
+      var hasBars = ch.data.datasets.some(function(ds){
+        return ds && ds.type === 'bar' && Array.isArray(ds.data) && ds.data.some(function(v){ return Number(v || 0) !== 0; });
+      });
+      var hasLine = ch.data.datasets.some(function(ds){
+        return ds && ds.type === 'line' && Array.isArray(ds.data) && ds.data.some(function(v){ return v != null; });
+      });
+      return !(hasBars || hasLine);
+    }catch(_e){ return true; }
+  }
+  var _healing = false;
+  function _rerender(force){
+    try{
+      if(_healing) return;
+      if(_activeTab() !== 'ventas') return;
+      if(!_generalCardVisible()) return;
+      if(!force && !_chartLooksBroken()) return;
+      _healing = true;
+      var stores = _selectedStores();
+      try{
+        if(typeof state !== 'undefined' && state && state.chartMam && typeof state.chartMam.destroy === 'function'){
+          state.chartMam.destroy();
+          state.chartMam = null;
+        }
+      }catch(_e){}
+      try{ if(typeof renderMamChart === 'function') renderMamChart(stores); }catch(err){ try{ console.warn('ventas sdya self-heal render failed', err); }catch(_e){} }
+      try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(_e){}
+      try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(_e){}
+      setTimeout(function(){ _healing = false; }, 220);
+    }catch(err){ _healing = false; try{ console.warn('ventas sdya self-heal failed', err); }catch(_e){} }
+  }
+  function _schedule(force){
+    try{
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ _rerender(!!force); }); });
+      setTimeout(function(){ _rerender(!!force); }, 120);
+      setTimeout(function(){ _rerender(!!force); }, 320);
+      setTimeout(function(){ _rerender(!!force); }, 700);
+    }catch(_e){}
+  }
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{
+      var tab = _txt(ev && ev.detail && ev.detail.tab);
+      if(tab === 'ventas') _schedule(false);
+    }catch(_e){}
+  });
+  window.addEventListener('resize', function(){
+    try{ if(_activeTab() === 'ventas') _schedule(false); }catch(_e){}
+  }, { passive:true });
+  setTimeout(function(){ try{ if(_activeTab() === 'ventas') _schedule(false); }catch(_e){} }, 900);
+})();
 </script>
 <script id="prd0-store-scope-hardfix-v7">
 (function(){
@@ -57902,7 +56829,6 @@ function innovationOnePagerCreateBrandedShell(){
 
   var REFRESH_DELAY = 180;
   var refreshTimer = 0;
-  var resizeOnlyTimer = 0;
   var lastObservedW = 0;
   var lastObservedH = 0;
   var layoutObserver = null;
@@ -57940,13 +56866,6 @@ function innovationOnePagerCreateBrandedShell(){
     try{ if(typeof window.updateAllChartTitles === 'function') window.updateAllChartTitles(); }catch(_e){}
     try{ if(typeof window.scheduleFitTables === 'function') window.scheduleFitTables(); }catch(_e){}
     try{ if(typeof window.deptTrendResizeMap === 'function'){ window.deptTrendResizeMap('ventas'); window.deptTrendResizeMap('delivery'); } }catch(_e){}
-  }
-  function scheduleResizeOnly(){
-    if(!hasDataLoaded()) return;
-    try{ clearTimeout(resizeOnlyTimer); }catch(_e){}
-    resizeOnlyTimer = setTimeout(function(){
-      try{ resizeOnly(); }catch(_e){}
-    }, 120);
   }
   function rebuildActiveTab(forceRebuild){
     var tab = activeTab();
@@ -57988,10 +56907,8 @@ function innovationOnePagerCreateBrandedShell(){
       }
     }
     try{ localStorage.setItem('ampm_sidebar_collapsed', collapsed ? '1' : '0'); }catch(_e){}
-    // Sidebar open/close is a visual layout action, not a data/filter action.
-    // Keep charts alive and avoid full rebuilds; only perform a quiet size/table fit pass.
-    suspendObserverUntil = now() + 1200;
-    if(!opts || opts.resize !== false) scheduleResizeOnly();
+    suspendObserverUntil = now() + 260;
+    if(!opts || opts.refresh !== false) scheduleRefresh(true);
   }
   function installObserver(){
     if(typeof ResizeObserver !== 'function') return;
@@ -58014,7 +56931,7 @@ function innovationOnePagerCreateBrandedShell(){
       if(dw < 8 && dh < 8) return;
       lastObservedW = w;
       lastObservedH = h;
-      scheduleResizeOnly();
+      scheduleRefresh(dw >= 24);
     });
     try{ layoutObserver.observe(target); }catch(_e){}
   }
@@ -58035,20 +56952,15 @@ function innovationOnePagerCreateBrandedShell(){
     btn.addEventListener('click', function(){
       var shell = document.querySelector('.ampm-shell');
       var next = !(shell && shell.classList.contains('is-collapsed'));
-      apply(next, { refresh:false, restoreScroll:true, resize:true });
+      apply(next, { refresh:true, restoreScroll:true });
     });
-    scheduleResizeOnly();
-    setTimeout(function(){ scheduleResizeOnly(); }, 320);
+    scheduleRefresh(true);
+    setTimeout(function(){ scheduleRefresh(true); }, 320);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
   else boot();
-  window.addEventListener('load', function(){ scheduleResizeOnly(); }, { once:true });
+  window.addEventListener('load', function(){ scheduleRefresh(true); }, { once:true });
 })();</script>
-<script id="ampm-sidebar-no-refresh-policy-v7">
-(function(){
-  window.__ampmSidebarRefreshPolicy = { version:'v7', sidebarToggle:'resize-only', rebuildChartsOnToggle:false };
-})();
-</script>
 <style id="ampm-context-header-styles">
 .ampm-context-header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 14px;padding:18px 20px;border-radius:22px;background:linear-gradient(135deg, rgba(0,94,167,.16) 0%, rgba(12,77,143,.10) 38%, rgba(245,131,32,.10) 100%);border:1px solid rgba(12,77,143,.14);box-shadow:0 16px 40px rgba(17,40,74,.10);overflow:hidden;isolation:isolate;}
 .ampm-context-header::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 44%);pointer-events:none;z-index:0;}
@@ -58227,7 +57139,7 @@ function innovationOnePagerCreateBrandedShell(){
     }
     window.addEventListener('ampm:tabshown', schedule);
     window.addEventListener('load', schedule);
-    /* AMPM stable v2: no actualizar contexto al volver a Chrome; se actualiza con filtros/carga. */
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) schedule(); });
     schedule();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
@@ -58265,558 +57177,100 @@ function innovationOnePagerCreateBrandedShell(){
   }
   window.addEventListener('ampm:tabshown', function(){ setTimeout(enforce, 0); setTimeout(enforce, 80); });
   window.addEventListener('load', function(){ setTimeout(enforce, 0); setTimeout(enforce, 120); });
-  /* AMPM stable v2: no ejecutar guard al volver a Chrome; se mantiene en tabshown/load. */
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ setTimeout(enforce, 0); } });
 })();
 </script>
 
 
-<script id="ampm-store-filter-hard-refresh-v11" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
-</script>
-
-
-<script id="ampm-stable-refresh-governor-v2">
+<script id="ampm-store-filter-hard-refresh-v11">
 (function(){
-  window.__ampmStableRefreshPolicy = {
-    version:'v2',
-    ambientFocusRefresh:false,
-    ambientVisibilityRefresh:false,
-    tabSwitchRebuild:'only-if-chart-missing',
-    filterApplyRefresh:true
-  };
-})();
-</script>
-
-<!-- AMPM Store Floating Filter v1 -->
-<style id="ampm-floating-store-filter-v1-styles">
-body:not(.auth-ok) #ampmStoreFloat{display:none!important}
-#ampmStoreFloat{position:fixed;right:18px;bottom:72px;z-index:2400;font-family:var(--sans,system-ui);color:#11284A}
-#ampmStoreFloat button{font-family:inherit}
-#ampmStoreFloatBtn{appearance:none;border:1px solid rgba(255,255,255,.4);background:linear-gradient(135deg,#11284A,#0C4D8F 60%,#005EA7);color:#fff;border-radius:999px;height:42px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:1000;cursor:pointer;box-shadow:0 14px 30px rgba(2,6,23,.22),inset 0 1px 0 rgba(255,255,255,.18)}
-#ampmStoreFloatBtn .ico{width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#F58320;color:#fff;font-size:12px}
-#ampmStoreFloatBtn .txt{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#ampmStoreFloatPanel{position:absolute;right:0;bottom:50px;width:272px;max-width:calc(100vw - 28px);border:1px solid rgba(15,23,42,.12);border-radius:18px;background:rgba(255,255,255,.98);box-shadow:0 22px 56px rgba(2,6,23,.24);overflow:hidden;display:none}
-#ampmStoreFloat.open #ampmStoreFloatPanel{display:block}
-#ampmStoreFloat .sfHead{padding:12px 13px 10px;background:linear-gradient(135deg,rgba(0,94,167,.10),rgba(245,131,32,.10));border-bottom:1px solid rgba(226,232,240,.92)}
-#ampmStoreFloat .sfTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:1000;color:#11284A}
-#ampmStoreFloat .sfSub{margin-top:3px;color:#64748b;font-size:11px;font-weight:800;line-height:1.25}
-#ampmStoreFloatClose{width:26px;height:26px;border:1px solid rgba(15,23,42,.10);border-radius:999px;background:#fff;color:#11284A;font-weight:1000;cursor:pointer;padding:0}
-#ampmStoreFloat .sfBody{padding:11px 12px 12px}
-#ampmStoreFloat .sfActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
-#ampmStoreFloat .sfMini{border:1px solid rgba(0,94,167,.15);border-radius:11px;background:#f8fafc;color:#0C4D8F;font-size:11px;font-weight:1000;padding:8px 9px;cursor:pointer}
-#ampmStoreFloatList{max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:7px;padding-right:2px}
-#ampmStoreFloat .sfItem{display:flex;align-items:center;gap:9px;border:1px solid rgba(148,163,184,.22);border-radius:13px;padding:8px 10px;background:#fff;color:#11284A;font-size:12px;font-weight:900;cursor:pointer}
-#ampmStoreFloat .sfItem:hover{background:#f8fbff;border-color:rgba(0,94,167,.24)}
-#ampmStoreFloat .sfItem input{width:16px;height:16px;accent-color:#F58320;flex:0 0 auto}
-#ampmStoreFloat .sfFoot{display:flex;gap:8px;align-items:center;margin-top:11px}
-#ampmStoreFloatApply{flex:1;border:1px solid rgba(245,131,32,.7);border-radius:13px;background:linear-gradient(135deg,#FAA21E,#F58320);color:#11284A;font-size:12px;font-weight:1000;padding:10px 12px;cursor:pointer;box-shadow:0 10px 22px rgba(245,131,32,.2)}
-#ampmStoreFloatStatus{min-width:72px;text-align:center;border:1px solid rgba(15,23,42,.10);border-radius:999px;padding:7px 8px;background:#f8fafc;color:#475569;font-size:10.5px;font-weight:1000;white-space:nowrap}
-#ampmStoreFloat.pending #ampmStoreFloatStatus{background:rgba(245,131,32,.12);border-color:rgba(245,131,32,.28);color:#9A4A0D}
-#ampmStoreFloat .sfEmpty{padding:12px 10px;border:1px dashed rgba(148,163,184,.35);border-radius:13px;background:#f8fafc;color:#64748b;font-size:12px;font-weight:800;line-height:1.3}
-@media(max-width:720px){#ampmStoreFloat{right:12px;bottom:58px}#ampmStoreFloatBtn{height:40px;padding:0 10px}#ampmStoreFloatBtn .txt{display:none}#ampmStoreFloatPanel{width:266px;bottom:48px}}
-</style>
-<style id="ampm-floating-store-filter-v2-corner-override">
-/* AMPM stable v2: botón más pequeño, fijo en la esquina inferior derecha */
-body:not(.auth-ok) #ampmStoreFloat{display:none!important}
-#ampmStoreFloat{
-  right:12px!important;
-  bottom:12px!important;
-  z-index:2600!important;
-}
-#ampmStoreFloatBtn{
-  height:34px!important;
-  min-width:0!important;
-  padding:0 10px!important;
-  gap:6px!important;
-  font-size:11px!important;
-  border-radius:999px!important;
-  box-shadow:0 10px 22px rgba(2,6,23,.22), inset 0 1px 0 rgba(255,255,255,.18)!important;
-}
-#ampmStoreFloatBtn .ico{
-  width:18px!important;
-  height:18px!important;
-  font-size:10px!important;
-}
-#ampmStoreFloatBtn .txt{
-  max-width:70px!important;
-}
-#ampmStoreFloatPanel{
-  bottom:42px!important;
-  right:0!important;
-  width:258px!important;
-  max-width:calc(100vw - 24px)!important;
-}
-#ampmStoreFloat .sfHead{padding:10px 11px 8px!important}
-#ampmStoreFloat .sfTitle{font-size:12px!important}
-#ampmStoreFloat .sfSub{font-size:10.5px!important}
-#ampmStoreFloat .sfBody{padding:10px!important}
-#ampmStoreFloat .sfMini{font-size:10.5px!important;padding:7px 8px!important}
-#ampmStoreFloat .sfItem{font-size:11.5px!important;padding:7px 9px!important}
-#ampmStoreFloatApply{font-size:11px!important;padding:9px 10px!important}
-#ampmStoreFloatStatus{font-size:10px!important;min-width:64px!important;padding:6px 7px!important}
-@media(max-width:720px){
-  #ampmStoreFloat{right:10px!important;bottom:10px!important}
-  #ampmStoreFloatBtn{height:32px!important;padding:0 9px!important}
-  #ampmStoreFloatBtn .txt{display:none!important}
-  #ampmStoreFloatPanel{bottom:40px!important;width:252px!important}
-}
-</style>
-<div id="ampmStoreFloat">
-  <button id="ampmStoreFloatBtn" type="button" title="Filtro rápido de tiendas"><span class="ico">🏪</span><span class="txt" id="ampmStoreFloatLabel">Tiendas</span></button>
-  <div id="ampmStoreFloatPanel" role="dialog" aria-label="Filtro flotante de tiendas">
-    <div class="sfHead"><div class="sfTitle">Filtro de tiendas <button id="ampmStoreFloatClose" type="button">×</button></div><div class="sfSub">Seleccioná 1, 2 o todas. Se aplica una sola vez al presionar el botón.</div></div>
-    <div class="sfBody"><div class="sfActions"><button class="sfMini" id="ampmStoreFloatAll" type="button">Todas</button><button class="sfMini" id="ampmStoreFloatNone" type="button">Limpiar</button></div><div id="ampmStoreFloatList"></div><div class="sfFoot"><button id="ampmStoreFloatApply" type="button">Aplicar tiendas</button><span id="ampmStoreFloatStatus">Listo</span></div></div>
-  </div>
-</div>
-<script id="ampm-floating-store-filter-v1-script">
-(function(){
- if(window.__ampmStoreFloatV1)return; window.__ampmStoreFloatV1=true;
- function id(x){return document.getElementById(x)} function sel(){return id('stores')}
- function s(v){return String(v==null?'':v).trim()} function e(v){return s(v).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]})}
- function opts(){var x=sel();return Array.from((x&&x.options)||[]).map(function(o){return{v:s(o.value),l:s(o.textContent||o.label||o.value)}}).filter(function(o){return o.v})}
- function selected(){var x=sel(),o=opts();if(!x||!o.length)return[];var p=Array.from(x.options||[]).filter(function(a){return a.selected}).map(function(a){return s(a.value)}).filter(Boolean);return p.length?p:o.map(function(a){return a.v})}
- function label(vals){var o=opts(),v=(arguments.length?vals:selected()).map(s).filter(Boolean);if(!o.length)return'Tiendas';if(!v.length||v.length===o.length)return'ALL';if(v.length<=2)return v.join(', ');return v.slice(0,2).join(', ')+' +'+(v.length-2)}
- function status(t,p){var h=id('ampmStoreFloat'),st=id('ampmStoreFloatStatus');if(st)st.textContent=t||'Listo';if(h)h.classList.toggle('pending',!!p)}
- function draft(){var l=id('ampmStoreFloatList');return l?Array.from(l.querySelectorAll('input:checked')).map(function(i){return s(i.value)}).filter(Boolean):[]}
- function pending(){var lb=id('ampmStoreFloatLabel');if(lb)lb.textContent=label(draft());status('Pendiente',true)}
- function render(useDraft){var l=id('ampmStoreFloatList'),lb=id('ampmStoreFloatLabel');if(!l)return;var o=opts();if(!o.length){l.innerHTML='<div class="sfEmpty">Cargá primero el cubo o el Excel para habilitar las tiendas.</div>';if(lb)lb.textContent='Tiendas';status('Sin data',false);return}var set=new Set((useDraft?draft():selected()).map(s));if(!set.size)o.forEach(function(a){set.add(a.v)});l.innerHTML=o.map(function(a){return'<label class="sfItem"><input type="checkbox" value="'+e(a.v)+'"'+(set.has(a.v)?' checked':'')+'> <span>'+e(a.l||a.v)+'</span></label>'}).join('');if(lb)lb.textContent=label(Array.from(set));status('Listo',false)}
- function open(force){var h=id('ampmStoreFloat');if(!h)return;var n=typeof force==='boolean'?force:!h.classList.contains('open');h.classList.toggle('open',n);if(n)render(false)}
- function all(on){Array.from((id('ampmStoreFloatList')||document).querySelectorAll('#ampmStoreFloatList input')).forEach(function(i){i.checked=!!on});pending()}
- function apply(){var x=sel();if(!x)return;var o=opts(),v=draft();if(!v.length)v=o.map(function(a){return a.v});var w=new Set(v.map(s));Array.from(x.options||[]).forEach(function(a){a.selected=w.has(s(a.value))});try{window.__ampmManualRefreshActiveUntil=Date.now()+5000;window.__ampmLastUserFilterChangeAt=Date.now();}catch(_e){}try{if(typeof window.renderStoreQuick==='function')window.renderStoreQuick()}catch(_e){}try{x.dispatchEvent(new Event('change',{bubbles:true}))}catch(_e){}try{if(typeof window.refreshAll==='function')window.refreshAll()}catch(err){console.warn('Filtro flotante de tiendas: refreshAll falló',err)}render(false);open(false);status('Aplicado',false);setTimeout(function(){status('Listo',false)},1300)}
- function bind(){var h=id('ampmStoreFloat'),b=id('ampmStoreFloatBtn'),l=id('ampmStoreFloatList'),x=sel();if(!h||!b||h.__b)return;h.__b=true;b.onclick=function(ev){ev.preventDefault();ev.stopPropagation();open()};id('ampmStoreFloatClose').onclick=function(ev){ev.preventDefault();ev.stopPropagation();open(false)};id('ampmStoreFloatAll').onclick=function(ev){ev.preventDefault();ev.stopPropagation();all(true)};id('ampmStoreFloatNone').onclick=function(ev){ev.preventDefault();ev.stopPropagation();all(false)};id('ampmStoreFloatApply').onclick=function(ev){ev.preventDefault();ev.stopPropagation();apply()};if(l)l.addEventListener('change',pending);h.addEventListener('click',function(ev){ev.stopPropagation()});document.addEventListener('click',function(){open(false)});if(x&&!x.__sf){x.addEventListener('change',function(){render(false)});x.__sf=true}window.addEventListener('ampm:fileloaded',function(){setTimeout(function(){render(false)},60)});render(false)}
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-})();
-</script>
-
-
-<script id="inv-stock-search-v19-height-sync-script">
-(function(){
-  let raf = 0;
-  function isInventoryActive(){
-    const bodyTab = String(document.body && document.body.getAttribute('data-active-tab') || '').trim().toLowerCase();
-    const activeBtn = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim().toLowerCase();
-    return bodyTab === 'inventario' || activeBtn === 'inventario';
+  function _safeTab(){
+    try{ return String((typeof getActiveAmpmTab === 'function' ? getActiveAmpmTab() : (document.querySelector('.tabBtn.active')?.dataset?.tab || '')) || '').trim().toLowerCase(); }catch(e){ return ''; }
   }
-  function clearStockHeight(card){ if(card) card.style.removeProperty('--inv-stock-card-h'); }
-  function syncInventoryStockCardHeight(){
-    const layout = document.querySelector('.invDrillStockLayout');
-    if(!layout) return;
-    const drill = layout.querySelector(':scope > .invDrillCard') || document.querySelector('.invDrillCard[data-tabpage="inventario"]');
-    const card = layout.querySelector(':scope > .invStockSearchCard') || document.querySelector('.invStockSearchCard[data-tabpage="inventario"]');
-    const wrap = card ? card.querySelector('.invStockSearchTableWrap') : null;
-    if(!drill || !card || !wrap) return;
-    if(!isInventoryActive() || window.innerWidth <= 1320){ clearStockHeight(card); return; }
-    const h = Math.round(drill.getBoundingClientRect().height || 0);
-    if(!h || h < 360){ clearStockHeight(card); return; }
-    card.style.setProperty('--inv-stock-card-h', h + 'px');
-  }
-  function scheduleInventoryStockCardHeightSync(){
-    if(raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(function(){ raf = requestAnimationFrame(syncInventoryStockCardHeight); });
-  }
-  window.syncInventoryStockCardHeight = syncInventoryStockCardHeight;
-  window.scheduleInventoryStockCardHeightSync = scheduleInventoryStockCardHeightSync;
-  function bindObservers(){
-    const targets = [document.getElementById('tbody_inv_dept'), document.getElementById('invStockSearchBody'), document.querySelector('.invDrillStockLayout')].filter(Boolean);
-    if(!targets.length) return;
-    const mo = new MutationObserver(scheduleInventoryStockCardHeightSync);
-    targets.forEach(t=>mo.observe(t, {childList:true, subtree:true, attributes:true}));
-    scheduleInventoryStockCardHeightSync();
-  }
-  document.addEventListener('DOMContentLoaded', function(){ bindObservers(); setTimeout(scheduleInventoryStockCardHeightSync,80); setTimeout(scheduleInventoryStockCardHeightSync,350); setTimeout(scheduleInventoryStockCardHeightSync,900); });
-  window.addEventListener('load', scheduleInventoryStockCardHeightSync, {passive:true});
-  window.addEventListener('resize', scheduleInventoryStockCardHeightSync, {passive:true});
-  document.addEventListener('click', function(ev){ if(ev.target && ev.target.closest('[data-inv-toggle], #invExpandAll, #invCollapseAll, #invDeptOnly, .tabBtn, .tabsbar button')){ setTimeout(scheduleInventoryStockCardHeightSync,80); setTimeout(scheduleInventoryStockCardHeightSync,280); } }, true);
-  document.addEventListener('input', function(ev){ if(ev.target && ev.target.id === 'invStockSearchInput'){ setTimeout(scheduleInventoryStockCardHeightSync,140); } }, true);
-})();
-</script>
-
-
-
-
-<style id="ventas-sdya-sidebar-v25-styles">
-/* v25: Venta Vs SDYA queda estable al abrir/cerrar men� lateral. */
-.chartCard:has(#chart_mam){overflow:hidden !important;}
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  position:relative !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  max-height:420px !important;
-  overflow:hidden !important;
-  box-sizing:border-box !important;
-}
-#chart_mam{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  max-height:none !important;
-  box-sizing:border-box !important;
-  pointer-events:auto !important;
-  position:relative !important;
-  z-index:5 !important;
-}
-.chartCard:has(#chart_mam),
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  pointer-events:auto !important;
-}
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  z-index:4 !important;
-}
-.chartCard:has(#chart_mam) #rank_mam{
-  position:relative !important;
-  z-index:1 !important;
-}
-</style>
-<script id="ventas-sdya-sidebar-v25-script" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
-</script>
-
-
-<script id="ventas-sdya-tooltip-v26-fix" data-disabled="v27-replaced">
-(function(){
-  if(true) return;
-  window.__ampmVentasSdyaTooltipV26 = true;
-  function patchChart(){
+  function _safeStores(){
     try{
-      var ch = (window.state && state.chartMam) || (typeof Chart !== 'undefined' && Chart.getChart ? Chart.getChart('chart_mam') : null);
-      if(!ch || !ch.options) return;
-      ch.options.interaction = Object.assign({}, ch.options.interaction || {}, {mode:'index', axis:'x', intersect:false});
-      ch.options.plugins = ch.options.plugins || {};
-      ch.options.plugins.tooltip = Object.assign({}, ch.options.plugins.tooltip || {}, {enabled:true, mode:'index', intersect:false, position:'nearest', displayColors:true});
-      if(ch.canvas) ch.canvas.style.pointerEvents = 'auto';
-      if(typeof ch.update === 'function') ch.update('none');
-    }catch(_e){}
+      if(typeof getSelectedStoresOrAll === 'function'){
+        return (getSelectedStoresOrAll() || []).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean);
+      }
+    }catch(e){}
+    try{ return (state && Array.isArray(state.stores) ? state.stores : []).map(function(v){ return String(v || '').trim().toUpperCase(); }).filter(Boolean); }catch(e){}
+    return [];
   }
-  window.addEventListener('ampm:tabshown', function(ev){
-    try{ if(String(ev && ev.detail && ev.detail.tab || '').toLowerCase() === 'ventas') setTimeout(patchChart, 120); }catch(_e){}
-  });
-  document.addEventListener('mousemove', function(ev){
-    try{ if(ev.target && ev.target.id === 'chart_mam') patchChart(); }catch(_e){}
-  }, {passive:true, capture:true});
-  setTimeout(patchChart, 700);
+  function _safeDow(){
+    try{ return String((typeof getGlobalDowFilter === 'function' ? getGlobalDowFilter() : '__ALL__') || '__ALL__').trim(); }catch(e){ return '__ALL__'; }
+  }
+  function _storeSig(){
+    var stores = _safeStores().slice().sort().join('|');
+    return stores + '||' + _safeDow();
+  }
+  function _markDirty(tab){
+    try{ if(typeof markTabsDirty === 'function') markTabsDirty(tab); }catch(e){}
+    try{ if(state && state._lastChartRenderSig) state._lastChartRenderSig[String(tab || '').trim()] = ''; }catch(e){}
+    try{ if(state && state._lastRenderedTabSig) state._lastRenderedTabSig[String(tab || '').trim()] = ''; }catch(e){}
+  }
+  function _hardRefreshActiveTab(reason){
+    var tab = _safeTab();
+    if(!tab) return;
+    _markDirty(tab);
+    var run = function(){
+      try{
+        if(tab === 'innovacion'){
+          try{
+            if(typeof renderInnovationCharts === 'function') renderInnovationCharts(_safeStores());
+          }catch(e){ console.warn('v11 innovation hard refresh failed', reason, e); }
+        }
+        if(typeof refreshVisibleTabCharts === 'function'){
+          try{ refreshVisibleTabCharts(tab, true); }catch(e){ console.warn('v11 refreshVisibleTabCharts failed', tab, reason, e); }
+        }else if(typeof scheduleVisibleChartRefresh === 'function'){
+          try{ scheduleVisibleChartRefresh(tab); }catch(e){ console.warn('v11 scheduleVisibleChartRefresh failed', tab, reason, e); }
+        }
+        try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(e){}
+        try{ if(typeof updateAllChartTitles === 'function') updateAllChartTitles(); }catch(e){}
+      }catch(e){ console.warn('v11 hard refresh run failed', tab, reason, e); }
+    };
+    [0, 120, 360, 720].forEach(function(ms){ setTimeout(run, ms); });
+  }
+  function _wrapRefreshAll(){
+    if(typeof window.refreshAll !== 'function' || window.refreshAll.__ampmStoreHardRefreshV11) return;
+    var _base = window.refreshAll;
+    window.refreshAll = function(){
+      var prevSig = String(window.__ampmLastStoreFilterSig || '');
+      var out = _base.apply(this, arguments);
+      var nextSig = _storeSig();
+      var tab = _safeTab();
+      var triggerTabs = ['ventas','delivery','innovacion','sbf','onepager'];
+      if(prevSig !== nextSig && triggerTabs.indexOf(tab) >= 0){
+        _hardRefreshActiveTab('store-filter-change');
+      }
+      window.__ampmLastStoreFilterSig = nextSig;
+      return out;
+    };
+    window.refreshAll.__ampmStoreHardRefreshV11 = true;
+  }
+  function _bindStoreSelectors(){
+    try{
+      var storeSel = document.getElementById('stores');
+      if(storeSel && !storeSel.__ampmStoreHardRefreshV11){
+        storeSel.addEventListener('change', function(){
+          window.__ampmPendingStoreFilterSig = _storeSig();
+        });
+        storeSel.__ampmStoreHardRefreshV11 = true;
+      }
+    }catch(e){}
+  }
+  function _bootstrap(){
+    try{ window.__ampmLastStoreFilterSig = _storeSig(); }catch(e){}
+    _wrapRefreshAll();
+    _bindStoreSelectors();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bootstrap, {once:true});
+  }else{
+    _bootstrap();
+  }
 })();
 </script>
 
-<script id="ventas-sdya-tooltip-v28-driver" data-disabled="v31-passive-tooltip">
-(function(){
-  /* v31: desactivado. El tooltip de Venta Vs SDYA ahora es pasivo y no manipula Chart.js. */
-})();
-</script>
-
-
-
-<script id="ventas-sdya-tooltip-v30-forensic-persistente" data-disabled="v31-passive-tooltip">
-(function(){
-  /* v31: desactivado. Esta versión manipulaba activeElements/update y podía dejar el canvas en blanco. */
-})();
-</script>
-
-
-
-<script id="ventas-sdya-tooltip-v37-overlay-estable" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
-</script>
-
-
-<style id="sbf-mam-repair-v39-styles">
-/* v39: reparación local de TX SBF Vs LY. Evita canvas blanco por resize/sidebar/tab sin tocar otros gráficos. */
-.chartCard:has(#chart_sbf_mam){overflow:hidden !important;}
-.chartCard:has(#chart_sbf_mam) .monthly-chart-viewport{
-  position:relative !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  overflow:hidden !important;
-  pointer-events:auto !important;
-}
-#chart_sbf_mam{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  max-height:none !important;
-  position:relative !important;
-  z-index:1 !important;
-  pointer-events:auto !important;
-}
-.chartCard:has(#chart_sbf_mam) #rank_sbf_mam{
-  position:relative !important;
-  z-index:2 !important;
-  pointer-events:auto !important;
-}
-</style>
-<script id="sbf-mam-repair-v39-script" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
-</script>
-
-
-
-<style id="sbf-mam-sidebar-hard-rebuild-v40-styles">
-/* v40: reparación quirúrgica TX SBF Vs LY al ocultar/mostrar menú lateral. */
-.chartCard:has(#chart_sbf_mam) .monthly-chart-viewport{
-  position:relative !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  overflow:hidden !important;
-}
-#chart_sbf_mam{
-  display:block !important;
-  width:100% !important;
-  height:420px !important;
-  max-height:420px !important;
-  min-height:420px !important;
-}
-</style>
-<script id="sbf-mam-sidebar-hard-rebuild-v40-script" data-disabled="ampm-central-chart-lifecycle-v3">
-/* Desactivado por lifecycle central v3. */
-</script>
-
-<style id="ampm-central-chart-lifecycle-v3-styles">
-.monthly-chart-viewport,.opCanvasWrap,.innovationChartWrap,.innovationFsExecCanvasWrap,.innovationMetaFsCanvasWrap,.innovationIngredMermaCanvasWrap{position:relative!important;min-width:0!important;max-width:100%!important}
-.monthly-chart-viewport>canvas,.opCanvasWrap>canvas,.innovationChartWrap>canvas,.innovationFsExecCanvasWrap>canvas,.innovationMetaFsCanvasWrap>canvas,.innovationIngredMermaCanvasWrap>canvas{display:block!important;width:100%!important;max-width:100%!important;pointer-events:auto!important}
-#ventasSdyaHoverLayerV37,#ventasSdyaHoverLayerV36,#ventasSdyaHoverLayerV31,#ventasSdyaTooltipV37,#ventasSdyaTooltipV36,#ventasSdyaTooltipV31{display:none!important;pointer-events:none!important}
-</style>
-<script id="ampm-central-chart-lifecycle-v3-script">
-(function(){
-  if(window.__AMPM_CENTRAL_CHART_LIFECYCLE_V3__) return;
-  window.__AMPM_CENTRAL_CHART_LIFECYCLE_V3__ = true;
-  window.AMPM_CHARTS = window.AMPM_CHARTS || Object.create(null);
-  window.__ampmChartLifecycleAudit={version:'v3',disabledAggressiveDrivers:['ampm-tab-chart-recovery-v1','ventas-sdya-self-heal-v2','ampm-store-filter-hard-refresh-v11','ventas-sdya-sidebar-v25-script','ventas-sdya-tooltip-v37-overlay-estable','sbf-mam-repair-v39-script','sbf-mam-sidebar-hard-rebuild-v40-script'],tooltipStrategy:'native Chart.js only for chart_mam',sidebarStrategy:'resize visible charts only; rebuild only invalid visible chart'};
-  var timers=Object.create(null),rendering=Object.create(null);
-  function txt(v){return String(v==null?'':v).trim();}
-  function byId(id){return document.getElementById(id);}
-  function activeTab(){try{return txt(document.querySelector('.tabBtn.active')?.dataset?.tab||localStorage.getItem('ampm_tab')||'resumen')||'resumen';}catch(e){return'resumen';}}
-  function stores(){try{if(typeof getSelectedStoresOrAll==='function')return getSelectedStoresOrAll()||[];}catch(e){}try{if(typeof state!=='undefined'&&state&&Array.isArray(state.stores))return state.stores.slice();}catch(e){}return[];}
-  function key(c){if(!c)return'';if(c.id)return c.id;if(!c.dataset.ampmChartKey)c.dataset.ampmChartKey='chart_auto_'+Math.random().toString(36).slice(2);return c.dataset.ampmChartKey;}
-  function itemCanvas(x){try{return x&&(x.canvas||((x instanceof HTMLCanvasElement)?x:null));}catch(e){return null;}}
-  function tabOf(c){try{return txt(c.closest('[data-tabpage]')?.dataset?.tabpage||'');}catch(e){return'';}}
-  function visible(el,w,h){try{if(!el||!el.isConnected)return false;var s=getComputedStyle(el),r=el.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&r.width>=(w||40)&&r.height>=(h||40);}catch(e){return false;}}
-  function canvasVisible(c){try{if(!c)return false;var t=tabOf(c);if(t&&t!==activeTab())return false;return visible(c,40,40)&&visible(c.closest('.chartCard,[data-tabpage]')||c.parentElement||c,80,80);}catch(e){return false;}}
-  function cleanSdya(){['ventasSdyaHoverLayerV37','ventasSdyaHoverLayerV36','ventasSdyaHoverLayerV31','ventasSdyaTooltipV37','ventasSdyaTooltipV36','ventasSdyaTooltipV31'].forEach(function(id){try{var e=byId(id);if(e)e.remove();}catch(x){}});}
-  function harden(c){try{if(!c)return;var h=c.closest('.monthly-chart-viewport')||c.parentElement;if(h){h.style.position=h.style.position||'relative';h.style.minWidth='0';h.style.maxWidth='100%';if(/^(chart_mam|chart_delivery_mam|chart_delivery_share_mam|chart_sbf_mam)$/.test(c.id)){if(!h.style.height||h.getBoundingClientRect().height<280)h.style.height='420px';h.style.overflow='hidden';}}c.style.display='block';c.style.width='100%';c.style.maxWidth='100%';c.style.pointerEvents='auto';}catch(e){}}
-  function patchCfg(c,cfg){try{if(!c||!cfg)return cfg;cfg.options=cfg.options||{};cfg.options.responsive=true;cfg.options.maintainAspectRatio=false;if(c.id==='chart_mam'){cfg.options.interaction=Object.assign({},cfg.options.interaction||{},{mode:'index',axis:'x',intersect:false});cfg.options.hover=Object.assign({},cfg.options.hover||{},{mode:'index',axis:'x',intersect:false});cfg.options.events=['mousemove','mouseout','mouseleave','click','touchstart','touchmove','touchend'];cfg.options.plugins=cfg.options.plugins||{};cfg.options.plugins.tooltip=Object.assign({},cfg.options.plugins.tooltip||{},{enabled:true,mode:'index',axis:'x',intersect:false,external:null});}}catch(e){}return cfg;}
-  function installProxy(){try{var C=window.Chart;if(!C||C.__ampmLifecycleV3Proxy)return;var P=new Proxy(C,{construct:function(t,args,n){var c=itemCanvas(args&&args[0]),k='';try{if(c){harden(c);k=key(c);args[1]=patchCfg(c,args[1]);var old=(typeof t.getChart==='function')?t.getChart(c):null;if(old&&old.destroy)old.destroy();if(window.AMPM_CHARTS[k]&&window.AMPM_CHARTS[k]!==old&&window.AMPM_CHARTS[k].destroy)window.AMPM_CHARTS[k].destroy();window.AMPM_CHARTS[k]=null;}}catch(e){}var ch=Reflect.construct(t,args,n||t);try{c=c||ch.canvas;k=k||key(c);if(k)window.AMPM_CHARTS[k]=ch;ch.$ampmChartKey=k;}catch(e){}return ch;}});try{Object.setPrototypeOf(P,C);}catch(e){}P.__ampmLifecycleV3Proxy=true;window.Chart=P;}catch(e){console.warn('AMPM lifecycle proxy failed',e);}}
-  function ch(c){try{return c&&typeof Chart!=='undefined'?((Chart.getChart&&Chart.getChart(c))||window.AMPM_CHARTS[key(c)]||null):null;}catch(e){return null;}}
-  function invalid(x){try{if(!x||!x.canvas)return true;if(!canvasVisible(x.canvas))return false;var r=x.canvas.getBoundingClientRect(),a=x.chartArea;if(r.width<80||r.height<80||!a)return true;return (a.right-a.left)<Math.min(180,r.width*.35)||(a.bottom-a.top)<Math.min(140,r.height*.35)||!x.data||!Array.isArray(x.data.datasets)||!x.data.datasets.length;}catch(e){return false;}}
-  function rank(x){try{if(!x||!x.canvas||typeof renderBottomRankRow!=='function')return;var id=x.canvas.id,l=x.data.labels||[],d=x.data.datasets||[],rid='',v=[];if(id==='chart_mam'){rid='rank_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}else if(id==='chart_delivery_mam'){rid='rank_delivery_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}else if(id==='chart_delivery_share_mam'){rid='rank_delivery_share_mam';var s=d.find(function(ds){return /share/i.test(txt(ds&&ds.label))})||d[d.length-1];v=(s&&s.data||[]).map(function(n){return n==null?-Infinity:Number(n)});}else if(id==='chart_sbf_mam'){rid='rank_sbf_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}if(rid&&byId(rid))renderBottomRankRow(rid,l,v,{label:'Top',chart:x});}catch(e){}}
-  function resizeOne(x){try{if(!x||!x.canvas||!canvasVisible(x.canvas))return;harden(x.canvas);x.resize&&x.resize();x.update&&x.update('none');rank(x);}catch(e){}}
-  function resizeVisible(){cleanSdya();var seen=new Set();try{Object.keys(window.AMPM_CHARTS||{}).forEach(function(k){var x=window.AMPM_CHARTS[k];if(x&&!seen.has(x)){seen.add(x);resizeOne(x);}});if(typeof Chart!=='undefined'&&Chart.instances)Object.keys(Chart.instances).forEach(function(k){var x=Chart.instances[k];if(x&&!seen.has(x)){seen.add(x);resizeOne(x);}});}catch(e){}return seen.size;}
-  function renderId(id,force){try{var c=byId(id);if(!c||!canvasVisible(c))return false;var x=ch(c);if(!force&&x&&!invalid(x)){resizeOne(x);return true;}if(rendering[id])return false;rendering[id]=1;try{var s=stores();if(id==='chart_mam'&&typeof renderMamChart==='function')renderMamChart(s);else if(id==='chart_delivery_mam'&&typeof renderDeliveryMamChart==='function')renderDeliveryMamChart(s);else if(id==='chart_delivery_share_mam'&&typeof renderDeliveryShareMamChart==='function')renderDeliveryShareMamChart(s);else if(id==='chart_sbf_mam'&&typeof renderSbfMamChart==='function')renderSbfMamChart(s);else return false;}finally{rendering[id]=0;}x=ch(c);if(x)resizeOne(x);return!!x;}catch(e){rendering[id]=0;console.warn('AMPM lifecycle local render failed',id,e);return false;}}
-  function recover(tab,force){var ids={ventas:['chart_mam'],delivery:['chart_delivery_mam','chart_delivery_share_mam'],sbf:['chart_sbf_mam']}[txt(tab||activeTab())]||[];ids.forEach(function(id){var c=byId(id),x=ch(c);if(c&&canvasVisible(c)){if(force||!x||invalid(x))renderId(id,!!force||!x||invalid(x));else resizeOne(x);}});resizeVisible();}
-  function schedule(tab,force,wait){var k=txt(tab||activeTab())+':' +(force?'force':'fit');clearTimeout(timers[k]);timers[k]=setTimeout(function(){requestAnimationFrame(function(){recover(tab,force);});},wait||0);}
-  function wrap(name,ids){try{if(typeof window[name]!=='function'||window[name].__ampmLifecycleV3Wrapped)return;var b=window[name];window[name]=function(){ids=Array.isArray(ids)?ids:[ids];try{var hidden=ids.every(function(id){var c=byId(id);return c&&!canvasVisible(c);});if(hidden){schedule(activeTab(),false,180);return;}}catch(e){}var out=b.apply(this,arguments);try{cleanSdya();ids.forEach(function(id){resizeOne(ch(byId(id)));});}catch(e){}return out;};window[name].__ampmLifecycleV3Wrapped=true;}catch(e){}}
-  function wrapRenders(){wrap('renderMamChart','chart_mam');wrap('renderDeliveryMamChart','chart_delivery_mam');wrap('renderDeliveryShareMamChart','chart_delivery_share_mam');wrap('renderSbfMamChart','chart_sbf_mam');}
-  function installRefresh(){var base=window.refreshVisibleTabCharts;if(typeof base==='function'&&!window.__ampmBaseRefreshVisibleTabChartsV3)window.__ampmBaseRefreshVisibleTabChartsV3=base;window.refreshVisibleTabCharts=function(tab,force){var t=txt(tab||activeTab()),fn=window.__ampmBaseRefreshVisibleTabChartsV3||base,out;try{if(typeof fn==='function')out=fn.call(this,t,!!force);}catch(e){console.warn('AMPM lifecycle refresh failed',t,e);}requestAnimationFrame(function(){resizeVisible();recover(t,false);});return out;};window.scheduleVisibleChartRefresh=function(tab){clearTimeout(timers.refresh);var t=txt(tab||activeTab());timers.refresh=setTimeout(function(){requestAnimationFrame(function(){window.refreshVisibleTabCharts(t,false);});},90);};window.resizeCharts=resizeVisible;}
-  function listeners(){window.addEventListener('ampm:tabshown',function(ev){var t=txt(ev&&ev.detail&&ev.detail.tab||activeTab());schedule(t,false,160);setTimeout(function(){recover(t,false);},360);},{passive:true});window.addEventListener('resize',function(){clearTimeout(timers.resize);timers.resize=setTimeout(function(){resizeVisible();recover(activeTab(),false);},140);},{passive:true});document.addEventListener('click',function(ev){try{if(ev.target&&ev.target.closest&&ev.target.closest('#ampmSidebarToggle,.ampm-sidebar-toggle')){clearTimeout(timers.sidebar);timers.sidebar=setTimeout(function(){requestAnimationFrame(function(){resizeVisible();recover(activeTab(),false);});},280);}if(ev.target&&ev.target.closest&&ev.target.closest('#ampmStoreFloatApply')){clearTimeout(timers.filter);timers.filter=setTimeout(function(){try{window.refreshVisibleTabCharts(activeTab(),true);}catch(e){}},120);}}catch(e){}},true);}
-  function boot(){installProxy();wrapRenders();installRefresh();listeners();window.__ampmVentasSdyaTooltipBindV28=cleanSdya;window.__ampmVentasSdyaTooltipPatchV28=cleanSdya;window.__ampmVentasSdyaTooltipPatchV31=cleanSdya;window.__ampmVentasSdyaTooltipPatchV37=cleanSdya;window.__ampmChartLifecycle={resizeVisibleChartsOnly:resizeVisible,recoverVisibleChartsForTab:recover,cleanupSdyaOverlays:cleanSdya};setTimeout(function(){resizeVisible();recover(activeTab(),false);},240);setTimeout(function(){wrapRenders();resizeVisible();recover(activeTab(),false);},1000);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-})();
-</script>
-
-<style id="ventas-sdya-sidebar-v41-styles">
-/* v41: reparación local y estable de Venta Vs SDYA después de ocultar/mostrar menú lateral. */
-.chartCard:has(#chart_mam){overflow:hidden !important;}
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  position:relative !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  overflow:hidden !important;
-}
-#chart_mam{
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  max-width:100% !important;
-  max-height:none !important;
-  pointer-events:auto !important;
-}
-</style>
-<script id="ventas-sdya-sidebar-v41-local-repair" data-disabled="replaced-by-v43">
-(function(){ window.__ventasSdyaSidebarV41 = true; })();
-</script>
-
-<style id="ventas-sdya-sidebar-v43-hard-local-styles">
-/* v43: Venta Vs SDYA se reconstruye localmente después del cambio real de ancho del sidebar. */
-.chartCard:has(#chart_mam){overflow:hidden !important; contain:layout paint style;}
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  position:relative !important;
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  overflow:hidden !important;
-}
-#chart_mam{
-  display:block !important;
-  width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  max-width:100% !important;
-  max-height:none !important;
-  pointer-events:auto !important;
-  position:relative !important;
-  z-index:1 !important;
-}
-</style>
-<script id="ventas-sdya-sidebar-v43-hard-local-rebuild">
-/* Desactivado por v44: Venta Vs SDYA ahora usa renderer canvas propio, estable ante sidebar. */
-(function(){ window.__AMPM_SALES_SDYA_V43_DISABLED_BY_V44__ = true; })();
-</script>
-
-
-<style id="ventas-sdya-v47-canvas-renderer-styles">
-/* v47: Venta Vs SDYA estable. Stack fijo: azul abajo, naranja centro, plomo Excel arriba; etiquetas Semana/Año más grandes y sin delta S01 vs LY. */
-.chartCard:has(#chart_mam){overflow:hidden !important;}
-.chartCard:has(#chart_mam) .monthly-chart-viewport{
-  position:relative !important;
-  width:100% !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  max-height:420px !important;
-  overflow:hidden !important;
-  box-sizing:border-box !important;
-  background:#ffffff !important;
-}
-#chart_mam{
-  display:block !important;
-  width:100% !important;
-  height:420px !important;
-  min-height:420px !important;
-  max-height:420px !important;
-  max-width:100% !important;
-  position:relative !important;
-  z-index:2 !important;
-  pointer-events:auto !important;
-  box-sizing:border-box !important;
-}
-.sdyaCustomTooltipV44{
-  position:absolute;
-  z-index:40;
-  pointer-events:none;
-  opacity:0;
-  transform:translate3d(0,0,0);
-  transition:opacity .08s ease;
-  max-width:min(340px, calc(100vw - 80px));
-  background:rgba(15,23,42,.96);
-  color:#fff;
-  border:1px solid rgba(148,163,184,.30);
-  border-radius:6px;
-  box-shadow:0 18px 34px rgba(15,23,42,.26);
-  padding:10px 12px;
-  font:700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  line-height:1.35;
-}
-.sdyaCustomTooltipV44 .t{font-weight:1000;margin-bottom:7px;color:#fff;white-space:nowrap;}
-.sdyaCustomTooltipV44 .r{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:3px 0;}
-.sdyaCustomTooltipV44 .l{display:inline-flex;align-items:center;gap:7px;min-width:0;}
-.sdyaCustomTooltipV44 .sw{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 10px;}
-.sdyaCustomTooltipV44 .v{font-weight:1000;white-space:nowrap;}
-</style>
-<script id="ventas-sdya-v47-canvas-renderer-script">
-(function(){
-  if(window.__AMPM_SALES_SDYA_CANVAS_RENDERER_V47__) return;
-  window.__AMPM_SALES_SDYA_CANVAS_RENDERER_V47__ = true;
-
-  var COLORS = {AMPM01:'#005EA7', AMPM02:'#F58320', AMPM03:'#A6A6A6', line:'#2E7D32', axis:'#1F2937', grid:'rgba(100,116,139,.24)', ink:'#0F172A'};
-  var FALLBACK_COLORS = ['#005EA7','#F58320','#A6A6A6','#0C4D8F','#E67425','#B7B7B7'];
-  function colorForStore(store, idx){ store=String(store||'').trim().toUpperCase(); if(COLORS[store]) return COLORS[store]; var h=0; for(var i=0;i<store.length;i++) h=((h<<5)-h)+store.charCodeAt(i); return FALLBACK_COLORS[Math.abs(h + (idx||0)) % FALLBACK_COLORS.length]; }
-  var stateKey = '__ampmSalesSdyaV44';
-  var resizeTimer = 0;
-
-  function byId(id){ return document.getElementById(id); }
-  function num(v){ v = Number(v||0); return Number.isFinite(v) ? v : 0; }
-  function activeTab(){try{ return String((document.querySelector('.tabBtn.active')||{}).dataset?.tab || localStorage.getItem('ampm_tab') || '').trim().toLowerCase(); }catch(_e){ return ''; }}
-  function isVentas(){ return activeTab() === 'ventas'; }
-  function visible(el){try{ var r=el.getBoundingClientRect(), cs=getComputedStyle(el); return !!(el && el.isConnected && r.width>160 && r.height>180 && cs.display!=='none' && cs.visibility!=='hidden'); }catch(_e){ return false; }}
-  function formatMoneyK(v){v = num(v); var s = v < 0 ? '-' : ''; var a = Math.abs(v); if(a >= 1000000) return s + '$' + (a/1000000).toFixed(a>=10000000?0:1).replace(/\.0$/,'') + 'M'; if(a >= 1000) return s + '$' + (a/1000).toFixed(a>=10000?0:1).replace(/\.0$/,'') + 'K'; return s + '$' + a.toFixed(0);}
-  function formatMoney(v){ return '$' + num(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
-  function niceMax(v){v = Math.max(1, num(v)); var p = Math.pow(10, Math.floor(Math.log10(v))); var n = v / p; var m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10; return m * p;}
-  function labelOf(period){try{ if(typeof periodChartLabel === 'function') return periodChartLabel(period); }catch(_e){} return String(period||'');}
-  function flatLabel(x){ return Array.isArray(x) ? x.join(' ') : String(x||''); }
-  function weekNumOf(period, label){
-    var raw = (String(period||'') + ' ' + flatLabel(label||'')).toUpperCase();
-    var m = raw.match(/\bS(?:EMANA)?\s*0?(\d{1,2})\b/) || raw.match(/\bW\s*0?(\d{1,2})\b/) || raw.match(/(?:^|[^A-Z0-9])(?:S|W)[-\s]?0?(\d{1,2})(?:[^0-9]|$)/);
-    return m ? Number(m[1]) : null;
-  }
-  function yearOf(period, label){
-    var raw = String(period||'') + ' ' + flatLabel(label||'');
-    var m = raw.match(/(20\d{2})/);
-    return m ? m[1] : '';
-  }
-  function axisLabelParts(period, label, monthly){
-    var lb = flatLabel(label);
-    if(monthly){ return {top:lb, bottom:''}; }
-    var w = weekNumOf(period, label);
-    var y = yearOf(period, label);
-    if(w != null){ return {top:'S' + String(w).padStart(2,'0'), bottom:y}; }
-    var parts = lb.split(/\s+/);
-    return {top:parts[0] || lb, bottom:parts.find(function(x){return /^20\d{2}$/.test(x);}) || y};
-  }
-  function isWeek01(period, label, monthly){
-    if(monthly) return false;
-    return weekNumOf(period, label) === 1;
-  }
-  function selectedStoresFallback(){try{ if(typeof getSelectedStoresOrAll === 'function'){ var a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a; } }catch(_e){} try{ if(typeof getSelectedStores === 'function'){ var b=getSelectedStores(); if(Array.isArray(b) && b.length) return b; } }catch(_e){} try{ if(window.state && Array.isArray(state.stores)) return state.stores.slice(); }catch(_e){} return [];}
-  function getPayload(storeList){
-    var show = true; try{ if(typeof syncSalesMamVisibility === 'function') show = syncSalesMamVisibility(storeList); }catch(_e){} if(!show) return null;
-    var periods = []; try{ if(typeof getChartPeriods === 'function') periods = getChartPeriods('sales') || []; }catch(_e){}
-    var stores = Array.from(new Set((storeList && storeList.length ? storeList : selectedStoresFallback()).map(function(s){return String(s||'').trim().toUpperCase();}).filter(Boolean)));
-    if(!periods.length || !stores.length) return null;
-    var monthly = false; try{ monthly = typeof isMonthlyReport === 'function' ? !!isMonthlyReport() : false; }catch(_e){}
-    function getV(st, ym){try{ return monthly && typeof getMonthlySalesValueSafe === 'function' ? num(getMonthlySalesValueSafe(st, ym)) : num(getChartSalesValue(st, ym)); }catch(_e){ return 0; }}
-    var labels = periods.map(labelOf);
-    var series = stores.map(function(store){ return {store:store, values:periods.map(function(ym){return getV(store, ym);}), deltas:[]}; });
-    var totals = periods.map(function(_,i){ return series.reduce(function(a,s){ return a + num(s.values[i]); }, 0); });
-    var deltas = periods.map(function(ym,i){try{ if(isWeek01(ym, labels[i], monthly)) return null; var ly = typeof lyIsoWeekKey === 'function' ? lyIsoWeekKey(ym) : ''; var lyVal = stores.reduce(function(a,st){ return a + getV(st, ly); }, 0); if(!(lyVal > 0)) return null; if(typeof resolveMonthlyDeltaGuard === 'function'){var guard = resolveMonthlyDeltaGuard({stores:stores, monthKey:ym, lyKey:ly, lyVal:lyVal, getter:getV, metric:'sales'}); if(!guard || !guard.valid) return null;} return totals[i] / lyVal;}catch(_e){ return null; }});
-    series.forEach(function(s){s.deltas = periods.map(function(ym,i){try{ if(isWeek01(ym, labels[i], monthly)) return null; var ly = typeof lyIsoWeekKey === 'function' ? lyIsoWeekKey(ym) : ''; var lyVal = getV(s.store, ly); if(!(lyVal > 0)) return null; if(typeof resolveMonthlyDeltaGuard === 'function'){var guard = resolveMonthlyDeltaGuard({stores:[s.store], monthKey:ym, lyKey:ly, lyVal:lyVal, getter:getV, metric:'sales'}); if(!guard || !guard.valid) return null;} return num(s.values[i]) / lyVal;}catch(_e){ return null; }});});
-    return {periods:periods, labels:labels, stores:stores, series:series, totals:totals, deltas:deltas, monthly:monthly};
-  }
-  function destroyChartInstance(canvas){try{ if(window.Chart && typeof Chart.getChart === 'function'){ var ch = Chart.getChart(canvas) || Chart.getChart('chart_mam'); if(ch && ch.destroy) ch.destroy(); } }catch(_e){} try{ if(window.state && state.chartMam && state.chartMam.destroy) state.chartMam.destroy(); }catch(_e){} try{ if(window.state) state.chartMam = null; }catch(_e){} try{ if(window.AMPM_CHARTS) window.AMPM_CHARTS.chart_mam = null; }catch(_e){}}
-  function ensureCanvas(){var c = byId('chart_mam'); if(!c) return null; var vp = c.closest('.monthly-chart-viewport') || c.parentElement; if(!vp) return null; vp.style.position='relative'; vp.style.display='block'; vp.style.width='100%'; vp.style.minWidth='0'; vp.style.maxWidth='100%'; vp.style.height='420px'; vp.style.minHeight='420px'; vp.style.maxHeight='420px'; vp.style.overflow='hidden'; c.style.display='block'; c.style.width='100%'; c.style.height='420px'; c.style.minHeight='420px'; c.style.maxHeight='420px'; c.style.pointerEvents='auto'; return c;}
-  function drawRounded(ctx,x,y,w,h,r){r = Math.max(0, Math.min(r, Math.abs(w)/2, Math.abs(h)/2)); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();}
-  function drawChart(canvas, payload){
-    var vp = canvas.closest('.monthly-chart-viewport') || canvas.parentElement; var cssW = Math.max(360, Math.floor((vp && vp.getBoundingClientRect().width) || canvas.getBoundingClientRect().width || 0)); var cssH = 420; var dpr = Math.max(1, Math.min(2, Number(window.devicePixelRatio || 1)));
-    canvas.width = Math.floor(cssW * dpr); canvas.height = Math.floor(cssH * dpr); canvas.style.width='100%'; canvas.style.height=cssH+'px';
-    var ctx = canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,cssW,cssH); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cssW,cssH);
-    var title = 'Sales ' + (payload.monthly ? 'MaM' : 'SaS') + ' AMPM ESA'; var left=58, right=54, top=54, bottom=96; var w=cssW-left-right, h=cssH-top-bottom; var n=payload.labels.length;
-    var maxTotal = niceMax(Math.max.apply(null, payload.totals.concat([1])) * 1.10); var validD = payload.deltas.filter(function(v){return v != null && Number.isFinite(Number(v));}).map(Number); var dMin = validD.length ? Math.min.apply(null, validD) : 0.8; var dMax = validD.length ? Math.max.apply(null, validD) : 1.2; var y1Min = Math.max(0.6, Math.floor((dMin - .15) * 10) / 10); var y1Max = Math.max(1.2, Math.ceil((dMax + .15) * 10) / 10); if(y1Max <= y1Min) y1Max = y1Min + .4;
-    var stepX = n > 1 ? w / n : w; var barW = Math.max(11, Math.min(36, stepX * .52)); var xFor = function(i){ return left + stepX * i + stepX/2; }; var yFor = function(v){ return top + h - (num(v) / maxTotal) * h; }; var y1For = function(v){ return top + h - ((Number(v) - y1Min) / (y1Max - y1Min)) * h; };
-    ctx.save(); ctx.fillStyle=COLORS.ink; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.font='900 16px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.fillText(title, cssW/2, 10); ctx.font='800 11px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.fillStyle='#64748B'; try{ if(typeof chartTitleDayLine === 'function'){ var dayLine = chartTitleDayLine('ventas'); if(dayLine) ctx.fillText(dayLine, cssW/2, 30); } }catch(_e){} ctx.restore();
-    ctx.save(); ctx.strokeStyle=COLORS.grid; ctx.lineWidth=1; ctx.fillStyle=COLORS.axis; ctx.font='700 10px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.textAlign='right'; ctx.textBaseline='middle'; for(var gi=0; gi<=4; gi++){var val=maxTotal*gi/4, y=yFor(val); ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(left+w,y); ctx.stroke(); ctx.fillText(formatMoneyK(val), left-8, y);} ctx.textAlign='left'; for(var gj=0; gj<=4; gj++){var dv=y1Min+(y1Max-y1Min)*gj/4, yy=y1For(dv); ctx.fillText(dv.toFixed(2), left+w+8, yy);} ctx.strokeStyle='rgba(15,23,42,.22)'; ctx.beginPath(); ctx.moveTo(left,top); ctx.lineTo(left,top+h); ctx.lineTo(left+w,top+h); ctx.stroke(); ctx.restore();
-    var hit=[]; payload.labels.forEach(function(_,i){var x=xFor(i), acc=0; payload.series.forEach(function(s){var v=num(s.values[i]); if(!(v>0)) return; var y0=yFor(acc), y1=yFor(acc+v), segH=Math.max(1,y0-y1), color=colorForStore(s.store); ctx.save(); ctx.shadowColor='rgba(15,23,42,.18)'; ctx.shadowBlur=5; ctx.shadowOffsetY=2; ctx.fillStyle=color; ctx.fillRect(x-barW/2,y1,barW,segH); ctx.restore(); if(segH>=20){var d=s.deltas[i]; if(d!=null){var lab=Number(d).toFixed(2).replace(/\.00$/,'.0').replace(/(\.\d)0$/,'$1'); ctx.save(); ctx.font='800 9.5px ui-sans-serif, system-ui, Segoe UI, Arial'; var tw=ctx.measureText(lab).width+10, bx=x-tw/2, by=y1+segH/2-8; drawRounded(ctx,bx,by,tw,16,2); ctx.fillStyle='rgba(255,255,255,.93)'; ctx.fill(); ctx.fillStyle=color==='#F58320'?'#B45309':(color==='#005EA7'?'#0C4D8F':'#595959'); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(lab,x,by+8.5); ctx.restore();}} acc+=v;}); hit.push({i:i,x:x,left:x-stepX/2,right:x+stepX/2,total:payload.totals[i]});});
-    ctx.save(); ctx.fillStyle=COLORS.axis; ctx.textAlign='center'; ctx.textBaseline='top'; payload.labels.forEach(function(lb,i){var parts=axisLabelParts(payload.periods[i], lb, payload.monthly); ctx.font='1000 12px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.fillText(parts.top,xFor(i),top+h+9); if(parts.bottom){ ctx.font='900 10.5px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.fillStyle='#475569'; ctx.fillText(parts.bottom,xFor(i),top+h+24); ctx.fillStyle=COLORS.axis; }}); ctx.restore();
-    ctx.save(); ctx.strokeStyle=COLORS.line; ctx.fillStyle=COLORS.line; ctx.lineWidth=3; ctx.lineJoin='round'; var started=false; payload.deltas.forEach(function(v,i){if(v==null){started=false; return;} var x=xFor(i), y=y1For(v); if(!started){ctx.beginPath(); ctx.moveTo(x,y); started=true;} else ctx.lineTo(x,y); var next=payload.deltas[i+1]; if(next==null || i===payload.deltas.length-1){ctx.stroke(); started=false;}}); payload.deltas.forEach(function(v,i){if(v==null) return; var x=xFor(i), y=y1For(v); ctx.beginPath(); ctx.arc(x,y,4.2,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=COLORS.line; ctx.lineWidth=2; ctx.stroke(); var lab=Number(v).toFixed(2).replace(/\.00$/,'.0').replace(/(\.\d)0$/,'$1'); ctx.font='800 9.5px ui-sans-serif, system-ui, Segoe UI, Arial'; var tw=ctx.measureText(lab).width+10; var bx=Math.max(left+2, Math.min(left+w-tw-2, x-tw/2)); var by=Math.max(top+2, y-26); drawRounded(ctx,bx,by,tw,17,2); ctx.fillStyle='rgba(221,235,210,.98)'; ctx.fill(); ctx.strokeStyle='rgba(112,173,71,.20)'; ctx.lineWidth=.75; ctx.stroke(); ctx.fillStyle='#48613A'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(lab,bx+tw/2,by+8.5);}); ctx.restore();
-    ctx.save(); var legendY=cssH-20, legendX=Math.max(left, cssW/2-120); ctx.font='900 12.5px ui-sans-serif, system-ui, Segoe UI, Arial'; ctx.textAlign='left'; ctx.textBaseline='middle'; payload.stores.forEach(function(st,idx){var x=legendX+idx*88; ctx.fillStyle=colorForStore(st,idx); ctx.fillRect(x,legendY-6,16,12); ctx.fillStyle=COLORS.ink; ctx.fillText(st,x+22,legendY);}); var lx=legendX+payload.stores.length*88+10; ctx.strokeStyle=COLORS.line; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(lx,legendY); ctx.lineTo(lx+22,legendY); ctx.stroke(); ctx.fillStyle=COLORS.ink; ctx.fillText('Delta SDYA',lx+30,legendY); ctx.restore();
-    canvas[stateKey] = {payload:payload, hit:hit, area:{left:left,right:left+w,top:top,bottom:top+h}, cssW:cssW, cssH:cssH, xFor:xFor};
-    try{ if(typeof renderBottomRankRow === 'function'){ var fakeChart={chartArea:{left:left,right:left+w,top:top,bottom:top+h},scales:{x:{getPixelForTick:function(i){return xFor(i);}}}}; renderBottomRankRow('rank_mam', payload.labels, payload.totals, {label:'Top', chart:fakeChart}); } }catch(_e){}
-  }
-  function tooltip(){var c=byId('chart_mam'); if(!c) return null; var vp=c.closest('.monthly-chart-viewport')||c.parentElement; if(!vp) return null; var el=vp.querySelector('.sdyaCustomTooltipV44'); if(!el){el=document.createElement('div'); el.className='sdyaCustomTooltipV44'; vp.appendChild(el);} return el;}
-  function bindTooltip(canvas){if(canvas.__sdyaV44Bound) return; canvas.__sdyaV44Bound=true; function hide(){var el=tooltip(); if(el) el.style.opacity='0';} canvas.addEventListener('mouseleave',hide,{passive:true}); canvas.addEventListener('mouseout',hide,{passive:true}); canvas.addEventListener('mousemove',function(ev){try{var meta=canvas[stateKey]; if(!meta||!meta.hit||!meta.hit.length) return hide(); var rect=canvas.getBoundingClientRect(), x=ev.clientX-rect.left; var nearest=meta.hit.reduce(function(best,h){var d=Math.abs(x-h.x); return !best || d<best.d ? {h:h,d:d}:best;},null); if(!nearest || nearest.d>Math.max(18,(meta.hit[0].right-meta.hit[0].left)/2)) return hide(); var i=nearest.h.i,p=meta.payload,el=tooltip(); if(!el) return; var rows=''; p.series.forEach(function(s){rows+='<div class="r"><span class="l"><i class="sw" style="background:'+(colorForStore(s.store))+'"></i>'+s.store+'</span><span class="v">'+formatMoney(s.values[i])+'</span></div>';}); var d=p.deltas[i]; rows+='<div class="r" style="border-top:1px solid rgba(255,255,255,.14);padding-top:6px;margin-top:6px"><span class="l"><i class="sw" style="background:'+COLORS.line+'"></i>Delta SDYA</span><span class="v">'+(d==null?'—':Number(d).toFixed(2))+'</span></div>'; rows+='<div class="r"><span class="l">Total</span><span class="v">'+formatMoney(p.totals[i])+'</span></div>'; el.innerHTML='<div class="t">'+flatLabel(p.labels[i])+'</div>'+rows; var left=x+16, top=ev.clientY-rect.top-30; var w=el.offsetWidth||260, h=el.offsetHeight||110; left=Math.max(8,Math.min(meta.cssW-w-8,left)); top=Math.max(8,Math.min(meta.cssH-h-8,top)); el.style.left=left+'px'; el.style.top=top+'px'; el.style.opacity='1';}catch(_e){hide();}}, {passive:true});}
-  function render(storeList){var canvas=ensureCanvas(); if(!canvas || !visible(canvas.closest('.monthly-chart-viewport') || canvas)) return; destroyChartInstance(canvas); var payload=getPayload(storeList); if(!payload){try{var r=byId('rank_mam'); if(r) r.innerHTML='';}catch(_e){} return;} drawChart(canvas,payload); bindTooltip(canvas); try{ if(window.state){ state.chartMam=null; state.chartMamCustomV44=true; } }catch(_e){}}
-  function schedule(reason, wait){clearTimeout(resizeTimer); resizeTimer=setTimeout(function(){requestAnimationFrame(function(){ if(isVentas()) render(selectedStoresFallback()); });}, wait == null ? 180 : wait);}
-  window.renderMamChart=render; window.__ampmSalesSdyaV44Render=render; window.__ampmSalesSdyaHardResetV43={fit:function(){schedule('manual-fit',20);},rebuild:function(){schedule('manual-rebuild',20);},sidebar:function(){schedule('manual-sidebar',260);}};
-  window.addEventListener('resize',function(){schedule('resize',160);},{passive:true}); window.addEventListener('ampm:tabshown',function(ev){try{if(String(ev?.detail?.tab||'').toLowerCase()==='ventas') schedule('tab',180);}catch(_e){}},{passive:true});
-  document.addEventListener('click',function(ev){try{if(ev.target&&ev.target.closest&&ev.target.closest('#ampmSidebarToggle,.ampm-sidebar-toggle')){schedule('sidebar-a',320); setTimeout(function(){schedule('sidebar-b',20);},760);} if(ev.target&&ev.target.closest&&ev.target.closest('#ampmStoreFloatApply')) schedule('store-filter',220); if(ev.target&&ev.target.closest&&ev.target.closest('.tabBtn[data-tab="ventas"]')) schedule('tab-click',220);}catch(_e){}},true);
-  document.addEventListener('change',function(ev){try{if(ev.target&&ev.target.id==='storeFilter') schedule('store-change',180);}catch(_e){}},true);
-  setTimeout(function(){ if(isVentas()) schedule('boot',40); },0);
-})();
-</script>
 </body>
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
