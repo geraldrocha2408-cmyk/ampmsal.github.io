@@ -4503,6 +4503,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     for(var i=0;i<nodes.length;i++){
       var n = nodes[i];
       if(n.getAttribute('data-ampm-skip') === '1') continue;
+      if(n.hasAttribute('data-disabled')) continue;
       await runOne(n);
     }
     setTimeout(function(){
@@ -7754,7 +7755,7 @@ function applyUnifiedModeUI(){
     state.monthlyXfSbfRows = [];
     state.monthlyXfEnabled = false;
 
-    const ALL_REPORT_TABS = ['resumen','onepager','ventas','delivery','innovacion','sbf','inventario','merma','prd0','cxc','hallazgos'];
+    const ALL_REPORT_TABS = ['resumen','onepager','ventas','delivery','innovacion','album','sbf','inventario','merma','prd0','cxc','hallazgos'];
 
     function parseHuesoSheet(wb){
       state.huesoRows = [];
@@ -12571,6 +12572,10 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
           try{ renderInnovationCharts(storeList); rememberChartRender('innovacion', currentYm, prevYms, storeList); }catch(e){ console.warn('Innovation charts error', e); }
         }
         rememberTabRender(activeTab, currentYm, prevYms, storeList);
+      }
+
+      if(activeTab === 'album'){
+        try{ if(typeof window.renderAlbumFiguritas === 'function'){ window.renderAlbumFiguritas(); rememberTabRender('album', currentYm, prevYms, storeList); rememberChartRender('album', currentYm, prevYms, storeList); } } catch(e){ console.warn('Album module error', e); }
       }
 
       if(activeTab === 'inventario'){
@@ -24153,7 +24158,19 @@ function getDeliveryBubbleData(storeList, currentYm){
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
       const totalSalesMap = state._xfSummary?.delivery?.totalByStore || state.totalSalesByStoreMonth || null;
       const getCh = (ch, ym) => mapCh ? mapGet(mapCh, String(ch || '').trim() || '(Sin dato)', ym) : getDeliveryChannelSales(ch, ym, stores);
-      const getTotal = (ym) => totalSalesMap ? sumMapByStoresWeek(totalSalesMap, stores, ym) : stores.reduce((acc, store) => acc + Number(getTotalSales(store, ym) || 0), 0);
+      const getTotal = (ym) => {
+        if (totalSalesMap){
+          let sum = 0;
+          (stores || []).forEach(store => {
+            const st = String(store || '').trim().toUpperCase();
+            if(!st) return;
+            if (typeof strictMapGet === 'function') sum += Number(strictMapGet(totalSalesMap, st, ym) || 0);
+            else { const m = totalSalesMap.get(st); sum += Number(m?.get(ym) ?? 0); }
+          });
+          return sum;
+        }
+        return stores.reduce((acc, store) => acc + Number(getTotalSales(store, ym) || 0), 0);
+      };
 
       const seriesPy = months.map(ym => Number(getCh(chPY, ym) || 0));
       const seriesUe = months.map(ym => Number(getCh(chUE, ym) || 0));
@@ -28869,7 +28886,7 @@ renderShareTable({
       autoSelectInvWeeks();
       markFiltersDirty(true);
     });
-    const reportModeSel = el('reportMode'); if(reportModeSel){ reportModeSel.value = getUnifiedReportMode(); reportModeSel.addEventListener('change', ()=>{ state.reportMode = reportModeSel.value; try{ localStorage.setItem('ampm_report_mode', state.reportMode); }catch(e){} if(!isDailyReport()){ state.dowFilter='__ALL__'; syncDowSelectFromToken('__ALL__'); } rebuildPeriodSelectors(); try{ if(state && state.__hallWorkbook){ buildHallazgosData(state.__hallWorkbook); } }catch(e){ console.warn('Hallazgos rebuild on mode change failed', e); } applyUnifiedModeUI(); rebuildLyWeekOverrideOptions(); try{ xfRenderAll(); }catch(e){} markFiltersDirty(true); }); }
+    const reportModeSel = el('reportMode'); if(reportModeSel){ reportModeSel.value = getUnifiedReportMode(); reportModeSel.addEventListener('change', ()=>{ state.reportMode = reportModeSel.value; try{ localStorage.setItem('ampm_report_mode', state.reportMode); }catch(e){} if(!isDailyReport()){ state.dowFilter='__ALL__'; syncDowSelectFromToken('__ALL__'); } rebuildPeriodSelectors(); applyUnifiedModeUI(); rebuildLyWeekOverrideOptions(); markFiltersDirty(true); }); }
     const lyWeekOverrideSel = el('lyWeekOverride'); if(lyWeekOverrideSel){ lyWeekOverrideSel.addEventListener('change', ()=>{ try{ localStorage.setItem('ampm_ly_week_override', lyWeekOverrideSel.value || ''); }catch(e){} markFiltersDirty(true); }); }
     el('prevMonths').addEventListener('change', ()=>markFiltersDirty(true));
     el('stores').addEventListener('change', ()=>{
@@ -28904,6 +28921,56 @@ renderShareTable({
 
     const exportDelCsvBtn = el('exportDelCsv'); if(exportDelCsvBtn) exportDelCsvBtn.addEventListener('click', () => exportTableToCsv('t_del', `Sales_Delivery_${el('currentMonth').value || 'NA'}.csv`));
   </script>
+<script type="text/plain" data-ampm-deferred="1" id="ampm-filter-apply-governor-v10">
+(function(){
+  'use strict';
+  if(window.__AMPM_FILTER_APPLY_GOVERNOR_V10__) return;
+  window.__AMPM_FILTER_APPLY_GOVERNOR_V10__ = true;
+
+  var FILTER_IDS = {
+    reportMode:1, currentMonth:1, prevMonths:1, stores:1, storeFilter:1, dowFilter:1, globalDowFilter:1,
+    lyWeekOverride:1, invWeeks:1, deliveryMode:1, viewMode:1
+  };
+
+  var nativeAdd = document.addEventListener.bind(document);
+  function looksLikeRepairListener(fn){
+    var src = '';
+    try{ src = Function.prototype.toString.call(fn || ''); }catch(_e){}
+    if(!/(reportMode|currentMonth|prevMonths|stores|storeFilter|dowFilter|globalDowFilter|viewMode|deliveryMode|lyWeekOverride|invWeeks)/.test(src)) return false;
+    if(/markFiltersDirty|syncDowSelectFromToken|rebuildPeriodSelectors|autoSelectPrevMonths|autoSelectInvWeeks|normalizeInvWeeks|localStorage\.setItem/.test(src)) return false;
+    return /(schedule|refresh|render|rerender|resize|update|rebuild|apply\(\)|xfRenderAll)/i.test(src);
+  }
+
+  document.addEventListener = function(type, listener, options){
+    try{
+      if(String(type).toLowerCase() === 'change' && typeof listener === 'function' && looksLikeRepairListener(listener)){
+        var wrapped = function(ev){
+          var id = '';
+          try{ id = String(ev && ev.target && ev.target.id || ''); }catch(_e){}
+          if(FILTER_IDS[id] && !window.__AMPM_FILTER_APPLY_RUNNING__){
+            return;
+          }
+          return listener.apply(this, arguments);
+        };
+        try{ Object.defineProperty(wrapped, 'name', {value: (listener.name || 'governedChangeListener') + '_governed'}); }catch(_e){}
+        return nativeAdd(type, wrapped, options);
+      }
+    }catch(_e){}
+    return nativeAdd(type, listener, options);
+  };
+
+  function markApplyWindow(){
+    window.__AMPM_FILTER_APPLY_RUNNING__ = true;
+    clearTimeout(window.__AMPM_FILTER_APPLY_RUNNING_TIMER__);
+    window.__AMPM_FILTER_APPLY_RUNNING_TIMER__ = setTimeout(function(){
+      window.__AMPM_FILTER_APPLY_RUNNING__ = false;
+    }, 1800);
+  }
+  nativeAdd('click', function(ev){
+    try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')) markApplyWindow(); }catch(_e){}
+  }, true);
+})();
+</script>
 <script type="text/plain" data-ampm-deferred="1">
     (function(){
       function $q(sel, root=document){ return root.querySelector(sel); }
@@ -40603,6 +40670,720 @@ function renderOnePager(storeList, currentYm, prevYms){
 }
 
 </script>
+<script type="text/plain" data-ampm-deferred="1" id="album-module-v1-script">
+(function(){
+  'use strict';
+  const MIN_TS = new Date(2026,4,1).getTime();
+  const TAB = 'album';
+  const COLORS = ['#005EA7','#F58320','#11284A','#0C4D8F','#E67425','#64748B','#FAA21E','#334155','#38BDF8','#94A3B8'];
+  const chartKeys = ['chartAlbumDaily','chartAlbumTrend','chartAlbumImpact','chartAlbumPie','chartAlbumDaypart'];
+  const albumLabelPlugin = {
+    id:'albumLabelPlugin',
+    afterDatasetsDraw(chart, args, pluginOptions){
+      if(!pluginOptions || pluginOptions.display===false) return;
+      const ctx = chart.ctx;
+      const type = chart.config?.type || '';
+      const isHorizontal = chart.options?.indexAxis === 'y';
+      const canvasId = chart.canvas?.id || '';
+      if(!/^chart_album_/.test(canvasId)) return;
+      const fontSize = Number(pluginOptions.fontSize || 10);
+      const fontWeight = String(pluginOptions.fontWeight || '900');
+      const color = pluginOptions.color || '#11284A';
+      const offset = Number(pluginOptions.offset == null ? 10 : pluginOptions.offset);
+      const bottomOffset = Number(pluginOptions.bottomOffset == null ? 14 : pluginOptions.bottomOffset);
+      const labelPositions = Array.isArray(pluginOptions.labelPositions) ? pluginOptions.labelPositions : null;
+      const bottomColors = Array.isArray(pluginOptions.bottomColors) ? pluginOptions.bottomColors : null;
+      const labelBackgrounds = Array.isArray(pluginOptions.labelBackgrounds) ? pluginOptions.labelBackgrounds : null;
+      const labelBackgroundTextColors = Array.isArray(pluginOptions.labelBackgroundTextColors) ? pluginOptions.labelBackgroundTextColors : null;
+      const labelBackgroundBorders = Array.isArray(pluginOptions.labelBackgroundBorders) ? pluginOptions.labelBackgroundBorders : null;
+      const labelBgPadX = Number(pluginOptions.labelBackgroundPadX == null ? 6 : pluginOptions.labelBackgroundPadX);
+      const labelBgPadY = Number(pluginOptions.labelBackgroundPadY == null ? 3 : pluginOptions.labelBackgroundPadY);
+      const labelBgRadius = Number(pluginOptions.labelBackgroundRadius == null ? 6 : pluginOptions.labelBackgroundRadius);
+      function roundRectPath(x,y,w,h,r){
+        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+        if(typeof ctx.roundRect === 'function'){
+          ctx.roundRect(x,y,w,h,r);
+          return;
+        }
+        ctx.moveTo(x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.lineTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+      }
+      function drawLabelBackground(label, x, y, align, bg, border){
+        if(!bg) return;
+        const w = ctx.measureText(label).width;
+        const h = fontSize + (labelBgPadY*2);
+        let rx = x - (w/2) - labelBgPadX;
+        if(align === 'left') rx = x - labelBgPadX;
+        if(align === 'right') rx = x - w - labelBgPadX;
+        const ry = y - (h/2);
+        ctx.save();
+        ctx.beginPath();
+        roundRectPath(rx, ry, w + (labelBgPadX*2), h, labelBgRadius);
+        ctx.fillStyle = bg;
+        ctx.fill();
+        if(border){ ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke(); }
+        ctx.restore();
+      }
+      function totalForDataset(di){
+        const ds = chart.data?.datasets?.[di]?.data || [];
+        return ds.reduce((a,v)=>a+n(v),0);
+      }
+      function formatValue(raw, datasetIndex){
+        const val = n(raw);
+        if(type === 'doughnut' || type === 'pie'){
+          const tot = totalForDataset(datasetIndex);
+          return tot>0 ? (val/tot*100).toFixed(1)+'%' : '0%';
+        }
+        const ds = chart.data?.datasets?.[datasetIndex] || {};
+        if(ds.yAxisID === 'y1' || /impacto/i.test(String(ds.label || ''))) return Number(val).toFixed(1)+'%';
+        if(canvasId === 'chart_album_impact') return money(val);
+        return money(val);
+      }
+      ctx.save();
+      ctx.font = `${fontWeight} ${fontSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if(type === 'doughnut' || type === 'pie'){
+        (chart.data.datasets||[]).forEach((ds, di)=>{
+          const meta = chart.getDatasetMeta(di);
+          const tot = totalForDataset(di);
+          (meta.data||[]).forEach((arc, idx)=>{
+            const raw = ds.data?.[idx];
+            const val = n(raw);
+            if(!val || !tot) return;
+            const share = val/tot;
+            if(share < 0.04) return;
+            const angle = (arc.startAngle + arc.endAngle) / 2;
+            const radius = arc.innerRadius + ((arc.outerRadius - arc.innerRadius) * 0.58);
+            const x = arc.x + Math.cos(angle) * radius;
+            const y = arc.y + Math.sin(angle) * radius;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText(formatValue(raw, di), x, y);
+          });
+        });
+      } else {
+        (chart.data.datasets||[]).forEach((ds, di)=>{
+          const meta = chart.getDatasetMeta(di);
+          (meta.data||[]).forEach((el, idx)=>{
+            const raw = ds.data?.[idx];
+            const val = n(raw);
+            if(!val || typeof el?.getProps !== 'function') return;
+            const p = el.getProps(['x','y','base'], true);
+            const label = formatValue(raw, di);
+            const dsType = String(ds.type || type || '').toLowerCase();
+            const dsPos = labelPositions ? String(labelPositions[di] || '') : String(pluginOptions.labelPosition || '');
+            let x = p.x, y = p.y - offset;
+            const area = chart.chartArea || {};
+            const dsLabelColors = pluginOptions.datasetColors;
+            ctx.fillStyle = Array.isArray(dsLabelColors) ? (dsLabelColors[di] || color) : color;
+            ctx.textAlign = 'center';
+            if(!isHorizontal && dsType !== 'line' && /bottom|inferior|base/i.test(dsPos)){
+              const baseY = Number.isFinite(Number(p.base)) ? Number(p.base) : Number(area.bottom || chart.height || 0);
+              y = baseY - bottomOffset;
+              if(bottomColors) ctx.fillStyle = bottomColors[di] || ctx.fillStyle;
+            }
+            if(isHorizontal){
+              x = Math.max(p.x, p.base) + 28;
+              y = p.y;
+              ctx.textAlign = 'left';
+              const rightLimit = Number(area.right || chart.width || 0) - 6;
+              const leftLimit = Number(area.left || 0) + 6;
+              const labelWidth = ctx.measureText(label).width;
+              if(x + labelWidth > rightLimit){
+                x = rightLimit;
+                ctx.textAlign = 'right';
+              }
+              x = Math.max(leftLimit, Math.min(rightLimit, x));
+            }
+            if(dsType === 'line' || type === 'line'){
+              y = p.y - 12;
+            }
+            if(!isHorizontal){
+              const topLimit = Number(area.top || 0) + 10;
+              const bottomLimit = Number(area.bottom || 0) - 8;
+              y = Math.max(topLimit, Math.min(bottomLimit, y));
+            }
+            const align = ctx.textAlign || 'center';
+            const bg = labelBackgrounds ? labelBackgrounds[di] : null;
+            const bgBorder = labelBackgroundBorders ? labelBackgroundBorders[di] : null;
+            if(bg){
+              drawLabelBackground(label, x, y, align, bg, bgBorder);
+              const bgTextColor = labelBackgroundTextColors ? labelBackgroundTextColors[di] : null;
+              if(bgTextColor) ctx.fillStyle = bgTextColor;
+            }
+            ctx.fillText(label, x, y);
+          });
+        });
+      }
+      ctx.restore();
+    }
+  };
+  const albumAxisPillPlugin = {
+    id:'albumAxisPillPlugin',
+    afterDraw(chart, args, pluginOptions){
+      if(!pluginOptions || pluginOptions.display===false) return;
+      const canvasId = chart.canvas?.id || '';
+      if(!/^chart_album_/.test(canvasId)) return;
+      const axisId = pluginOptions.axis || 'y1';
+      const scale = chart.scales?.[axisId];
+      const area = chart.chartArea || {};
+      if(!scale || !area) return;
+      const ctx = chart.ctx;
+      const text = String(pluginOptions.text || 'Impacto %');
+      const fontSize = Number(pluginOptions.fontSize || 10);
+      const fontWeight = String(pluginOptions.fontWeight || '900');
+      const fill = pluginOptions.fill || 'rgba(245,131,32,.14)';
+      const stroke = pluginOptions.stroke || 'rgba(245,131,32,.34)';
+      const color = pluginOptions.color || '#F58320';
+      const padX = Number(pluginOptions.padX == null ? 7 : pluginOptions.padX);
+      const padY = Number(pluginOptions.padY == null ? 4 : pluginOptions.padY);
+      const radius = Number(pluginOptions.radius == null ? 7 : pluginOptions.radius);
+      const offsetX = Number(pluginOptions.offsetX == null ? 16 : pluginOptions.offsetX);
+      function rr(x,y,w,h,r){
+        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+        if(typeof ctx.roundRect === 'function'){
+          ctx.roundRect(x,y,w,h,r);
+          return;
+        }
+        ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+      }
+      ctx.save();
+      ctx.font = `${fontWeight} ${fontSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const textW = ctx.measureText(text).width;
+      const boxW = textW + padX*2;
+      const boxH = fontSize + padY*2;
+      // Coloca la cápsula del nombre del segundo eje en el margen derecho,
+      // fuera del área de los números del eje, para evitar traslapes.
+      const rotatedHalfHeight = boxH / 2;
+      const maxX = Math.max(rotatedHalfHeight + 8, chart.width - rotatedHalfHeight - 8);
+      const baseRight = (scale.right || area.right || chart.width);
+      const preferredX = baseRight + offsetX;
+      const x = Math.min(maxX, preferredX);
+      const y = ((area.top || 0) + (area.bottom || chart.height)) / 2;
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI/2);
+      ctx.beginPath();
+      rr(-boxW/2, -boxH/2, boxW, boxH, radius);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+      ctx.fillStyle = color;
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+  };
+  if(typeof Chart !== 'undefined' && Chart && !Chart.__albumLabelPluginRegistered){
+    try{ Chart.register(albumLabelPlugin, albumAxisPillPlugin); Chart.__albumLabelPluginRegistered = true; }catch(_e){}
+  }
+
+  function byId(id){ return document.getElementById(id); }
+  function n(v){ const x=Number(v); return Number.isFinite(x) ? x : 0; }
+  function money(v){ return '$' + n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
+  function qty(v){ return n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
+  function pct(v){ return Number.isFinite(Number(v)) ? (Number(v)*100).toFixed(2)+'%' : '—'; }
+  function safeTxt(v){ return String(v == null ? '' : v).trim(); }
+  function norm(v){ return safeTxt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim(); }
+  function pick(keys, names){
+    const map = new Map((keys||[]).map(k=>[norm(k), k]));
+    for(const nm of names){ const got = map.get(norm(nm)); if(got) return got; }
+    for(const k of (keys||[])){ const nk=norm(k); for(const nm of names){ if(nk.includes(norm(nm))) return k; } }
+    return '';
+  }
+  function albumMatchText(r){ return norm([r.category,r.description,r.brand,r.supplier,r.department].join(' ')); }
+  function isAlbumRow(r){ const txt = albumMatchText(r); return /\balbum\b/.test(txt) || /\bfigurit/.test(txt) || /\bsticker/.test(txt) || /\blamina/.test(txt); }
+  function toDate(v){
+    if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+    if(typeof v === 'number' && typeof XLSX !== 'undefined' && XLSX && XLSX.SSF && XLSX.SSF.parse_date_code){
+      try{ const d=XLSX.SSF.parse_date_code(v); if(d && d.y) return new Date(d.y, (d.m||1)-1, d.d||1); }catch(_e){}
+    }
+    const s=safeTxt(v); if(!s) return null;
+    let m=s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+    m=s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/); if(m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+    const d=new Date(s); if(!isNaN(d)) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return null;
+  }
+  function isoDate(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` : ''; }
+  function monthKey(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : ''; }
+  function isoWeek(d){
+    if(!d) return '';
+    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = dt.getUTCDay() || 7;
+    dt.setUTCDate(dt.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+    const week = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+    return `${dt.getUTCFullYear()}-W${String(week).padStart(2,'0')}`;
+  }
+  function dowNum(v){
+    const s=norm(v); if(!s) return null;
+    if(/^\d+$/.test(s)){ const x=Number(s); return x>=1 && x<=7 ? x : null; }
+    const m={lunes:1,lun:1,monday:1,mon:1,martes:2,mar:2,tuesday:2,tue:2,miercoles:3,mie:3,wednesday:3,wed:3,jueves:4,jue:4,thursday:4,thu:4,viernes:5,vie:5,friday:5,fri:5,sabado:6,sab:6,saturday:6,sat:6,domingo:7,dom:7,sunday:7,sun:7};
+    return m[s] || null;
+  }
+  function isoWeekToDate(weekKey, dow){
+    const m=safeTxt(weekKey).match(/^(\d{4})-W(\d{2})$/); if(!m) return null;
+    const year=Number(m[1]), week=Number(m[2]), day=Math.min(7, Math.max(1, Number(dow||1)));
+    const jan4 = new Date(Date.UTC(year,0,4));
+    const jan4Dow = jan4.getUTCDay() || 7;
+    const monday = new Date(jan4); monday.setUTCDate(jan4.getUTCDate() - jan4Dow + 1 + ((week-1)*7));
+    monday.setUTCDate(monday.getUTCDate() + (day-1));
+    return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+  }
+  function periodToDate(period, dow){
+    const p=safeTxt(period); if(!p) return null;
+    if(/^\d{4}-W\d{2}$/.test(p)) return isoWeekToDate(p, dow || 1);
+    const m=p.match(/^(\d{4})-(\d{2})$/); if(m) return new Date(Number(m[1]), Number(m[2])-1, 1);
+    return toDate(p);
+  }
+  function periodKey(row, mode){ return mode==='weekly' ? row.week : (mode==='monthly' ? row.month : row.dateKey); }
+  function periodLabel(key, mode){
+    if(!key) return '—';
+    if(mode==='daily') return key;
+    if(mode==='weekly') return key.replace('-W',' S');
+    const [y,m]=String(key).split('-'); const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${months[(Number(m)||1)-1] || m} ${y}`;
+  }
+  function selectedStores(){
+    const own = byId('albumStore')?.value || '__GLOBAL__';
+    if(own && own !== '__GLOBAL__' && own !== '__ALL__') return [own];
+    if(own === '__ALL__') return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
+    try{ if(typeof getSelectedStoresOrAll === 'function'){ const a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a.map(s=>safeTxt(s).toUpperCase()); } }catch(_e){}
+    return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
+  }
+  function readRows(wb, sheet){ try{ if(typeof sheetRows === 'function') return sheetRows(wb, sheet, {defval:null, raw:true}) || []; }catch(_e){} try{ return XLSX.utils.sheet_to_json(wb.Sheets[sheet], {defval:null, raw:true}) || []; }catch(_e){ return []; } }
+  function has(wb, sheet){ try{ if(typeof hasSheet === 'function') return hasSheet(wb, sheet); }catch(_e){} return !!(wb && wb.Sheets && wb.Sheets[sheet]); }
+
+  function parseSalesSheet(wb, sheet){
+    const raw = readRows(wb, sheet);
+    if(!raw.length) return null;
+    const keys = Object.keys(raw[0] || {});
+    const cStore=pick(keys,['Store','Store Name','Tienda','store']);
+    const cDate=pick(keys,['Date Sold','Fecha Venta','Fecha','Date','Sale Date','Day','Día']);
+    const cPeriod=pick(keys,['YearWeek','Week','Semana','YearMonth','YM','Year Month','CalMonth','CalendarMonth','Month','Mes','Periodo']);
+    const cMonth=pick(keys,['CalMonth','CalendarMonth','Month','Mes','YearMonth','Year Month']);
+    const cDept=pick(keys,['Department','Departamento','department']);
+    const cCat=pick(keys,['Category','Categoria','Categoría','category']);
+    const cSupp=pick(keys,['Supplier','Proveedor','Vendor']);
+    const cBrand=pick(keys,['Brand','Marca','brand']);
+    const cDesc=pick(keys,['Description','Descripcion','Descripción','Producto','Item','Articulo','Artículo']);
+    const cSku=pick(keys,['SKU','Sku','Codigo','Código','Item Code','Barcode','Bar Code']);
+    const cDaypart=pick(keys,['Daypart','Horario','Turno','Horario Food Service','Time Slot','Franja','Franja Horaria','Service Period','Meal Period']);
+    const cHour=pick(keys,['Hour','Hora','Time','Hora Venta','Hora de venta','Time Sold']);
+    const cDow=pick(keys,['DOW','Dow','DayOfWeek','DiaSemana','Dia de semana','Día de semana','Día','dayofweek']);
+    const cQty=pick(keys,['Qty Sold','Qty','Cantidad','Quantity','Unidades','Uds']);
+    const cSales=pick(keys,['Sales','Total Sales','TotalSales','Venta','Ventas','Monto','Amount']);
+    if(!cStore || !cSales || (!cDate && !cPeriod && !cMonth)) return null;
+    const all=[]; const album=[];
+    raw.forEach(r=>{
+      const store=safeTxt(r[cStore]).toUpperCase(); if(!store) return;
+      const periodRaw = cPeriod ? r[cPeriod] : (cMonth ? r[cMonth] : '');
+      const period = (typeof normalizeYm === 'function') ? (normalizeYm(periodRaw) || safeTxt(periodRaw)) : safeTxt(periodRaw);
+      const monthRaw = cMonth ? r[cMonth] : periodRaw;
+      const dow = cDow ? dowNum(r[cDow]) : null;
+      let d = cDate ? toDate(r[cDate]) : null;
+      if(!d) d = periodToDate(period, dow || 1) || periodToDate(monthRaw, 1);
+      if(!d || isNaN(d) || d.getTime() < MIN_TS) return;
+      const week = /^\d{4}-W\d{2}$/.test(period) ? period : isoWeek(d);
+      const month = monthKey(d) || ((typeof normalizeYm === 'function') ? normalizeYm(monthRaw) : safeTxt(monthRaw));
+      const row={
+        store, date:d, dateKey:isoDate(d), week, month,
+        department:cDept ? safeTxt(r[cDept]) : '', category:cCat ? safeTxt(r[cCat]) : '', supplier:cSupp ? safeTxt(r[cSupp]) : '', brand:cBrand ? safeTxt(r[cBrand]) : '', description:cDesc ? safeTxt(r[cDesc]) : '', sku:cSku ? safeTxt(r[cSku]) : '',
+        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0
+      };
+      row.item = row.description || row.brand || row.category || row.supplier || 'Sin descripción';
+      all.push(row);
+      if(isAlbumRow(row)) album.push(row);
+    });
+    return {sheet, all, album};
+  }
+
+  function getSalesPayload(){
+    const stamp = (typeof state !== 'undefined' && state) ? (state.__hallWorkbookStamp || state.__albumStamp || 0) : 0;
+    if(typeof state !== 'undefined' && state && state.__albumSalesPayload && state.__albumSalesPayload.stamp === stamp) return state.__albumSalesPayload;
+    const wb = (typeof state !== 'undefined' && state) ? state.__hallWorkbook : null;
+    const empty = {stamp, source:'Sin cubo', allRows:[], albumRows:[]};
+    if(!wb){ if(typeof state !== 'undefined' && state) state.__albumSalesPayload = empty; return empty; }
+    const candidates = ['Cubo_Sales_DetailHallazgos','Sales_Cal_Detail','Cubo_Sales_SKUWeek','Cubo_Sales_Fact','Cubo_Sales','Store_Month_Delivery'];
+    let best=null;
+    for(const sh of candidates){ if(!has(wb, sh)) continue; const parsed=parseSalesSheet(wb, sh); if(parsed && parsed.album.length){ best=parsed; break; } }
+    const out = best ? {stamp, source:best.sheet, allRows:best.all, albumRows:best.album} : empty;
+    if(typeof state !== 'undefined' && state) state.__albumSalesPayload = out;
+    return out;
+  }
+
+  function isAlbumStockExcluded(r){
+    const txt = norm([r.description,r.category,r.brand,r.supplier].join(' '));
+    return /mundial\s+de\s+clubes/.test(txt)
+      || /copa\s+america/.test(txt)
+      || /\bdisplay\b/.test(txt)
+      || /sticker\s+seguridad/.test(txt)
+      || /seguridad\s+mh/.test(txt);
+  }
+  function getInventoryRows(){
+    const src = (typeof state !== 'undefined' && state && Array.isArray(state.invItems)) ? state.invItems : [];
+    return src.map(r=>({
+      store:safeTxt(r.store || r.Store || r.tienda || r.Tienda).toUpperCase(),
+      sku:safeTxt(r.sku || r.SKU || r.codigo || r.Codigo || r.code),
+      description:safeTxt(r.description || r.Description || r.descripcion || r.Descripcion || r['Descripción'] || r.item || r.Item),
+      category:safeTxt(r.category || r.Category || r.categoria || r.Categoria || r['Categoría']),
+      supplier:safeTxt(r.supplier || r.Supplier || r.proveedor || r.Proveedor),
+      brand:safeTxt(r.brand || r.Brand || r.marca || r.Marca),
+      qty:n(r.qty ?? r.quantity ?? r.Quantity ?? r.Qty ?? r.Existencia ?? r.Stock ?? r['On Hand']),
+      amount:n(r.amount ?? r.Amount ?? r.Inventario ?? r.Inventory ?? r.Monto)
+    })).filter(r=>r.store && isAlbumRow(r));
+  }
+  function aggregate(rows, keyFn, valFn){ const m=new Map(); rows.forEach(r=>{ const k=keyFn(r)||'Sin dato'; const cur=m.get(k)||0; m.set(k, cur+n(valFn(r))); }); return m; }
+  function topRows(map, limit){ return Array.from(map.entries()).map(([k,v])=>({k,v:n(v)})).sort((a,b)=>b.v-a.v).slice(0,limit||999); }
+  function groupRows(rows, keyFn){ const m=new Map(); rows.forEach(r=>{ const k=keyFn(r)||'Sin dato'; if(!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
+  function destroyCharts(){ if(typeof state === 'undefined' || !state) return; chartKeys.forEach(k=>{ try{ state[k]?.destroy?.(); }catch(_e){} state[k]=null; }); }
+  function makeChart(key, canvasId, cfg){
+    const canvas=byId(canvasId); if(!canvas || typeof Chart === 'undefined') return null;
+    try{ state[key]?.destroy?.(); }catch(_e){}
+    state[key] = new Chart(canvas.getContext('2d'), cfg);
+    return state[key];
+  }
+  function chartOptions(extra){
+    const base={responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:18,right:18,left:10,bottom:0}},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){ const y=ctx.parsed && (ctx.parsed.y != null ? ctx.parsed.y : ctx.parsed); return `${ctx.dataset?.label || ctx.label}: ${money(y)}`; }}},albumLabelPlugin:{display:true,color:'#F58320',fontSize:11,fontWeight:'1000',offset:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}};
+    const out=Object.assign({}, base, extra||{});
+    out.plugins = Object.assign({}, base.plugins, (extra&&extra.plugins)||{});
+    out.plugins.legend = Object.assign({}, base.plugins.legend, extra?.plugins?.legend||{});
+    out.plugins.legend.labels = Object.assign({}, base.plugins.legend.labels, extra?.plugins?.legend?.labels||{});
+    out.plugins.tooltip = Object.assign({}, base.plugins.tooltip, extra?.plugins?.tooltip||{});
+    out.plugins.tooltip.callbacks = Object.assign({}, base.plugins.tooltip.callbacks, extra?.plugins?.tooltip?.callbacks||{});
+    out.plugins.albumLabelPlugin = Object.assign({}, base.plugins.albumLabelPlugin, extra?.plugins?.albumLabelPlugin||{});
+    out.layout = Object.assign({}, base.layout, extra?.layout||{});
+    out.layout.padding = Object.assign({}, base.layout.padding, extra?.layout?.padding||{});
+    out.scales = Object.assign({}, base.scales, (extra&&extra.scales)||{});
+    out.scales.x = Object.assign({}, base.scales.x, extra?.scales?.x||{});
+    out.scales.x.ticks = Object.assign({}, base.scales.x.ticks, extra?.scales?.x?.ticks||{});
+    out.scales.x.grid = Object.assign({}, base.scales.x.grid, extra?.scales?.x?.grid||{});
+    out.scales.y = Object.assign({}, base.scales.y, extra?.scales?.y||{});
+    out.scales.y.ticks = Object.assign({}, base.scales.y.ticks, extra?.scales?.y?.ticks||{});
+    out.scales.y.grid = Object.assign({}, base.scales.y.grid, extra?.scales?.y?.grid||{});
+    return out;
+  }
+  function setOptions(sel, opts, val){
+    const el=byId(sel); if(!el) return;
+    const cur=val != null ? val : el.value;
+    el.innerHTML=(opts||[]).map(o=>`<option value="${String(o.value).replace(/"/g,'&quot;')}">${o.label}</option>`).join('');
+    if((opts||[]).some(o=>String(o.value)===String(cur))) el.value=cur;
+    else if(opts && opts.length) el.value=opts[0].value;
+  }
+  function currentScope(){
+    const mode=byId('albumMode')?.value || 'daily';
+    const payload=getSalesPayload();
+    const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
+    const itemFilter=byId('albumItem')?.value || '__ALL__';
+    let rows=payload.albumRows.filter(r=>storeSet.has(r.store));
+    if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item === itemFilter);
+    const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
+    const periodSel=byId('albumPeriod')?.value || periods[periods.length-1] || '';
+    let scoped = rows.filter(r=>periodKey(r, mode) === periodSel);
+    if(mode==='monthly') scoped = rows.filter(r=>r.month === periodSel);
+    return {mode,payload,stores,storeSet,itemFilter,rows,periods,periodSel,scoped};
+  }
+  function populateFilters(){
+    const mode=byId('albumMode')?.value || 'daily';
+    const payload=getSalesPayload();
+    const globalStores = ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
+    const storeOpts=[{value:'__GLOBAL__',label:'Tiendas del filtro global'},{value:'__ALL__',label:'Todas las tiendas'}].concat(globalStores.map(s=>({value:s,label:s})));
+    setOptions('albumStore', storeOpts);
+    const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
+    let rows=payload.albumRows.filter(r=>storeSet.has(r.store));
+    const itemCounts=topRows(aggregate(rows, r=>r.item, r=>r.sales), 200);
+    setOptions('albumItem', [{value:'__ALL__',label:'Todos los items'}].concat(itemCounts.map(x=>({value:x.k,label:`${x.k} · ${money(x.v)}`}))));
+    const itemFilter=byId('albumItem')?.value || '__ALL__'; if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item===itemFilter);
+    const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
+    setOptions('albumPeriod', periods.map(p=>({value:p,label:periodLabel(p,mode)})), periods[periods.length-1] || '');
+  }
+  function renderKpis(scope){
+    const kpis=byId('albumKpis'); if(!kpis) return;
+    const totalSales=scope.scoped.reduce((a,r)=>a+n(r.sales),0);
+    const totalQty=scope.scoped.reduce((a,r)=>a+n(r.qty),0);
+    const selDate = scope.mode==='daily' ? toDate(scope.periodSel) : null;
+    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (selDate ? monthKey(selDate) : (scope.scoped[0]?.month || scope.periodSel.slice(0,7)));
+    let mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
+    if(scope.mode==='daily' && selDate) mtdRows=mtdRows.filter(r=>r.date<=selDate);
+    const mtdSales=mtdRows.reduce((a,r)=>a+n(r.sales),0);
+    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
+    const itemFilter=scope.itemFilter; const scopedInv = itemFilter==='__ALL__' ? invRows : invRows.filter(r=>(r.description||r.category||r.brand)===itemFilter || norm(r.description||'').includes(norm(itemFilter)) || norm(itemFilter).includes(norm(r.description||'')) );
+    const stock=scopedInv.reduce((a,r)=>a+n(r.qty),0);
+    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && periodKey(r, scope.mode)===scope.periodSel);
+    const totalStoreSales = totalRows.reduce((a,r)=>a+n(r.sales),0);
+    const impact = totalStoreSales>0 ? totalSales/totalStoreSales : NaN;
+    const topStore=topRows(aggregate(scope.scoped, r=>r.store, r=>r.sales),1)[0];
+    const defs=[['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${periodLabel(scope.periodSel, scope.mode)}`],['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],['Existencias', qty(stock), `${scopedInv.length} filas de inventario`],['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']];
+    kpis.innerHTML=defs.map(d=>`<div class="albumKpi"><div class="k">${d[0]}</div><div class="v">${d[1]}</div><div class="s">${d[2]}</div></div>`).join('');
+    const source=byId('albumSourceChip'); if(source) source.textContent = `Fuente: ${scope.payload.source || 'pendiente'}`;
+    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'}`;
+  }
+  function renderTables(scope){
+    const salesAgg=new Map();
+    scope.scoped.forEach(r=>{ const k=r.store+'||'+r.item; const cur=salesAgg.get(k)||{store:r.store,item:r.item,sales:0,qty:0}; cur.sales+=n(r.sales); cur.qty+=n(r.qty); salesAgg.set(k,cur); });
+    const salesRows=Array.from(salesAgg.values()).sort((a,b)=>b.sales-a.sales).slice(0,80);
+    fillTable('albumSalesTable',['Tienda','Item','Venta','Unidades','Share'],salesRows.map(r=>[r.store,r.item,money(r.sales),qty(r.qty),pct(r.sales/(scope.scoped.reduce((a,x)=>a+n(x.sales),0)||NaN))]));
+    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
+    const invAgg=new Map(); invRows.forEach(r=>{ const item=r.description||r.category||r.brand||'Sin descripción'; const k=r.store+'||'+item; const cur=invAgg.get(k)||{store:r.store,item,qty:0,amount:0}; cur.qty+=n(r.qty); cur.amount+=n(r.amount); invAgg.set(k,cur); });
+    fillTable('albumStockTable',['Tienda','Item','Existencias','Valor inv.'],Array.from(invAgg.values()).sort((a,b)=>b.qty-a.qty).slice(0,80).map(r=>[r.store,r.item,qty(r.qty),money(r.amount)]));
+    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (scope.scoped[0]?.month || scope.periodSel.slice(0,7));
+    const mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
+    const mtdAgg=topRows(aggregate(mtdRows, r=>r.item, r=>r.sales),80);
+    fillTable('albumMtdTable',['Item','Venta MTD','Share MTD'],mtdAgg.map(r=>[r.k,money(r.v),pct(r.v/(mtdAgg.reduce((a,x)=>a+n(x.v),0)||NaN))]));
+  }
+  function fillTable(id, headers, rows){
+    const t=byId(id); if(!t) return; const th=t.querySelector('thead'), tb=t.querySelector('tbody');
+    th.innerHTML='<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+    if(!rows.length){ tb.innerHTML=`<tr><td colspan="${headers.length}" class="muted">Sin data para la selección actual.</td></tr>`; return; }
+    tb.innerHTML=rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+  }
+  function renderCharts(scope){
+    const mode=scope.mode;
+    const daypartMeta=byId('albumDaypartMeta');
+    const dayAgg=topRows(aggregate(scope.rows, r=>r.dateKey, r=>r.sales), 999).sort((a,b)=>a.k.localeCompare(b.k));
+    const filteredDayAgg=dayAgg.filter(x=> mode==='daily' ? x.k===scope.periodSel : (mode==='weekly' ? isoWeek(toDate(x.k))===scope.periodSel : x.k.slice(0,7)===scope.periodSel));
+    const albumDailyMeta=byId('albumDailyMeta');
+    if(albumDailyMeta) albumDailyMeta.textContent = 'Barra: venta diaria · línea: % impacto sobre venta general.';
+    const dailyImpactBaseRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store));
+    const dailyImpactPct = filteredDayAgg.map(x=>{
+      const total = dailyImpactBaseRows.filter(r=>r.dateKey===x.k).reduce((a,r)=>a+n(r.sales),0);
+      return total>0 ? (n(x.v)/total*100) : 0;
+    });
+    makeChart('chartAlbumDaily','chart_album_daily',{
+      type:'bar',
+      data:{
+        labels:filteredDayAgg.map(x=>x.k),
+        datasets:[
+          {
+            type:'bar',
+            label:'Venta diaria',
+            data:filteredDayAgg.map(x=>x.v),
+            backgroundColor:'#005EA7',
+            borderRadius:6,
+            maxBarThickness:58,
+            yAxisID:'y'
+          },
+          {
+            type:'line',
+            label:'Impacto %',
+            data:dailyImpactPct,
+            borderColor:'#F58320',
+            backgroundColor:'#F58320',
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:5,
+            tension:.28,
+            fill:false,
+            yAxisID:'y1'
+          }
+        ]
+      },
+      options:chartOptions({
+        layout:{padding:{top:28,right:44,left:10,bottom:0}},
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},
+          albumAxisPillPlugin:{display:true,text:'Impacto %',axis:'y1',color:'#F58320',fill:'rgba(245,131,32,.13)',stroke:'rgba(245,131,32,.32)',offsetX:14},
+          tooltip:{callbacks:{
+            label:function(ctx){
+              if(ctx.dataset?.yAxisID === 'y1') return `Impacto: ${Number(ctx.raw||0).toFixed(2)}%`;
+              return `Venta diaria: ${money(ctx.raw)}`;
+            },
+            afterBody:function(items){
+              const idx=items && items.length ? items[0].dataIndex : 0;
+              const date=filteredDayAgg[idx]?.k || '';
+              const total=dailyImpactBaseRows.filter(r=>r.dateKey===date).reduce((a,r)=>a+n(r.sales),0);
+              return [`Venta total base: ${money(total)}`];
+            }
+          }},
+          albumLabelPlugin:{labelPositions:['bottom','top'],bottomColors:['#FFFFFF','#F58320'],datasetColors:['#FFFFFF','#F58320'],labelBackgrounds:['rgba(17,40,74,.86)','rgba(245,131,32,.92)'],labelBackgroundTextColors:['#FFFFFF','#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)','rgba(245,131,32,.95)'],bottomOffset:16,fontSize:10,fontWeight:'1000',offset:12}
+        },
+        scales:{
+          x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},
+          y:{
+            beginAtZero:true,
+            position:'left',
+            grace:'16%',
+            title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
+            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            grid:{color:'rgba(148,163,184,.20)'}
+          },
+          y1:{
+            beginAtZero:true,
+            position:'right',
+            grace:'18%',
+            title:{display:false},
+            ticks:{callback:v=>v+'%',color:'#000000',font:{size:10,weight:'800'}},
+            grid:{drawOnChartArea:false}
+          }
+        }
+      })
+    });
+    let cum=0; const trend=filteredDayAgg.map(x=>{cum+=n(x.v); return {k:x.k,v:cum};});
+    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.k),datasets:[{label:'Acumulado',data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({plugins:{albumLabelPlugin:{offset:14}}})});
+    const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && periodKey(r, mode)===scope.periodSel).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
+    makeChart('chartAlbumImpact','chart_album_impact',{
+      type:'bar',
+      data:{
+        labels:impactRows.map(x=>x.store),
+        datasets:[
+          {
+            type:'bar',
+            label:'Ventas Álbum',
+            data:impactRows.map(x=>x.album),
+            backgroundColor:'#005EA7',
+            borderRadius:6,
+            maxBarThickness:54,
+            yAxisID:'y'
+          },
+          {
+            type:'line',
+            label:'Impacto %',
+            data:impactRows.map(x=>x.impact*100),
+            borderColor:'#F58320',
+            backgroundColor:'#F58320',
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:5,
+            tension:.28,
+            fill:false,
+            yAxisID:'y1'
+          }
+        ]
+      },
+      options:chartOptions({
+        layout:{padding:{top:28,right:44,left:10,bottom:0}},
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},
+          albumAxisPillPlugin:{display:true,text:'Impacto %',axis:'y1',color:'#F58320',fill:'rgba(245,131,32,.13)',stroke:'rgba(245,131,32,.32)',offsetX:14},
+          tooltip:{callbacks:{
+            label:function(ctx){
+              const r=impactRows[ctx.dataIndex]||{};
+              if(ctx.dataset?.yAxisID === 'y1') return `Impacto: ${Number(ctx.raw||0).toFixed(2)}%`;
+              return `Ventas Álbum: ${money(r.album)}`;
+            },
+            afterBody:function(items){
+              const idx=items && items.length ? items[0].dataIndex : 0;
+              const r=impactRows[idx]||{};
+              return [`Venta total tienda: ${money(r.total)}`];
+            }
+          }},
+          albumLabelPlugin:{labelPositions:['bottom','top'],bottomColors:['#FFFFFF','#F58320'],datasetColors:['#FFFFFF','#F58320'],labelBackgrounds:['rgba(17,40,74,.86)','rgba(245,131,32,.92)'],labelBackgroundTextColors:['#FFFFFF','#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)','rgba(245,131,32,.95)'],bottomOffset:16,offset:12,color:'#F58320',fontSize:10,fontWeight:'1000'}
+        },
+        scales:{
+          x:{ticks:{color:'#11284A',font:{size:10,weight:'800'}},grid:{display:false}},
+          y:{
+            beginAtZero:true,
+            position:'left',
+            grace:'18%',
+            title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
+            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            grid:{color:'rgba(148,163,184,.20)'}
+          },
+          y1:{
+            beginAtZero:true,
+            position:'right',
+            grace:'18%',
+            title:{display:false},
+            ticks:{callback:v=>v+'%',color:'#000000',font:{size:10,weight:'800'}},
+            grid:{drawOnChartArea:false}
+          }
+        }
+      })
+    });
+    const pieMode=byId('albumPieMode')?.value || 'item'; const pieAgg=topRows(aggregate(scope.scoped, r=>pieMode==='store'?r.store:r.item, r=>r.sales), 8);
+    makeChart('chartAlbumPie','chart_album_pie',{type:'doughnut',data:{labels:pieAgg.map(x=>x.k),datasets:[{data:pieAgg.map(x=>x.v),backgroundColor:pieAgg.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){return `${ctx.label}: ${money(ctx.raw)}`;}}},albumLabelPlugin:{display:true,fontSize:10,fontWeight:'900'}},cutout:'54%'}});
+    const daypartAgg=topRows(aggregate(scope.scoped, r=>safeTxt(r.daypart)||'Sin horario', r=>r.sales), 10);
+    if(daypartMeta) daypartMeta.textContent = 'Franja / turno Food Service detectado en el cubo.';
+    makeChart('chartAlbumDaypart','chart_album_daypart',{
+      type:'bar',
+      data:{
+        labels:daypartAgg.map(x=>x.k),
+        datasets:[{
+          label:'Venta por horario FS',
+          data:daypartAgg.map(x=>x.v),
+          backgroundColor:'#005EA7',
+          borderRadius:6,
+          maxBarThickness:58
+        }]
+      },
+      options:chartOptions({
+        layout:{padding:{top:24,right:12,left:10,bottom:0}},
+        plugins:{
+          legend:{display:false},
+          albumLabelPlugin:{labelPosition:'bottom',bottomColors:['#FFFFFF'],datasetColors:['#FFFFFF'],labelBackgrounds:['rgba(17,40,74,.86)'],labelBackgroundTextColors:['#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)'],bottomOffset:16,offset:12,color:'#FFFFFF',fontSize:10,fontWeight:'1000'}
+        },
+        scales:{
+          x:{
+            ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:25,minRotation:0},
+            grid:{display:false}
+          },
+          y:{
+            beginAtZero:true,
+            grace:'15%',
+            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            grid:{color:'rgba(148,163,184,.20)'}
+          }
+        }
+      })
+    });
+  }
+  function renderAlbum(){
+    if(!byId('albumWrap')) return;
+    populateFilters();
+    const scope=currentScope();
+    const empty=byId('albumEmpty');
+    if(!scope.payload.albumRows.length){
+      destroyCharts();
+      if(empty){ empty.style.display='block'; empty.innerHTML='No encontré registros de <b>Álbum / Figuritas</b> desde mayo 2026 en el cubo cargado. El módulo ya está listo; cuando el cubo traiga la categoría, se actualizará automáticamente.'; }
+      renderKpis(scope); renderTables(scope); return;
+    }
+    if(empty) empty.style.display='none';
+    renderKpis(scope); renderCharts(scope); renderTables(scope);
+    try{ if(typeof rememberTabRender === 'function') rememberTabRender(TAB, byId('currentMonth')?.value, (typeof getSelectedValues==='function'?getSelectedValues(byId('prevMonths')):[]), selectedStores()); }catch(_e){}
+  }
+  function scheduleRender(wait){ setTimeout(()=>{ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB) renderAlbum(); }catch(e){ console.warn('Album render failed', e); } }, wait == null ? 80 : wait); }
+  function boot(){
+    try{ if(typeof ALL_REPORT_TABS !== 'undefined' && Array.isArray(ALL_REPORT_TABS) && !ALL_REPORT_TABS.includes(TAB)) ALL_REPORT_TABS.push(TAB); }catch(_e){}
+    try{ if(typeof state !== 'undefined' && state){ if(!(state._tabDirty instanceof Set)) state._tabDirty=new Set(); state._tabDirty.add(TAB); } }catch(_e){}
+    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem') populateFilters(); renderAlbum(); }); });
+    document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="album"]')) scheduleRender(120); }catch(_e){} }, true);
+    window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev?.detail?.tab||'')===TAB) scheduleRender(40); }catch(_e){} }, {passive:true});
+    window.addEventListener('ampm:fileloaded', function(){ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB){ populateFilters(); scheduleRender(90); scheduleRender(450); } }catch(_e){} }, {passive:true});
+    window.addEventListener('ampm:refresh', function(){ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB){ scheduleRender(120); } }catch(_e){} }, {passive:true});
+    const refresh=byId('refresh'); if(refresh && !refresh.__albumBound){ refresh.__albumBound=true; refresh.addEventListener('click', ()=>scheduleRender(180)); }
+    const remoteLoad=byId('remoteLoadBtn'); if(remoteLoad && !remoteLoad.__albumBound){ remoteLoad.__albumBound=true; remoteLoad.addEventListener('click', ()=>{ scheduleRender(1200); scheduleRender(2600); }); }
+    try{
+      if(typeof refreshAll === 'function' && !refreshAll.__albumWrapped){
+        const base=refreshAll;
+        refreshAll=function(){ const out=base.apply(this, arguments); scheduleRender(160); return out; };
+        refreshAll.__albumWrapped=true;
+      }
+    }catch(_e){}
+    try{
+      if(typeof refreshVisibleTabCharts === 'function' && !refreshVisibleTabCharts.__albumWrapped){
+        const base=refreshVisibleTabCharts;
+        refreshVisibleTabCharts=function(tab, force){ const out=base.apply(this, arguments); if(String(tab||'')===TAB) scheduleRender(20); return out; };
+        window.refreshVisibleTabCharts=refreshVisibleTabCharts;
+        refreshVisibleTabCharts.__albumWrapped=true;
+      }
+    }catch(_e){}
+    scheduleRender(250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot, {once:true}); else boot();
+  window.renderAlbumFiguritas = renderAlbum;
+})();
+</script>
+
+
 <script type="text/plain" data-ampm-deferred="1">
 
 (function(){
@@ -59914,717 +60695,6 @@ body:not(.auth-ok) #ampmStoreFloat{display:none!important}
 })();
 </script>
 
-<script type="text/plain" data-ampm-deferred="1" id="album-module-v1-script">
-(function(){
-  'use strict';
-  const MIN_TS = new Date(2026,4,1).getTime();
-  const TAB = 'album';
-  const COLORS = ['#005EA7','#F58320','#11284A','#0C4D8F','#E67425','#64748B','#FAA21E','#334155','#38BDF8','#94A3B8'];
-  const chartKeys = ['chartAlbumDaily','chartAlbumTrend','chartAlbumImpact','chartAlbumPie','chartAlbumDaypart'];
-  const albumLabelPlugin = {
-    id:'albumLabelPlugin',
-    afterDatasetsDraw(chart, args, pluginOptions){
-      if(!pluginOptions || pluginOptions.display===false) return;
-      const ctx = chart.ctx;
-      const type = chart.config?.type || '';
-      const isHorizontal = chart.options?.indexAxis === 'y';
-      const canvasId = chart.canvas?.id || '';
-      if(!/^chart_album_/.test(canvasId)) return;
-      const fontSize = Number(pluginOptions.fontSize || 10);
-      const fontWeight = String(pluginOptions.fontWeight || '900');
-      const color = pluginOptions.color || '#11284A';
-      const offset = Number(pluginOptions.offset == null ? 10 : pluginOptions.offset);
-      const bottomOffset = Number(pluginOptions.bottomOffset == null ? 14 : pluginOptions.bottomOffset);
-      const labelPositions = Array.isArray(pluginOptions.labelPositions) ? pluginOptions.labelPositions : null;
-      const bottomColors = Array.isArray(pluginOptions.bottomColors) ? pluginOptions.bottomColors : null;
-      const labelBackgrounds = Array.isArray(pluginOptions.labelBackgrounds) ? pluginOptions.labelBackgrounds : null;
-      const labelBackgroundTextColors = Array.isArray(pluginOptions.labelBackgroundTextColors) ? pluginOptions.labelBackgroundTextColors : null;
-      const labelBackgroundBorders = Array.isArray(pluginOptions.labelBackgroundBorders) ? pluginOptions.labelBackgroundBorders : null;
-      const labelBgPadX = Number(pluginOptions.labelBackgroundPadX == null ? 6 : pluginOptions.labelBackgroundPadX);
-      const labelBgPadY = Number(pluginOptions.labelBackgroundPadY == null ? 3 : pluginOptions.labelBackgroundPadY);
-      const labelBgRadius = Number(pluginOptions.labelBackgroundRadius == null ? 6 : pluginOptions.labelBackgroundRadius);
-      function roundRectPath(x,y,w,h,r){
-        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
-        if(typeof ctx.roundRect === 'function'){
-          ctx.roundRect(x,y,w,h,r);
-          return;
-        }
-        ctx.moveTo(x+r,y);
-        ctx.lineTo(x+w-r,y);
-        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-        ctx.lineTo(x+w,y+h-r);
-        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-        ctx.lineTo(x+r,y+h);
-        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-        ctx.lineTo(x,y+r);
-        ctx.quadraticCurveTo(x,y,x+r,y);
-      }
-      function drawLabelBackground(label, x, y, align, bg, border){
-        if(!bg) return;
-        const w = ctx.measureText(label).width;
-        const h = fontSize + (labelBgPadY*2);
-        let rx = x - (w/2) - labelBgPadX;
-        if(align === 'left') rx = x - labelBgPadX;
-        if(align === 'right') rx = x - w - labelBgPadX;
-        const ry = y - (h/2);
-        ctx.save();
-        ctx.beginPath();
-        roundRectPath(rx, ry, w + (labelBgPadX*2), h, labelBgRadius);
-        ctx.fillStyle = bg;
-        ctx.fill();
-        if(border){ ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke(); }
-        ctx.restore();
-      }
-      function totalForDataset(di){
-        const ds = chart.data?.datasets?.[di]?.data || [];
-        return ds.reduce((a,v)=>a+n(v),0);
-      }
-      function formatValue(raw, datasetIndex){
-        const val = n(raw);
-        if(type === 'doughnut' || type === 'pie'){
-          const tot = totalForDataset(datasetIndex);
-          return tot>0 ? (val/tot*100).toFixed(1)+'%' : '0%';
-        }
-        const ds = chart.data?.datasets?.[datasetIndex] || {};
-        if(ds.yAxisID === 'y1' || /impacto/i.test(String(ds.label || ''))) return Number(val).toFixed(1)+'%';
-        if(canvasId === 'chart_album_impact') return money(val);
-        return money(val);
-      }
-      ctx.save();
-      ctx.font = `${fontWeight} ${fontSize}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      if(type === 'doughnut' || type === 'pie'){
-        (chart.data.datasets||[]).forEach((ds, di)=>{
-          const meta = chart.getDatasetMeta(di);
-          const tot = totalForDataset(di);
-          (meta.data||[]).forEach((arc, idx)=>{
-            const raw = ds.data?.[idx];
-            const val = n(raw);
-            if(!val || !tot) return;
-            const share = val/tot;
-            if(share < 0.04) return;
-            const angle = (arc.startAngle + arc.endAngle) / 2;
-            const radius = arc.innerRadius + ((arc.outerRadius - arc.innerRadius) * 0.58);
-            const x = arc.x + Math.cos(angle) * radius;
-            const y = arc.y + Math.sin(angle) * radius;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillText(formatValue(raw, di), x, y);
-          });
-        });
-      } else {
-        (chart.data.datasets||[]).forEach((ds, di)=>{
-          const meta = chart.getDatasetMeta(di);
-          (meta.data||[]).forEach((el, idx)=>{
-            const raw = ds.data?.[idx];
-            const val = n(raw);
-            if(!val || typeof el?.getProps !== 'function') return;
-            const p = el.getProps(['x','y','base'], true);
-            const label = formatValue(raw, di);
-            const dsType = String(ds.type || type || '').toLowerCase();
-            const dsPos = labelPositions ? String(labelPositions[di] || '') : String(pluginOptions.labelPosition || '');
-            let x = p.x, y = p.y - offset;
-            const area = chart.chartArea || {};
-            const dsLabelColors = pluginOptions.datasetColors;
-            ctx.fillStyle = Array.isArray(dsLabelColors) ? (dsLabelColors[di] || color) : color;
-            ctx.textAlign = 'center';
-            if(!isHorizontal && dsType !== 'line' && /bottom|inferior|base/i.test(dsPos)){
-              const baseY = Number.isFinite(Number(p.base)) ? Number(p.base) : Number(area.bottom || chart.height || 0);
-              y = baseY - bottomOffset;
-              if(bottomColors) ctx.fillStyle = bottomColors[di] || ctx.fillStyle;
-            }
-            if(isHorizontal){
-              x = Math.max(p.x, p.base) + 28;
-              y = p.y;
-              ctx.textAlign = 'left';
-              const rightLimit = Number(area.right || chart.width || 0) - 6;
-              const leftLimit = Number(area.left || 0) + 6;
-              const labelWidth = ctx.measureText(label).width;
-              if(x + labelWidth > rightLimit){
-                x = rightLimit;
-                ctx.textAlign = 'right';
-              }
-              x = Math.max(leftLimit, Math.min(rightLimit, x));
-            }
-            if(dsType === 'line' || type === 'line'){
-              y = p.y - 12;
-            }
-            if(!isHorizontal){
-              const topLimit = Number(area.top || 0) + 10;
-              const bottomLimit = Number(area.bottom || 0) - 8;
-              y = Math.max(topLimit, Math.min(bottomLimit, y));
-            }
-            const align = ctx.textAlign || 'center';
-            const bg = labelBackgrounds ? labelBackgrounds[di] : null;
-            const bgBorder = labelBackgroundBorders ? labelBackgroundBorders[di] : null;
-            if(bg){
-              drawLabelBackground(label, x, y, align, bg, bgBorder);
-              const bgTextColor = labelBackgroundTextColors ? labelBackgroundTextColors[di] : null;
-              if(bgTextColor) ctx.fillStyle = bgTextColor;
-            }
-            ctx.fillText(label, x, y);
-          });
-        });
-      }
-      ctx.restore();
-    }
-  };
-  const albumAxisPillPlugin = {
-    id:'albumAxisPillPlugin',
-    afterDraw(chart, args, pluginOptions){
-      if(!pluginOptions || pluginOptions.display===false) return;
-      const canvasId = chart.canvas?.id || '';
-      if(!/^chart_album_/.test(canvasId)) return;
-      const axisId = pluginOptions.axis || 'y1';
-      const scale = chart.scales?.[axisId];
-      const area = chart.chartArea || {};
-      if(!scale || !area) return;
-      const ctx = chart.ctx;
-      const text = String(pluginOptions.text || 'Impacto %');
-      const fontSize = Number(pluginOptions.fontSize || 10);
-      const fontWeight = String(pluginOptions.fontWeight || '900');
-      const fill = pluginOptions.fill || 'rgba(245,131,32,.14)';
-      const stroke = pluginOptions.stroke || 'rgba(245,131,32,.34)';
-      const color = pluginOptions.color || '#F58320';
-      const padX = Number(pluginOptions.padX == null ? 7 : pluginOptions.padX);
-      const padY = Number(pluginOptions.padY == null ? 4 : pluginOptions.padY);
-      const radius = Number(pluginOptions.radius == null ? 7 : pluginOptions.radius);
-      const offsetX = Number(pluginOptions.offsetX == null ? 16 : pluginOptions.offsetX);
-      function rr(x,y,w,h,r){
-        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
-        if(typeof ctx.roundRect === 'function'){
-          ctx.roundRect(x,y,w,h,r);
-          return;
-        }
-        ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-        ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-        ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-        ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-      }
-      ctx.save();
-      ctx.font = `${fontWeight} ${fontSize}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const textW = ctx.measureText(text).width;
-      const boxW = textW + padX*2;
-      const boxH = fontSize + padY*2;
-      // Coloca la cápsula del nombre del segundo eje en el margen derecho,
-      // fuera del área de los números del eje, para evitar traslapes.
-      const rotatedHalfHeight = boxH / 2;
-      const maxX = Math.max(rotatedHalfHeight + 8, chart.width - rotatedHalfHeight - 8);
-      const baseRight = (scale.right || area.right || chart.width);
-      const preferredX = baseRight + offsetX;
-      const x = Math.min(maxX, preferredX);
-      const y = ((area.top || 0) + (area.bottom || chart.height)) / 2;
-      ctx.translate(x, y);
-      ctx.rotate(-Math.PI/2);
-      ctx.beginPath();
-      rr(-boxW/2, -boxH/2, boxW, boxH, radius);
-      ctx.fillStyle = fill;
-      ctx.fill();
-      if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-      ctx.fillStyle = color;
-      ctx.fillText(text, 0, 0);
-      ctx.restore();
-    }
-  };
-  if(typeof Chart !== 'undefined' && Chart && !Chart.__albumLabelPluginRegistered){
-    try{ Chart.register(albumLabelPlugin, albumAxisPillPlugin); Chart.__albumLabelPluginRegistered = true; }catch(_e){}
-  }
-
-  function byId(id){ return document.getElementById(id); }
-  function n(v){ const x=Number(v); return Number.isFinite(x) ? x : 0; }
-  function money(v){ return '$' + n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
-  function qty(v){ return n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
-  function pct(v){ return Number.isFinite(Number(v)) ? (Number(v)*100).toFixed(2)+'%' : '—'; }
-  function safeTxt(v){ return String(v == null ? '' : v).trim(); }
-  function norm(v){ return safeTxt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim(); }
-  function pick(keys, names){
-    const map = new Map((keys||[]).map(k=>[norm(k), k]));
-    for(const nm of names){ const got = map.get(norm(nm)); if(got) return got; }
-    for(const k of (keys||[])){ const nk=norm(k); for(const nm of names){ if(nk.includes(norm(nm))) return k; } }
-    return '';
-  }
-  function albumMatchText(r){ return norm([r.category,r.description,r.brand,r.supplier,r.department].join(' ')); }
-  function isAlbumRow(r){ const txt = albumMatchText(r); return /\balbum\b/.test(txt) || /\bfigurit/.test(txt) || /\bsticker/.test(txt) || /\blamina/.test(txt); }
-  function toDate(v){
-    if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
-    if(typeof v === 'number' && typeof XLSX !== 'undefined' && XLSX && XLSX.SSF && XLSX.SSF.parse_date_code){
-      try{ const d=XLSX.SSF.parse_date_code(v); if(d && d.y) return new Date(d.y, (d.m||1)-1, d.d||1); }catch(_e){}
-    }
-    const s=safeTxt(v); if(!s) return null;
-    let m=s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
-    m=s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/); if(m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
-    const d=new Date(s); if(!isNaN(d)) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    return null;
-  }
-  function isoDate(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` : ''; }
-  function monthKey(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : ''; }
-  function isoWeek(d){
-    if(!d) return '';
-    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const day = dt.getUTCDay() || 7;
-    dt.setUTCDate(dt.getUTCDate() + 4 - day);
-    const yearStart = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
-    const week = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
-    return `${dt.getUTCFullYear()}-W${String(week).padStart(2,'0')}`;
-  }
-  function dowNum(v){
-    const s=norm(v); if(!s) return null;
-    if(/^\d+$/.test(s)){ const x=Number(s); return x>=1 && x<=7 ? x : null; }
-    const m={lunes:1,lun:1,monday:1,mon:1,martes:2,mar:2,tuesday:2,tue:2,miercoles:3,mie:3,wednesday:3,wed:3,jueves:4,jue:4,thursday:4,thu:4,viernes:5,vie:5,friday:5,fri:5,sabado:6,sab:6,saturday:6,sat:6,domingo:7,dom:7,sunday:7,sun:7};
-    return m[s] || null;
-  }
-  function isoWeekToDate(weekKey, dow){
-    const m=safeTxt(weekKey).match(/^(\d{4})-W(\d{2})$/); if(!m) return null;
-    const year=Number(m[1]), week=Number(m[2]), day=Math.min(7, Math.max(1, Number(dow||1)));
-    const jan4 = new Date(Date.UTC(year,0,4));
-    const jan4Dow = jan4.getUTCDay() || 7;
-    const monday = new Date(jan4); monday.setUTCDate(jan4.getUTCDate() - jan4Dow + 1 + ((week-1)*7));
-    monday.setUTCDate(monday.getUTCDate() + (day-1));
-    return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
-  }
-  function periodToDate(period, dow){
-    const p=safeTxt(period); if(!p) return null;
-    if(/^\d{4}-W\d{2}$/.test(p)) return isoWeekToDate(p, dow || 1);
-    const m=p.match(/^(\d{4})-(\d{2})$/); if(m) return new Date(Number(m[1]), Number(m[2])-1, 1);
-    return toDate(p);
-  }
-  function periodKey(row, mode){ return mode==='weekly' ? row.week : (mode==='monthly' ? row.month : row.dateKey); }
-  function periodLabel(key, mode){
-    if(!key) return '—';
-    if(mode==='daily') return key;
-    if(mode==='weekly') return key.replace('-W',' S');
-    const [y,m]=String(key).split('-'); const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${months[(Number(m)||1)-1] || m} ${y}`;
-  }
-  function selectedStores(){
-    const own = byId('albumStore')?.value || '__GLOBAL__';
-    if(own && own !== '__GLOBAL__' && own !== '__ALL__') return [own];
-    if(own === '__ALL__') return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
-    try{ if(typeof getSelectedStoresOrAll === 'function'){ const a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a.map(s=>safeTxt(s).toUpperCase()); } }catch(_e){}
-    return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
-  }
-  function readRows(wb, sheet){ try{ if(typeof sheetRows === 'function') return sheetRows(wb, sheet, {defval:null, raw:true}) || []; }catch(_e){} try{ return XLSX.utils.sheet_to_json(wb.Sheets[sheet], {defval:null, raw:true}) || []; }catch(_e){ return []; } }
-  function has(wb, sheet){ try{ if(typeof hasSheet === 'function') return hasSheet(wb, sheet); }catch(_e){} return !!(wb && wb.Sheets && wb.Sheets[sheet]); }
-
-  function parseSalesSheet(wb, sheet){
-    const raw = readRows(wb, sheet);
-    if(!raw.length) return null;
-    const keys = Object.keys(raw[0] || {});
-    const cStore=pick(keys,['Store','Store Name','Tienda','store']);
-    const cDate=pick(keys,['Date Sold','Fecha Venta','Fecha','Date','Sale Date','Day','Día']);
-    const cPeriod=pick(keys,['YearWeek','Week','Semana','YearMonth','YM','Year Month','CalMonth','CalendarMonth','Month','Mes','Periodo']);
-    const cMonth=pick(keys,['CalMonth','CalendarMonth','Month','Mes','YearMonth','Year Month']);
-    const cDept=pick(keys,['Department','Departamento','department']);
-    const cCat=pick(keys,['Category','Categoria','Categoría','category']);
-    const cSupp=pick(keys,['Supplier','Proveedor','Vendor']);
-    const cBrand=pick(keys,['Brand','Marca','brand']);
-    const cDesc=pick(keys,['Description','Descripcion','Descripción','Producto','Item','Articulo','Artículo']);
-    const cSku=pick(keys,['SKU','Sku','Codigo','Código','Item Code','Barcode','Bar Code']);
-    const cDaypart=pick(keys,['Daypart','Horario','Turno','Horario Food Service','Time Slot','Franja','Franja Horaria','Service Period','Meal Period']);
-    const cHour=pick(keys,['Hour','Hora','Time','Hora Venta','Hora de venta','Time Sold']);
-    const cDow=pick(keys,['DOW','Dow','DayOfWeek','DiaSemana','Dia de semana','Día de semana','Día','dayofweek']);
-    const cQty=pick(keys,['Qty Sold','Qty','Cantidad','Quantity','Unidades','Uds']);
-    const cSales=pick(keys,['Sales','Total Sales','TotalSales','Venta','Ventas','Monto','Amount']);
-    if(!cStore || !cSales || (!cDate && !cPeriod && !cMonth)) return null;
-    const all=[]; const album=[];
-    raw.forEach(r=>{
-      const store=safeTxt(r[cStore]).toUpperCase(); if(!store) return;
-      const periodRaw = cPeriod ? r[cPeriod] : (cMonth ? r[cMonth] : '');
-      const period = (typeof normalizeYm === 'function') ? (normalizeYm(periodRaw) || safeTxt(periodRaw)) : safeTxt(periodRaw);
-      const monthRaw = cMonth ? r[cMonth] : periodRaw;
-      const dow = cDow ? dowNum(r[cDow]) : null;
-      let d = cDate ? toDate(r[cDate]) : null;
-      if(!d) d = periodToDate(period, dow || 1) || periodToDate(monthRaw, 1);
-      if(!d || isNaN(d) || d.getTime() < MIN_TS) return;
-      const week = /^\d{4}-W\d{2}$/.test(period) ? period : isoWeek(d);
-      const month = monthKey(d) || ((typeof normalizeYm === 'function') ? normalizeYm(monthRaw) : safeTxt(monthRaw));
-      const row={
-        store, date:d, dateKey:isoDate(d), week, month,
-        department:cDept ? safeTxt(r[cDept]) : '', category:cCat ? safeTxt(r[cCat]) : '', supplier:cSupp ? safeTxt(r[cSupp]) : '', brand:cBrand ? safeTxt(r[cBrand]) : '', description:cDesc ? safeTxt(r[cDesc]) : '', sku:cSku ? safeTxt(r[cSku]) : '',
-        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0
-      };
-      row.item = row.description || row.brand || row.category || row.supplier || 'Sin descripción';
-      all.push(row);
-      if(isAlbumRow(row)) album.push(row);
-    });
-    return {sheet, all, album};
-  }
-
-  function getSalesPayload(){
-    const stamp = (typeof state !== 'undefined' && state) ? (state.__hallWorkbookStamp || state.__albumStamp || 0) : 0;
-    if(typeof state !== 'undefined' && state && state.__albumSalesPayload && state.__albumSalesPayload.stamp === stamp) return state.__albumSalesPayload;
-    const wb = (typeof state !== 'undefined' && state) ? state.__hallWorkbook : null;
-    const empty = {stamp, source:'Sin cubo', allRows:[], albumRows:[]};
-    if(!wb){ if(typeof state !== 'undefined' && state) state.__albumSalesPayload = empty; return empty; }
-    const candidates = ['Cubo_Sales_DetailHallazgos','Sales_Cal_Detail','Cubo_Sales_SKUWeek','Cubo_Sales_Fact','Cubo_Sales','Store_Month_Delivery'];
-    let best=null;
-    for(const sh of candidates){ if(!has(wb, sh)) continue; const parsed=parseSalesSheet(wb, sh); if(parsed && parsed.album.length){ best=parsed; break; } }
-    const out = best ? {stamp, source:best.sheet, allRows:best.all, albumRows:best.album} : empty;
-    if(typeof state !== 'undefined' && state) state.__albumSalesPayload = out;
-    return out;
-  }
-
-  function isAlbumStockExcluded(r){
-    const txt = norm([r.description,r.category,r.brand,r.supplier].join(' '));
-    return /mundial\s+de\s+clubes/.test(txt)
-      || /copa\s+america/.test(txt)
-      || /\bdisplay\b/.test(txt)
-      || /sticker\s+seguridad/.test(txt)
-      || /seguridad\s+mh/.test(txt);
-  }
-  function getInventoryRows(){
-    const src = (typeof state !== 'undefined' && state && Array.isArray(state.invItems)) ? state.invItems : [];
-    return src.map(r=>({
-      store:safeTxt(r.store || r.Store || r.tienda || r.Tienda).toUpperCase(),
-      sku:safeTxt(r.sku || r.SKU || r.codigo || r.Codigo || r.code),
-      description:safeTxt(r.description || r.Description || r.descripcion || r.Descripcion || r['Descripción'] || r.item || r.Item),
-      category:safeTxt(r.category || r.Category || r.categoria || r.Categoria || r['Categoría']),
-      supplier:safeTxt(r.supplier || r.Supplier || r.proveedor || r.Proveedor),
-      brand:safeTxt(r.brand || r.Brand || r.marca || r.Marca),
-      qty:n(r.qty ?? r.quantity ?? r.Quantity ?? r.Qty ?? r.Existencia ?? r.Stock ?? r['On Hand']),
-      amount:n(r.amount ?? r.Amount ?? r.Inventario ?? r.Inventory ?? r.Monto)
-    })).filter(r=>r.store && isAlbumRow(r));
-  }
-  function aggregate(rows, keyFn, valFn){ const m=new Map(); rows.forEach(r=>{ const k=keyFn(r)||'Sin dato'; const cur=m.get(k)||0; m.set(k, cur+n(valFn(r))); }); return m; }
-  function topRows(map, limit){ return Array.from(map.entries()).map(([k,v])=>({k,v:n(v)})).sort((a,b)=>b.v-a.v).slice(0,limit||999); }
-  function groupRows(rows, keyFn){ const m=new Map(); rows.forEach(r=>{ const k=keyFn(r)||'Sin dato'; if(!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
-  function destroyCharts(){ if(typeof state === 'undefined' || !state) return; chartKeys.forEach(k=>{ try{ state[k]?.destroy?.(); }catch(_e){} state[k]=null; }); }
-  function makeChart(key, canvasId, cfg){
-    const canvas=byId(canvasId); if(!canvas || typeof Chart === 'undefined') return null;
-    try{ state[key]?.destroy?.(); }catch(_e){}
-    state[key] = new Chart(canvas.getContext('2d'), cfg);
-    return state[key];
-  }
-  function chartOptions(extra){
-    const base={responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:18,right:18,left:10,bottom:0}},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){ const y=ctx.parsed && (ctx.parsed.y != null ? ctx.parsed.y : ctx.parsed); return `${ctx.dataset?.label || ctx.label}: ${money(y)}`; }}},albumLabelPlugin:{display:true,color:'#F58320',fontSize:11,fontWeight:'1000',offset:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}};
-    const out=Object.assign({}, base, extra||{});
-    out.plugins = Object.assign({}, base.plugins, (extra&&extra.plugins)||{});
-    out.plugins.legend = Object.assign({}, base.plugins.legend, extra?.plugins?.legend||{});
-    out.plugins.legend.labels = Object.assign({}, base.plugins.legend.labels, extra?.plugins?.legend?.labels||{});
-    out.plugins.tooltip = Object.assign({}, base.plugins.tooltip, extra?.plugins?.tooltip||{});
-    out.plugins.tooltip.callbacks = Object.assign({}, base.plugins.tooltip.callbacks, extra?.plugins?.tooltip?.callbacks||{});
-    out.plugins.albumLabelPlugin = Object.assign({}, base.plugins.albumLabelPlugin, extra?.plugins?.albumLabelPlugin||{});
-    out.layout = Object.assign({}, base.layout, extra?.layout||{});
-    out.layout.padding = Object.assign({}, base.layout.padding, extra?.layout?.padding||{});
-    out.scales = Object.assign({}, base.scales, (extra&&extra.scales)||{});
-    out.scales.x = Object.assign({}, base.scales.x, extra?.scales?.x||{});
-    out.scales.x.ticks = Object.assign({}, base.scales.x.ticks, extra?.scales?.x?.ticks||{});
-    out.scales.x.grid = Object.assign({}, base.scales.x.grid, extra?.scales?.x?.grid||{});
-    out.scales.y = Object.assign({}, base.scales.y, extra?.scales?.y||{});
-    out.scales.y.ticks = Object.assign({}, base.scales.y.ticks, extra?.scales?.y?.ticks||{});
-    out.scales.y.grid = Object.assign({}, base.scales.y.grid, extra?.scales?.y?.grid||{});
-    return out;
-  }
-  function setOptions(sel, opts, val){
-    const el=byId(sel); if(!el) return;
-    const cur=val != null ? val : el.value;
-    el.innerHTML=(opts||[]).map(o=>`<option value="${String(o.value).replace(/"/g,'&quot;')}">${o.label}</option>`).join('');
-    if((opts||[]).some(o=>String(o.value)===String(cur))) el.value=cur;
-    else if(opts && opts.length) el.value=opts[0].value;
-  }
-  function currentScope(){
-    const mode=byId('albumMode')?.value || 'daily';
-    const payload=getSalesPayload();
-    const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
-    const itemFilter=byId('albumItem')?.value || '__ALL__';
-    let rows=payload.albumRows.filter(r=>storeSet.has(r.store));
-    if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item === itemFilter);
-    const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
-    const periodSel=byId('albumPeriod')?.value || periods[periods.length-1] || '';
-    let scoped = rows.filter(r=>periodKey(r, mode) === periodSel);
-    if(mode==='monthly') scoped = rows.filter(r=>r.month === periodSel);
-    return {mode,payload,stores,storeSet,itemFilter,rows,periods,periodSel,scoped};
-  }
-  function populateFilters(){
-    const mode=byId('albumMode')?.value || 'daily';
-    const payload=getSalesPayload();
-    const globalStores = ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
-    const storeOpts=[{value:'__GLOBAL__',label:'Tiendas del filtro global'},{value:'__ALL__',label:'Todas las tiendas'}].concat(globalStores.map(s=>({value:s,label:s})));
-    setOptions('albumStore', storeOpts);
-    const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
-    let rows=payload.albumRows.filter(r=>storeSet.has(r.store));
-    const itemCounts=topRows(aggregate(rows, r=>r.item, r=>r.sales), 200);
-    setOptions('albumItem', [{value:'__ALL__',label:'Todos los items'}].concat(itemCounts.map(x=>({value:x.k,label:`${x.k} · ${money(x.v)}`}))));
-    const itemFilter=byId('albumItem')?.value || '__ALL__'; if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item===itemFilter);
-    const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
-    setOptions('albumPeriod', periods.map(p=>({value:p,label:periodLabel(p,mode)})), periods[periods.length-1] || '');
-  }
-  function renderKpis(scope){
-    const kpis=byId('albumKpis'); if(!kpis) return;
-    const totalSales=scope.scoped.reduce((a,r)=>a+n(r.sales),0);
-    const totalQty=scope.scoped.reduce((a,r)=>a+n(r.qty),0);
-    const selDate = scope.mode==='daily' ? toDate(scope.periodSel) : null;
-    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (selDate ? monthKey(selDate) : (scope.scoped[0]?.month || scope.periodSel.slice(0,7)));
-    let mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
-    if(scope.mode==='daily' && selDate) mtdRows=mtdRows.filter(r=>r.date<=selDate);
-    const mtdSales=mtdRows.reduce((a,r)=>a+n(r.sales),0);
-    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
-    const itemFilter=scope.itemFilter; const scopedInv = itemFilter==='__ALL__' ? invRows : invRows.filter(r=>(r.description||r.category||r.brand)===itemFilter || norm(r.description||'').includes(norm(itemFilter)) || norm(itemFilter).includes(norm(r.description||'')) );
-    const stock=scopedInv.reduce((a,r)=>a+n(r.qty),0);
-    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && periodKey(r, scope.mode)===scope.periodSel);
-    const totalStoreSales = totalRows.reduce((a,r)=>a+n(r.sales),0);
-    const impact = totalStoreSales>0 ? totalSales/totalStoreSales : NaN;
-    const topStore=topRows(aggregate(scope.scoped, r=>r.store, r=>r.sales),1)[0];
-    const defs=[['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${periodLabel(scope.periodSel, scope.mode)}`],['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],['Existencias', qty(stock), `${scopedInv.length} filas de inventario`],['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']];
-    kpis.innerHTML=defs.map(d=>`<div class="albumKpi"><div class="k">${d[0]}</div><div class="v">${d[1]}</div><div class="s">${d[2]}</div></div>`).join('');
-    const source=byId('albumSourceChip'); if(source) source.textContent = `Fuente: ${scope.payload.source || 'pendiente'}`;
-    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'}`;
-  }
-  function renderTables(scope){
-    const salesAgg=new Map();
-    scope.scoped.forEach(r=>{ const k=r.store+'||'+r.item; const cur=salesAgg.get(k)||{store:r.store,item:r.item,sales:0,qty:0}; cur.sales+=n(r.sales); cur.qty+=n(r.qty); salesAgg.set(k,cur); });
-    const salesRows=Array.from(salesAgg.values()).sort((a,b)=>b.sales-a.sales).slice(0,80);
-    fillTable('albumSalesTable',['Tienda','Item','Venta','Unidades','Share'],salesRows.map(r=>[r.store,r.item,money(r.sales),qty(r.qty),pct(r.sales/(scope.scoped.reduce((a,x)=>a+n(x.sales),0)||NaN))]));
-    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
-    const invAgg=new Map(); invRows.forEach(r=>{ const item=r.description||r.category||r.brand||'Sin descripción'; const k=r.store+'||'+item; const cur=invAgg.get(k)||{store:r.store,item,qty:0,amount:0}; cur.qty+=n(r.qty); cur.amount+=n(r.amount); invAgg.set(k,cur); });
-    fillTable('albumStockTable',['Tienda','Item','Existencias','Valor inv.'],Array.from(invAgg.values()).sort((a,b)=>b.qty-a.qty).slice(0,80).map(r=>[r.store,r.item,qty(r.qty),money(r.amount)]));
-    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (scope.scoped[0]?.month || scope.periodSel.slice(0,7));
-    const mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
-    const mtdAgg=topRows(aggregate(mtdRows, r=>r.item, r=>r.sales),80);
-    fillTable('albumMtdTable',['Item','Venta MTD','Share MTD'],mtdAgg.map(r=>[r.k,money(r.v),pct(r.v/(mtdAgg.reduce((a,x)=>a+n(x.v),0)||NaN))]));
-  }
-  function fillTable(id, headers, rows){
-    const t=byId(id); if(!t) return; const th=t.querySelector('thead'), tb=t.querySelector('tbody');
-    th.innerHTML='<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-    if(!rows.length){ tb.innerHTML=`<tr><td colspan="${headers.length}" class="muted">Sin data para la selección actual.</td></tr>`; return; }
-    tb.innerHTML=rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
-  }
-  function renderCharts(scope){
-    const mode=scope.mode;
-    const daypartMeta=byId('albumDaypartMeta');
-    const dayAgg=topRows(aggregate(scope.rows, r=>r.dateKey, r=>r.sales), 999).sort((a,b)=>a.k.localeCompare(b.k));
-    const filteredDayAgg=dayAgg.filter(x=> mode==='daily' ? x.k===scope.periodSel : (mode==='weekly' ? isoWeek(toDate(x.k))===scope.periodSel : x.k.slice(0,7)===scope.periodSel));
-    const albumDailyMeta=byId('albumDailyMeta');
-    if(albumDailyMeta) albumDailyMeta.textContent = 'Barra: venta diaria · línea: % impacto sobre venta general.';
-    const dailyImpactBaseRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store));
-    const dailyImpactPct = filteredDayAgg.map(x=>{
-      const total = dailyImpactBaseRows.filter(r=>r.dateKey===x.k).reduce((a,r)=>a+n(r.sales),0);
-      return total>0 ? (n(x.v)/total*100) : 0;
-    });
-    makeChart('chartAlbumDaily','chart_album_daily',{
-      type:'bar',
-      data:{
-        labels:filteredDayAgg.map(x=>x.k),
-        datasets:[
-          {
-            type:'bar',
-            label:'Venta diaria',
-            data:filteredDayAgg.map(x=>x.v),
-            backgroundColor:'#005EA7',
-            borderRadius:6,
-            maxBarThickness:58,
-            yAxisID:'y'
-          },
-          {
-            type:'line',
-            label:'Impacto %',
-            data:dailyImpactPct,
-            borderColor:'#F58320',
-            backgroundColor:'#F58320',
-            borderWidth:3,
-            pointRadius:4,
-            pointHoverRadius:5,
-            tension:.28,
-            fill:false,
-            yAxisID:'y1'
-          }
-        ]
-      },
-      options:chartOptions({
-        layout:{padding:{top:28,right:44,left:10,bottom:0}},
-        plugins:{
-          legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},
-          albumAxisPillPlugin:{display:true,text:'Impacto %',axis:'y1',color:'#F58320',fill:'rgba(245,131,32,.13)',stroke:'rgba(245,131,32,.32)',offsetX:14},
-          tooltip:{callbacks:{
-            label:function(ctx){
-              if(ctx.dataset?.yAxisID === 'y1') return `Impacto: ${Number(ctx.raw||0).toFixed(2)}%`;
-              return `Venta diaria: ${money(ctx.raw)}`;
-            },
-            afterBody:function(items){
-              const idx=items && items.length ? items[0].dataIndex : 0;
-              const date=filteredDayAgg[idx]?.k || '';
-              const total=dailyImpactBaseRows.filter(r=>r.dateKey===date).reduce((a,r)=>a+n(r.sales),0);
-              return [`Venta total base: ${money(total)}`];
-            }
-          }},
-          albumLabelPlugin:{labelPositions:['bottom','top'],bottomColors:['#FFFFFF','#F58320'],datasetColors:['#FFFFFF','#F58320'],labelBackgrounds:['rgba(17,40,74,.86)','rgba(245,131,32,.92)'],labelBackgroundTextColors:['#FFFFFF','#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)','rgba(245,131,32,.95)'],bottomOffset:16,fontSize:10,fontWeight:'1000',offset:12}
-        },
-        scales:{
-          x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},
-          y:{
-            beginAtZero:true,
-            position:'left',
-            grace:'16%',
-            title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
-            grid:{color:'rgba(148,163,184,.20)'}
-          },
-          y1:{
-            beginAtZero:true,
-            position:'right',
-            grace:'18%',
-            title:{display:false},
-            ticks:{callback:v=>v+'%',color:'#000000',font:{size:10,weight:'800'}},
-            grid:{drawOnChartArea:false}
-          }
-        }
-      })
-    });
-    let cum=0; const trend=filteredDayAgg.map(x=>{cum+=n(x.v); return {k:x.k,v:cum};});
-    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.k),datasets:[{label:'Acumulado',data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({plugins:{albumLabelPlugin:{offset:14}}})});
-    const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && periodKey(r, mode)===scope.periodSel).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
-    makeChart('chartAlbumImpact','chart_album_impact',{
-      type:'bar',
-      data:{
-        labels:impactRows.map(x=>x.store),
-        datasets:[
-          {
-            type:'bar',
-            label:'Ventas Álbum',
-            data:impactRows.map(x=>x.album),
-            backgroundColor:'#005EA7',
-            borderRadius:6,
-            maxBarThickness:54,
-            yAxisID:'y'
-          },
-          {
-            type:'line',
-            label:'Impacto %',
-            data:impactRows.map(x=>x.impact*100),
-            borderColor:'#F58320',
-            backgroundColor:'#F58320',
-            borderWidth:3,
-            pointRadius:4,
-            pointHoverRadius:5,
-            tension:.28,
-            fill:false,
-            yAxisID:'y1'
-          }
-        ]
-      },
-      options:chartOptions({
-        layout:{padding:{top:28,right:44,left:10,bottom:0}},
-        plugins:{
-          legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},
-          albumAxisPillPlugin:{display:true,text:'Impacto %',axis:'y1',color:'#F58320',fill:'rgba(245,131,32,.13)',stroke:'rgba(245,131,32,.32)',offsetX:14},
-          tooltip:{callbacks:{
-            label:function(ctx){
-              const r=impactRows[ctx.dataIndex]||{};
-              if(ctx.dataset?.yAxisID === 'y1') return `Impacto: ${Number(ctx.raw||0).toFixed(2)}%`;
-              return `Ventas Álbum: ${money(r.album)}`;
-            },
-            afterBody:function(items){
-              const idx=items && items.length ? items[0].dataIndex : 0;
-              const r=impactRows[idx]||{};
-              return [`Venta total tienda: ${money(r.total)}`];
-            }
-          }},
-          albumLabelPlugin:{labelPositions:['bottom','top'],bottomColors:['#FFFFFF','#F58320'],datasetColors:['#FFFFFF','#F58320'],labelBackgrounds:['rgba(17,40,74,.86)','rgba(245,131,32,.92)'],labelBackgroundTextColors:['#FFFFFF','#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)','rgba(245,131,32,.95)'],bottomOffset:16,offset:12,color:'#F58320',fontSize:10,fontWeight:'1000'}
-        },
-        scales:{
-          x:{ticks:{color:'#11284A',font:{size:10,weight:'800'}},grid:{display:false}},
-          y:{
-            beginAtZero:true,
-            position:'left',
-            grace:'18%',
-            title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
-            grid:{color:'rgba(148,163,184,.20)'}
-          },
-          y1:{
-            beginAtZero:true,
-            position:'right',
-            grace:'18%',
-            title:{display:false},
-            ticks:{callback:v=>v+'%',color:'#000000',font:{size:10,weight:'800'}},
-            grid:{drawOnChartArea:false}
-          }
-        }
-      })
-    });
-    const pieMode=byId('albumPieMode')?.value || 'item'; const pieAgg=topRows(aggregate(scope.scoped, r=>pieMode==='store'?r.store:r.item, r=>r.sales), 8);
-    makeChart('chartAlbumPie','chart_album_pie',{type:'doughnut',data:{labels:pieAgg.map(x=>x.k),datasets:[{data:pieAgg.map(x=>x.v),backgroundColor:pieAgg.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){return `${ctx.label}: ${money(ctx.raw)}`;}}},albumLabelPlugin:{display:true,fontSize:10,fontWeight:'900'}},cutout:'54%'}});
-    const daypartAgg=topRows(aggregate(scope.scoped, r=>safeTxt(r.daypart)||'Sin horario', r=>r.sales), 10);
-    if(daypartMeta) daypartMeta.textContent = 'Franja / turno Food Service detectado en el cubo.';
-    makeChart('chartAlbumDaypart','chart_album_daypart',{
-      type:'bar',
-      data:{
-        labels:daypartAgg.map(x=>x.k),
-        datasets:[{
-          label:'Venta por horario FS',
-          data:daypartAgg.map(x=>x.v),
-          backgroundColor:'#005EA7',
-          borderRadius:6,
-          maxBarThickness:58
-        }]
-      },
-      options:chartOptions({
-        layout:{padding:{top:24,right:12,left:10,bottom:0}},
-        plugins:{
-          legend:{display:false},
-          albumLabelPlugin:{labelPosition:'bottom',bottomColors:['#FFFFFF'],datasetColors:['#FFFFFF'],labelBackgrounds:['rgba(17,40,74,.86)'],labelBackgroundTextColors:['#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.28)'],bottomOffset:16,offset:12,color:'#FFFFFF',fontSize:10,fontWeight:'1000'}
-        },
-        scales:{
-          x:{
-            ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:25,minRotation:0},
-            grid:{display:false}
-          },
-          y:{
-            beginAtZero:true,
-            grace:'15%',
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
-            grid:{color:'rgba(148,163,184,.20)'}
-          }
-        }
-      })
-    });
-  }
-  function renderAlbum(){
-    if(!byId('albumWrap')) return;
-    populateFilters();
-    const scope=currentScope();
-    const empty=byId('albumEmpty');
-    if(!scope.payload.albumRows.length){
-      destroyCharts();
-      if(empty){ empty.style.display='block'; empty.innerHTML='No encontré registros de <b>Álbum / Figuritas</b> desde mayo 2026 en el cubo cargado. El módulo ya está listo; cuando el cubo traiga la categoría, se actualizará automáticamente.'; }
-      renderKpis(scope); renderTables(scope); return;
-    }
-    if(empty) empty.style.display='none';
-    renderKpis(scope); renderCharts(scope); renderTables(scope);
-    try{ if(typeof rememberTabRender === 'function') rememberTabRender(TAB, byId('currentMonth')?.value, (typeof getSelectedValues==='function'?getSelectedValues(byId('prevMonths')):[]), selectedStores()); }catch(_e){}
-  }
-  function scheduleRender(wait){ setTimeout(()=>{ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB) renderAlbum(); }catch(e){ console.warn('Album render failed', e); } }, wait == null ? 80 : wait); }
-  function boot(){
-    try{ if(typeof ALL_REPORT_TABS !== 'undefined' && Array.isArray(ALL_REPORT_TABS) && !ALL_REPORT_TABS.includes(TAB)) ALL_REPORT_TABS.push(TAB); }catch(_e){}
-    try{ if(typeof state !== 'undefined' && state){ if(!(state._tabDirty instanceof Set)) state._tabDirty=new Set(); state._tabDirty.add(TAB); } }catch(_e){}
-    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem') populateFilters(); renderAlbum(); }); });
-    document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="album"]')) scheduleRender(120); }catch(_e){} }, true);
-    window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev?.detail?.tab||'')===TAB) scheduleRender(40); }catch(_e){} }, {passive:true});
-    const refresh=byId('refresh'); if(refresh && !refresh.__albumBound){ refresh.__albumBound=true; refresh.addEventListener('click', ()=>scheduleRender(180)); }
-    try{
-      if(typeof refreshAll === 'function' && !refreshAll.__albumWrapped){
-        const base=refreshAll;
-        refreshAll=function(){ const out=base.apply(this, arguments); scheduleRender(160); return out; };
-        refreshAll.__albumWrapped=true;
-      }
-    }catch(_e){}
-    try{
-      if(typeof refreshVisibleTabCharts === 'function' && !refreshVisibleTabCharts.__albumWrapped){
-        const base=refreshVisibleTabCharts;
-        refreshVisibleTabCharts=function(tab, force){ const out=base.apply(this, arguments); if(String(tab||'')===TAB) scheduleRender(20); return out; };
-        window.refreshVisibleTabCharts=refreshVisibleTabCharts;
-        refreshVisibleTabCharts.__albumWrapped=true;
-      }
-    }catch(_e){}
-    scheduleRender(250);
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot, {once:true}); else boot();
-  window.renderAlbumFiguritas = renderAlbum;
-})();
-</script>
-
-
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
 body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
@@ -64822,6 +64892,75 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     var root = document.getElementById('sbf_store_cards');
     if(root) mo.observe(root, {childList:true, subtree:true});
   }catch(_e){}
+})();
+</script>
+
+
+<script type="text/plain" data-ampm-deferred="1" id="ampm-v8-mode-visible-settle" data-ampm-skip="1">
+(function(){
+  'use strict';
+  if(window.__AMPM_V8_MODE_SETTLE__) return; window.__AMPM_V8_MODE_SETTLE__=true;
+  function activeTab(){ try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab || localStorage.getItem('ampm_tab') || 'resumen').trim();}catch(_e){return 'resumen';} }
+  function resizeVisible(){
+    try{
+      if(typeof Chart === 'undefined' || !Chart || !Chart.instances) return;
+      var arr=[];
+      if(typeof Chart.instances.forEach === 'function') Chart.instances.forEach(function(c){arr.push(c);});
+      else Object.keys(Chart.instances).forEach(function(k){arr.push(Chart.instances[k]);});
+      arr.forEach(function(ch){
+        try{
+          var canvas=ch && (ch.canvas || (ch.ctx && ch.ctx.canvas)); if(!canvas) return;
+          var r=canvas.getBoundingClientRect(); if(r.width<40 || r.height<40) return;
+          ch.resize && ch.resize(); ch.update && ch.update('none');
+        }catch(_e){}
+      });
+    }catch(_e){}
+  }
+  function refreshActive(force){
+    var tab=activeTab();
+    try{ if(tab==='album' && typeof window.renderAlbumFiguritas==='function') window.renderAlbumFiguritas(); }
+    catch(e){ console.warn('Album refresh v8', e); }
+    try{ if(tab!=='album' && typeof refreshVisibleTabCharts==='function') refreshVisibleTabCharts(tab, !!force); }
+    catch(e){ console.warn('Visible chart refresh v8', e); }
+    setTimeout(resizeVisible, 120); setTimeout(resizeVisible, 520);
+  }
+  document.addEventListener('change', function(ev){
+    try{ if(ev.target && ev.target.id==='reportMode'){ setTimeout(function(){refreshActive(true);},260); setTimeout(function(){refreshActive(false);},900); } }catch(_e){}
+  }, true);
+  window.addEventListener('ampm:fileloaded', function(){ setTimeout(function(){refreshActive(true);},350); }, {passive:true});
+})();
+</script>
+
+
+
+<script type="text/plain" data-ampm-deferred="1" id="ampm-delivery-channel-12w-apply-only-v10">
+(function(){
+  'use strict';
+  if(window.__AMPM_DELIVERY_CHANNEL_12W_APPLY_ONLY_V10__) return;
+  window.__AMPM_DELIVERY_CHANNEL_12W_APPLY_ONLY_V10__ = true;
+  function activeTab(){ try{return String(document.querySelector('.tabBtn.active')?.dataset?.tab || document.body.getAttribute('data-active-tab') || '').toLowerCase();}catch(_e){return '';} }
+  function hasData(){ try{return typeof hasReportData==='function' ? hasReportData() : !!(window.state && state.months && state.months.length);}catch(_e){return false;} }
+  function render(){
+    try{
+      if(activeTab() !== 'delivery' || !hasData()) return;
+      var c = document.getElementById('chart_delivery_channel_12w');
+      if(!c) return;
+      var box = c.parentElement;
+      if(box){ box.style.position='relative'; box.style.width='100%'; box.style.height='420px'; box.style.minHeight='420px'; }
+      c.style.display='block'; c.style.width='100%'; c.style.height='100%'; c.style.maxWidth='100%';
+      if(typeof renderDeliveryChannel12wChart === 'function') {
+        var stores = (typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : ((window.state && state.stores) || []);
+        var old = window.__AMPM_FILTER_APPLY_RUNNING__;
+        window.__AMPM_FILTER_APPLY_RUNNING__ = true;
+        try{ renderDeliveryChannel12wChart(stores); }finally{ window.__AMPM_FILTER_APPLY_RUNNING__ = old; }
+        setTimeout(function(){ try{ var ch = (window.Chart && Chart.getChart) ? Chart.getChart(c) : (window.state && state.chartDeliveryChannel12w); if(ch){ ch.resize(); ch.update('none'); } }catch(_e){} }, 90);
+      }
+    }catch(e){ console.warn('delivery channel 12w apply-only v10', e); }
+  }
+  document.addEventListener('click', function(ev){
+    try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){ setTimeout(render, 220); setTimeout(render, 700); } }catch(_e){}
+  }, true);
+  window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev.detail&&ev.detail.tab||'').toLowerCase()==='delivery'){ setTimeout(render, 160); } }catch(_e){} }, {passive:true});
 })();
 </script>
 
