@@ -4417,6 +4417,111 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 </div>
 </div>
 </div>
+
+<script id="ampm-auth-early-bootstrap">
+(function(){
+  // Bootstrap liviano del login. Debe ejecutarse antes de las librerías/gráficas para que
+  // GitHub Pages no deje el formulario congelado mientras termina de cargar el dashboard.
+  var AUTH_KEY = 'ampm_report_auth_v1';
+  var USERS = {
+    admin: { password: 'Gero2027**', label: 'Administrador' },
+    mercadeo: { password: 'AMPM2026*-*', label: 'Mercadeo' },
+    AMPM01: { password: 'AMPM2026*-*', label: 'Gerente AMPM01' },
+    AMPM02: { password: 'AMPM2026*-*', label: 'Gerente AMPM02' },
+    AMPM03: { password: 'AMPM2026*-*', label: 'Gerente AMPM03' }
+  };
+  function resolveUser(raw){
+    var v = String(raw || '').trim();
+    if(!v) return null;
+    var upper = v.toUpperCase();
+    if(upper === 'ADMIN') return 'admin';
+    if(Object.prototype.hasOwnProperty.call(USERS, upper)) return upper;
+    if(Object.prototype.hasOwnProperty.call(USERS, v)) return v;
+    return null;
+  }
+  function readSession(){
+    try{ var raw = sessionStorage.getItem(AUTH_KEY); return raw ? JSON.parse(raw) : null; }catch(_e){ return null; }
+  }
+  function saveSession(user){
+    try{ sessionStorage.setItem(AUTH_KEY, JSON.stringify({ user:user, at:Date.now() })); }catch(_e){}
+  }
+  function clearSession(){
+    try{ sessionStorage.removeItem(AUTH_KEY); }catch(_e){}
+  }
+  function getActiveUser(){
+    var session = readSession();
+    if(!session || !session.user) return null;
+    var user = resolveUser(session.user);
+    return user && USERS[user] ? user : null;
+  }
+  function setMessage(text, ok){
+    var el = document.getElementById('ampmAuthMsg');
+    if(!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('ok', !!ok);
+  }
+  function applyState(){
+    var user = getActiveUser();
+    var ok = !!(user && USERS[user]);
+    if(document.body){
+      document.body.classList.toggle('auth-ok', ok);
+      document.body.classList.toggle('auth-locked', !ok);
+    }
+    var gate = document.getElementById('ampmAuthGate');
+    if(gate) gate.setAttribute('aria-hidden', ok ? 'true' : 'false');
+    var logoutUser = document.getElementById('ampmLogoutUser');
+    if(logoutUser) logoutUser.textContent = ok ? String(user) : '—';
+    if(ok) setMessage('');
+  }
+  function onSubmit(ev){
+    if(ev && ev.preventDefault) ev.preventDefault();
+    var userInput = document.getElementById('ampmAuthUser');
+    var passInput = document.getElementById('ampmAuthPass');
+    var rawUser = userInput ? userInput.value : '';
+    var rawPass = passInput ? passInput.value : '';
+    var user = resolveUser(rawUser);
+    if(!user){ setMessage('Usuario no reconocido.'); if(userInput) userInput.focus(); return false; }
+    if(String(rawPass) !== String(USERS[user].password)){
+      setMessage('Contraseña incorrecta.');
+      if(passInput){ passInput.focus(); try{ passInput.select(); }catch(_e){} }
+      return false;
+    }
+    saveSession(user);
+    setMessage('Acceso concedido.', true);
+    applyState();
+    try{ setTimeout(function(){ window.dispatchEvent(new Event('resize')); }, 80); }catch(_e){}
+    try{ setTimeout(function(){ window.dispatchEvent(new Event('resize')); }, 360); }catch(_e){}
+    return false;
+  }
+  function bindNow(){
+    applyState();
+    var form = document.getElementById('ampmAuthForm');
+    if(form && !form.__ampmAuthBound){
+      form.__ampmAuthBound = true;
+      form.addEventListener('submit', onSubmit);
+    }
+    var submit = document.getElementById('ampmAuthSubmit');
+    if(submit && !submit.__ampmAuthEarlyBound){
+      submit.__ampmAuthEarlyBound = true;
+      submit.addEventListener('click', function(ev){
+        var f = document.getElementById('ampmAuthForm');
+        if(f && typeof f.requestSubmit === 'function') return;
+        onSubmit(ev);
+      });
+    }
+  }
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(t && t.closest && t.closest('#ampmLogoutBtn')){
+      ev.preventDefault();
+      clearSession();
+      applyState();
+    }
+  }, true);
+  bindNow();
+  window.__ampmApplyAuthState = applyState;
+})();
+</script>
 <div id="ampmFloatingActions"><div class="export-dd" id="ampmExportWrap">
 <button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
 <div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
@@ -6005,13 +6110,8 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 </div>
 </div></div></div></div></div>
 </div>
-<!-- AMPM GitHub Pages resilience: fallbacks síncronos para evitar que el dashboard se quede detenido si jsDelivr no responde. -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>window.XLSX||document.write('<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>')</script>
-<script>window.XLSX||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>')</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>window.Chart||document.write('<script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>')</script>
-<script>window.Chart||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>')</script>
 <script>
 (function(){
   if (typeof window === 'undefined' || !window.Proxy) return;
@@ -28336,16 +28436,7 @@ renderShareTable({
       }
 
       const workerSource = `
-        try{ self.importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); }catch(_e1){}
-        if(typeof self.XLSX === 'undefined'){
-          try{ self.importScripts('https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'); }catch(_e2){}
-        }
-        if(typeof self.XLSX === 'undefined'){
-          try{ self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); }catch(_e3){}
-        }
-        if(typeof self.XLSX === 'undefined'){
-          throw new Error('XLSX no está disponible en el worker. Revisá conexión/CDN o cargá el cubo local nuevamente.');
-        }
+        self.importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
         self.onmessage = function(ev){
           const buffer = ev.data && ev.data.buffer;
           try{
