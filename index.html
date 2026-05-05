@@ -6005,8 +6005,13 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 </div>
 </div></div></div></div></div>
 </div>
+<!-- AMPM GitHub Pages resilience: fallbacks síncronos para evitar que el dashboard se quede detenido si jsDelivr no responde. -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>window.XLSX||document.write('<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>')</script>
+<script>window.XLSX||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>')</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>window.Chart||document.write('<script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>')</script>
+<script>window.Chart||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>')</script>
 <script>
 (function(){
   if (typeof window === 'undefined' || !window.Proxy) return;
@@ -28331,7 +28336,16 @@ renderShareTable({
       }
 
       const workerSource = `
-        self.importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+        try{ self.importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); }catch(_e1){}
+        if(typeof self.XLSX === 'undefined'){
+          try{ self.importScripts('https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'); }catch(_e2){}
+        }
+        if(typeof self.XLSX === 'undefined'){
+          try{ self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); }catch(_e3){}
+        }
+        if(typeof self.XLSX === 'undefined'){
+          throw new Error('XLSX no está disponible en el worker. Revisá conexión/CDN o cargá el cubo local nuevamente.');
+        }
         self.onmessage = function(ev){
           const buffer = ev.data && ev.data.buffer;
           try{
