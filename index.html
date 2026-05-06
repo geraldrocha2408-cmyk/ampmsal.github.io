@@ -4385,6 +4385,53 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 @media (max-width:1320px){.albumFilters{grid-template-columns:repeat(3,minmax(0,1fr))}.albumKpiGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.albumGrid3{grid-template-columns:1fr 1fr}.albumGridCharts,.albumGridTables{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:1100px){.albumGridCharts,.albumGridTables{grid-template-columns:1fr}.albumGridTables .albumTableWrap{max-height:330px}}@media (max-width:900px){.albumGrid2,.albumGrid3{grid-template-columns:1fr}.albumKpiGrid{grid-template-columns:1fr 1fr}.albumFilters{grid-template-columns:1fr 1fr}.albumTitle{font-size:24px}}@media (max-width:620px){.albumFilters,.albumKpiGrid{grid-template-columns:1fr}.albumWrap{padding:0 10px 20px}.albumChart,.albumChart.compact{height:280px}}
 </style>
 
+<style id="vapes-sticky-table-titles-fix">
+/* Vapes: títulos y encabezados de tablas anclados al hacer scroll */
+.vapesRoot .vapesTableWrap{
+  position: relative !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: 430px !important;
+  border-radius: 12px !important;
+}
+.vapesRoot .vapesTable thead th,
+.vapesRoot .vapesTable th{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 40 !important;
+  background: linear-gradient(180deg,#11284A 0%,#0C4D8F 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 0 rgba(255,255,255,.12) inset, 0 6px 12px rgba(17,40,74,.22) !important;
+}
+.vapesRoot .vapesCard:has(.vapesTableWrap) .vapesCardHead{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 45 !important;
+  background: rgba(255,255,255,.96) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid rgba(17,40,74,.12) !important;
+}
+.vapesRoot .vapesCard:has(.vapesTableWrap) .vapesCardHead h3{
+  color:#11284A !important;
+}
+.vapesRoot .vapesCard:has(.vapesTableWrap) .vapesCardHead .sub{
+  color:#526581 !important;
+}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar{width:10px;height:10px;}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar-thumb{background:#0C4D8F;border-radius:20px;border:2px solid #EAF2FA;}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar-track{background:#EAF2FA;border-radius:20px;}
+</style>
+
+<style id="ampm-vapes-axis-compact-v1">
+/* Compacta el segundo eje en gráficos de barras de Vapes para eliminar espacio blanco innecesario. */
+.vapesRoot .vapesCanvas canvas{max-width:100%!important;}
+</style>
+<style id="ampm-vapes-delivery-under-margin-v1">
+/* Vapes: Delivery queda inmediatamente debajo de % Margen • Cigarros / Vapes */
+.vapesRoot #vapesChartDelivery{display:block;}
+</style>
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -64961,6 +65008,1513 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){ setTimeout(render, 220); setTimeout(render, 700); } }catch(_e){}
   }, true);
   window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev.detail&&ev.detail.tab||'').toLowerCase()==='delivery'){ setTimeout(render, 160); } }catch(_e){} }, {passive:true});
+})();
+</script>
+
+
+<!-- AMPM Vapes Module: BEGIN -->
+<style id="ampm-vapes-styles-v7">
+  .vapesRoot{padding:0 0 24px;}
+  .vapesHero{padding:16px;display:grid;grid-template-columns:minmax(280px,1fr) auto;gap:14px;align-items:end;background:linear-gradient(135deg,rgba(0,94,167,.11),rgba(245,131,32,.10));border:1px solid rgba(15,23,42,.10);border-radius:18px;margin:0 16px 14px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+  .vapesHero h2{margin:0;font-size:22px;color:#11284A;font-weight:1000;line-height:1.1}.vapesHero p{margin:5px 0 0;color:#64748B;font-size:12.5px;line-height:1.35;font-weight:700}.vapesHeroActions{display:flex;gap:10px;align-items:flex-end;justify-content:flex-end;flex-wrap:wrap}.vapesField{display:flex;flex-direction:column;gap:5px;min-width:230px}.vapesField label{font-size:11px;font-weight:900;color:#64748B;text-transform:uppercase;letter-spacing:.04em}.vapesSelect{border:1px solid #E2E8F0;border-radius:12px;background:#fff;padding:8px 10px;font-weight:800;color:#11284A;min-height:38px}.vapesSelect[multiple]{min-height:96px;min-width:280px}.vapesMiniActions{display:flex;gap:6px;margin-top:6px}.vapesMiniBtn{border-radius:999px!important;padding:6px 10px!important;font-size:11px!important;background:#fff!important;color:#11284A!important;border:1px solid #E2E8F0!important;font-weight:900!important;cursor:pointer}.vapesPill{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid rgba(15,23,42,.10);border-radius:999px;background:#fff;color:#64748B;font-size:12px;font-weight:800}.vapesPill b{color:#11284A}
+  .vapesKpiGrid{display:grid;grid-template-columns:repeat(6,minmax(140px,1fr));gap:12px;margin:0 16px 14px}.vapesKpi{background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:16px;padding:13px 14px;box-shadow:0 8px 18px rgba(15,23,42,.05);position:relative;overflow:hidden}.vapesKpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:#005EA7}.vapesKpi.orange:before{background:#F58320}.vapesKpi.red:before{background:#DC2626}.vapesKpi.green:before{background:#16A34A}.vapesKpi.gray:before{background:#94A3B8}.vapesKpi .t{font-size:11px;color:#64748B;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.vapesKpi .v{font-size:22px;color:#11284A;font-weight:1000;margin-top:4px}.vapesKpi .s{font-size:11.5px;color:#64748B;font-weight:750;margin-top:2px;line-height:1.25}
+  .vapesAlertGrid{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:12px;margin:0 16px 14px}.vapesAlert{background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:16px;padding:13px 14px;box-shadow:0 8px 18px rgba(15,23,42,.05)}.vapesAlert h3{margin:0;color:#11284A;font-size:14px;font-weight:1000}.vapesAlert .meta{margin-top:4px;color:#64748B;font-size:12px;font-weight:750}.vapesAlert .badge{display:inline-flex;margin-left:8px;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:1000;background:#FEE2E2;color:#991B1B}.vapesAlert.warn .badge{background:#FEF3C7;color:#92400E}.vapesAlert.ok .badge{background:#DCFCE7;color:#166534}.vapesAlert ul{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}.vapesAlert li{font-size:12px;line-height:1.25;color:#0F172A;display:grid;grid-template-columns:1fr auto;gap:8px;border-top:1px solid #F1F5F9;padding-top:7px}.vapesAlert li b{color:#11284A}.vapesAlert li small{color:#64748B;font-weight:750}.vapesAlert .amount{font-weight:1000;color:#F58320}
+  .vapesGrid2{display:grid;grid-template-columns:1fr;gap:16px;margin:0 16px 16px}.vapesGrid3{display:grid;grid-template-columns:repeat(2,minmax(320px,1fr));gap:16px;margin:0 16px 16px}.vapesCard{background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:16px;padding:14px;box-shadow:0 8px 18px rgba(15,23,42,.05);min-width:0}.vapesCard-span2{grid-column:1 / -1}.vapesCardHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}.vapesCard h3{margin:0;font-size:15px;font-weight:1000;color:#11284A;line-height:1.15}.vapesCard .sub{font-size:12px;color:#64748B;font-weight:750;margin-top:3px;line-height:1.25}.vapesCanvas{height:440px;position:relative}.vapesCanvas.tall{height:480px}.vapesTableWrap{overflow-y:auto;overflow-x:hidden;max-height:430px;border:1px solid #E2E8F0;border-radius:12px}.vapesTable{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.5px}.vapesTable th{position:sticky;top:0;background:#11284A;color:#fff;text-align:left;padding:8px;font-size:11px;z-index:2;white-space:normal;word-break:break-word;line-height:1.15}.vapesTable td{padding:7px 8px;border-bottom:1px solid #EEF2F7;white-space:normal;word-break:break-word;overflow-wrap:anywhere;line-height:1.18}.vapesTable td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;word-break:normal}.vapesTable tr:hover td{background:#F8FAFC}.vapesNoData{margin:0 16px 14px;padding:16px;border:1px dashed #CBD5E1;border-radius:16px;background:#fff;color:#64748B;font-weight:800;line-height:1.35}
+  @media(max-width:1200px){.vapesKpiGrid{grid-template-columns:repeat(2,minmax(160px,1fr))}.vapesAlertGrid,.vapesGrid2,.vapesGrid3{grid-template-columns:1fr}.vapesHero{grid-template-columns:1fr}.vapesHeroActions{justify-content:flex-start}.vapesSelect[multiple]{min-width:100%}}
+  /* Ajuste ejecutivo: Vapes en una sola columna + tablas sin scroll horizontal */
+  .vapesRoot .vapesGrid2{grid-template-columns:1fr!important;gap:16px!important;}
+  .vapesRoot .vapesGrid3{grid-template-columns:repeat(2,minmax(320px,1fr))!important;gap:16px!important;}
+  .vapesRoot .vapesCard-span2{grid-column:1 / -1!important;}
+  .vapesRoot .vapesCanvas{height:440px!important;}
+  .vapesRoot .vapesCanvas.tall{height:480px!important;}
+  .vapesRoot .vapesTableWrap{overflow-x:hidden!important;overflow-y:auto!important;max-height:430px!important;}
+  .vapesRoot .vapesTable{width:100%!important;max-width:100%!important;table-layout:fixed!important;}
+  .vapesRoot .vapesTable th,.vapesRoot .vapesTable td{white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;line-height:1.18!important;}
+  .vapesRoot .vapesTable td.num{white-space:nowrap!important;word-break:normal!important;}
+  @media(max-width:1200px){.vapesRoot .vapesGrid3{grid-template-columns:1fr!important;}.vapesRoot .vapesCard-span2{grid-column:auto!important;}}
+  /* Vapes | Proveedor + pastel en la misma fila */
+  .vapesRoot .vapesProviderRow{grid-template-columns:minmax(620px,1.35fr) minmax(320px,.65fr)!important;align-items:stretch!important;}
+  .vapesRoot .vapesProviderRow .vapesSupplierBarCard{min-width:0!important;}
+  .vapesRoot .vapesProviderRow .vapesSupplierPieCard{min-width:0!important;}
+  .vapesRoot .vapesProviderRow .vapesSupplierPieCard .vapesCanvas{height:480px!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+  .vapesRoot .vapesProviderRow canvas{max-width:100%!important;}
+  @media(max-width:1400px){.vapesRoot .vapesProviderRow{grid-template-columns:1fr!important;}.vapesRoot .vapesProviderRow .vapesSupplierPieCard .vapesCanvas{height:360px!important;}}
+
+</style>
+
+<style id="ampm-vapes-innovation-colors-v1">
+  .vapesRoot{
+    --v-blue:#0C4D8F;
+    --v-blue-2:#005EA7;
+    --v-navy:#11284A;
+    --v-orange:#F58320;
+    --v-orange-2:#F7931A;
+    --v-green:#0FA04A;
+    --v-red:#C62828;
+  }
+  .vapesRoot .vapesHero{
+    background:linear-gradient(135deg, rgba(12,77,143,.20) 0%, rgba(0,94,167,.10) 48%, rgba(245,131,32,.22) 100%)!important;
+    border-color:rgba(12,77,143,.24)!important;
+    box-shadow:0 18px 38px rgba(17,40,74,.12)!important;
+  }
+  .vapesRoot .vapesHero h2{color:#11284A!important;text-shadow:0 1px 0 rgba(255,255,255,.45)!important;}
+  .vapesRoot .vapesHero p{color:#334155!important;}
+  .vapesRoot .vapesPill{
+    background:#ffffff!important;
+    border-color:rgba(12,77,143,.20)!important;
+    color:#334155!important;
+    box-shadow:0 8px 18px rgba(17,40,74,.08)!important;
+  }
+  .vapesRoot .vapesPill b{color:#11284A!important;}
+  .vapesRoot .vapesSelect{
+    border-color:rgba(12,77,143,.24)!important;
+    box-shadow:0 8px 18px rgba(17,40,74,.06)!important;
+  }
+  .vapesRoot .vapesMiniBtn{
+    border-color:rgba(245,131,32,.42)!important;
+    color:#11284A!important;
+    box-shadow:0 6px 14px rgba(245,131,32,.10)!important;
+  }
+  .vapesRoot .vapesMiniBtn:hover{background:rgba(245,131,32,.12)!important;}
+  .vapesRoot .vapesKpi{
+    background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%)!important;
+    border-color:rgba(12,77,143,.16)!important;
+    box-shadow:0 13px 28px rgba(17,40,74,.09)!important;
+  }
+  .vapesRoot .vapesKpi:before{width:6px!important;background:linear-gradient(180deg,#005EA7,#0C4D8F)!important;}
+  .vapesRoot .vapesKpi.orange:before{background:linear-gradient(180deg,#F7931A,#F58320)!important;}
+  .vapesRoot .vapesKpi.red:before{background:linear-gradient(180deg,#EF4444,#C62828)!important;}
+  .vapesRoot .vapesKpi.green:before{background:linear-gradient(180deg,#12B455,#0FA04A)!important;}
+  .vapesRoot .vapesKpi.gray:before{background:linear-gradient(180deg,#11284A,#0C4D8F)!important;}
+  .vapesRoot .vapesKpi .t{color:#475569!important;}
+  .vapesRoot .vapesKpi .v{color:#11284A!important;}
+  .vapesRoot .vapesKpi .s{color:#526581!important;}
+  .vapesRoot .vapesAlert,
+  .vapesRoot .vapesCard{
+    background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%)!important;
+    border-color:rgba(12,77,143,.17)!important;
+    box-shadow:0 14px 30px rgba(17,40,74,.09)!important;
+  }
+  .vapesRoot .vapesCard h3{color:#0C4D8F!important;}
+  .vapesRoot .vapesCard .sub{color:#526581!important;}
+  .vapesRoot .vapesAlert{border-top:5px solid #0C4D8F!important;}
+  .vapesRoot .vapesAlert.warn{border-top-color:#F58320!important;}
+  .vapesRoot .vapesAlert.ok{border-top-color:#0FA04A!important;}
+  .vapesRoot .vapesAlert h3{color:#11284A!important;}
+  .vapesRoot .vapesAlert .meta{color:#526581!important;}
+  .vapesRoot .vapesAlert .badge{
+    background:#C62828!important;
+    color:#fff!important;
+    border:0!important;
+    box-shadow:0 8px 16px rgba(198,40,40,.20)!important;
+  }
+  .vapesRoot .vapesAlert.warn .badge{background:#F58320!important;color:#fff!important;box-shadow:0 8px 16px rgba(245,131,32,.22)!important;}
+  .vapesRoot .vapesAlert.ok .badge{background:#0FA04A!important;color:#fff!important;box-shadow:0 8px 16px rgba(15,160,74,.20)!important;}
+  .vapesRoot .vapesAlert li{border-top-color:rgba(12,77,143,.12)!important;}
+  .vapesRoot .vapesAlert li b{color:#11284A!important;}
+  .vapesRoot .vapesAlert li small{color:#526581!important;}
+  .vapesRoot .vapesAlert .amount{color:#F58320!important;font-weight:1000!important;}
+  .vapesRoot .vapesTableWrap{border-color:rgba(12,77,143,.18)!important;}
+  .vapesRoot .vapesTable th{
+    background:#0C4D8F!important;
+    color:#fff!important;
+    border-right:1px solid rgba(255,255,255,.16)!important;
+  }
+  .vapesRoot .vapesTable td{border-bottom-color:rgba(12,77,143,.10)!important;}
+  .vapesRoot .vapesTable tr:hover td{background:rgba(12,77,143,.10)!important;}
+  .vapesRoot .vapesNoData{
+    border-color:rgba(245,131,32,.36)!important;
+    background:linear-gradient(135deg,rgba(255,247,237,.98),#ffffff)!important;
+    color:#11284A!important;
+  }
+  .tabBtn[data-tab="vapes"].active{
+    background:linear-gradient(180deg,#F7931A,#F58320)!important;
+    color:#fff!important;
+    border-color:rgba(255,255,255,0)!important;
+    box-shadow:0 10px 20px rgba(245,131,32,.26), inset 0 1px 0 rgba(255,255,255,.22)!important;
+  }
+</style>
+
+<style id="ampm-vapes-existencias-rop-layout-v1">
+/* Vapes: Top SKU + existencias por tienda, y tablas finales extendidas */
+.vapesRoot .vapesAlertGrid{display:none!important;}
+.vapesRoot .vapesSkuInvRow{grid-template-columns:minmax(650px,1.28fr) minmax(420px,.72fr)!important;align-items:stretch!important;}
+.vapesRoot .vapesSkuChartCard,.vapesRoot .vapesExistenceCard{min-width:0!important;}
+.vapesRoot .vapesExistenceCard{display:flex!important;flex-direction:column!important;}
+.vapesRoot .vapesExistenceCard .vapesCardHead{flex:0 0 auto!important;}
+.vapesRoot .vapesExistenceWrap{flex:1 1 auto!important;max-height:480px!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.vapesRoot .vapesExistenceTable{table-layout:fixed!important;width:100%!important;min-width:0!important;}
+.vapesRoot .vapesExistenceTable th,.vapesRoot .vapesExistenceTable td{font-size:10.8px!important;padding:6px 6px!important;line-height:1.14!important;}
+.vapesRoot .vapesExistenceTable th:nth-child(1),.vapesRoot .vapesExistenceTable td:nth-child(1){width:42%!important;}
+.vapesRoot .vapesExistenceTable th:nth-child(2),.vapesRoot .vapesExistenceTable td:nth-child(2){width:18%!important;}
+.vapesRoot .vapesExistenceTable th:last-child,.vapesRoot .vapesExistenceTable td:last-child{font-weight:1000!important;background:rgba(12,77,143,.06)!important;}
+.vapesRoot .vapesFullTables{display:grid;grid-template-columns:1fr;gap:16px;margin:0 16px 18px;}
+.vapesRoot .vapesWideTableCard{width:100%!important;max-width:100%!important;}
+.vapesRoot .vapesWideTableWrap{max-height:560px!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.vapesRoot .vapesRopTable,.vapesRoot .vapesTransferTable{table-layout:fixed!important;width:100%!important;min-width:0!important;}
+.vapesRoot .vapesRopTable th,.vapesRoot .vapesRopTable td,.vapesRoot .vapesTransferTable th,.vapesRoot .vapesTransferTable td{font-size:11px!important;padding:7px 7px!important;line-height:1.15!important;}
+.vapesRoot .vapesRopTable th:nth-child(1),.vapesRoot .vapesRopTable td:nth-child(1){width:8%!important;}
+.vapesRoot .vapesRopTable th:nth-child(2),.vapesRoot .vapesRopTable td:nth-child(2){width:11%!important;}
+.vapesRoot .vapesRopTable th:nth-child(3),.vapesRoot .vapesRopTable td:nth-child(3){width:25%!important;}
+.vapesRoot .vapesRopTable th:last-child,.vapesRoot .vapesRopTable td:last-child{width:13%!important;}
+.vapesRoot .vapesTransferTable th:nth-child(1),.vapesRoot .vapesTransferTable td:nth-child(1),.vapesRoot .vapesTransferTable th:nth-child(2),.vapesRoot .vapesTransferTable td:nth-child(2){width:8%!important;}
+.vapesRoot .vapesTransferTable th:nth-child(3),.vapesRoot .vapesTransferTable td:nth-child(3){width:12%!important;}
+.vapesRoot .vapesTransferTable th:nth-child(4),.vapesRoot .vapesTransferTable td:nth-child(4){width:28%!important;}
+.vapesRoot .vapesTransferTable th:last-child,.vapesRoot .vapesTransferTable td:last-child{width:15%!important;}
+@media(max-width:1450px){.vapesRoot .vapesSkuInvRow{grid-template-columns:1fr!important;}.vapesRoot .vapesExistenceWrap{max-height:390px!important;}}
+</style>
+<script id="ampm-vapes-module-v7">
+(function(){
+  'use strict';
+  if(window.__AMPM_VAPES_MODULE_V7__) return;
+  window.__AMPM_VAPES_MODULE_V7__ = true;
+  var TAB='vapes';
+  var C={blue:'#0C4D8F',orange:'#F58320',navy:'#11284A',gray:'#334155',green:'#0FA04A',red:'#C62828'};
+  var local={timer:0,sheets:null,stamp:null,fallback:null,fallbackStamp:null,supplierSig:''};
+  var charts={};
+  function byId(id){return document.getElementById(id);} 
+  function appState(){try{if(typeof state!=='undefined'&&state)return state;}catch(e){}try{return window.state||null;}catch(e){return null;}}
+  function txt(v){return String(v==null?'':v).trim();}
+  function num(v){var n=Number(v);return Number.isFinite(n)?n:0;}
+  function esc(v){return txt(v).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
+  function norm(v){try{return txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();}catch(e){return txt(v).toUpperCase();}}
+  function key(v){return norm(v).replace(/\s+/g,'');}
+  function val(r,keys){for(var i=0;i<keys.length;i++){var k=keys[i];if(r&&Object.prototype.hasOwnProperty.call(r,k)&&r[k]!=null&&r[k]!== '')return r[k];}return '';}
+  function money(v){var n=num(v),s=n<0?'-':'',a=Math.abs(n);if(a>=1000000)return s+'$'+(a/1000000).toFixed(1).replace(/\.0$/,'')+'M';if(a>=1000)return s+'$'+(a/1000).toFixed(1).replace(/\.0$/,'')+'K';return s+'$'+Math.round(a).toLocaleString('en-US');}
+  function pct(v,d){return Number.isFinite(Number(v))?Number(v).toFixed(d==null?1:d)+'%':'—';}
+  function fint(v){return Math.round(num(v)).toLocaleString('en-US');}
+  function nstore(v){var s=key(v);if(/^AMPM\d+$/.test(s))return 'AMPM'+String(parseInt(s.replace('AMPM',''),10)).padStart(2,'0');if(/^\d+$/.test(s))return 'AMPM'+String(parseInt(s,10)).padStart(2,'0');return s;}
+  function rowStore(r){return nstore(val(r,['Store','store','Tienda','Store Name']));}
+  function rowPeriodType(r){return txt(val(r,['PeriodType','periodType'])).toLowerCase();}
+  function rowPeriodKey(r){return txt(val(r,['PeriodKey','periodKey']));}
+  function rowGroup(r){return norm(val(r,['Group','group','Grupo']));}
+  function rowSales(r){return num(val(r,['Sales','sales','Total Sales','TotalSales']));}
+  function rowMargin(r){return num(val(r,['Total Gross Margin','TotalGrossMargin','Gross Margin','GrossMargin','Margin','Margen']));}
+  function rowQty(r){return num(val(r,['Qty Sold','QtySold','Qty','Quantity','Cantidad']));}
+  function supKey(r){return key(val(r,['SupplierKey','supplierKey','Supplier','supplier','Proveedor'])||'(Sin proveedor)');}
+  function descKey(r){return key(val(r,['DescriptionKey','descriptionKey','Description','description','Descripcion'])||'');}
+  function getModeLive(){try{if(typeof getUnifiedReportMode==='function')return txt(getUnifiedReportMode()).toLowerCase();}catch(e){}return txt(byId('reportMode')&&byId('reportMode').value).toLowerCase()||'semanal';}
+  function currentPeriodLive(){return txt(byId('currentMonth')&&byId('currentMonth').value);}
+  function selectedStoresLive(){var arr=[];try{if(typeof getSelectedStoresOrAll==='function')arr=getSelectedStoresOrAll()||[];}catch(e){}if(!arr.length){var sel=byId('stores');if(sel)arr=Array.from(sel.selectedOptions||[]).map(function(o){return o.value;});}if(!arr.length){var st=appState();if(st&&Array.isArray(st.stores))arr=st.stores.slice();}return Array.from(new Set((arr||[]).map(nstore).filter(Boolean)));}
+  function selectedSuppliersLive(){var sel=byId('vapesSupplierFilter');return new Set(sel?Array.from(sel.selectedOptions||[]).map(function(o){return key(o.value);}).filter(Boolean):[]);}
+  function captureVapesFilterSnapshot(){local.appliedFilters={mode:getModeLive(),current:currentPeriodLive(),stores:selectedStoresLive(),suppliers:Array.from(selectedSuppliersLive())};return local.appliedFilters;}
+  function vapesFilterSnapshot(){return local.appliedFilters||captureVapesFilterSnapshot();}
+  function getMode(){return txt(vapesFilterSnapshot().mode).toLowerCase()||'semanal';}
+  function ptype(){var m=getMode();if(m.indexOf('mens')>=0||m==='month')return 'month';if(m.indexOf('diar')>=0||m==='day')return 'day';return 'week';}
+  function currentPeriod(){return txt(vapesFilterSnapshot().current);}
+  function pRank(p){var m=txt(p).match(/(20\d{2})-W(\d{1,2})/i);if(m)return Number(m[1])*100+Number(m[2]);m=txt(p).match(/(20\d{2})-(\d{1,2})-(\d{1,2})/);if(m)return Number(m[1])*10000+Number(m[2])*100+Number(m[3]);m=txt(p).match(/(20\d{2})-(\d{1,2})/);if(m)return Number(m[1])*100+Number(m[2]);return 0;}
+  function selectedStores(){return (vapesFilterSnapshot().stores||[]).slice();}
+  function selectedSuppliers(){return new Set((vapesFilterSnapshot().suppliers||[]).slice());}
+  function sheetReal(wb,name){try{if(!wb||!Array.isArray(wb.SheetNames))return name;var want=key(name);return wb.SheetNames.find(function(n){return key(n)===want;})||name;}catch(e){return name;}}
+  function wbRows(name){var st=appState(),wb=st&&st.__hallWorkbook;if(!wb)return[];var real=sheetReal(wb,name);try{if(wb.__rowsBySheet&&Array.isArray(wb.__rowsBySheet[real]))return wb.__rowsBySheet[real];}catch(e){}try{if(typeof innovationWorkbookSheetRows==='function')return innovationWorkbookSheetRows(wb,real)||[];}catch(e){}try{if(typeof sheetRows==='function')return sheetRows(wb,real,{defval:null,raw:true})||[];}catch(e){}try{if(wb.Sheets&&wb.Sheets[real]&&window.XLSX)return XLSX.utils.sheet_to_json(wb.Sheets[real],{defval:null,raw:true})||[];}catch(e){}return[];}
+  function stamp(){var st=appState();return st&&st.__hallWorkbookStamp?st.__hallWorkbookStamp:0;}
+  function isVape(r){var s=norm([val(r,['Category','Categoria','category','categoria']),val(r,['Description','Descripcion','description','descripcion','desc']),val(r,['Department','Departamento','department','departamento','dept']),val(r,['Brand','Marca','brand','marca']),val(r,['Supplier','Proveedor','supplier','proveedor'])].join(' '));return /\bVAPES?\b|VAPOR|VAPORIZADOR|VAPORETA|VAPEO|CIGARRO ELECTRONICO|CIGARRILLO ELECTRONICO|\bE\s*CIG\b|\bECIG\b|\bPODS?\b|PUFF|NICOTINA|ELF\s*BAR|ELFBAR|GEEK\s*BAR|GEEKBAR|LOST\s*MARY|LOSTMARY|VAPORESSO|VOOPOO|RELX|OXBAR|HQD|IGNITE|VOZOL|MASKKING|NEXBAR|FLUM|FUME|HYDE|STIG|POD\s*SYSTEM|VUSE|WAKA|MR\s*FOG|F\s*EXTRA/.test(s);}
+  function isCigar(r){if(isVape(r))return false;var s=norm([val(r,['Category','Categoria','category','categoria']),val(r,['Description','Descripcion','description','descripcion','desc']),val(r,['Department','Departamento','department','departamento','dept']),val(r,['Brand','Marca','brand','marca'])].join(' '));return /CIGARR|CIGARRO|CIGARILLO|TABACO|TOBACCO|PURO|CIGARETTE|CIGAR/.test(s);}
+  function acc(map,k,fn){var r=map[k];if(!r){r=map[k]=fn();}return r;}
+  function pushAgg(map,pt,pk,store,group,sales,gm,qty){var k=[pt,pk,store,group].join('|');var r=acc(map,k,function(){return{PeriodType:pt,PeriodKey:pk,Store:store,Group:group,Sales:0,'Total Gross Margin':0,'Qty Sold':0};});r.Sales+=sales;r['Total Gross Margin']+=gm;r['Qty Sold']+=qty;}
+  function buildFallbackSheets(){
+    var s=stamp();if(local.fallback&&local.fallbackStamp===s)return local.fallback;
+    var salesRows=wbRows('Cubo_Sales_DetailHallazgos');
+    if(!salesRows||!salesRows.length)return null;
+    var periods={}, suppliers={}, skus={}, s4={}, displaySupplier={}, displaySku={};
+    for(var i=0;i<salesRows.length;i++){
+      var r=salesRows[i];var vape=isVape(r), cigar=!vape&&isCigar(r);if(!vape&&!cigar)continue;
+      var group=vape?'Vapes':'Cigarros', store=rowStore(r)||txt(val(r,['Store']))||'', sales=rowSales(r), gm=rowMargin(r), qty=rowQty(r);
+      var day=txt(val(r,['Date Sold','Date'])), week=txt(val(r,['YearWeek','YearMonth'])), month=txt(val(r,['CalMonth']));
+      if(day){pushAgg(periods,'day',day,store,group,sales,gm,qty);pushAgg(periods,'day',day,'Total empresa',group,sales,gm,qty);}
+      if(week){pushAgg(periods,'week',week,store,group,sales,gm,qty);pushAgg(periods,'week',week,'Total empresa',group,sales,gm,qty);}
+      if(month){pushAgg(periods,'month',month,store,group,sales,gm,qty);pushAgg(periods,'month',month,'Total empresa',group,sales,gm,qty);}
+      if(vape){
+        var sup=txt(val(r,['Supplier','Proveedor']))||'(Sin proveedor)', sk=supKey(r), brand=txt(val(r,['Brand','Marca'])), desc=txt(val(r,['Description','Descripcion']))||'(Sin descripción)', dk=descKey(r);
+        displaySupplier[sk]=sup;displaySku[sk+'|'+dk]={Supplier:sup,SupplierKey:sk,Brand:brand,Description:desc,DescriptionKey:dk};
+        [['day',day],['week',week],['month',month]].forEach(function(pp){if(!pp[1])return;var ks=[pp[0],pp[1],store,sk].join('|'), kt=[pp[0],pp[1],'Total empresa',sk].join('|');[ks,kt].forEach(function(k,idx){var rr=acc(suppliers,k,function(){return{PeriodType:pp[0],PeriodKey:pp[1],Store:idx?'Total empresa':store,Supplier:sup,SupplierKey:sk,Sales:0,'Total Gross Margin':0,'Qty Sold':0};});rr.Sales+=sales;rr['Total Gross Margin']+=gm;rr['Qty Sold']+=qty;});var ksku=[pp[0],pp[1],store,sk,dk].join('|'), kskut=[pp[0],pp[1],'Total empresa',sk,dk].join('|');[ksku,kskut].forEach(function(k,idx){var rr=acc(skus,k,function(){return{PeriodType:pp[0],PeriodKey:pp[1],Store:idx?'Total empresa':store,Supplier:sup,SupplierKey:sk,Brand:brand,Description:desc,DescriptionKey:dk,Sales:0,'Total Gross Margin':0,'Qty Sold':0};});rr.Sales+=sales;rr['Total Gross Margin']+=gm;rr['Qty Sold']+=qty;});});
+        if(week){var k4=[store,sk,dk].join('|'), rr4=acc(s4,k4,function(){return{Store:store,Supplier:sup,SupplierKey:sk,Brand:brand,Description:desc,DescriptionKey:dk,weeks:{},qty:0,sales:0};});rr4.weeks[week]=(rr4.weeks[week]||0)+qty;rr4.sales+=sales;}
+      }
+    }
+    var invRows=wbRows('Inventario_Items')||[], invOut=[];
+    for(var j=0;j<invRows.length;j++){
+      var ir=invRows[j];if(!isVape(ir))continue;var st=rowStore(ir), sk2=supKey(ir), dk2=descKey(ir), q=num(val(ir,['Quantity','Qty'])), amt=num(val(ir,['Amount'])), rop=num(val(ir,['ROP'])), plan=num(val(ir,['Planimetria','Plan']));
+      var hist=s4[[st,sk2,dk2].join('|')]||{qty:0,sales:0};var avg=hist.qty/28;var sug=Math.max(rop,plan,Math.ceil(avg*14));var cov=avg>0?q/avg:null;var alert='OK';if(q<=0&&(sug>0||avg>0))alert='Crítico';else if(cov!=null&&cov<7)alert='Cobertura crítica';else if(sug>0&&q<sug)alert='Bajo inventario';
+      invOut.push({Store:st,Supplier:txt(val(ir,['Supplier','Proveedor']))||displaySupplier[sk2]||'(Sin proveedor)',SupplierKey:sk2,Brand:txt(val(ir,['Brand','Marca'])),Description:txt(val(ir,['Description','Descripcion']))||((displaySku[sk2+'|'+dk2]||{}).Description||''),DescriptionKey:dk2,'LookUp Code':txt(val(ir,['LookUp Code','UPC','SKU'])),Quantity:q,Amount:amt,ROP:rop,Planimetria:plan,'Qty S4':hist.qty,'Sales S4':hist.sales,'Avg Daily Qty':avg,'Suggested ROP':sug,'Coverage Days':cov,'Alert Level':alert,'Priority Score':(alert==='Crítico'?100000:/crítica/i.test(alert)?50000:alert==='Bajo inventario'?20000:0)+hist.sales});
+    }
+    invOut.sort(function(a,b){return num(b['Priority Score'])-num(a['Priority Score']);});
+    var sheets={periods:Object.values(periods),supplier:Object.values(suppliers),sku:Object.values(skus),inventory:invOut,transfers:buildTransfers(invOut),source:'Cubo detalle'};
+    local.fallback=sheets;local.fallbackStamp=s;return sheets;
+  }
+  function buildTransfers(inv){var bySku={};inv.forEach(function(r){var k=[r.SupplierKey,r.DescriptionKey].join('|');(bySku[k]=bySku[k]||[]).push(r);});var out=[];Object.keys(bySku).forEach(function(k){var rows=bySku[k],needs=[],sources=[];rows.forEach(function(r){var q=num(r.Quantity),sug=num(r['Suggested ROP']),avg=num(r['Avg Daily Qty']);var need=Math.max(Math.ceil(sug-q),0),excess=Math.max(Math.floor(q-Math.max(sug,avg*7)),0);if(need>0)needs.push([need,r]);if(excess>0)sources.push([excess,r]);});needs.sort(function(a,b){return b[0]-a[0];});sources.sort(function(a,b){return b[0]-a[0];});needs.forEach(function(n){var need=n[0],to=n[1];for(var i=0;i<sources.length&&need>0;i++){var ex=sources[i][0],fr=sources[i][1];if(ex<=0||fr.Store===to.Store)continue;var mv=Math.max(1,Math.min(ex,need));var uc=num(fr.Quantity)>0?num(fr.Amount)/num(fr.Quantity):0;out.push({Supplier:to.Supplier,SupplierKey:to.SupplierKey,Brand:to.Brand,Description:to.Description,DescriptionKey:to.DescriptionKey,'From Store':fr.Store,'To Store':to.Store,'Qty Suggested':mv,'From Qty':fr.Quantity,'To Qty':to.Quantity,'To Suggested ROP':to['Suggested ROP'],'Avg Daily Qty To':to['Avg Daily Qty'],'Amount Est':uc*mv,Reason:'Destino bajo ROP sugerido y origen con excedente'});sources[i][0]-=mv;need-=mv;}});});out.sort(function(a,b){return num(b['Amount Est'])-num(a['Amount Est']);});return out;}
+  function invNormSkuKey(v){var s=norm(v).replace(/&/g,' Y ').replace(/\bAND\b/g,' Y ').replace(/\b(\d+)\s+S\b/g,'$1S').replace(/\b(\d+)\s+(ML|LT|L|G|GR|KG|OZ|ONZ)\b/g,'$1$2').replace(/\bX\s+(\d+)\b/g,'X$1').replace(/\b(\d+)\s+PACK\b/g,'$1PACK');return s.replace(/\s+/g,'').trim();}
+  function invSkuKey(store,supplier,description,supplierKey,descriptionKey){var sk=(supplierKey!=null&&txt(supplierKey)!=='')?invNormSkuKey(supplierKey):invNormSkuKey(supplier);var dk=(descriptionKey!=null&&txt(descriptionKey)!=='')?invNormSkuKey(descriptionKey):invNormSkuKey(description);return txt(store).toUpperCase()+'|'+sk+'|'+dk;}
+  function getInventoryWeeksForVapes(){var st=appState();try{if(st&&Array.isArray(st._invWeeks)&&st._invWeeks.length)return st._invWeeks.slice();}catch(e){}try{if(typeof getInvWeeks==='function'){var w=getInvWeeks(currentPeriod());if(Array.isArray(w)&&w.length)return w.slice();}}catch(e){}var rows=(st&&Array.isArray(st.cuboSalesSkuWeekRows))?st.cuboSalesSkuWeekRows:[];var weeks=Array.from(new Set(rows.map(function(r){return txt(r&&r.ym);}).filter(Boolean))).sort(function(a,b){return pRank(a)-pRank(b);});return weeks.slice(-4);}
+  function buildInventorySalesMapsForVapes(storeSet,weeks){var st=appState(),weekSet=new Set(weeks||[]),qtyMap=new Map(),salesMap=new Map();var rows=(st&&Array.isArray(st.cuboSalesSkuWeekRows))?st.cuboSalesSkuWeekRows:[];rows.forEach(function(r){if(!r||!storeSet.has(txt(r.store).toUpperCase())||!weekSet.has(txt(r.ym)))return;var k=invSkuKey(r.store,r.supplier,r.description,r.supplier_key,r.desc_key);qtyMap.set(k,(num(qtyMap.get(k))+num(r.qty)));salesMap.set(k,(num(salesMap.get(k))+num(r.sales)));});return{qtyMap:qtyMap,salesMap:salesMap};}
+  function buildInventoryRopRowsForVapes(){var st=appState();var inv=(st&&Array.isArray(st.invItems))?st.invItems:[];if(!inv.length)return[];var allStores=new Set(inv.map(function(r){return txt(r.store).toUpperCase();}).filter(Boolean));var weeks=getInventoryWeeksForVapes();if(!weeks.length)return[];var maps=buildInventorySalesMapsForVapes(allStores,weeks);var rows=[];var huesoLoose=new Set(),huesoStrict=new Set();try{(Array.isArray(st.huesoRows)?st.huesoRows:[]).forEach(function(hr){var d=invNormSkuKey(hr.descripcion_match||hr.descripcion_lista||'');var su=invNormSkuKey(hr.supplier||'');if(d){huesoLoose.add(d);if(su)huesoStrict.add(su+'||'+d);}});}catch(e){}
+    inv.forEach(function(it){var probe={Description:it.description||it.desc_key||'',Supplier:it.supplier||it.supplier_key||'',Brand:it.brand||'',Department:it.department||'',Category:it.category||''};if(!isVape(probe))return;var store=txt(it.store).toUpperCase(),supplier=txt(it.supplier||it.supplier_key||'(Sin proveedor)'),supplierKey=invNormSkuKey(it.supplier_key||supplier),desc=txt(it.description||it.desc_key||''),descKey=invNormSkuKey(it.desc_key||desc);var k=invSkuKey(store,supplier,desc,it.supplier_key, it.desc_key);var s4q=num(maps.qtyMap.get(k)),s4s=num(maps.salesMap.get(k));var qty=num(it.qty),amt=num(it.amount),rop=num(it.rop),plan=num(it.plan),inactive=num(it.inactive_compra);var dept=txt(it.department),isFS=/FOODSERVICE/.test(norm(dept));if(inactive!==0||isFS)return;var div=norm(supplier).indexOf('CONSTANCIA')>=0?2.5:2.0;var idealCeil=s4q>0?Math.ceil(s4q/div):0;var huesoHit=!!(descKey&&(huesoStrict.has(invNormSkuKey(supplier)+'||'+descKey)||huesoLoose.has(descKey)));var ropProp=huesoHit?0:Math.max(idealCeil,plan);var delta=ropProp-rop;var days=s4q>0?(qty*28/s4q):(qty>0?999999:null);var avg=s4q>0?s4q/28:0;var cov=avg>0?qty/avg:null;var need=Math.max(Math.ceil(ropProp-qty),0);var unitCost=qty>0?amt/qty:(s4q>0?s4s/s4q:0);var alert='OK';if(ropProp>0&&qty<=0)alert='Crítico';else if(ropProp>0&&qty<ropProp)alert='Bajo inventario';else if(cov!=null&&isFinite(cov)&&cov<7)alert='Cobertura crítica';var impact=Math.abs(delta)*unitCost;rows.push({Store:store,Supplier:supplier,SupplierKey:supplierKey,Brand:txt(it.brand),Description:desc,DescriptionKey:descKey,'LookUp Code':txt(it.lookup),'Quantity':qty,Amount:amt,ROP:rop,Planimetria:plan,'Qty S4':s4q,'Sales S4':s4s,'Avg Daily Qty':avg,'Suggested ROP':ropProp,'ROP Propuesto Inventario':ropProp,'Delta ROP':delta,'Need Qty':need,'Coverage Days':cov,'Days Qty':days,'Unit Cost':unitCost,'ROP Impact $':impact,'Alert Level':alert,'Priority Score':(alert==='Crítico'?100000:/COBERTURA|BAJO/i.test(alert)?50000:0)+impact+s4s,WeeksBase:weeks.join(', '),_fromInventoryAnalysis:true});});
+    rows.sort(function(a,b){return num(b['Priority Score'])-num(a['Priority Score']);});return rows;}
+  function applyInventoryRopAnalysis(sheets){try{var invRows=buildInventoryRopRowsForVapes();if(invRows&&invRows.length){sheets.inventory=invRows;sheets.transfers=buildTransfers(invRows);sheets.source=(sheets.source?String(sheets.source).replace(/ \+ ROP Inventario/g,''):'Vapes')+' + ROP Inventario';}}catch(e){console.warn('Vapes inventory ROP sync failed',e);}return sheets;}
+  function sheetsFromState(){var s=stamp();if(local.sheets&&local.stamp===s&&s)return local.sheets;var out={periods:wbRows('Vapes_Periods'),supplier:wbRows('Vapes_Supplier'),sku:wbRows('Vapes_SKU'),inventory:wbRows('Vapes_Inventory'),transfers:wbRows('Vapes_Transfers'),source:'Vapes_*'};if(out.periods.length||out.supplier.length||out.sku.length||out.inventory.length){out=applyInventoryRopAnalysis(out);local.sheets=out;local.stamp=s||Date.now();return out;}var fb=buildFallbackSheets();if(fb&&(fb.periods.length||fb.supplier.length||fb.sku.length||fb.inventory.length)){fb=applyInventoryRopAnalysis(fb);local.sheets=fb;local.stamp=s||Date.now();return fb;}return null;}
+  async function loadSheets(){return sheetsFromState();}
+  function installTab(){var tabs=document.querySelector('.tabsbar .tabs')||document.querySelector('.tabs');if(!tabs)return;var btn=document.querySelector('.tabBtn[data-tab="vapes"]');if(!btn){btn=document.createElement('button');btn.className='tabBtn';btn.dataset.tab='vapes';btn.dataset.short='V';btn.type='button';btn.title='Vapes';var after=document.querySelector('.tabBtn[data-tab="innovacion"]')||document.querySelector('.tabBtn[data-tab="delivery"]');if(after&&after.parentNode)after.parentNode.insertBefore(btn,after.nextSibling);else tabs.appendChild(btn);}btn.innerHTML='<span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.75h4"></path><path d="M10 2.75v2.1c0 .49-.16.96-.46 1.35l-.88 1.14A4.55 4.55 0 0 0 7.7 10.1v7.55A3.6 3.6 0 0 0 11.3 21.25h1.4a3.6 3.6 0 0 0 3.6-3.6V10.1c0-1-.33-1.98-.96-2.76l-.88-1.14A2.22 2.22 0 0 1 14 4.85v-2.1"></path><path d="M8.8 9.2h6.4"></path><path d="M8.8 16.4h6.4"></path></svg></span><span class="tabLabel">Vapes</span>';btn.onclick=function(ev){ev.preventDefault();showTab();};}
+  function installPage(){if(byId('vapesRoot'))return;var root=document.createElement('div');root.id='vapesRoot';root.className='vapesRoot';root.setAttribute('data-tabpage','vapes');root.style.display='none';root.innerHTML=`<div class="vapesHero"><div><h2>VAPES • Categoría en crecimiento</h2><p>Venta, margen, mix contra cigarros, proveedores, inventario crítico, ROP sugerido y traslados. Respeta tienda, período y vista del dashboard.</p></div><div class="vapesHeroActions"><span class="vapesPill">Vista: <b id="vapesModeBadge">—</b></span><span class="vapesPill">Rango: <b id="vapesRangeBadge">—</b></span><span class="vapesPill">Fuente: <b id="vapesSourceBadge">—</b></span><div class="vapesField"><label>Proveedor Vapes</label><select id="vapesSupplierFilter" class="vapesSelect" multiple></select><div class="vapesMiniActions"><button id="vapesSupplierAll" class="vapesMiniBtn" type="button">Todos</button><button id="vapesSupplierNone" class="vapesMiniBtn" type="button">Limpiar</button></div></div></div></div><div id="vapesNoData" class="vapesNoData" style="display:none"></div><div id="vapesKpis" class="vapesKpiGrid"></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Venta • Cigarros vs Vapes</h3><div class="sub">Barras: ventas | Diamante: % Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartSales"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>Margen • Cigarros vs Vapes</h3><div class="sub">Barras: margen bruto | Diamante: % margen Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartMargin"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Ventas apiladas • Cigarros + Vapes</h3><div class="sub">Barras apiladas + diamante total</div></div></div><div class="vapesCanvas"><canvas id="vapesChartStack"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>% Margen • Cigarros / Vapes</h3><div class="sub">Margen bruto / venta por período</div></div></div><div class="vapesCanvas"><canvas id="vapesChartGmPct"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Vapes por Delivery</h3><div class="sub">Barras apiladas: Uber Eats verde + Pedidos Ya rojo | Diamante: share delivery sobre venta total vapes</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartDelivery"></canvas></div></div></div><div class="vapesGrid2 vapesProviderRow"><div class="vapesCard vapesSupplierBarCard"><div class="vapesCardHead"><div><h3>Vapes por proveedor</h3><div class="sub">Top proveedores filtrables + total</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplier"></canvas></div></div><div class="vapesCard vapesSupplierPieCard"><div class="vapesCardHead"><div><h3>Mix venta por proveedor</h3><div class="sub">Pastel de participación del período actual seleccionado</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplierPie"></canvas></div></div></div><div class="vapesGrid2 vapesSkuInvRow"><div class="vapesCard vapesSkuChartCard"><div class="vapesCardHead"><div><h3>Top SKU Vapes</h3><div class="sub">Ranking por venta del período actual seleccionado • color por proveedor</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSku"></canvas></div></div><div class="vapesCard vapesExistenceCard"><div class="vapesCardHead"><div><h3>Existencias Vapes por tienda</h3><div class="sub">Inventario actual por SKU y tienda • sin scroll horizontal</div></div></div><div class="vapesTableWrap vapesExistenceWrap"><table id="vapesExistenceTable" class="vapesTable vapesExistenceTable"></table></div></div></div><div class="vapesFullTables"><div class="vapesCard vapesWideTableCard vapesRopCard"><div class="vapesCardHead"><div><h3>Sugerencia ROP — Ajustes por impacto económico real</h3><div class="sub">Listado directo para subir o bajar ROP • ordenado por importancia $ del ajuste</div></div></div><div id="vapesRopSummary" class="vapesRopSummary"></div><div class="vapesTableWrap vapesWideTableWrap vapesRopWrap"><table id="vapesRopTable" class="vapesTable vapesRopTable"></table></div></div><div class="vapesCard vapesWideTableCard"><div class="vapesCardHead"><div><h3>Traslados sugeridos</h3><div class="sub">Balanceo entre tiendas según inventario origen/destino y ROP propuesto</div></div></div><div class="vapesTableWrap vapesWideTableWrap"><table id="vapesTransferTable" class="vapesTable vapesTransferTable"></table></div></div></div>`;(byId('noteBox')||document.querySelector('.ampm-mainInner')||document.body).appendChild(root);var all=byId('vapesSupplierAll'),none=byId('vapesSupplierNone'),sel=byId('vapesSupplierFilter');if(all)all.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=true;});local.pendingSupplierFilter=true;};if(none)none.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=false;});local.pendingSupplierFilter=true;};if(sel)sel.onchange=function(){local.pendingSupplierFilter=true;};}
+  function displayFor(n){return n.id==='vapesRoot'?'block':'';} 
+  function showTab(){installPage();document.querySelectorAll('.tabBtn').forEach(function(b){b.classList.toggle('active',txt(b.dataset.tab)==='vapes');});document.body.setAttribute('data-active-tab','vapes');try{var st=appState();if(st){st.tab='vapes';st._lastActiveTab='vapes';}localStorage.setItem('ampm_tab','vapes');}catch(e){}document.querySelectorAll('[data-tabpage]').forEach(function(n){var owner=txt(n.getAttribute('data-tabpage')).toLowerCase();n.style.display=owner==='vapes'?displayFor(n):'none';});try{window.dispatchEvent(new CustomEvent('ampm:tabshown',{detail:{tab:'vapes'}}));}catch(e){}schedule(50);}
+  function updateSuppliers(sheets){var sel=byId('vapesSupplierFilter');if(!sel)return;var rows=sheets.supplier||[];var map={};rows.forEach(function(r){var k=supKey(r),name=txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)';if(k)map[k]=name;});var sig=Object.keys(map).sort().join('|');if(sig===local.supplierSig)return;local.supplierSig=sig;sel.innerHTML=Object.keys(map).sort(function(a,b){return map[a].localeCompare(map[b]);}).map(function(k){return '<option value="'+esc(k)+'" selected>'+esc(map[k])+'</option>';}).join('');}
+  function filterStoresRows(rows,totalPreferred){var stores=selectedStores();if(totalPreferred&&(!stores.length||stores.length>1)){var tot=rows.filter(function(r){return rowStore(r)==='TOTALEMPRESA'||txt(val(r,['Store']))==='Total empresa';});if(tot.length)return tot;}return stores.length?rows.filter(function(r){return stores.indexOf(rowStore(r))>=0;}):rows;}
+  function choosePeriods(rows,t){var keys=Array.from(new Set(rows.filter(function(r){return rowPeriodType(r)===t;}).map(rowPeriodKey).filter(Boolean))).sort(function(a,b){return pRank(a)-pRank(b);});var cur=currentPeriod();var idx=keys.indexOf(cur);var max=t==='month'?6:(t==='week'?15:15);if(idx>=0)return keys.slice(Math.max(0,idx-max+1),idx+1);return keys.slice(-max);}
+  function aggregate(sheets){
+    var t=ptype();
+    var periodRows=filterStoresRows(sheets.periods||[],true);
+    var periods=choosePeriods(periodRows,t);
+    var pset=new Set(periods);
+    var out={
+      periods:periods,
+      cigar:{sales:{},gm:{},qty:{}},
+      vape:{sales:{},gm:{},qty:{}},
+      suppliers:{},
+      skus:{},
+      stores:{}
+    };
+    periods.forEach(function(p){
+      out.cigar.sales[p]=0;out.cigar.gm[p]=0;out.cigar.qty[p]=0;
+      out.vape.sales[p]=0;out.vape.gm[p]=0;out.vape.qty[p]=0;
+    });
+    periodRows.filter(function(r){return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r));}).forEach(function(r){
+      var g=rowGroup(r).indexOf('VAPE')>=0?out.vape:out.cigar;
+      var p=rowPeriodKey(r);
+      g.sales[p]+=rowSales(r);g.gm[p]+=rowMargin(r);g.qty[p]+=rowQty(r);
+    });
+    var sfilter=selectedSuppliers();
+    var sr=filterStoresRows(sheets.supplier||[],true).filter(function(r){
+      return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r))&&(!sfilter.size||sfilter.has(supKey(r)));
+    });
+    if(sr.length){
+      periods.forEach(function(p){out.vape.sales[p]=0;out.vape.gm[p]=0;out.vape.qty[p]=0;});
+    }
+    sr.forEach(function(r){
+      var p=rowPeriodKey(r),k=supKey(r),name=txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)';
+      var sales=rowSales(r),gm=rowMargin(r),qty=rowQty(r);
+      out.vape.sales[p]+=sales;out.vape.gm[p]+=gm;out.vape.qty[p]+=qty;
+      if(!out.suppliers[k])out.suppliers[k]={name:name,sales:{},gm:{},qty:{},total:0};
+      out.suppliers[k].sales[p]=(out.suppliers[k].sales[p]||0)+sales;
+      out.suppliers[k].gm[p]=(out.suppliers[k].gm[p]||0)+gm;
+      out.suppliers[k].qty[p]=(out.suppliers[k].qty[p]||0)+qty;
+      out.suppliers[k].total+=sales;
+    });
+    filterStoresRows(sheets.sku||[],true).filter(function(r){
+      return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r))&&(!sfilter.size||sfilter.has(supKey(r)));
+    }).forEach(function(r){
+      var p=rowPeriodKey(r),sk=supKey(r),k=sk+'|'+descKey(r);
+      var sales=rowSales(r),qty=rowQty(r),gm=rowMargin(r);
+      if(!out.skus[k])out.skus[k]={
+        name:txt(val(r,['Description','description','Descripcion']))||'(Sin descripción)',
+        sales:0,qty:0,gm:0,
+        salesByPeriod:{},qtyByPeriod:{},gmByPeriod:{},
+        supplierKey:sk,
+        supplier:txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)'
+      };
+      out.skus[k].sales+=sales;out.skus[k].qty+=qty;out.skus[k].gm+=gm;
+      out.skus[k].salesByPeriod[p]=(out.skus[k].salesByPeriod[p]||0)+sales;
+      out.skus[k].qtyByPeriod[p]=(out.skus[k].qtyByPeriod[p]||0)+qty;
+      out.skus[k].gmByPeriod[p]=(out.skus[k].gmByPeriod[p]||0)+gm;
+    });
+    (sheets.periods||[]).filter(function(r){
+      return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r))&&rowStore(r)!=='TOTALEMPRESA'&&txt(val(r,['Store']))!=='Total empresa';
+    }).forEach(function(r){
+      var st=rowStore(r);
+      if(!out.stores[st])out.stores[st]={v:0,c:0};
+      if(rowGroup(r).indexOf('VAPE')>=0)out.stores[st].v+=rowSales(r);else out.stores[st].c+=rowSales(r);
+    });
+    return out;
+  }
+  function currentAnalysisPeriod(a){
+    var cur=currentPeriod();
+    if(a&&Array.isArray(a.periods)&&a.periods.indexOf(cur)>=0)return cur;
+    return a&&Array.isArray(a.periods)&&a.periods.length?a.periods[a.periods.length-1]:'';
+  }
+  function alerts(sheets){var stores=selectedStores(),sf=selectedSuppliers();var invAll=(sheets.inventory||[]).filter(function(r){return (!sf.size||sf.has(supKey(r)));});var inv=invAll.filter(function(r){return (!stores.length||stores.indexOf(rowStore(r))>=0);});var low=inv.filter(function(r){var a=norm(val(r,['Alert Level','AlertLevel']));return /CRITICO|CRITICAL|BAJO|COBERTURA/.test(a);}).sort(function(a,b){return num(val(b,['Priority Score','PriorityScore','ROP Impact $','Sales S4']))-num(val(a,['Priority Score','PriorityScore','ROP Impact $','Sales S4']));});var rop=inv.filter(function(r){var sug=num(val(r,['Suggested ROP','SuggestedROP','ROP Propuesto Inventario'])),qty=num(val(r,['Quantity'])),delta=num(val(r,['Delta ROP','DeltaROP']));return sug>0&&(qty<sug||delta!==0);}).sort(function(a,b){return num(val(b,['ROP Impact $','Priority Score','PriorityScore','Sales S4']))-num(val(a,['ROP Impact $','Priority Score','PriorityScore','Sales S4']));});var transAll=(sheets.transfers||[]).filter(function(r){return (!sf.size||sf.has(supKey(r)));});var tr=transAll.filter(function(r){return (!stores.length||stores.indexOf(nstore(val(r,['From Store','FromStore'])))>=0||stores.indexOf(nstore(val(r,['To Store','ToStore'])))>=0);});return{low:low,rop:rop,trans:tr,transAll:transAll,inv:inv,invAll:invAll};}
+  function destroyCharts(){Object.keys(charts).forEach(function(k){try{charts[k].destroy();}catch(e){}});charts={};}
+  var vapesValueLabels={id:'vapesValueLabels',afterDatasetsDraw:function(chart,args,pluginOpts){var opt=(chart.options&&chart.options.plugins&&chart.options.plugins.vapesValueLabels)||{};if(opt.enabled===false)return;var ctx=chart.ctx,area=chart.chartArea,boxes=[],max=opt.maxLabels||80;ctx.save();ctx.font='800 10px Arial';ctx.textBaseline='middle';ctx.textAlign='center';function intersects(b){return boxes.some(function(a){return !(b.x2<a.x1||b.x1>a.x2||b.y2<a.y1||b.y1>a.y2);});}function drawLabel(text,x,y,color){var padX=5,padY=3,w=ctx.measureText(text).width+padX*2,h=16,xx=Math.max(area.left+2,Math.min(x-w/2,area.right-w-2)),yy=y-h/2,box={x1:xx,y1:yy,x2:xx+w,y2:yy+h};var tries=0;while(intersects(box)&&tries<10){yy-=h+3;box={x1:xx,y1:yy,x2:xx+w,y2:yy+h};tries++;}if(box.y1<area.top+2||box.y2>area.bottom+20||intersects(box))return;ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle=color||'#11284A';ctx.lineWidth=1;var r=5;ctx.beginPath();ctx.moveTo(xx+r,yy);ctx.lineTo(xx+w-r,yy);ctx.quadraticCurveTo(xx+w,yy,xx+w,yy+r);ctx.lineTo(xx+w,yy+h-r);ctx.quadraticCurveTo(xx+w,yy+h,xx+w-r,yy+h);ctx.lineTo(xx+r,yy+h);ctx.quadraticCurveTo(xx,yy+h,xx,yy+h-r);ctx.lineTo(xx,yy+r);ctx.quadraticCurveTo(xx,yy,xx+r,yy);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#11284A';ctx.fillText(text,xx+w/2,yy+h/2+.3);boxes.push(box);}var horizontal=chart.options&&chart.options.indexAxis==='y';(chart.data.datasets||[]).forEach(function(ds,di){if(chart.isDatasetVisible&&!chart.isDatasetVisible(di))return;var meta=chart.getDatasetMeta(di),isLine=meta.type==='line'||ds.type==='line',isPct=(ds.vapesValueFormat==='pct')||/%/.test(ds.label||''),data=ds.data||[];var color=(Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.borderColor||ds.backgroundColor)||'#11284A';(meta.data||[]).forEach(function(el,i){if(boxes.length>=max)return;var v=Number(data[i]||0);if(!Number.isFinite(v)||Math.abs(v)<.01)return;var pos=el.tooltipPosition?el.tooltipPosition():{x:el.x,y:el.y};var x=pos.x,y=pos.y;if(horizontal){x=Math.max(el.x||pos.x,el.base||0)+26;y=pos.y;}else if(isLine){y=pos.y-18;}else{var baseY=Number(el.base||area.bottom);var topY=Number(el.y||pos.y);if(opt.barPosition==='top'){if(Math.abs(baseY-topY)<18)return;y=Math.min(topY,baseY)-13;}else{y=Math.min(area.bottom-16,Math.max(area.top+14,baseY-17));}}var text=isPct?pct(v,Math.abs(v)>=10?0:1):money(v);drawLabel(text,x,y,color);});});ctx.restore();}};
+  function normalizeVapesComboChart(id,cfg){
+    try{
+      if(!cfg||String(id||'').indexOf('vapesChart')!==0)return cfg;
+      var marker='#2F6F95';
+      var hasSecondary=false;
+      var dsArr=(cfg.data&&cfg.data.datasets)||[];
+      dsArr.forEach(function(ds){
+        if(!ds)return;
+        var isSecondaryMarker=(ds.type==='line'||ds.yAxisID==='y1'||String(ds.label||'')==='Total');
+        if(!isSecondaryMarker)return;
+        hasSecondary=true;
+        ds.type='line';
+        ds.showLine=false;
+        ds.fill=false;
+        ds.tension=0;
+        ds.pointStyle='rectRot';
+        ds.pointRadius=6;
+        ds.pointHoverRadius=8;
+        ds.pointBorderWidth=1.5;
+        ds.borderWidth=0;
+        ds.clip=false;
+        ds.borderColor=marker;
+        ds.backgroundColor=marker;
+        ds.pointBackgroundColor=marker;
+        ds.pointBorderColor='#EAF6FB';
+      });
+      if(hasSecondary&&cfg.options){
+        cfg.options.layout=cfg.options.layout||{};
+        var lp=cfg.options.layout.padding;
+        if(typeof lp==='number')lp={top:lp,right:lp,bottom:lp,left:lp};
+        lp=Object.assign({top:28,right:6,bottom:4,left:4},lp||{});
+        // Evitar el espacio muerto que generaba el segundo eje: el ancho lo administra la escala, no el padding.
+        lp.right=Math.min(Math.max(Number(lp.right)||0,6),14);
+        lp.top=Math.max(Number(lp.top)||0,44);
+        cfg.options.layout.padding=lp;
+      }
+      if(hasSecondary&&cfg.options&&cfg.options.scales){
+        ['y1','y2'].forEach(function(axis){
+          var sc=cfg.options.scales[axis];
+          if(!sc)return;
+          sc.position=sc.position||'right';
+          sc.grid=Object.assign({},sc.grid||{}, {
+            display:false,
+            drawOnChartArea:false,
+            drawTicks:false,
+            drawBorder:false,
+            color:'transparent',
+            borderColor:'transparent',
+            tickColor:'transparent'
+          });
+          sc.border=Object.assign({},sc.border||{}, {display:false,color:'transparent'});
+          sc.ticks=Object.assign({},sc.ticks||{}, {
+            color:marker,
+            padding:4,
+            mirror:false,
+            font:Object.assign({weight:'900'},(sc.ticks&&sc.ticks.font)||{})
+          });
+          sc.afterFit=function(scale){
+            // Ancho compacto suficiente para 0%, 160%, $30K, etc., sin crear una franja blanca grande.
+            scale.width=Math.max(scale.width||0,44);
+          };
+          // Quitar título vertical del eje secundario para ganar espacio útil de plot.
+          if(sc.title){
+            sc.title=Object.assign({},sc.title,{display:false});
+          }
+        });
+      }
+      if(cfg.options&&cfg.options.plugins&&cfg.options.plugins.legend&&cfg.options.plugins.legend.labels){
+        cfg.options.plugins.legend.labels.color='#11284A';
+      }
+    }catch(e){}
+    return cfg;
+  }
+  function chart(id,cfg){var c=byId(id);if(!c||!window.Chart)return;if(charts[id]){try{charts[id].destroy();}catch(e){}}cfg=normalizeVapesComboChart(id,cfg);cfg.plugins=(cfg.plugins||[]).concat([vapesValueLabels]);charts[id]=new Chart(c.getContext('2d'),cfg);}
+  function opts(extra){var base={responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:28,right:8,left:4,bottom:4}},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{weight:'800'},color:'#000'}},tooltip:{callbacks:{label:function(ctx){var ds=ctx.dataset||{};var isPct=(ds.vapesValueFormat==='pct')||String(ds.label||'').indexOf('%')>=0;return ds.label+': '+(isPct?pct(ctx.raw):money(ctx.raw));}}},vapesValueLabels:{enabled:true,maxLabels:80,barPosition:'bottom'}},scales:{x:{ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0,minRotation:0}},y:{ticks:{color:'#000',font:{weight:'800'}}}}};extra=extra||{};if(extra.plugins)base.plugins=Object.assign({},base.plugins,extra.plugins);if(extra.scales)base.scales=Object.assign({},base.scales,extra.scales);var out=Object.assign({},base,extra);out.plugins=Object.assign({},base.plugins,extra.plugins||{});out.scales=Object.assign({},base.scales,extra.scales||{});return out;} 
+  function lab(p){var t=ptype(),m=txt(p);var w=m.match(/(20\d{2})-W(\d{1,2})/i);if(w)return ['S'+String(w[2]).padStart(2,'0'),w[1]];var mo=m.match(/(20\d{2})-(\d{1,2})$/);if(mo)return ['M'+String(mo[2]).padStart(2,'0'),mo[1]];var d=m.match(/(20\d{2})-(\d{1,2})-(\d{1,2})/);if(d)return [String(d[3]).padStart(2,'0')+'/'+String(d[2]).padStart(2,'0'),d[1]];return m;}
+  function pctAxisMax(values, minMax){
+    var maxVal=(values||[]).reduce(function(m,v){v=Number(v);return Number.isFinite(v)?Math.max(m,v):m;},0);
+    var floor=Number(minMax)||0;
+    var target=Math.max(floor,maxVal<=floor?floor:maxVal*1.16);
+    if(target<=0)return 100;
+    var step=target>180?20:10;
+    return Math.ceil(target/step)*step;
+  }
+
+  function vapesSupplierPieItems(a,currentKey){
+    var arr=Object.values(a.suppliers||{}).map(function(x){
+      return {name:x.name,value:num(x.sales&&x.sales[currentKey])};
+    }).filter(function(x){return num(x.value)>0;}).sort(function(x,y){return num(y.value)-num(x.value);});
+    var colors=[C.blue,C.orange,C.navy,C.gray,C.green,'#FAA21E','#2563EB','#7C2D12','#64748B'];
+    var top=arr.slice(0,6).map(function(x,i){return{label:x.name,value:num(x.value),color:colors[i%colors.length]};});
+    var rest=arr.slice(6).reduce(function(sum,x){return sum+num(x.value);},0);
+    if(rest>0)top.push({label:'Otros proveedores',value:rest,color:'#94A3B8'});
+    return top;
+  }
+  function renderVapesSupplierPie(a,currentKey){
+    currentKey=currentKey||currentAnalysisPeriod(a);
+    var items=vapesSupplierPieItems(a,currentKey),total=items.reduce(function(s,x){return s+num(x.value);},0);
+    var periodLabel=Array.isArray(lab(currentKey))?lab(currentKey).join(' '):txt(lab(currentKey));
+    var centerPlugin={id:'vapesSupplierPieCenter',afterDraw:function(chart){
+      if(!(total>0))return;
+      var meta=chart.getDatasetMeta(0),arc=(meta.data||[])[0];if(!arc)return;
+      var ctx=chart.ctx,cx=arc.x,cy=arc.y;
+      ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=C.navy;ctx.font='1000 17px Arial';ctx.fillText(money(total),cx,cy-8);
+      ctx.fillStyle='#526581';ctx.font='800 11px Arial';ctx.fillText('período actual',cx,cy+10);
+      ctx.restore();
+    }};
+    var percentPlugin={id:'vapesSupplierPiePct',afterDatasetsDraw:function(chart){
+      if(!(total>0))return;
+      var meta=chart.getDatasetMeta(0),ctx=chart.ctx,vals=(chart.data.datasets[0]||{}).data||[];
+      ctx.save();ctx.font='900 11px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+      (meta.data||[]).forEach(function(arc,i){
+        var v=num(vals[i]),share=v/total;if(!(share>=0.055))return;
+        var ang=(arc.startAngle+arc.endAngle)/2,r=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.62,x=arc.x+Math.cos(ang)*r,y=arc.y+Math.sin(ang)*r,t=Math.round(share*100)+'%';
+        ctx.lineWidth=3;ctx.strokeStyle='rgba(17,40,74,.28)';ctx.fillStyle='#fff';ctx.strokeText(t,x,y);ctx.fillText(t,x,y);
+      });
+      ctx.restore();
+    }};
+    chart('vapesChartSupplierPie',{type:'doughnut',data:{labels:items.map(function(x){return x.label;}),datasets:[{label:'Venta',data:items.map(function(x){return x.value;}),backgroundColor:items.map(function(x){return x.color;}),borderColor:'#fff',borderWidth:3,hoverOffset:8,cutout:'50%'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:8,right:8,bottom:8,left:8}},plugins:{legend:{position:'bottom',labels:{boxWidth:12,color:'#000',font:{weight:'800',size:11}}},title:{display:true,text:['Venta por proveedor','Mix período actual: '+periodLabel],color:'#000',font:{weight:'900',size:13},padding:{top:4,bottom:8}},tooltip:{callbacks:{label:function(ctx){var v=num(ctx.raw),share=total?v/total*100:0;return ctx.label+': '+money(v)+' • '+share.toFixed(1)+'%';},footer:function(){return 'Total período actual: '+money(total);}}},vapesValueLabels:{enabled:false}},cutout:'50%'},plugins:[centerPlugin,percentPlugin]});
+  }
+  function supplierPaletteMap(suppliers){var arr=Object.keys(suppliers||{}).map(function(k){return {key:k,total:num((suppliers[k]||{}).total),name:(suppliers[k]||{}).name||k};}).sort(function(a,b){return b.total-a.total;});var palette=[C.blue,C.orange,C.navy,C.green,'#FAA21E','#2563EB','#64748B','#7C2D12','#0EA5E9','#9333EA'];var map={};arr.forEach(function(x,i){map[x.key]=palette[i%palette.length];});return map;}
+  function rowPeriodByType(r,t){if(t==='month')return txt(val(r,['CalMonth','PeriodKey']));if(t==='day')return txt(val(r,['Date Sold','Date','PeriodKey']));return txt(val(r,['YearWeek','YearMonth','PeriodKey']));}
+  function rowIsDelivery(r){var flag=norm(val(r,['Is_Delivery','Is Delivery','Delivery']));var ch=norm(val(r,['Delivery_Channel','Channel','Delivery Channel']));return flag==='1'||flag==='SI'||flag==='YES'||flag==='TRUE'||flag==='DELIVERY'||!!ch;}
+  function rowDeliveryChannel(r){var ch=norm(val(r,['Delivery_Channel','Channel','Delivery Channel']));if(/UBER/.test(ch))return 'Uber Eats';if(/PEDIDOS|PEDIDO|PYA/.test(ch))return 'Pedidos Ya';return ch?txt(val(r,['Delivery_Channel','Channel','Delivery Channel'])):'Otros';}
+  function aggregateVapesDelivery(periods,a){var t=ptype(),pset=new Set(periods||[]),stores=selectedStores(),sf=selectedSuppliers(),rows=wbRows('Cubo_Sales_DetailHallazgos')||[],out={uber:{},pya:{},other:{},total:{},share:{},qtyUber:{},qtyPya:{},qtyOther:{}};(periods||[]).forEach(function(p){out.uber[p]=0;out.pya[p]=0;out.other[p]=0;out.total[p]=0;out.share[p]=0;out.qtyUber[p]=0;out.qtyPya[p]=0;out.qtyOther[p]=0;});rows.forEach(function(r){if(!isVape(r)||!rowIsDelivery(r))return;var pk=rowPeriodByType(r,t);if(!pset.has(pk))return;var st=rowStore(r);if(stores.length&&stores.indexOf(st)<0)return;if(sf.size&&!sf.has(supKey(r)))return;var sale=rowSales(r),qty=rowQty(r),ch=rowDeliveryChannel(r);if(ch==='Uber Eats'){out.uber[pk]+=sale;out.qtyUber[pk]+=qty;}else if(ch==='Pedidos Ya'){out.pya[pk]+=sale;out.qtyPya[pk]+=qty;}else{out.other[pk]+=sale;out.qtyOther[pk]+=qty;}out.total[pk]+=sale;});(periods||[]).forEach(function(p){var base=num(a&&a.vape&&a.vape.sales&&a.vape.sales[p]);out.share[p]=base?out.total[p]/base*100:0;});return out;}
+
+  function renderCharts(a){
+    var p=a.periods,labels=p.map(lab),currentKey=currentAnalysisPeriod(a);
+    var sc=p.map(function(k){return a.cigar.sales[k];}),sv=p.map(function(k){return a.vape.sales[k];}),gc=p.map(function(k){return a.cigar.gm[k];}),gv=p.map(function(k){return a.vape.gm[k];}),total=p.map(function(k,i){return sc[i]+sv[i];}),supPalette=supplierPaletteMap(a.suppliers),delivery=aggregateVapesDelivery(p,a);
+    var salesPct=p.map(function(k,i){return sc[i]?sv[i]/sc[i]*100:0;});
+    var marginPct=p.map(function(k,i){return gc[i]?gv[i]/gc[i]*100:0;});
+    chart('vapesChartSales',{type:'bar',data:{labels:labels,datasets:[{label:'Cigarros',data:sc,backgroundColor:C.blue,borderRadius:5},{label:'Vapes',data:sv,backgroundColor:C.orange,borderRadius:5},{label:'% Vapes/Cigarros',type:'line',yAxisID:'y1',data:salesPct,borderColor:C.gray,backgroundColor:C.gray,tension:.25,pointRadius:4}]},options:opts({layout:{padding:{top:44,right:8,left:4,bottom:4}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return money(v);},color:'#000'}},y1:{position:'right',beginAtZero:true,suggestedMax:pctAxisMax(salesPct,100),grid:{drawOnChartArea:false},ticks:{callback:function(v){return v+'%';},color:'#000',font:{weight:'800'}}}}})});
+    chart('vapesChartMargin',{type:'bar',data:{labels:labels,datasets:[{label:'Cigarros',data:gc,backgroundColor:C.blue,borderRadius:5},{label:'Vapes',data:gv,backgroundColor:C.orange,borderRadius:5},{label:'% margen Vapes/Cigarros',type:'line',yAxisID:'y1',data:marginPct,borderColor:C.gray,backgroundColor:C.gray,tension:.25,pointRadius:4}]},options:opts({layout:{padding:{top:44,right:8,left:4,bottom:4}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return money(v);}}},y1:{position:'right',beginAtZero:true,suggestedMax:pctAxisMax(marginPct,100),grid:{drawOnChartArea:false},ticks:{callback:function(v){return v+'%';},font:{weight:'800'}}}}})});
+    var stackTotalLineColor='#2F6F95';
+    var stackAxisMax=Math.max(1,Math.max.apply(null,total))*1.22;
+    chart('vapesChartStack',{type:'bar',data:{labels:labels,datasets:[{label:'Cigarros',data:sc,backgroundColor:C.blue,borderRadius:5,stack:'s'},{label:'Vapes',data:sv,backgroundColor:C.orange,borderRadius:5,stack:'s'},{label:'Total',type:'line',yAxisID:'y1',vapesValueFormat:'money',data:total,borderColor:stackTotalLineColor,backgroundColor:stackTotalLineColor,tension:.28,pointRadius:5,pointHoverRadius:7,pointStyle:'rectRot',borderWidth:3,clip:false}]},options:opts({layout:{padding:{top:50,right:8,left:4,bottom:4}},plugins:{vapesValueLabels:{enabled:true,maxLabels:55}},scales:{x:{stacked:true,ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0}},y:{stacked:true,beginAtZero:true,suggestedMax:stackAxisMax,ticks:{callback:function(v){return money(v);},color:'#1F2937',font:{weight:'800'}}},y1:{position:'right',beginAtZero:true,suggestedMax:stackAxisMax,grid:{drawOnChartArea:false,drawTicks:false,color:'transparent'},border:{display:false},title:{display:true,text:'Total',color:stackTotalLineColor,font:{weight:'900',size:12}},ticks:{callback:function(v){return money(v);},color:stackTotalLineColor,font:{weight:'900'}}}}})});
+    chart('vapesChartGmPct',{type:'bar',data:{labels:labels,datasets:[{label:'Cigarros % margen',data:p.map(function(k,i){return sc[i]?gc[i]/sc[i]*100:0;}),backgroundColor:C.blue,borderRadius:5},{label:'Vapes % margen',data:p.map(function(k,i){return sv[i]?gv[i]/sv[i]*100:0;}),backgroundColor:C.orange,borderRadius:5}]},options:opts({plugins:{vapesValueLabels:{enabled:true,maxLabels:60}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return v+'%';}}}}})});
+    var top=Object.values(a.suppliers).sort(function(x,y){return y.total-x.total;}).slice(0,5);
+    chart('vapesChartSupplier',{type:'bar',data:{labels:labels,datasets:top.map(function(s,i){return{label:s.name,data:p.map(function(k){return s.sales[k]||0;}),backgroundColor:[C.blue,C.orange,C.navy,C.gray,C.green][i%5],borderRadius:4,stack:'s'};})},options:opts({plugins:{vapesValueLabels:{enabled:true,maxLabels:35}},scales:{x:{stacked:true,ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{callback:function(v){return money(v);}}}}})});
+    renderVapesSupplierPie(a,currentKey);
+    var sku=Object.values(a.skus).map(function(x){
+      x.salesCurrent=num(x.salesByPeriod&&x.salesByPeriod[currentKey]);
+      x.qtyCurrent=num(x.qtyByPeriod&&x.qtyByPeriod[currentKey]);
+      return x;
+    }).filter(function(x){return x.salesCurrent>0;}).sort(function(x,y){return y.salesCurrent-x.salesCurrent;}).slice(0,12);
+    chart('vapesChartSku',{type:'bar',data:{labels:sku.map(function(x){return x.name.length>32?x.name.slice(0,31)+'…':x.name;}),datasets:[{label:'Venta período actual',data:sku.map(function(x){return x.salesCurrent;}),backgroundColor:sku.map(function(x){return supPalette[x.supplierKey]||C.blue;}),borderRadius:5}]},options:opts({indexAxis:'y',interaction:{mode:'nearest',axis:'y',intersect:true},plugins:{legend:{display:false},vapesValueLabels:{enabled:true,maxLabels:20},tooltip:{enabled:true,displayColors:true,callbacks:{title:function(items){var item=sku[(items&&items[0]&&items[0].dataIndex)||0]||{};return item.name||'';},label:function(ctx){var item=sku[ctx.dataIndex]||{};return ['Venta período actual: '+money(ctx.raw),'Unidades período actual: '+fint(item.qtyCurrent)+' uds','Proveedor: '+(item.supplier||'Sin proveedor')];},afterLabel:function(){return '';}}}},scales:{x:{beginAtZero:true,ticks:{callback:function(v){return money(v);},color:'#000'}},y:{ticks:{color:'#000',font:{weight:'800',size:11}}}}})});
+    var deliveryShareVals=p.map(function(k){return delivery.share[k]||0;});
+    chart('vapesChartDelivery',{type:'bar',data:{labels:labels,datasets:[{label:'Pedidos Ya',data:p.map(function(k){return delivery.pya[k]||0;}),backgroundColor:C.red,borderColor:C.red,borderWidth:1,borderRadius:5,stack:'delivery'},{label:'Uber Eats',data:p.map(function(k){return delivery.uber[k]||0;}),backgroundColor:C.green,borderColor:C.green,borderWidth:1,borderRadius:5,stack:'delivery'},{label:'% Delivery / Vapes',type:'line',yAxisID:'y1',vapesValueFormat:'pct',data:deliveryShareVals,borderColor:C.navy,backgroundColor:C.navy,tension:.25,pointRadius:4,borderWidth:3}]},options:opts({layout:{padding:{top:48,right:8,left:4,bottom:4}},plugins:{tooltip:{callbacks:{label:function(ctx){var raw=num(ctx.raw);if(ctx.dataset.yAxisID==='y1'||String(ctx.dataset.label||'').indexOf('%')>=0)return ctx.dataset.label+': '+pct(raw);var qty=(ctx.dataset.label==='Uber Eats')?(delivery.qtyUber[p[ctx.dataIndex]]||0):(delivery.qtyPya[p[ctx.dataIndex]]||0);return [ctx.dataset.label+': '+money(raw),'Unidades: '+fint(qty)+' uds'];},footer:function(items){if(!items||!items.length)return '';var idx=items[0].dataIndex,key=p[idx];var totalDel=num(delivery.total[key]),share=num(delivery.share[key]),other=num(delivery.other[key]);var lines=['Delivery total: '+money(totalDel),'Share delivery / total vapes: '+pct(share)];if(other>0)lines.push('Otros canales: '+money(other));return lines;}}},vapesValueLabels:{enabled:true,maxLabels:45}},scales:{x:{stacked:true,ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{callback:function(v){return money(v);},color:'#000'}},y1:{position:'right',beginAtZero:true,max:pctAxisMax(deliveryShareVals,80),grid:{display:false,drawOnChartArea:false,drawTicks:false,drawBorder:false,color:'transparent'},border:{display:false,color:'transparent'},ticks:{callback:function(v){return v+'%';},color:'#2F6F95',padding:4,font:{weight:'900'}}}}})});
+  }
+  function makeTable(node,heads,rows){
+    if(!node)return;
+    var header='<thead><tr>'+heads.map(function(h){return '<th>'+esc(h[0])+'</th>';}).join('')+'</tr></thead>';
+    if(!rows||!rows.length){node.innerHTML=header+'<tbody><tr><td colspan="'+heads.length+'">Sin datos para el filtro actual.</td></tr></tbody>';return;}
+    node.innerHTML=header+'<tbody>'+rows.map(function(r){return '<tr>'+heads.map(function(h){return '<td class="'+(h[2]?'num':'')+'">'+h[1](r)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>';
+  }
+  function vapesStoreShort(st){var raw=txt(st),n=norm(raw);if(n.indexOf('PROC')>=0)return 'Próceres';if(n.indexOf('TUSC')>=0)return 'Tuscania';if(n.indexOf('MASF')>=0)return 'Masferrer';return raw.replace(/^AMPM\s*\d*\s*/i,'').replace(/^AMPM/i,'').trim().slice(0,14)||raw.slice(0,14)||'Tienda';}
+  function buildVapesExistencePivot(invRows){
+    var stores=selectedStores();
+    if(!stores.length)stores=Array.from(new Set((invRows||[]).map(function(r){return rowStore(r);}).filter(Boolean)));
+    stores=stores.filter(Boolean).slice(0,4);
+    var storeSet=new Set(stores),map=new Map();
+    (invRows||[]).forEach(function(r){var st=rowStore(r);if(storeSet.size&&!storeSet.has(st))return;var desc=txt(val(r,['Description','description','Descripcion']));var sup=txt(val(r,['Supplier','supplier','Proveedor']));var k=key(sup)+'||'+key(desc);if(!map.has(k))map.set(k,{description:desc,supplier:sup,total:0,qtyByStore:{}});var obj=map.get(k),q=num(val(r,['Quantity','Qty','Existencia','On Hand']));obj.qtyByStore[st]=num(obj.qtyByStore[st])+q;obj.total+=q;});
+    var rows=Array.from(map.values()).sort(function(a,b){return num(b.total)-num(a.total)||txt(a.description).localeCompare(txt(b.description));});
+    return{stores:stores,rows:rows};
+  }
+
+  function vapesTransferSkuKey(r){
+    var sk=key(val(r,['SupplierKey','supplierKey','Supplier','supplier','Proveedor'])||'');
+    var dk=key(val(r,['DescriptionKey','descriptionKey','Description','description','Descripcion'])||'');
+    return sk+'||'+dk;
+  }
+  function vapesStoreSort(a,b){
+    var na=Number((txt(a).match(/(\d+)/)||[])[1]||999), nb=Number((txt(b).match(/(\d+)/)||[])[1]||999);
+    if(na!==nb)return na-nb;
+    return txt(a).localeCompare(txt(b),'es',{sensitivity:'base'});
+  }
+  function vapesDaysLabel(d){
+    d=num(d);
+    if(!Number.isFinite(d))return '—';
+    if(d>=9999)return '∞';
+    if(d<0)d=0;
+    return String(Math.round(d));
+  }
+  function vapesCalcDays(q, avg, fallback){
+    q=num(q);avg=num(avg);
+    if(avg>0)return q/avg;
+    var fb=num(fallback);
+    if(Number.isFinite(fb)&&fb>0)return fb;
+    return q>0?9999:0;
+  }
+  function buildVapesTransferMatrix(invRows,transRows){
+    invRows=Array.isArray(invRows)?invRows:[];
+    transRows=Array.isArray(transRows)?transRows:[];
+    // Matriz completa: no depender de selectedStores(), porque el balanceo requiere ver origen y destino.
+    var stSet=new Set();
+    invRows.forEach(function(r){var st=rowStore(r);if(st)stSet.add(st);});
+    transRows.forEach(function(r){var f=nstore(val(r,['From Store','FromStore'])),t=nstore(val(r,['To Store','ToStore']));if(f)stSet.add(f);if(t)stSet.add(t);});
+    var stores=Array.from(stSet).sort(vapesStoreSort);
+    stores=Array.from(new Set(stores)).slice(0,5);
+    var storeSet=new Set(stores), map=new Map();
+    function ensureRow(k,base){
+      if(!map.has(k))map.set(k,{supplier:txt(val(base,['Supplier','supplier','Proveedor']))||'(Sin proveedor)',description:txt(val(base,['Description','description','Descripcion']))||'(Sin descripción)',totalAmt:0,perStore:{},hasMove:false});
+      var obj=map.get(k);
+      if(!obj.supplier||obj.supplier==='(Sin proveedor)')obj.supplier=txt(val(base,['Supplier','supplier','Proveedor']))||obj.supplier;
+      if(!obj.description||obj.description==='(Sin descripción)')obj.description=txt(val(base,['Description','description','Descripcion']))||obj.description;
+      return obj;
+    }
+    function ensureStore(obj,st,base){
+      st=nstore(st);if(!st)return null;
+      if(storeSet.size&&!storeSet.has(st))return null;
+      var ps=obj.perStore[st];
+      if(!ps){
+        var q=num(val(base,['Quantity','Qty','From Qty','FromQty','To Qty','ToQty']));
+        var avg=num(val(base,['Avg Daily Qty','AvgDailyQty','Avg Daily Qty To','AvgDailyQtyTo']));
+        var plan=num(val(base,['Planimetria','Plan','Min','ROP','Suggested ROP','SuggestedROP','To Suggested ROP','ToSuggestedROP']));
+        var cov=num(val(base,['Coverage Days','CoverageDays','Days Qty','DaysQty']));
+        var unit=num(val(base,['Unit Cost','UnitCost']));
+        if(!(unit>0))unit=q>0?num(val(base,['Amount']))/q:0;
+        ps=obj.perStore[st]={q0:q,q1:q,avg:avg,days0:vapesCalcDays(q,avg,cov),days1:vapesCalcDays(q,avg,cov),plan:plan,out:0,inn:0,net:0,unitCost:unit};
+      }else{
+        var q2=num(val(base,['Quantity','Qty']));
+        if(q2||q2===0){ps.q0=q2;ps.q1=ps.q0-ps.out+ps.inn;}
+        var avg2=num(val(base,['Avg Daily Qty','AvgDailyQty']));if(avg2>0)ps.avg=avg2;
+        var plan2=num(val(base,['Planimetria','Plan','Min','ROP','Suggested ROP','SuggestedROP']));if(plan2>0)ps.plan=plan2;
+        var cov2=num(val(base,['Coverage Days','CoverageDays','Days Qty','DaysQty']));
+        ps.days0=vapesCalcDays(ps.q0,ps.avg,cov2);
+        ps.days1=vapesCalcDays(ps.q1,ps.avg,cov2);
+      }
+      return ps;
+    }
+    invRows.forEach(function(r){
+      var st=rowStore(r);if(storeSet.size&&!storeSet.has(st))return;
+      var k=vapesTransferSkuKey(r);if(k==='||')return;
+      var obj=ensureRow(k,r);ensureStore(obj,st,r);
+    });
+    transRows.forEach(function(r){
+      var k=vapesTransferSkuKey(r);if(k==='||')return;
+      var obj=ensureRow(k,r);
+      var from=nstore(val(r,['From Store','FromStore'])), to=nstore(val(r,['To Store','ToStore']));
+      var mv=Math.max(0,num(val(r,['Qty Suggested','QtySuggested','Mover'])));
+      if(!(mv>0))return;
+      var psFrom=ensureStore(obj,from,{'Quantity':val(r,['From Qty','FromQty']),'Avg Daily Qty':0,'Planimetria':0});
+      var psTo=ensureStore(obj,to,{'Quantity':val(r,['To Qty','ToQty']),'Avg Daily Qty':val(r,['Avg Daily Qty To','AvgDailyQtyTo']),'Suggested ROP':val(r,['To Suggested ROP','ToSuggestedROP'])});
+      if(psFrom){psFrom.out+=mv;psFrom.q1=psFrom.q0-psFrom.out+psFrom.inn;psFrom.net=psFrom.inn-psFrom.out;psFrom.days1=vapesCalcDays(psFrom.q1,psFrom.avg,psFrom.days0);}
+      if(psTo){psTo.inn+=mv;psTo.q1=psTo.q0-psTo.out+psTo.inn;psTo.net=psTo.inn-psTo.out;psTo.days1=vapesCalcDays(psTo.q1,psTo.avg,psTo.days0);}
+      obj.totalAmt+=num(val(r,['Amount Est','AmountEst']));
+      obj.hasMove=true;
+    });
+    var rows=Array.from(map.values()).filter(function(p){return p.hasMove;}).sort(function(a,b){return num(b.totalAmt)-num(a.totalAmt)||txt(a.description).localeCompare(txt(b.description),'es',{sensitivity:'base'});});
+    return{stores:stores,rows:rows};
+  }
+  function renderVapesTransferMatrix(node,invRows,transRows){
+    if(!node)return;
+    var matrix=buildVapesTransferMatrix(invRows,transRows),stores=matrix.stores,rows=matrix.rows.slice(0,100);
+    var heads=['Proveedor','SKU','Valor est.'].concat(stores);
+    var header='<colgroup><col class="vapesTransferColSupplier"><col class="vapesTransferColSku"><col class="vapesTransferColAmount">'+stores.map(function(){return '<col class="vapesTransferColStore">';}).join('')+'</colgroup><thead><tr>'+heads.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead>';
+    if(!rows.length){node.innerHTML=header+'<tbody><tr><td colspan="'+heads.length+'">Sin oportunidades de traslado con los filtros actuales.</td></tr></tbody>';return;}
+    node.innerHTML=header+'<tbody>'+rows.map(function(p){
+      var cells=stores.map(function(st){
+        var ps=p.perStore[st];
+        if(!ps||!(ps.out>0||ps.inn>0))return '<td class="transStoreCell transEmpty"></td>';
+        var cls=ps.net>0?'transIn':(ps.net<0?'transOut':'transMix');
+        var pill=ps.net>0?'<span class="deltaPill in">+'+fint(ps.net)+'</span>':(ps.net<0?'<span class="deltaPill out">'+fint(ps.net)+'</span>':'<span class="deltaPill zero">0</span>');
+        return '<td class="transStoreCell '+cls+'"><div>Qty: '+fint(ps.q0)+'→<b>'+fint(ps.q1)+'</b> '+pill+'</div><div class="muted">Días: '+vapesDaysLabel(ps.days0)+'→<b>'+vapesDaysLabel(ps.days1)+'</b></div><div class="muted">Min: '+fint(ps.plan)+'</div><div class="muted io">Salida: <b class="outN">'+fint(ps.out)+'</b> · Entrada: <b class="inN">'+fint(ps.inn)+'</b></div></td>';
+      }).join('');
+      return '<tr><td class="vapesTransferSupplierCell">'+esc(p.supplier)+'</td><td class="vapesTransferSkuCell">'+esc(p.description)+'</td><td class="transAmtCell"><b>'+money(p.totalAmt)+'</b></td>'+cells+'</tr>';
+    }).join('')+'</tbody>';
+  }
+  function renderVapesRopSuggestedTable(node,rows){
+    if(!node)return;
+    function ropActualLocal(r){return num(val(r,['ROP','Rop','ROP actual','ROP Actual']));}
+    function ropSugLocal(r){return num(val(r,['Suggested ROP','SuggestedROP','ROP Propuesto Inventario','ROP propuesto','ROP Propuesto']));}
+    function planLocal(r){return num(val(r,['Planimetria','Planimetría','Plan','Planogram','Planograma','Min']));}
+    function deltaLocal(r){var d=val(r,['Delta ROP','DeltaROP','ΔROP']);return d!==''?num(d):(ropSugLocal(r)-ropActualLocal(r));}
+    function daysLocal(r){var d=val(r,['Days Qty','DaysQty','Coverage Days','CoverageDays']);d=num(d);return Number.isFinite(d)&&d>0?d.toFixed(0):'sin cobertura';}
+    function unitCostLocal(r){var q=num(val(r,['Quantity','Qty']));var amt=num(val(r,['Amount','Valor inv','Inventory Amount']));var uc=num(val(r,['Unit Cost','UnitCost','Costo','Cost']));if(q>0&&amt>0)return amt/q;if(uc>0)return uc;return 0;}
+    var data=(rows||[]).map(function(r){var d=deltaLocal(r), impact=Math.abs(d)*unitCostLocal(r);return{row:r,delta:d,impact:impact,dir:d>0?'subir':(d<0?'bajar':'sin')};}).filter(function(x){return x.delta!==0;}).sort(function(a,b){return num(b.impact)-num(a.impact)||Math.abs(num(b.delta))-Math.abs(num(a.delta));});
+    var bajar=data.filter(function(x){return x.delta<0;}).length, subir=data.filter(function(x){return x.delta>0;}).length;
+    var sum=byId('vapesRopSummary');
+    if(sum){sum.innerHTML='<span class="vapesRopCount"><b>'+fint(bajar)+'</b> bajar ROP</span><span class="vapesRopCount subir"><b>'+fint(subir)+'</b> subir ROP</span><span class="vapesRopRule">Orden: impacto $ = (Amount ÷ Qty) × |ΔROP|</span>';}
+    var heads=['Acción','Store','Supplier','Description','Amount','Qty','QTY S4','Días Qty','ROP actual','Plan.','ROP prop.','ΔROP'];
+    var header='<colgroup><col class="ropAction"><col class="ropStore"><col class="ropSupplier"><col class="ropDesc"><col class="ropAmount"><col class="ropQty"><col class="ropS4"><col class="ropDays"><col class="ropActual"><col class="ropPlan"><col class="ropProp"><col class="ropDelta"></colgroup><thead><tr>'+heads.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead>';
+    if(!data.length){node.innerHTML=header+'<tbody><tr><td colspan="'+heads.length+'">Sin cambios de ROP con los filtros actuales.</td></tr></tbody>';return;}
+    node.innerHTML=header+'<tbody>'+data.slice(0,180).map(function(x){var r=x.row,d=x.delta,dir=x.dir,act=ropActualLocal(r),sug=ropSugLocal(r);var action=dir==='subir'?'Subir ROP':'Bajar ROP';var deltaTxt=(d>0?'+':'')+fint(d);return '<tr class="vapesRopRow '+dir+'">'
+      +'<td><span class="vapesRopAction '+dir+'">'+esc(action)+'</span></td>'
+      +'<td>'+esc(val(r,['Store']))+'</td>'
+      +'<td>'+esc(val(r,['Supplier']))+'</td>'
+      +'<td class="vapesRopDescCell">'+esc(val(r,['Description']))+'</td>'
+      +'<td class="num">'+money(val(r,['Amount']))+'</td>'
+      +'<td class="num">'+fint(val(r,['Quantity','Qty']))+'</td>'
+      +'<td class="num">'+fint(val(r,['Qty S4','QtyS4','QTY Sales S4']))+'</td>'
+      +'<td class="num">'+daysLocal(r)+'</td>'
+      +'<td class="num">'+fint(act)+'</td>'
+      +'<td class="num">'+fint(planLocal(r))+'</td>'
+      +'<td class="num vapesRopPropCell"><span class="vapesRopPropBadge">'+fint(sug)+'</span></td>'
+      +'<td class="num"><span class="vapesRopDelta '+dir+'">'+deltaTxt+'</span></td>'
+      +'</tr>';}).join('')+'</tbody>';
+  }
+  function renderStatic(a,al){
+    var p=a.periods,last=currentAnalysisPeriod(a)||p[p.length-1];
+    var vs=num(a.vape.sales[last]),cs=num(a.cigar.sales[last]),vg=num(a.vape.gm[last]);
+    var invRows=al.inv||[];
+    var invQty=invRows.reduce(function(s,r){return s+num(val(r,['Quantity']));},0);
+    var invAmt=invRows.reduce(function(s,r){return s+num(val(r,['Amount']));},0);
+    var k=byId('vapesKpis');
+    if(k)k.innerHTML='<div class="vapesKpi orange"><div class="t">Venta Vapes</div><div class="v">'+money(vs)+'</div><div class="s">Período actual seleccionado</div></div><div class="vapesKpi"><div class="t">Mix vs Cigarros</div><div class="v">'+pct(cs?vs/cs*100:null)+'</div><div class="s">Participación comercial</div></div><div class="vapesKpi green"><div class="t">% Margen Vapes</div><div class="v">'+pct(vs?vg/vs*100:null)+'</div><div class="s">GM / Venta</div></div><div class="vapesKpi gray"><div class="t">Inventario Vapes</div><div class="v">'+fint(invQty)+' uds</div><div class="s">Valor: '+money(invAmt)+'</div></div><div class="vapesKpi red"><div class="t">Sugerencias ROP</div><div class="v">'+fint(al.rop.length)+'</div><div class="s">SKU tienda a revisar</div></div><div class="vapesKpi gray"><div class="t">Traslados</div><div class="v">'+fint(al.trans.length)+'</div><div class="s">Movimientos sugeridos</div></div>';
+    var ab=byId('vapesAlerts');if(ab){ab.innerHTML='';ab.style.display='none';}
+    function cover(r){var d=num(val(r,['Coverage Days','CoverageDays']));return Number.isFinite(d)&&d>0?d.toFixed(1)+' días':'sin cobertura';}
+    function ropActual(r){return num(val(r,['ROP','Rop','ROP actual']));}
+    function ropSug(r){return num(val(r,['Suggested ROP','SuggestedROP','ROP Propuesto Inventario','ROP propuesto']));}
+    function deltaRop(r){var d=val(r,['Delta ROP','DeltaROP']);return d!==''?num(d):(ropSug(r)-ropActual(r));}
+    function qtyGap(r){var n=val(r,['Need Qty','NeedQty','Faltante']);return n!==''?Math.max(num(n),0):Math.max(ropSug(r)-num(val(r,['Quantity'])),0);}
+    function actionText(r){var need=qtyGap(r),d=deltaRop(r);if(need>0)return 'Reponer +'+fint(need)+' uds';if(d>0)return 'Subir ROP +'+fint(d);if(d<0)return 'Bajar ROP '+fint(d);return 'ROP OK';}
+    var piv=buildVapesExistencePivot(invRows);
+    var existenceHeads=[['SKU',function(r){return esc(r.description);}],['Proveedor',function(r){return esc(r.supplier);}] ];
+    piv.stores.forEach(function(st){existenceHeads.push([vapesStoreShort(st),function(r,store){return function(x){var q=num((x.qtyByStore||{})[store]||0);return '<span class="'+(q<=2?'vapesStockLow':'')+'">'+fint(q)+'</span>';};}(null,st),1]);});
+    existenceHeads.push(['Total',function(r){var q=num(r.total);return '<span class="'+(q<=2?'vapesStockLow':'')+'">'+fint(q)+'</span>';},1]);
+    makeTable(byId('vapesExistenceTable'),existenceHeads,piv.rows.slice(0,80));
+    renderVapesRopSuggestedTable(byId('vapesRopTable'),al.rop);
+    // Traslados debe mantenerse completo entre tiendas aunque el dashboard tenga una sola tienda filtrada.
+    // Se respeta el filtro de proveedor, pero no se recorta la matriz por tienda seleccionada.
+    renderVapesTransferMatrix(byId('vapesTransferTable'), (al.invAll||invRows), (al.transAll||al.trans));
+  }
+  async function render(){installTab();installPage();var mode=byId('vapesModeBadge'),source=byId('vapesSourceBadge'),range=byId('vapesRangeBadge'),no=byId('vapesNoData');if(mode)mode.textContent=ptype().toUpperCase();var sheets=await loadSheets();if(source)source.textContent=sheets?(sheets.source||'Vapes_*'):'Sin hojas';if(!sheets||!(sheets.periods||[]).length){if(no){no.style.display='';no.innerHTML='Sin data para Vapes en el cubo cargado.<br>Ejecutá el <b>compactar_excel.py</b> nuevo para generar hojas <b>Vapes_Periods</b>, <b>Vapes_Supplier</b>, <b>Vapes_SKU</b>, <b>Vapes_Inventory</b>.';}destroyCharts();return;}if(no)no.style.display='none';updateSuppliers(sheets);var a=aggregate(sheets),al=alerts(sheets);if(range)range.textContent=a.periods.length?a.periods[0]+' → '+a.periods[a.periods.length-1]:'—';if(!a.periods.length){if(no){no.style.display='';no.textContent='Hay data Vapes, pero no coincide con el período o filtros activos.';}destroyCharts();return;}renderStatic(a,al);renderCharts(a);}
+  function reset(){local.sheets=null;local.stamp=null;}
+  function schedule(ms){clearTimeout(local.timer);local.timer=setTimeout(function(){render().catch(function(e){console.warn('Vapes render error',e);});},ms==null?120:ms);}
+  function bind(){window.addEventListener('ampm:fileloaded',function(){captureVapesFilterSnapshot();reset();local.fallback=null;local.fallbackStamp=null;schedule(160);});window.addEventListener('ampm:tabshown',function(e){if(txt(e.detail&&e.detail.tab)==='vapes')schedule(80);});['reportMode','currentMonth','prevMonths','stores','dowFilter'].forEach(function(id){var n=byId(id);if(n)n.addEventListener('change',function(){local.pendingGlobalFilter=true;},true);});document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){setTimeout(function(){local.pendingGlobalFilter=false;local.pendingSupplierFilter=false;captureVapesFilterSnapshot();reset();schedule(20);},90);}},true);setTimeout(function(){schedule(0);},1000);}
+  function boot(){installTab();installPage();bind();try{if(localStorage.getItem('ampm_tab')==='vapes')showTab();}catch(e){}}
+  window.renderVapesDashboard=render;window.refreshVapesDashboard=function(){reset();schedule(20);};window.showVapesTab=showTab;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+<!-- AMPM Vapes Module: END -->
+
+
+
+<style id="vapes-sticky-table-headers-fix-v2">
+/* Vapes | Fix definitivo: encabezados de tablas congelados dentro del scroll */
+.vapesRoot .vapesTableWrap{
+  position:relative!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  max-height:430px!important;
+  border:1px solid #D8E6F3!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  isolation:isolate!important;
+  scrollbar-gutter:stable!important;
+}
+.vapesRoot .vapesTable{
+  width:100%!important;
+  max-width:100%!important;
+  table-layout:fixed!important;
+  border-collapse:separate!important;
+  border-spacing:0!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  background:#fff!important;
+}
+.vapesRoot .vapesTable thead{
+  position:sticky!important;
+  top:0!important;
+  z-index:200!important;
+}
+.vapesRoot .vapesTable thead tr{
+  position:sticky!important;
+  top:0!important;
+  z-index:201!important;
+}
+.vapesRoot .vapesTable thead th,
+.vapesRoot .vapesTable th{
+  position:sticky!important;
+  top:0!important;
+  z-index:202!important;
+  background:linear-gradient(180deg,#11284A 0%,#0C4D8F 100%)!important;
+  color:#fff!important;
+  font-weight:1000!important;
+  text-align:left!important;
+  padding:9px 8px!important;
+  line-height:1.12!important;
+  border-bottom:2px solid rgba(245,131,32,.9)!important;
+  box-shadow:0 3px 8px rgba(17,40,74,.20)!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.vapesRoot .vapesTable thead th:first-child{border-top-left-radius:11px!important;}
+.vapesRoot .vapesTable thead th:last-child{border-top-right-radius:11px!important;}
+.vapesRoot .vapesTable thead th.num,
+.vapesRoot .vapesTable thead th:nth-child(n+4){text-align:right!important;}
+.vapesRoot .vapesTable tbody td{
+  background:#fff;
+}
+.vapesRoot .vapesTable tbody tr:nth-child(even) td{
+  background:#FAFCFF;
+}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar{width:10px;height:10px;}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar-thumb{background:#0C4D8F;border-radius:20px;border:2px solid #EAF2FA;}
+.vapesRoot .vapesTableWrap::-webkit-scrollbar-track{background:#EAF2FA;border-radius:20px;}
+</style>
+
+
+
+<style id="ampm-vapes-existencias-descripcion-total-v2">
+/* Vapes: más ancho para descripción de existencias y total con lectura ejecutiva */
+.vapesRoot .vapesSkuInvRow{
+  grid-template-columns:minmax(560px,1.06fr) minmax(560px,.94fr)!important;
+  gap:18px!important;
+  align-items:stretch!important;
+}
+.vapesRoot .vapesExistenceCard{
+  min-width:560px!important;
+}
+.vapesRoot .vapesExistenceWrap{
+  overflow-x:hidden!important;
+  max-height:500px!important;
+}
+.vapesRoot .vapesExistenceTable{
+  table-layout:fixed!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.vapesRoot .vapesExistenceTable th,
+.vapesRoot .vapesExistenceTable td{
+  font-size:10.6px!important;
+  padding:6px 5px!important;
+  line-height:1.12!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(1),
+.vapesRoot .vapesExistenceTable td:nth-child(1){
+  width:50%!important;
+  min-width:50%!important;
+  max-width:50%!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+  text-align:left!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(2),
+.vapesRoot .vapesExistenceTable td:nth-child(2){
+  width:16%!important;
+  min-width:16%!important;
+  max-width:16%!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+  text-align:center!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(3),
+.vapesRoot .vapesExistenceTable td:nth-child(3),
+.vapesRoot .vapesExistenceTable th:nth-child(4),
+.vapesRoot .vapesExistenceTable td:nth-child(4),
+.vapesRoot .vapesExistenceTable th:nth-child(5),
+.vapesRoot .vapesExistenceTable td:nth-child(5){
+  width:7.5%!important;
+  min-width:7.5%!important;
+  max-width:7.5%!important;
+  text-align:center!important;
+}
+.vapesRoot .vapesExistenceTable th:last-child,
+.vapesRoot .vapesExistenceTable td:last-child{
+  width:11.5%!important;
+  min-width:11.5%!important;
+  max-width:11.5%!important;
+  text-align:center!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesExistenceTable th:last-child{
+  background:#F58320!important;
+  color:#ffffff!important;
+  border-left:3px solid #11284A!important;
+}
+.vapesRoot .vapesExistenceTable td:last-child{
+  background:#ffffff!important;
+  color:#11284A!important;
+  border-left:3px solid rgba(245,131,32,.72)!important;
+  box-shadow:inset 0 0 0 1px rgba(245,131,32,.10)!important;
+}
+.vapesRoot .vapesExistenceTable tbody tr:nth-child(even) td:last-child{
+  background:#FFF7ED!important;
+}
+.vapesRoot .vapesExistenceTable tbody tr:hover td:last-child{
+  background:#FFE8CF!important;
+}
+@media(max-width:1500px){
+  .vapesRoot .vapesSkuInvRow{grid-template-columns:1fr!important;}
+  .vapesRoot .vapesExistenceCard{min-width:0!important;}
+  .vapesRoot .vapesExistenceWrap{max-height:420px!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(1),
+  .vapesRoot .vapesExistenceTable td:nth-child(1){width:48%!important;min-width:48%!important;max-width:48%!important;}
+}
+</style>
+
+
+<style id="ampm-vapes-transfer-sku-clean-v1">
+/* Vapes | Traslados sugeridos: tabla más ejecutiva y compacta */
+.vapesRoot .vapesTransferTable{
+  width:min(1080px,100%)!important;
+  max-width:1080px!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:auto!important;
+  table-layout:fixed!important;
+}
+.vapesRoot .vapesTransferTable th,
+.vapesRoot .vapesTransferTable td{
+  font-size:11px!important;
+  padding:7px 8px!important;
+  line-height:1.15!important;
+}
+.vapesRoot .vapesTransferTable th:nth-child(1),
+.vapesRoot .vapesTransferTable td:nth-child(1){width:9%!important;text-align:left!important;font-weight:1000!important;}
+.vapesRoot .vapesTransferTable th:nth-child(2),
+.vapesRoot .vapesTransferTable td:nth-child(2){width:9%!important;text-align:left!important;}
+.vapesRoot .vapesTransferTable th:nth-child(3),
+.vapesRoot .vapesTransferTable td:nth-child(3){width:38%!important;text-align:left!important;white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;}
+.vapesRoot .vapesTransferTable th:nth-child(4),
+.vapesRoot .vapesTransferTable td:nth-child(4){width:10%!important;text-align:right!important;}
+.vapesRoot .vapesTransferTable th:nth-child(5),
+.vapesRoot .vapesTransferTable td:nth-child(5){width:10%!important;text-align:right!important;}
+.vapesRoot .vapesTransferTable th:nth-child(6),
+.vapesRoot .vapesTransferTable td:nth-child(6){width:10%!important;text-align:right!important;}
+.vapesRoot .vapesTransferTable th:nth-child(7),
+.vapesRoot .vapesTransferTable td:nth-child(7){width:7%!important;text-align:right!important;}
+.vapesRoot .vapesTransferTable th:nth-child(8),
+.vapesRoot .vapesTransferTable td:nth-child(8){width:7%!important;text-align:right!important;}
+.vapesRoot .vapesTransferTable thead th:nth-child(3){text-align:left!important;}
+.vapesRoot .vapesTransferTable tbody td:nth-child(3){color:#11284A!important;font-weight:850!important;}
+.vapesRoot .vapesWideTableWrap:has(#vapesTransferTable){overflow-x:hidden!important;}
+@media(max-width:1180px){
+  .vapesRoot .vapesTransferTable{width:100%!important;max-width:100%!important;}
+  .vapesRoot .vapesTransferTable th,
+  .vapesRoot .vapesTransferTable td{font-size:10.5px!important;padding:6px 6px!important;}
+}
+</style>
+
+
+<style id="ampm-vapes-transfer-inventory-layout-v1">
+/* Vapes | Traslados sugeridos igual a matriz de Inventario */
+.vapesRoot .vapesWideTableWrap:has(#vapesTransferTable){
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  max-height:520px!important;
+  border:1px solid rgba(148,163,184,.25)!important;
+  border-radius:14px!important;
+  background:#fff!important;
+}
+.vapesRoot #vapesTransferTable.vapesTransferTable{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+}
+.vapesRoot #vapesTransferTable col.vapesTransferColSupplier{width:18%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColSku{width:25%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColAmount{width:9%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColStore{width:auto!important;}
+.vapesRoot #vapesTransferTable th,
+.vapesRoot #vapesTransferTable td{
+  font-size:11px!important;
+  line-height:1.15!important;
+  padding:8px 9px!important;
+  vertical-align:top!important;
+}
+.vapesRoot #vapesTransferTable thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:25!important;
+  background:linear-gradient(180deg,#11284A 0%,#0C4D8F 100%)!important;
+  color:#fff!important;
+  border-bottom:2px solid #F58320!important;
+  text-align:left!important;
+  box-shadow:0 2px 0 rgba(15,23,42,.12)!important;
+}
+.vapesRoot #vapesTransferTable thead th:nth-child(3),
+.vapesRoot #vapesTransferTable tbody td:nth-child(3){text-align:right!important;white-space:nowrap!important;}
+.vapesRoot #vapesTransferTable .vapesTransferSupplierCell{
+  font-weight:1000!important;
+  color:#11284A!important;
+  text-align:left!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.vapesRoot #vapesTransferTable .vapesTransferSkuCell{
+  color:#0F172A!important;
+  font-weight:800!important;
+  text-align:left!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.vapesRoot #vapesTransferTable .transStoreCell{
+  font-size:10.8px!important;
+  line-height:1.17!important;
+  white-space:normal!important;
+  text-align:left!important;
+}
+.vapesRoot #vapesTransferTable .transStoreCell.transIn{background:rgba(0,94,167,.14)!important;}
+.vapesRoot #vapesTransferTable .transStoreCell.transOut{background:rgba(245,131,32,.06)!important;}
+.vapesRoot #vapesTransferTable .transStoreCell.transMix{background:rgba(148,163,184,.10)!important;}
+.vapesRoot #vapesTransferTable .transStoreCell.transEmpty{background:#fff!important;}
+.vapesRoot #vapesTransferTable .transStoreCell .muted{font-size:10.2px!important;white-space:normal!important;color:#526581!important;}
+.vapesRoot #vapesTransferTable .deltaPill{margin-left:5px!important;}
+.vapesRoot #vapesTransferTable tbody tr:hover td:not(.transStoreCell){background:rgba(0,94,167,.08)!important;}
+.vapesRoot #vapesTransferTable tbody tr:hover td.transStoreCell.transIn{background:rgba(0,94,167,.18)!important;}
+.vapesRoot #vapesTransferTable tbody tr:hover td.transStoreCell.transOut{background:rgba(245,131,32,.10)!important;}
+@media(max-width:1280px){
+  .vapesRoot #vapesTransferTable col.vapesTransferColSupplier{width:16%!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColSku{width:23%!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColAmount{width:8%!important;}
+  .vapesRoot #vapesTransferTable th,.vapesRoot #vapesTransferTable td{font-size:10.4px!important;padding:7px 6px!important;}
+  .vapesRoot #vapesTransferTable .transStoreCell{font-size:10px!important;}
+}
+</style>
+
+
+
+<style id="ampm-vapes-transfer-width-compact-v2">
+/* Vapes | Traslados sugeridos: ancho reducido sin espacios muertos */
+.vapesRoot .vapesWideTableCard:has(#vapesTransferTable){
+  max-width:1320px!important;
+  margin-left:0!important;
+  margin-right:auto!important;
+}
+.vapesRoot .vapesWideTableWrap:has(#vapesTransferTable){
+  width:100%!important;
+  max-width:1320px!important;
+  margin-left:0!important;
+  margin-right:auto!important;
+  overflow-x:hidden!important;
+}
+.vapesRoot #vapesTransferTable.vapesTransferTable{
+  width:100%!important;
+  max-width:100%!important;
+  table-layout:fixed!important;
+}
+.vapesRoot #vapesTransferTable col.vapesTransferColSupplier{width:18%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColSku{width:29%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColAmount{width:8%!important;}
+.vapesRoot #vapesTransferTable col.vapesTransferColStore{width:15%!important;}
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(1),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(1){
+  width:18%!important;
+  text-align:left!important;
+}
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(2),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(2){
+  width:29%!important;
+  text-align:left!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(3),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(3){
+  width:8%!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+}
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(4),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(4),
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(5),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(5),
+.vapesRoot #vapesTransferTable.vapesTransferTable th:nth-child(6),
+.vapesRoot #vapesTransferTable.vapesTransferTable td:nth-child(6){
+  width:15%!important;
+}
+.vapesRoot #vapesTransferTable .vapesTransferSkuCell{
+  padding-right:10px!important;
+}
+@media(max-width:1400px){
+  .vapesRoot .vapesWideTableCard:has(#vapesTransferTable),
+  .vapesRoot .vapesWideTableWrap:has(#vapesTransferTable){max-width:1180px!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColSupplier{width:17%!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColSku{width:28%!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColAmount{width:8%!important;}
+  .vapesRoot #vapesTransferTable col.vapesTransferColStore{width:15.666%!important;}
+  .vapesRoot #vapesTransferTable.vapesTransferTable th,
+  .vapesRoot #vapesTransferTable.vapesTransferTable td{font-size:10.2px!important;padding:7px 6px!important;}
+}
+</style>
+
+
+<style id="ampm-vapes-rop-inventory-style-v1">
+/* Vapes | ROP sugerido con formato tipo Inventario, listado directo subir/bajar y orden $ */
+.vapesRoot .vapesRopCard{
+  max-width:100%!important;
+}
+.vapesRoot .vapesRopSummary{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin:2px 0 10px!important;
+  color:#526581!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+.vapesRoot .vapesRopCount{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  background:rgba(245,131,32,.12)!important;
+  border:1px solid rgba(245,131,32,.28)!important;
+  color:#9A3412!important;
+}
+.vapesRoot .vapesRopCount.subir{
+  background:rgba(0,94,167,.10)!important;
+  border-color:rgba(0,94,167,.22)!important;
+  color:#0C4D8F!important;
+}
+.vapesRoot .vapesRopRule{
+  color:#64748B!important;
+  font-weight:850!important;
+}
+.vapesRoot .vapesRopWrap{
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  max-height:560px!important;
+  border:1px solid rgba(148,163,184,.25)!important;
+  border-radius:14px!important;
+  background:#fff!important;
+}
+.vapesRoot #vapesRopTable.vapesRopTable{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  font-size:10.6px!important;
+}
+.vapesRoot #vapesRopTable col.ropAction{width:8%!important;}
+.vapesRoot #vapesRopTable col.ropStore{width:5.5%!important;}
+.vapesRoot #vapesRopTable col.ropSupplier{width:14%!important;}
+.vapesRoot #vapesRopTable col.ropDesc{width:25%!important;}
+.vapesRoot #vapesRopTable col.ropAmount{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropQty{width:4.5%!important;}
+.vapesRoot #vapesRopTable col.ropS4{width:6.5%!important;}
+.vapesRoot #vapesRopTable col.ropDays{width:6.5%!important;}
+.vapesRoot #vapesRopTable col.ropActual{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropPlan{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropProp{width:7%!important;}
+.vapesRoot #vapesRopTable col.ropDelta{width:5%!important;}
+.vapesRoot #vapesRopTable th,
+.vapesRoot #vapesRopTable td{
+  padding:7px 7px!important;
+  font-size:10.6px!important;
+  line-height:1.16!important;
+  vertical-align:middle!important;
+  white-space:normal!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.vapesRoot #vapesRopTable thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+  background:linear-gradient(180deg,#11284A 0%,#0C4D8F 100%)!important;
+  color:#fff!important;
+  border-bottom:2px solid #F58320!important;
+  box-shadow:0 2px 0 rgba(15,23,42,.12)!important;
+  font-weight:1000!important;
+}
+.vapesRoot #vapesRopTable thead th:nth-child(n+5),
+.vapesRoot #vapesRopTable tbody td.num{
+  text-align:right!important;
+  white-space:nowrap!important;
+  word-break:normal!important;
+}
+.vapesRoot #vapesRopTable thead th:nth-child(11),
+.vapesRoot #vapesRopTable tbody td:nth-child(11){
+  background:rgba(245,131,32,.10)!important;
+}
+.vapesRoot #vapesRopTable thead th:nth-child(11){
+  background:#F58320!important;
+  color:#fff!important;
+}
+.vapesRoot #vapesRopTable tbody tr:nth-child(even) td{background:#FAFCFF!important;}
+.vapesRoot #vapesRopTable tbody tr:hover td{background:#EEF6FF!important;}
+.vapesRoot #vapesRopTable .vapesRopDescCell{
+  color:#11284A!important;
+  font-weight:800!important;
+}
+.vapesRoot .vapesRopAction{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:3px 7px!important;
+  border-radius:6px!important;
+  font-size:10px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+.vapesRoot .vapesRopAction.bajar{
+  background:rgba(245,131,32,.15)!important;
+  border:1px solid rgba(245,131,32,.32)!important;
+  color:#9A3412!important;
+}
+.vapesRoot .vapesRopAction.subir{
+  background:rgba(0,94,167,.12)!important;
+  border:1px solid rgba(0,94,167,.24)!important;
+  color:#0C4D8F!important;
+}
+.vapesRoot .vapesRopPropBadge{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:40px!important;
+  padding:4px 8px!important;
+  border-radius:8px!important;
+  background:linear-gradient(180deg,#FAA21E,#F58320)!important;
+  border:1px solid rgba(17,40,74,.20)!important;
+  color:#11284A!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesRopDelta{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:38px!important;
+  padding:3px 7px!important;
+  border-radius:999px!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesRopDelta.bajar{
+  background:rgba(245,131,32,.14)!important;
+  border:1px solid rgba(245,131,32,.30)!important;
+  color:#9A3412!important;
+}
+.vapesRoot .vapesRopDelta.subir{
+  background:rgba(0,94,167,.12)!important;
+  border:1px solid rgba(0,94,167,.24)!important;
+  color:#0C4D8F!important;
+}
+@media(max-width:1280px){
+  .vapesRoot #vapesRopTable th,
+  .vapesRoot #vapesRopTable td{font-size:10px!important;padding:6px 5px!important;}
+  .vapesRoot #vapesRopTable col.ropSupplier{width:13%!important;}
+  .vapesRoot #vapesRopTable col.ropDesc{width:22%!important;}
+}
+</style>
+
+
+<style id="vapes-rop-sin-impacto-v1">
+/* Vapes ROP: se elimina columna Impacto $ para liberar espacio a las columnas operativas */
+.vapesRoot #vapesRopTable col.ropAction{width:8%!important;}
+.vapesRoot #vapesRopTable col.ropStore{width:5.5%!important;}
+.vapesRoot #vapesRopTable col.ropSupplier{width:14%!important;}
+.vapesRoot #vapesRopTable col.ropDesc{width:25%!important;}
+.vapesRoot #vapesRopTable col.ropAmount{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropQty{width:4.5%!important;}
+.vapesRoot #vapesRopTable col.ropS4{width:6.5%!important;}
+.vapesRoot #vapesRopTable col.ropDays{width:6.5%!important;}
+.vapesRoot #vapesRopTable col.ropActual{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropPlan{width:6%!important;}
+.vapesRoot #vapesRopTable col.ropProp{width:7%!important;}
+.vapesRoot #vapesRopTable col.ropDelta{width:5%!important;}
+.vapesRoot #vapesRopTable thead th{font-size:10.2px!important;line-height:1.08!important;white-space:normal!important;}
+.vapesRoot #vapesRopTable .vapesRopDescCell{font-size:11.2px!important;}
+</style>
+
+<style id="vapes-tooltip-stock-fix-v1">
+/* Vapes | Ajuste visual: existencias críticas en rojo y tooltip SKU estable */
+.vapesRoot .vapesExistenceTable .vapesStockLow{
+  color:#C62828!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesExistenceTable td:has(.vapesStockLow){
+  color:#C62828!important;
+}
+.vapesRoot .vapesExistenceTable td:last-child .vapesStockLow{
+  color:#C62828!important;
+}
+</style>
+
+<style id="vapes-existencias-menu-expandido-fix-v1">
+/* VAPES | Fix responsive del bloque Top SKU + Existencias cuando el menú lateral está expandido.
+   Objetivo: que la tabla nunca quede cortada a la derecha y mantenga cero scroll horizontal. */
+.vapesRoot .vapesSkuInvRow{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;
+  gap:18px!important;
+  align-items:stretch!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.vapesRoot .vapesSkuChartCard,
+.vapesRoot .vapesExistenceCard{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.vapesRoot .vapesExistenceCard{
+  min-width:0!important;
+}
+.vapesRoot .vapesExistenceWrap{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  box-sizing:border-box!important;
+}
+.vapesRoot .vapesExistenceTable{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+  border-collapse:separate!important;
+}
+.vapesRoot .vapesExistenceTable th,
+.vapesRoot .vapesExistenceTable td{
+  box-sizing:border-box!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  line-height:1.10!important;
+  padding:6px 4px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(1),
+.vapesRoot .vapesExistenceTable td:nth-child(1){
+  width:46%!important;
+  min-width:0!important;
+  max-width:none!important;
+  text-align:left!important;
+  font-size:10.7px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(2),
+.vapesRoot .vapesExistenceTable td:nth-child(2){
+  width:18%!important;
+  min-width:0!important;
+  max-width:none!important;
+  text-align:center!important;
+  font-size:9.8px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(3),
+.vapesRoot .vapesExistenceTable td:nth-child(3),
+.vapesRoot .vapesExistenceTable th:nth-child(4),
+.vapesRoot .vapesExistenceTable td:nth-child(4),
+.vapesRoot .vapesExistenceTable th:nth-child(5),
+.vapesRoot .vapesExistenceTable td:nth-child(5){
+  width:8%!important;
+  min-width:0!important;
+  max-width:none!important;
+  text-align:center!important;
+  font-size:10.2px!important;
+}
+.vapesRoot .vapesExistenceTable th:last-child,
+.vapesRoot .vapesExistenceTable td:last-child{
+  width:12%!important;
+  min-width:0!important;
+  max-width:none!important;
+  text-align:center!important;
+  font-size:10.8px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(3),
+.vapesRoot .vapesExistenceTable th:nth-child(4),
+.vapesRoot .vapesExistenceTable th:nth-child(5){
+  font-size:10px!important;
+  line-height:1.02!important;
+  padding-left:2px!important;
+  padding-right:2px!important;
+}
+/* Con menú expandido hay menos ancho útil: se compacta el split, no se rompe ni se sale del card. */
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesSkuInvRow{
+  grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr)!important;
+}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th,
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td{
+  padding-left:3px!important;
+  padding-right:3px!important;
+}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:nth-child(1),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:nth-child(1){width:45%!important;}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:nth-child(2),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:nth-child(2){width:17%!important;}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:nth-child(3),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:nth-child(3),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:nth-child(4),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:nth-child(4),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:nth-child(5),
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:nth-child(5){width:8.5%!important;}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable th:last-child,
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesExistenceTable td:last-child{width:12.5%!important;}
+/* Si el ancho real baja demasiado, se apila para priorizar lectura completa. */
+@media(max-width:1680px){
+  .vapesRoot .vapesSkuInvRow{grid-template-columns:1fr!important;}
+  .vapesRoot .vapesExistenceWrap{max-height:460px!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(1),
+  .vapesRoot .vapesExistenceTable td:nth-child(1){width:50%!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(2),
+  .vapesRoot .vapesExistenceTable td:nth-child(2){width:17%!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(3),
+  .vapesRoot .vapesExistenceTable td:nth-child(3),
+  .vapesRoot .vapesExistenceTable th:nth-child(4),
+  .vapesRoot .vapesExistenceTable td:nth-child(4),
+  .vapesRoot .vapesExistenceTable th:nth-child(5),
+  .vapesRoot .vapesExistenceTable td:nth-child(5){width:7%!important;}
+  .vapesRoot .vapesExistenceTable th:last-child,
+  .vapesRoot .vapesExistenceTable td:last-child{width:12%!important;}
+}
+</style>
+
+
+
+<style id="vapes-sku-existence-same-row-force-v2">
+/* VAPES | Top SKU + Existencias: mantener ambos módulos en la misma fila con menú abierto/cerrado.
+   Se deja solo el stack para pantallas realmente pequeñas. */
+.vapesRoot .vapesSkuInvRow{
+  display:grid!important;
+  grid-template-columns:minmax(0,.50fr) minmax(0,.50fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:visible!important;
+}
+.ampm-shell:not(.is-collapsed) .vapesRoot .vapesSkuInvRow,
+body:not(.sidebar-collapsed) .vapesRoot .vapesSkuInvRow,
+body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
+  grid-template-columns:minmax(0,.47fr) minmax(0,.53fr)!important;
+  gap:12px!important;
+}
+.vapesRoot .vapesSkuChartCard,
+.vapesRoot .vapesExistenceCard{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.vapesRoot .vapesSkuChartCard .vapesCanvas.tall{
+  height:480px!important;
+  min-height:440px!important;
+}
+.vapesRoot .vapesExistenceCard{
+  display:flex!important;
+  flex-direction:column!important;
+}
+.vapesRoot .vapesExistenceCard .vapesCardHead{
+  flex:0 0 auto!important;
+  margin-bottom:7px!important;
+}
+.vapesRoot .vapesExistenceWrap{
+  flex:1 1 auto!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  max-height:480px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  box-sizing:border-box!important;
+}
+.vapesRoot .vapesExistenceTable{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+}
+.vapesRoot .vapesExistenceTable th,
+.vapesRoot .vapesExistenceTable td{
+  box-sizing:border-box!important;
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.08!important;
+  padding:6px 3px!important;
+  font-size:10.2px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(1),
+.vapesRoot .vapesExistenceTable td:nth-child(1){
+  width:43%!important;
+  text-align:left!important;
+  font-size:10.6px!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(2),
+.vapesRoot .vapesExistenceTable td:nth-child(2){
+  width:17%!important;
+  text-align:center!important;
+  font-size:9.5px!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(3),
+.vapesRoot .vapesExistenceTable td:nth-child(3),
+.vapesRoot .vapesExistenceTable th:nth-child(4),
+.vapesRoot .vapesExistenceTable td:nth-child(4),
+.vapesRoot .vapesExistenceTable th:nth-child(5),
+.vapesRoot .vapesExistenceTable td:nth-child(5){
+  width:7.8%!important;
+  text-align:center!important;
+  font-size:10px!important;
+  padding-left:2px!important;
+  padding-right:2px!important;
+}
+.vapesRoot .vapesExistenceTable th:last-child,
+.vapesRoot .vapesExistenceTable td:last-child{
+  width:10.6%!important;
+  text-align:center!important;
+  font-size:10.4px!important;
+  font-weight:1000!important;
+}
+.vapesRoot .vapesExistenceTable th:nth-child(3),
+.vapesRoot .vapesExistenceTable th:nth-child(4),
+.vapesRoot .vapesExistenceTable th:nth-child(5){
+  line-height:1!important;
+  letter-spacing:-.02em!important;
+}
+/* Override directo al media query anterior que lo apilaba en desktop. */
+@media(max-width:1680px){
+  .vapesRoot .vapesSkuInvRow{
+    grid-template-columns:minmax(0,.48fr) minmax(0,.52fr)!important;
+    gap:12px!important;
+  }
+  .vapesRoot .vapesExistenceWrap{max-height:480px!important;}
+}
+@media(max-width:1280px){
+  .vapesRoot .vapesSkuInvRow{
+    grid-template-columns:minmax(0,.46fr) minmax(0,.54fr)!important;
+    gap:10px!important;
+  }
+  .vapesRoot .vapesExistenceTable th,
+  .vapesRoot .vapesExistenceTable td{
+    font-size:9.2px!important;
+    padding-left:2px!important;
+    padding-right:2px!important;
+  }
+  .vapesRoot .vapesExistenceTable th:nth-child(1),
+  .vapesRoot .vapesExistenceTable td:nth-child(1){width:42%!important;font-size:9.6px!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(2),
+  .vapesRoot .vapesExistenceTable td:nth-child(2){width:16%!important;font-size:8.7px!important;}
+  .vapesRoot .vapesExistenceTable th:nth-child(3),
+  .vapesRoot .vapesExistenceTable td:nth-child(3),
+  .vapesRoot .vapesExistenceTable th:nth-child(4),
+  .vapesRoot .vapesExistenceTable td:nth-child(4),
+  .vapesRoot .vapesExistenceTable th:nth-child(5),
+  .vapesRoot .vapesExistenceTable td:nth-child(5){width:8%!important;font-size:9px!important;}
+  .vapesRoot .vapesExistenceTable th:last-child,
+  .vapesRoot .vapesExistenceTable td:last-child{width:10%!important;font-size:9.5px!important;}
+}
+@media(max-width:980px){
+  .vapesRoot .vapesSkuInvRow{grid-template-columns:1fr!important;}
+}
+</style>
+<script id="vapes-sku-existence-same-row-resize-v2">
+(function(){
+  function resizeVapesSku(){
+    try{
+      if(!window.Chart) return;
+      var c=document.getElementById('vapesChartSku');
+      if(!c) return;
+      var ch=Chart.getChart ? Chart.getChart(c) : null;
+      if(ch){ ch.resize(); ch.update('none'); }
+    }catch(e){}
+  }
+  function queueResize(){
+    setTimeout(resizeVapesSku,60);
+    setTimeout(resizeVapesSku,220);
+    setTimeout(resizeVapesSku,520);
+  }
+  window.addEventListener('resize', queueResize, {passive:true});
+  document.addEventListener('click', function(ev){
+    var t=ev.target;
+    if(!t) return;
+    if(t.closest && (t.closest('.ampm-sidebarToggle') || t.closest('.sidebar-toggle') || t.closest('[data-sidebar-toggle]') || t.closest('[aria-label*="menú"]') || t.closest('[aria-label*="menu"]'))){
+      queueResize();
+    }
+  }, true);
+  try{
+    var shell=document.querySelector('.ampm-shell') || document.body;
+    new MutationObserver(queueResize).observe(shell,{attributes:true,attributeFilter:['class','style']});
+  }catch(e){}
+  document.addEventListener('DOMContentLoaded', queueResize);
 })();
 </script>
 
