@@ -6204,8 +6204,200 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 </div></div></div></div></div>
 </div>
 <script type="text/plain" data-ampm-deferred="1" data-ampm-src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="text/plain" data-ampm-deferred="1" data-ampm-src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script type="text/plain" data-ampm-deferred="1" data-ampm-src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script type="text/plain" data-ampm-deferred="1">
+<script type="text/plain" data-ampm-deferred="1" id="ampm-detailhallazgos-loader-v4">
+(function(){
+  'use strict';
+  if(typeof window === 'undefined') return;
+  if(window.AMPM_DETAIL_HALLAZGOS_LOADER_V4) return;
+
+  function sleep(ms){ return new Promise(function(resolve){ setTimeout(resolve, ms || 0); }); }
+  function xmlDecode(s){
+    if(s == null) return '';
+    return String(s)
+      .replace(/&lt;/g,'<')
+      .replace(/&gt;/g,'>')
+      .replace(/&quot;/g,'"')
+      .replace(/&apos;/g,"'")
+      .replace(/&amp;/g,'&');
+  }
+  function attrsToObject(s){
+    var out = {};
+    String(s || '').replace(/([A-Za-z_:][A-Za-z0-9_:\-.]*)="([^"]*)"/g, function(_, k, v){ out[k] = xmlDecode(v); return _; });
+    return out;
+  }
+  function colToIndex(cellRef){
+    var m = String(cellRef || '').match(/^([A-Z]+)\d*/i);
+    if(!m) return -1;
+    var col = m[1].toUpperCase(), n = 0;
+    for(var i=0;i<col.length;i++) n = n * 26 + (col.charCodeAt(i) - 64);
+    return n - 1;
+  }
+  function parseXmlDoc(txt){
+    return new DOMParser().parseFromString(txt, 'application/xml');
+  }
+  function nodeListToArray(list){ return Array.prototype.slice.call(list || []); }
+  function readRelId(node){
+    return node.getAttribute('r:id') || node.getAttribute('id') || node.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') || '';
+  }
+  function normalizeTarget(target){
+    target = String(target || '').replace(/^\//, '');
+    if(!target) return '';
+    if(/^xl\//i.test(target)) return target;
+    return 'xl/' + target.replace(/^\.\//, '');
+  }
+  async function resolveSheetPath(zip, sheetName){
+    var wbFile = zip.file('xl/workbook.xml');
+    var relFile = zip.file('xl/_rels/workbook.xml.rels');
+    if(!wbFile || !relFile) throw new Error('No encontré workbook.xml dentro del .xlsx.');
+    var wbXml = parseXmlDoc(await wbFile.async('text'));
+    var relXml = parseXmlDoc(await relFile.async('text'));
+    var rels = {};
+    nodeListToArray(relXml.getElementsByTagName('Relationship')).forEach(function(r){
+      var id = r.getAttribute('Id');
+      var target = r.getAttribute('Target');
+      if(id) rels[id] = normalizeTarget(target);
+    });
+    var sheets = nodeListToArray(wbXml.getElementsByTagName('sheet'));
+    for(var i=0;i<sheets.length;i++){
+      var s = sheets[i];
+      if(s.getAttribute('name') === sheetName){
+        var rid = readRelId(s);
+        var p = rels[rid];
+        if(!p) throw new Error('No pude resolver la ruta interna de ' + sheetName + '.');
+        return p;
+      }
+    }
+    return '';
+  }
+  async function parseSharedStrings(zip){
+    var f = zip.file('xl/sharedStrings.xml');
+    if(!f) return [];
+    var txt = await f.async('text');
+    var doc = parseXmlDoc(txt);
+    var sis = nodeListToArray(doc.getElementsByTagName('si'));
+    var out = new Array(sis.length);
+    for(var i=0;i<sis.length;i++){
+      var parts = nodeListToArray(sis[i].getElementsByTagName('t')).map(function(t){ return t.textContent || ''; });
+      out[i] = parts.join('');
+    }
+    return out;
+  }
+  function parseInlineString(body){
+    var texts = [];
+    String(body || '').replace(/<t\b[^>]*>([\s\S]*?)<\/t>/g, function(_, t){ texts.push(xmlDecode(t)); return _; });
+    return texts.join('');
+  }
+  function cellValue(cellAttrs, body, sharedStrings){
+    var a = attrsToObject(cellAttrs || '');
+    var t = a.t || '';
+    var vMatch = String(body || '').match(/<v\b[^>]*>([\s\S]*?)<\/v>/);
+    var raw = vMatch ? xmlDecode(vMatch[1]) : '';
+    if(t === 's'){
+      var idx = Number(raw);
+      return Number.isFinite(idx) && sharedStrings[idx] != null ? sharedStrings[idx] : '';
+    }
+    if(t === 'b') return raw === '1' || /^true$/i.test(raw);
+    if(t === 'inlineStr') return parseInlineString(body);
+    if(t === 'str') return raw;
+    if(raw === '') return null;
+    var n = Number(raw);
+    return Number.isFinite(n) ? n : raw;
+  }
+  function ensureFirstRowKeys(row, headers){
+    if(!row || !headers) return row;
+    for(var i=0;i<headers.length;i++){
+      var h = headers[i];
+      if(h && !Object.prototype.hasOwnProperty.call(row, h)) row[h] = null;
+    }
+    return row;
+  }
+  async function parseSheetXmlToRows(xmlText, sharedStrings, progressFn){
+    var rows = [];
+    var headers = [];
+    var rowRe = /<row\b([^>]*)>([\s\S]*?)<\/row>/g;
+    var rowMatch, processed = 0, lastYield = Date.now();
+    while((rowMatch = rowRe.exec(xmlText))){
+      var rowAttrs = attrsToObject(rowMatch[1] || '');
+      var rnum = Number(rowAttrs.r || 0);
+      var body = rowMatch[2] || '';
+      var cells = [];
+      var cellRe = /<c\b([^>]*)>([\s\S]*?)<\/c>|<c\b([^>]*)\/>/g;
+      var cellMatch;
+      while((cellMatch = cellRe.exec(body))){
+        var cAttrStr = cellMatch[1] || cellMatch[3] || '';
+        var attrs = attrsToObject(cAttrStr);
+        var idx = colToIndex(attrs.r || '');
+        if(idx < 0) continue;
+        cells[idx] = cellValue(cAttrStr, cellMatch[2] || '', sharedStrings);
+      }
+      if(rnum === 1 || !headers.length){
+        headers = cells.map(function(v){ return String(v == null ? '' : v).trim(); });
+        continue;
+      }
+      if(!headers.length) continue;
+      var obj = {};
+      var hasAny = false;
+      for(var i=0;i<cells.length;i++){
+        var h = headers[i];
+        if(!h) continue;
+        var val = cells[i];
+        if(val !== undefined && val !== null && val !== '') hasAny = true;
+        if(val !== undefined) obj[h] = val;
+      }
+      if(hasAny){
+        if(rows.length === 0) ensureFirstRowKeys(obj, headers);
+        rows.push(obj);
+      }
+      processed++;
+      if(processed % 25000 === 0){
+        if(typeof progressFn === 'function'){
+          var pct = Math.min(74, 44 + Math.round(processed / 460000 * 28));
+          progressFn(pct, 'Cargando Cubo_Sales_DetailHallazgos…', processed.toLocaleString('en-US') + ' registros procesados');
+        }
+        if(Date.now() - lastYield > 120){ lastYield = Date.now(); await sleep(0); }
+      }
+    }
+    if(typeof progressFn === 'function') progressFn(76, 'Cubo_Sales_DetailHallazgos cargado', rows.length.toLocaleString('en-US') + ' registros listos para módulos de detalle');
+    return rows;
+  }
+  async function hydrate(wb, buffer, progressFn){
+    if(!wb || !buffer) return 0;
+    if(!Array.isArray(wb.SheetNames) || wb.SheetNames.indexOf('Cubo_Sales_DetailHallazgos') < 0) return 0;
+    wb.__rowsBySheet = wb.__rowsBySheet || {};
+    if(Array.isArray(wb.__rowsBySheet.Cubo_Sales_DetailHallazgos) && wb.__rowsBySheet.Cubo_Sales_DetailHallazgos.length){
+      return wb.__rowsBySheet.Cubo_Sales_DetailHallazgos.length;
+    }
+    if(typeof JSZip === 'undefined'){
+      console.warn('AMPM DetailHallazgos loader: JSZip no está disponible; usando lectura estándar de SheetJS.');
+      return 0;
+    }
+    progressFn && progressFn(46, 'Preparando carga robusta de Hallazgos…', 'Se leerá Cubo_Sales_DetailHallazgos directo del XML interno para evitar hojas vacías.');
+    await sleep(0);
+    var zip = await JSZip.loadAsync(buffer);
+    var sheetPath = await resolveSheetPath(zip, 'Cubo_Sales_DetailHallazgos');
+    if(!sheetPath || !zip.file(sheetPath)) throw new Error('No encontré el XML interno de Cubo_Sales_DetailHallazgos.');
+    progressFn && progressFn(52, 'Leyendo diccionario de textos…', 'Shared strings del cubo');
+    var sharedStrings = await parseSharedStrings(zip);
+    await sleep(0);
+    progressFn && progressFn(58, 'Descomprimiendo Cubo_Sales_DetailHallazgos…', sheetPath);
+    let xmlText = await zip.file(sheetPath).async('text');
+    await sleep(0);
+    progressFn && progressFn(64, 'Transformando Cubo_Sales_DetailHallazgos…', 'Conversión directa a registros del dashboard');
+    var rows = await parseSheetXmlToRows(xmlText, sharedStrings, progressFn);
+    wb.__rowsBySheet.Cubo_Sales_DetailHallazgos = rows;
+    try{
+      if(!wb.Sheets) wb.Sheets = {};
+      if(!wb.Sheets.Cubo_Sales_DetailHallazgos) wb.Sheets.Cubo_Sales_DetailHallazgos = {'!ref':'A1:S' + String(rows.length + 1)};
+    }catch(_e){}
+    xmlText = null;
+    return rows.length;
+  }
+  window.AMPM_DETAIL_HALLAZGOS_LOADER_V4 = { hydrate: hydrate };
+})();
+</script>
+<script type="text/plain" data-ampm-deferred="1" data-disabled="v6-disable-recursive-chart-proxy">
 (function(){
   if (typeof window === 'undefined' || !window.Proxy) return;
   const tabsAllowed = new Set(['ventas','delivery','sbf']);
@@ -7007,37 +7199,10 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       }
     }
     function updateAllChartTitles(){
-      if(state.__updatingAllChartTitles) return;
-      state.__updatingAllChartTitles = true;
-      try{
-        setChartTitle(state.chartMam, getMamChartBaseTitle(), xfFiltersText('ventas'), 'ventas');
-        setChartTitle(state.chartStoreMam, isMonthlyReport() ? 'SALES MaM x STORE AMPM ESA' : 'SALES SaS x STORE AMPM ESA', xfFiltersText('ventas'), 'ventas');
-        if(state.chartMamByStore){ Object.keys(state.chartMamByStore).forEach(store => { setChartTitle(state.chartMamByStore[store], `${isMonthlyReport() ? 'Sales MaM' : 'Sales SaS'} ${store}`, xfFiltersTextNoStore('ventas'), 'ventas'); }); }
-        if(!state.salesBubbleDrillDept && !state.salesBubbleDrillCategory && !state.salesBubbleDrillBrand){ setChartTitle(state.chartSalesBubble, 'Mapa Ventas — Venta vs LY vs Margen', xfFiltersText('ventas'), 'ventas'); }
-        setChartTitle(state.chartDeliveryMam, isMonthlyReport() ? 'Delivery MaM AMPM ESA' : 'Delivery SaS AMPM ESA', xfFiltersText('delivery'), 'delivery');
-        if(state.chartDeliveryByStore){
-          Object.keys(state.chartDeliveryByStore).forEach(store => {
-            setChartTitle(state.chartDeliveryByStore[store], `${isMonthlyReport() ? 'Delivery MaM' : 'Delivery SaS'} ${store}`, xfFiltersTextNoStore('delivery'), 'delivery');
-          });
-        }
-        if(state.chartDeliveryShareMam){
-          setChartTitle(state.chartDeliveryShareMam, isMonthlyReport() ? 'Share Delivery MaM AMPM ESA' : 'Share Delivery SaS AMPM ESA', xfFiltersText('delivery'), 'delivery');
-        }
-        if(state.chartDeliveryShareByStore){
-          Object.keys(state.chartDeliveryShareByStore).forEach(store => {
-            setChartTitle(state.chartDeliveryShareByStore[store], `${isMonthlyReport() ? 'Share Delivery MaM' : 'Share Delivery SaS'} ${store}`, xfFiltersTextNoStore('delivery'), 'delivery');
-          });
-        }
-        setChartTitle(state.chartDeliveryCatUber, 'Uber Eats — Share x Categoría', xfFiltersText('delivery'), 'delivery');
-        setChartTitle(state.chartDeliveryCatPya, 'Pedidos Ya — Share x Categoría', xfFiltersText('delivery'), 'delivery');
-        if(!state.deliveryBubbleDrillDept && !state.deliveryBubbleDrillCategory && !state.deliveryBubbleDrillBrand){ setChartTitle(state.chartDeliveryBubble, 'Mapa Delivery — Venta vs LY vs Margen', xfFiltersText('delivery'), 'delivery'); }
-        setChartTitle(state.chartSbfMam, isMonthlyReport() ? 'TX SBF MaM AMPM ESA' : 'TX SBF SaS AMPM ESA', xfFiltersText('sbf'), 'sbf');
-        if(state.chartSbfByStore){ Object.keys(state.chartSbfByStore).forEach(store => { setChartTitle(state.chartSbfByStore[store], `${isMonthlyReport() ? 'TX SBF MaM' : 'TX SBF SaS'} ${store}`, xfFiltersTextNoStore('sbf'), 'sbf'); }); }
-        if(state.chartSbfHourS8){
-          setChartTitle(state.chartSbfHourS8, isMonthlyReport() ? 'SBF — TX por Hora: Mes vs Prom 3M' : 'SBF — TX por Hora: LW vs Prom S8', xfFiltersText('sbf'), 'sbf');
-        }
-      }catch(e){ console.warn('updateAllChartTitles', e); }
-      finally{ try{ state.__updatingAllChartTitles = false; }catch(_e){} }
+      /* AMPM V6 — desactivado por estabilidad.
+         La versión anterior escribía sobre opciones ya resueltas de Chart.js y generaba
+         RangeError: Maximum call stack size exceeded. Los títulos base permanecen en cada gráfico. */
+      return;
     }
     function xfMarkActiveRows(){
       xfEnsure();
@@ -7383,21 +7548,50 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 
     function sheetRows(wb, sheetName, opts){
       if(!wb || !sheetName || !hasSheet(wb, sheetName)) return [];
-      if(wb.__rowsBySheet && Object.prototype.hasOwnProperty.call(wb.__rowsBySheet, sheetName)){
-        return wb.__rowsBySheet[sheetName] || [];
-      }
-      const ws = wb.Sheets && wb.Sheets[sheetName];
-      if(!ws) return [];
+      const useOpts = opts || {defval:null};
       let perBook = WB_ROWS_CACHE.get(wb);
       if(!perBook){
         perBook = new Map();
         WB_ROWS_CACHE.set(wb, perBook);
       }
-      const cacheKey = `${sheetName}__${sheetRowsCacheKey(opts || {defval:null})}`;
+      const cacheKey = `${sheetName}__${sheetRowsCacheKey(useOpts)}`;
       if(perBook.has(cacheKey)) return perBook.get(cacheKey);
-      const rows = XLSX.utils.sheet_to_json(ws, opts || {defval:null});
-      perBook.set(cacheKey, rows);
-      return rows;
+
+      /* AMPM FIX V3 — no confiar en cachés vacíos generados por Worker.
+         En cubos grandes SheetJS puede devolver [] dentro del Worker para hojas pesadas.
+         Si existe la hoja real en wb.Sheets, se reparsea directo y se cachea el resultado válido. */
+      if(wb.__rowsBySheet && Object.prototype.hasOwnProperty.call(wb.__rowsBySheet, sheetName)){
+        const cachedRows = wb.__rowsBySheet[sheetName];
+        if(Array.isArray(cachedRows) && cachedRows.length){
+          perBook.set(cacheKey, cachedRows);
+          return cachedRows;
+        }
+        if(!(wb.Sheets && wb.Sheets[sheetName])){
+          const emptyRows = Array.isArray(cachedRows) ? cachedRows : [];
+          perBook.set(cacheKey, emptyRows);
+          return emptyRows;
+        }
+      }
+
+      const ws = wb.Sheets && wb.Sheets[sheetName];
+      if(!ws){
+        const empty = [];
+        perBook.set(cacheKey, empty);
+        return empty;
+      }
+
+      let rows = [];
+      try{
+        rows = XLSX.utils.sheet_to_json(ws, useOpts);
+      }catch(err){
+        console.warn('sheetRows parse warning', sheetName, err);
+        rows = [];
+      }
+      if(wb.__rowsBySheet && Array.isArray(rows) && rows.length){
+        try{ wb.__rowsBySheet[sheetName] = rows; }catch(_e){}
+      }
+      perBook.set(cacheKey, rows || []);
+      return rows || [];
     }
 
     function firstSheetRows(wb, opts){
@@ -8916,6 +9110,103 @@ function toNum(v){
       return out;
     }
 
+    function loadCoreSalesFromPeriodSheets(wb, storesSet, monthsSet, channelsSet){
+      if(!wb || !hasSheet(wb, 'Chart_Sales_Periods')) return false;
+      const salesRows = sheetRows(wb, 'Chart_Sales_Periods', {defval:null});
+      if(!salesRows || !salesRows.length) return false;
+
+      const totalByKey = new Map();
+      const deliveryByKey = new Map();
+      const addKey = (map, store, period, value) => {
+        const key = `${store}||${period}`;
+        map.set(key, Number(map.get(key) || 0) + Number(value || 0));
+      };
+
+      salesRows.forEach(r=>{
+        const period = String(r['PeriodKey'] ?? r['YearWeek'] ?? r['YearMonth'] ?? '').trim();
+        const pType = String(r['PeriodType'] ?? '').trim().toLowerCase();
+        const store = String(r['Store'] ?? r['Store Name'] ?? r['Tienda'] ?? '').trim().toUpperCase();
+        const dow = String(r['DOW'] ?? '__ALL__').trim() || '__ALL__';
+        if(!period || !store || dow !== '__ALL__') return;
+        const sales = toNum(r['Sales'] ?? r['Total Sales'] ?? r['Ventas']);
+        storesSet.add(store);
+        if(pType === 'week' || parseIsoWeekKey(period)) monthsSet.add(normalizeYm(period) || period);
+        pushMetric(state.totalSalesByStoreMonth, store, normalizeYm(period) || period, sales);
+        addKey(totalByKey, store, normalizeYm(period) || period, sales);
+      });
+
+      if(hasSheet(wb, 'Chart_Delivery_Periods')){
+        const delRows = sheetRows(wb, 'Chart_Delivery_Periods', {defval:null});
+        delRows.forEach(r=>{
+          const period = String(r['PeriodKey'] ?? r['YearWeek'] ?? r['YearMonth'] ?? '').trim();
+          const pType = String(r['PeriodType'] ?? '').trim().toLowerCase();
+          const store = String(r['Store'] ?? r['Store Name'] ?? r['Tienda'] ?? '').trim().toUpperCase();
+          const dow = String(r['DOW'] ?? '__ALL__').trim() || '__ALL__';
+          const ch = String(r['Channel'] ?? r['Delivery_Channel'] ?? '').trim();
+          if(!period || !store || dow !== '__ALL__') return;
+          const keyPeriod = normalizeYm(period) || period;
+          const sales = toNum(r['Delivery Sales'] ?? r['Sales'] ?? r['Ventas']);
+          storesSet.add(store);
+          if(pType === 'week' || parseIsoWeekKey(period)) monthsSet.add(keyPeriod);
+          if(ch) channelsSet.add(ch);
+          pushMetric(state.deliverySalesByStoreMonth, store, keyPeriod, sales);
+          if(ch) pushMetricKeyed(state.deliverySalesByStoreMonthChannel, `${store}||${ch}`, keyPeriod, sales);
+          addKey(deliveryByKey, store, keyPeriod, sales);
+        });
+      }
+
+      totalByKey.forEach((tot, key)=>{
+        const [store, period] = String(key).split('||');
+        const del = Number(deliveryByKey.get(key) || 0);
+        pushMetric(state.noDeliverySalesByStoreMonth, store, period, Math.max(0, Number(tot || 0) - del));
+      });
+
+      return true;
+    }
+
+    function buildLightCuboSalesRowsFromPeriodSheets(wb){
+      const out = [];
+      const delByDept = new Map();
+      const normPeriod = (v) => normalizeYm(String(v ?? '').trim()) || String(v ?? '').trim();
+      const add = (row) => { if(row && row.store && row.ym && Number(row.sales || 0)) out.push(row); };
+
+      if(hasSheet(wb, 'Chart_Delivery_Dept_Periods')){
+        const dr = sheetRows(wb, 'Chart_Delivery_Dept_Periods', {defval:null});
+        dr.forEach(r=>{
+          const period = normPeriod(r['PeriodKey']);
+          const pType = String(r['PeriodType'] ?? '').trim().toLowerCase();
+          const store = String(r['Store'] ?? '').trim().toUpperCase();
+          const dow = String(r['DOW'] ?? '').trim();
+          const dept = stripAccents(String(r['DeptGroup'] ?? '').trim());
+          const ch = String(r['Channel'] ?? '').trim();
+          const sales = toNum(r['Delivery Sales']);
+          if(!period || !store || !dept || !ch || pType !== 'week') return;
+          const key = `${period}||${store}||${dow || '__ALL__'}||${dept}`;
+          delByDept.set(key, Number(delByDept.get(key) || 0) + Number(sales || 0));
+          add({store, ym:period, department:dept, category:'', brand:'', daypart:'', dow, is_delivery:true, delivery_channel:ch, sales, gross_margin:null});
+        });
+      }
+
+      if(hasSheet(wb, 'Chart_Sales_Dept_Periods')){
+        const sr = sheetRows(wb, 'Chart_Sales_Dept_Periods', {defval:null});
+        sr.forEach(r=>{
+          const period = normPeriod(r['PeriodKey']);
+          const pType = String(r['PeriodType'] ?? '').trim().toLowerCase();
+          const store = String(r['Store'] ?? '').trim().toUpperCase();
+          const dow = String(r['DOW'] ?? '').trim();
+          const dept = stripAccents(String(r['DeptGroup'] ?? '').trim());
+          const sales = toNum(r['Sales']);
+          if(!period || !store || !dept || pType !== 'week') return;
+          const key = `${period}||${store}||${dow || '__ALL__'}||${dept}`;
+          const delivery = Number(delByDept.get(key) || 0);
+          const noDelivery = Math.max(0, Number(sales || 0) - delivery);
+          add({store, ym:period, department:dept, category:'', brand:'', daypart:'', dow, is_delivery:false, delivery_channel:'', sales:noDelivery, gross_margin:null});
+        });
+      }
+
+      return out;
+    }
+
     function buildFromCube(wb){
       resetState();
     try{ ensureDeliverySwitches(); }catch(e){}
@@ -9038,43 +9329,53 @@ function toNum(v){
         }
 
       } else {
+        let loadedCoreSalesFromHelper = false;
         try{
-          const salesSheetName = hasSheet(wb, 'Cubo_Sales_Fact') ? 'Cubo_Sales_Fact' : (hasSheet(wb, 'Cubo_Sales') ? 'Cubo_Sales' : 'Cubo_Sales_DetailHallazgos');
-          const rs = sheetRows(wb, salesSheetName, {defval:null});
-          if (!rs.length) throw new Error(`Hoja "${salesSheetName}" está vacía.`);
+          loadedCoreSalesFromHelper = loadCoreSalesFromPeriodSheets(wb, storesSet, monthsSet, channelsSet);
+        }catch(e){
+          console.warn('Chart period core sales parse warning', e);
+          loadedCoreSalesFromHelper = false;
+        }
 
-          const k = Object.keys(rs[0] || {});
-          const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
-          const cYM    = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','CalendarMonth','Month','Mes']);
-          const cSales = pickCol(k, ['Sales','Total Sales','TotalSales','sales','Venta','Ventas']);
-          const cIsDel = pickCol(k, ['Is_Delivery','Is Delivery','Delivery','delivery','is_delivery','IsDelivery']);
-          const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','Channel','delivery_channel','DeliveryChannel','DelivChannel']);
-          if (!cStore || !cYM || !cSales){
-            throw new Error(`En "${salesSheetName}" faltan columnas. Necesito: Store, YearMonth, Sales.`);
-          }
-
-          rs.forEach(r=>{
-            const store = String(r[cStore] ?? '').trim().toUpperCase();
-            const ym = normalizeYm(r[cYM]);
-            if(!store || !ym) return;
-            const sales = toNum(r[cSales]);
-            const isDel = cIsDel ? Boolean(r[cIsDel]) : false;
-            const ch = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
-            storesSet.add(store); monthsSet.add(ym);
-
-            pushMetric(state.totalSalesByStoreMonth, store, ym, sales);
-            if (isDel){
-              pushMetric(state.deliverySalesByStoreMonth, store, ym, sales);
-              if (ch){
-                channelsSet.add(ch);
-                pushMetricKeyed(state.deliverySalesByStoreMonthChannel, `${store}||${ch}`, ym, sales);
-              }
-            } else {
-              pushMetric(state.noDeliverySalesByStoreMonth, store, ym, sales);
+        if(!loadedCoreSalesFromHelper){
+        try{
+            const salesSheetName = hasSheet(wb, 'Cubo_Sales_Fact') ? 'Cubo_Sales_Fact' : (hasSheet(wb, 'Cubo_Sales') ? 'Cubo_Sales' : 'Cubo_Sales_DetailHallazgos');
+            const rs = sheetRows(wb, salesSheetName, {defval:null});
+            if (!rs.length) throw new Error(`Hoja "${salesSheetName}" está vacía.`);
+  
+            const k = Object.keys(rs[0] || {});
+            const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
+            const cYM    = pickCol(k, ['YearWeek','YearMonth','YM','Year Month','Week','Semana','ym','yearmonth','CalMonth','CalendarMonth','Month','Mes']);
+            const cSales = pickCol(k, ['Sales','Total Sales','TotalSales','sales','Venta','Ventas']);
+            const cIsDel = pickCol(k, ['Is_Delivery','Is Delivery','Delivery','delivery','is_delivery','IsDelivery']);
+            const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','Channel','delivery_channel','DeliveryChannel','DelivChannel']);
+            if (!cStore || !cYM || !cSales){
+              throw new Error(`En "${salesSheetName}" faltan columnas. Necesito: Store, YearMonth, Sales.`);
             }
-          });
-        } catch(e){
-          console.warn('Facts Sales parse warning', e);
+  
+            rs.forEach(r=>{
+              const store = String(r[cStore] ?? '').trim().toUpperCase();
+              const ym = normalizeYm(r[cYM]);
+              if(!store || !ym) return;
+              const sales = toNum(r[cSales]);
+              const isDel = cIsDel ? Boolean(r[cIsDel]) : false;
+              const ch = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
+              storesSet.add(store); monthsSet.add(ym);
+  
+              pushMetric(state.totalSalesByStoreMonth, store, ym, sales);
+              if (isDel){
+                pushMetric(state.deliverySalesByStoreMonth, store, ym, sales);
+                if (ch){
+                  channelsSet.add(ch);
+                  pushMetricKeyed(state.deliverySalesByStoreMonthChannel, `${store}||${ch}`, ym, sales);
+                }
+              } else {
+                pushMetric(state.noDeliverySalesByStoreMonth, store, ym, sales);
+              }
+            });
+          } catch(e){
+            console.warn('Facts Sales parse warning', e);
+          }
         }
 
         try{
@@ -9187,7 +9488,15 @@ parseMetricDateRangesSheet(wb);
       if (hasSalesFact){
         try{
           const salesSheetName = hasSheet(wb, 'Cubo_Sales_Fact') ? 'Cubo_Sales_Fact' : (hasSheet(wb, 'Cubo_Sales') ? 'Cubo_Sales' : 'Cubo_Sales_DetailHallazgos');
-          const rs = sheetRows(wb, salesSheetName, {defval:null});
+          /* AMPM V6 — la base de negocio debe salir de Cubo_Sales_DetailHallazgos.
+             No sustituir por Chart_Sales_Dept_Periods: esa hoja liviana no trae Category, Brand,
+             Daypart ni Gross Margin y deja en cero Top categorías, marcas, margen y horario. */
+          const useLightSalesRows = false;
+          if(useLightSalesRows){
+            state.cuboSalesRows = buildLightCuboSalesRowsFromPeriodSheets(wb);
+            state.cuboSalesDowRows = state.cuboSalesRows.filter(r => r && r.dow != null && String(r.dow).trim() !== '');
+          }else{
+            const rs = sheetRows(wb, salesSheetName, {defval:null});
           if (rs && rs.length){
             const k = Object.keys(rs[0] || {});
             const cStore = pickCol(k, ['Store','Store Name','store','Tienda']);
@@ -9229,6 +9538,7 @@ parseMetricDateRangesSheet(wb);
                 state.cuboSalesDowRows = state.cuboSalesRows.filter(r => r && r.dow != null && String(r.dow).trim() !== '');
               }
             }
+          }
           }
         } catch(e){ console.warn('Sales base parse warning', e); }
       } else if (wb && (hasSheet(wb, 'Cubo_Sales') || hasSheet(wb, 'Cubo_Sales_DetailHallazgos'))){
@@ -28531,76 +28841,59 @@ renderShareTable({
       return parseWorkbookBufferOffMainThread(buffer, finalUrl);
     }
     async function parseWorkbookBufferOffMainThread(buffer, sourceLabel){
-      setLoadingProgress(14, 'Archivo leído. Preparando estructura…');
+      /* AMPM FIX V4 — carga robusta de Cubo_Sales_DetailHallazgos.
+         La hoja de Hallazgos pesa mucho; por eso se excluye de la lectura general de SheetJS
+         y se hidrata desde el XML interno del .xlsx con un parser dedicado. Esto evita que
+         SheetJS/Chrome la devuelvan como [] y deje KPIs/tablas en cero. */
+      setLoadingProgress(14, 'Archivo leído. Preparando cubo robusto…', 'Modo V4: lectura selectiva + Hallazgos directo desde XML.');
       await uiYield(20);
-
-      async function parseOnMainThread(hint){
-        setLoadingProgress(18, 'Procesando archivo en modo compatible…', hint || 'Esto puede tardar un poco más en archivos pesados.');
-        await uiYield(24);
-        return XLSX.read(buffer, {type:'array', cellDates:true});
+      if(typeof XLSX === 'undefined' || !XLSX || typeof XLSX.read !== 'function'){
+        throw new Error('No está cargada la librería XLSX. Recargá el HTML y validá conexión.');
       }
+      setLoadingProgress(24, 'Leyendo índice de hojas del Excel…', sourceLabel || 'Archivo principal');
+      await uiYield(16);
 
-      if(typeof Worker === 'undefined'){
-        return parseOnMainThread('Tu navegador no soporta procesamiento en segundo plano.');
-      }
-
-      const workerSource = `
-        self.importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-        self.onmessage = function(ev){
-          const buffer = ev.data && ev.data.buffer;
-          try{
-            self.postMessage({type:'progress', pct:20, text:'Libro cargado. Identificando hojas…'});
-            const wb = XLSX.read(buffer, {type:'array', cellDates:true});
-            const names = Array.isArray(wb.SheetNames) ? wb.SheetNames.slice() : [];
-            const rowsBySheet = {};
-            const total = Math.max(1, names.length);
-            for(let i=0;i<names.length;i++){
-              const name = names[i];
-              rowsBySheet[name] = XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:null, raw:true});
-              const pct = 22 + Math.round(((i+1)/total) * 30);
-              if(i === 0 || i === names.length-1 || (i+1) % 2 === 0){
-                self.postMessage({type:'progress', pct:pct, text:'Procesando hojas del cubo…', hint:name});
-              }
-            }
-            self.postMessage({type:'done', payload:{SheetNames:names, __rowsBySheet:rowsBySheet}});
-          }catch(err){
-            self.postMessage({type:'error', message: (err && err.message) ? err.message : String(err)});
-          }
-        };`;
-      const workerUrl = URL.createObjectURL(new Blob([workerSource], {type:'application/javascript'}));
+      let sheetNames = [];
       try{
-        const payload = await new Promise((resolve, reject)=>{
-          const worker = new Worker(workerUrl);
-          worker.onmessage = (ev)=>{
-            const data = ev.data || {};
-            if(data.type === 'progress'){
-              setLoadingProgress(data.pct || 22, data.text || 'Procesando hojas del cubo…', data.hint || '');
-              return;
-            }
-            if(data.type === 'done'){
-              try{ worker.terminate(); }catch(_e){}
-              resolve(data.payload || {});
-              return;
-            }
-            if(data.type === 'error'){
-              try{ worker.terminate(); }catch(_e){}
-              reject(new Error(data.message || 'No se pudo procesar el Excel'));
-            }
-          };
-          worker.onerror = (err)=>{
-            try{ worker.terminate(); }catch(_e){}
-            reject(err && err.message ? new Error(err.message) : new Error('Fallo el procesamiento del Excel'));
-          };
-          worker.postMessage({buffer});
-        });
-        return hydrateWorkerWorkbook(payload);
-      } catch(err){
-        console.warn('Workbook worker fallback:', err);
-        return parseOnMainThread('Se activó el modo compatible de lectura del cubo compacto.');
-      } finally {
-        try{ URL.revokeObjectURL(workerUrl); }catch(_e){}
+        const metaWb = XLSX.read(buffer, {type:'array', bookSheets:true});
+        sheetNames = Array.isArray(metaWb?.SheetNames) ? metaWb.SheetNames.slice() : [];
+      }catch(_metaErr){
+        sheetNames = [];
       }
+
+      const heavySheet = 'Cubo_Sales_DetailHallazgos';
+      const sheetsToParse = sheetNames.length ? sheetNames.filter(n => n !== heavySheet) : undefined;
+      setLoadingProgress(34, 'Leyendo hojas livianas del cubo…', sheetsToParse ? `${sheetsToParse.length} hojas sin bloquear Hallazgos` : 'Lectura estándar');
+      await uiYield(16);
+
+      let wb;
+      try{
+        wb = sheetsToParse ? XLSX.read(buffer, {type:'array', cellDates:true, dense:false, sheets:sheetsToParse}) : XLSX.read(buffer, {type:'array', cellDates:true, dense:false});
+      }catch(readErr){
+        console.warn('Lectura selectiva falló; intento lectura estándar.', readErr);
+        wb = XLSX.read(buffer, {type:'array', cellDates:true, dense:false});
+      }
+      if(sheetNames.length) wb.SheetNames = sheetNames.slice();
+      try{ wb.__rowsBySheet = wb.__rowsBySheet || {}; }catch(_e){}
+      try{ wb.__ampmStableLoadV4 = true; wb.__ampmSourceLabel = sourceLabel || ''; }catch(_e){}
+
+      if(sheetNames.indexOf(heavySheet) >= 0 && window.AMPM_DETAIL_HALLAZGOS_LOADER_V4 && typeof window.AMPM_DETAIL_HALLAZGOS_LOADER_V4.hydrate === 'function'){
+        try{
+          await window.AMPM_DETAIL_HALLAZGOS_LOADER_V4.hydrate(wb, buffer, function(p,t,h){
+            try{ setLoadingProgress(p,t,h); }catch(_e){}
+          });
+        }catch(hErr){
+          console.warn('Carga robusta de Cubo_Sales_DetailHallazgos falló; se intentará lectura estándar lazy.', hErr);
+        }
+      }else if(sheetNames.indexOf(heavySheet) >= 0){
+        console.warn('Cubo_Sales_DetailHallazgos existe, pero el loader robusto no está disponible.');
+      }
+
+      setLoadingProgress(78, 'Cubo listo para modelado…', 'Hallazgos cargado en caché interna para ventas, innovación, vapes e inventario.');
+      await uiYield(16);
+      return wb;
     }
+
     async function parseWorkbookOffMainThread(file){
       const buffer = await file.arrayBuffer();
       return parseWorkbookBufferOffMainThread(buffer, (file && file.name) || 'Archivo local');
@@ -28814,6 +29107,12 @@ renderShareTable({
     }
 
     async function handleRemoteSource(){
+      if(location && location.protocol === 'file:'){
+        const f = el('file');
+        if(f) f.click();
+        alert('Chrome bloquea cargar ./Cubo_Semanal_Compactado.xlsx desde un HTML abierto como file://. Usá Seleccionar Excel local, o abrí el dashboard desde un servidor local/GitHub Pages.');
+        return;
+      }
       const input = el('remoteDataUrl');
       const rawUrl = input && input.value ? String(input.value).trim() : '';
       if(!rawUrl){
@@ -40472,6 +40771,25 @@ document.addEventListener('click', function(ev){
   opRefreshOnePagerCurrent();
 });
 
+
+/* AMPM FIX V5 — One Pager Hallazgos sync must be global.
+   La función real vive dentro del módulo Hallazgos diferido; si One Pager renderiza antes
+   o desde otro scope, esta versión segura evita ReferenceError y mantiene el panel vivo. */
+if(typeof window.refreshOnePagerHallSync !== 'function'){
+  window.refreshOnePagerHallSync = function(periodYm, scopeLabel, monthly, dowLabelTxt, stores){
+    try{
+      var storeTxt = String(scopeLabel || (Array.isArray(stores) && stores.length ? stores.join(', ') : 'ALL') || 'ALL');
+      if(typeof opSetText === 'function') opSetText('opHallStore', storeTxt);
+      if(typeof opSetHtml === 'function'){
+        opSetHtml('opHallFinding', 'Construye el hallazgo en la pestaña Hallazgos.');
+        opSetHtml('opHallReason', '—');
+        opSetHtml('opHallAction', '—');
+      }
+      if(typeof opSetText === 'function') opSetText('opHallMeta', (monthly ? 'Hallazgo sincronizado · ' : 'Hallazgo sincronizado · ') + storeTxt + (periodYm ? (' · ' + periodYm) : ''));
+    }catch(_e){}
+  };
+}
+
 function renderOnePager(storeList, currentYm, prevYms){
   if(!currentYm) return;
   const monthly = isMonthlyReport();
@@ -40713,7 +41031,9 @@ function renderOnePager(storeList, currentYm, prevYms){
     { compareLabel, deltaLabel: `Delta vs ${compareLabel}` }
   );
 
-  refreshOnePagerHallSync(periodYm, scopeLabel, monthly, dowLabelTxt, stores);
+  try{
+    if(typeof window.refreshOnePagerHallSync === 'function') window.refreshOnePagerHallSync(periodYm, scopeLabel, monthly, dowLabelTxt, stores);
+  }catch(e){ console.warn('OnePager Hallazgos sync skipped', e); }
 }
 
 </script>
@@ -41512,6 +41832,7 @@ function renderOnePager(storeList, currentYm, prevYms){
       opSetText('opHallMeta', monthly ? `Hallazgo sincronizado · ${scopeLabel || 'ALL'} · ${monthDisplay(periodYm)}` : `Hallazgo sincronizado · ${scopeLabel || 'ALL'} · ${dowLabelTxt}`);
     }
   }
+  try{ window.refreshOnePagerHallSync = refreshOnePagerHallSync; }catch(_e){}
   function hallLabel(v, fallback){
     const s = hallText(v);
     return s || (fallback || '(Sin dato)');
@@ -60517,7 +60838,13 @@ body:not(.auth-ok) #ampmStoreFloat{display:none!important}
   function cleanSdya(){['ventasSdyaHoverLayerV37','ventasSdyaHoverLayerV36','ventasSdyaHoverLayerV31','ventasSdyaTooltipV37','ventasSdyaTooltipV36','ventasSdyaTooltipV31'].forEach(function(id){try{var e=byId(id);if(e)e.remove();}catch(x){}});}
   function harden(c){try{if(!c)return;var h=c.closest('.monthly-chart-viewport')||c.parentElement;if(h){h.style.position=h.style.position||'relative';h.style.minWidth='0';h.style.maxWidth='100%';if(/^(chart_mam|chart_delivery_mam|chart_delivery_share_mam|chart_sbf_mam)$/.test(c.id)){if(!h.style.height||h.getBoundingClientRect().height<280)h.style.height='420px';h.style.overflow='hidden';}}c.style.display='block';c.style.width='100%';c.style.maxWidth='100%';c.style.pointerEvents='auto';}catch(e){}}
   function patchCfg(c,cfg){try{if(!c||!cfg)return cfg;cfg.options=cfg.options||{};cfg.options.responsive=true;cfg.options.maintainAspectRatio=false;if(c.id==='chart_mam'){cfg.options.interaction=Object.assign({},cfg.options.interaction||{},{mode:'index',axis:'x',intersect:false});cfg.options.hover=Object.assign({},cfg.options.hover||{},{mode:'index',axis:'x',intersect:false});cfg.options.events=['mousemove','mouseout','mouseleave','click','touchstart','touchmove','touchend'];cfg.options.plugins=cfg.options.plugins||{};cfg.options.plugins.tooltip=Object.assign({},cfg.options.plugins.tooltip||{},{enabled:true,mode:'index',axis:'x',intersect:false,external:null});}}catch(e){}return cfg;}
-  function installProxy(){try{var C=window.Chart;if(!C||C.__ampmLifecycleV3Proxy)return;var P=new Proxy(C,{construct:function(t,args,n){var c=itemCanvas(args&&args[0]),k='';try{if(c){harden(c);k=key(c);args[1]=patchCfg(c,args[1]);var old=(typeof t.getChart==='function')?t.getChart(c):null;if(old&&old.destroy)old.destroy();if(window.AMPM_CHARTS[k]&&window.AMPM_CHARTS[k]!==old&&window.AMPM_CHARTS[k].destroy)window.AMPM_CHARTS[k].destroy();window.AMPM_CHARTS[k]=null;}}catch(e){}var ch=Reflect.construct(t,args,n||t);try{c=c||ch.canvas;k=k||key(c);if(k)window.AMPM_CHARTS[k]=ch;ch.$ampmChartKey=k;}catch(e){}return ch;}});try{Object.setPrototypeOf(P,C);}catch(e){}P.__ampmLifecycleV3Proxy=true;window.Chart=P;}catch(e){console.warn('AMPM lifecycle proxy failed',e);}}
+  function installProxy(){
+    /* AMPM FIX V5 — desactivado el Proxy de Chart.js.
+       Ese wrapper reentraba sobre Chart y generaba Maximum call stack size exceeded,
+       dejando pestañas parcialmente renderizadas. La gestión de destroy/resize queda
+       en los renderers existentes y en el recover() central. */
+    try{ if(window.Chart) window.Chart.__ampmLifecycleProxyDisabledV5 = true; }catch(_e){}
+  }
   function ch(c){try{return c&&typeof Chart!=='undefined'?((Chart.getChart&&Chart.getChart(c))||window.AMPM_CHARTS[key(c)]||null):null;}catch(e){return null;}}
   function invalid(x){try{if(!x||!x.canvas)return true;if(!canvasVisible(x.canvas))return false;var r=x.canvas.getBoundingClientRect(),a=x.chartArea;if(r.width<80||r.height<80||!a)return true;return (a.right-a.left)<Math.min(180,r.width*.35)||(a.bottom-a.top)<Math.min(140,r.height*.35)||!x.data||!Array.isArray(x.data.datasets)||!x.data.datasets.length;}catch(e){return false;}}
   function rank(x){try{if(!x||!x.canvas||typeof renderBottomRankRow!=='function')return;var id=x.canvas.id,l=x.data.labels||[],d=x.data.datasets||[],rid='',v=[];if(id==='chart_mam'){rid='rank_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}else if(id==='chart_delivery_mam'){rid='rank_delivery_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}else if(id==='chart_delivery_share_mam'){rid='rank_delivery_share_mam';var s=d.find(function(ds){return /share/i.test(txt(ds&&ds.label))})||d[d.length-1];v=(s&&s.data||[]).map(function(n){return n==null?-Infinity:Number(n)});}else if(id==='chart_sbf_mam'){rid='rank_sbf_mam';v=l.map(function(_,i){return d.filter(function(ds){return ds&&ds.type==='bar'}).reduce(function(a,ds){return a+Number((ds.data||[])[i]||0)},0)});}if(rid&&byId(rid))renderBottomRankRow(rid,l,v,{label:'Top',chart:x});}catch(e){}}
@@ -66518,5 +66845,57 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
 })();
 </script>
 
+
+<script type="text/plain" data-ampm-deferred="1" id="ampm-v5-stability-marker">
+(function(){
+  try{ console.info('AMPM V5 estabilidad: DetailHallazgos + OnePager global + Chart Proxy OFF'); }catch(_e){}
+})();
+</script>
+
+<script type="text/plain" data-ampm-deferred="1" id="ampm-v6-full-detail-healthcheck">
+(function(){
+  'use strict';
+  if(typeof window === 'undefined') return;
+  window.AMPM_V6_FULL_DETAIL = true;
+  function n(v){ v=Number(v); return Number.isFinite(v)?v:0; }
+  function salesHealth(){
+    try{
+      var st = window.state || {};
+      var rows = Array.isArray(st.cuboSalesRows) ? st.cuboSalesRows : [];
+      var out = {rows: rows.length, categories:0, brands:0, dayparts:0, marginRows:0, sales:n(rows.reduce(function(a,r){return a+n(r&&r.sales);},0))};
+      var cats={}, brands={}, dayparts={};
+      rows.forEach(function(r){
+        if(r && r.category) cats[String(r.category)] = 1;
+        if(r && r.brand) brands[String(r.brand)] = 1;
+        if(r && r.daypart) dayparts[String(r.daypart)] = 1;
+        if(r && r.gross_margin != null) out.marginRows += 1;
+      });
+      out.categories = Object.keys(cats).length;
+      out.brands = Object.keys(brands).length;
+      out.dayparts = Object.keys(dayparts).length;
+      return out;
+    }catch(e){ return {error:String(e&&e.message||e)}; }
+  }
+  window.ampmV6SalesHealth = salesHealth;
+  function blockLocalRemoteLoad(){
+    try{
+      if(!location || location.protocol !== 'file:') return;
+      var btn = document.getElementById('remoteLoadBtn');
+      if(btn){ btn.title = 'Modo local: usá Seleccionar Excel local'; }
+      document.addEventListener('click', function(ev){
+        try{
+          var target = ev.target && ev.target.closest ? ev.target.closest('#remoteLoadBtn') : null;
+          if(!target) return;
+          ev.preventDefault(); ev.stopPropagation(); if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+          var f = document.getElementById('file'); if(f) f.click();
+          console.warn('AMPM V6: carga publicada bloqueada en file://; usar Seleccionar Excel local.');
+        }catch(_e){}
+      }, true);
+    }catch(_e){}
+  }
+  blockLocalRemoteLoad();
+  setTimeout(function(){ try{ console.info('AMPM V6 full DetailHallazgos health', salesHealth()); }catch(_e){} }, 1500);
+})();
+</script>
 </body>
 </html>
