@@ -4432,6 +4432,48 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 /* Vapes: Delivery queda inmediatamente debajo de % Margen • Cigarros / Vapes */
 .vapesRoot #vapesChartDelivery{display:block;}
 </style>
+
+<style id="album-sas-layout-v2">
+/* Álbum v2: más capacidad visual para acumulados y selector DaD/SaS */
+.albumFilters{grid-template-columns:repeat(6,minmax(135px,1fr)) minmax(170px,.8fr) !important;}
+.albumGridMainTimeline{grid-template-columns:1fr !important;}
+.albumGridMainTimeline .albumChart{height:370px;}
+.albumGridQty{grid-template-columns:repeat(2,minmax(0,1fr)) !important;align-items:start;}
+.albumGridQty .albumCard:nth-child(2){grid-column:1 / -1;}
+.albumGridQty .albumCard:nth-child(2) .albumChart{height:380px;}
+.albumCardHead h3 .sasTag{display:inline-flex;align-items:center;margin-left:7px;padding:3px 7px;border-radius:999px;background:rgba(245,131,32,.12);border:1px solid rgba(245,131,32,.25);color:#9A4A0D;font-size:10px;font-weight:1000;vertical-align:middle;}
+.albumChart.timelineWide{overflow-x:auto;overflow-y:hidden;padding-bottom:12px;}
+.albumChart.timelineWide .albumChartInner{height:100%;min-width:100%;position:relative;}
+.albumChart.timelineWide canvas{display:block!important;width:100%!important;height:100%!important;max-width:none!important;}
+.albumChart.timelineWide::-webkit-scrollbar{height:10px;}
+.albumChart.timelineWide::-webkit-scrollbar-thumb{background:rgba(12,77,143,.28);border-radius:999px;border:2px solid rgba(255,255,255,.75);}
+.albumChart.timelineWide::-webkit-scrollbar-track{background:rgba(148,163,184,.10);border-radius:999px;}
+@media (max-width:1320px){.albumFilters{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}}
+@media (max-width:1100px){.albumGridQty{grid-template-columns:1fr !important;}.albumGridMainTimeline .albumChart,.albumGridQty .albumCard:nth-child(2) .albumChart{height:330px;}}
+@media (max-width:900px){.albumFilters{grid-template-columns:1fr 1fr !important;}}
+@media (max-width:620px){.albumFilters{grid-template-columns:1fr !important;}.albumGridMainTimeline .albumChart,.albumGridQty .albumCard:nth-child(2) .albumChart{height:300px;}}
+</style>
+
+<style id="album-layout-v3-clean-fix">
+/* Álbum v3: cada serie larga usa una fila completa y el canvas ocupa todo el ancho real del card. */
+.albumGridMainTimeline{grid-template-columns:1fr !important;align-items:stretch !important;}
+.albumGridMainTimeline>.albumCard{grid-column:1 / -1 !important;width:100% !important;}
+.albumGridMainTimeline .albumChart{height:390px !important;}
+.albumGridQty{grid-template-columns:1fr !important;align-items:stretch !important;}
+.albumGridQty>.albumCard{grid-column:1 / -1 !important;width:100% !important;max-width:100% !important;}
+.albumGridQty .albumChart.qtyDaily,.albumGridQty .albumChart.qtyCum{height:365px !important;}
+.albumChart.timelineWide{width:100% !important;max-width:100% !important;overflow-x:auto !important;overflow-y:hidden !important;padding:10px 10px 14px !important;}
+.albumChart.timelineWide .albumChartInner{height:100% !important;position:relative !important;max-width:none !important;}
+.albumChart.timelineWide canvas{display:block !important;width:100% !important;height:100% !important;max-width:none !important;max-height:none !important;}
+@media (max-width:1100px){
+  .albumGridMainTimeline .albumChart{height:340px !important;}
+  .albumGridQty .albumChart.qtyDaily,.albumGridQty .albumChart.qtyCum{height:330px !important;}
+}
+@media (max-width:620px){
+  .albumGridMainTimeline .albumChart,.albumGridQty .albumChart.qtyDaily,.albumGridQty .albumChart.qtyCum{height:300px !important;}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -4742,8 +4784,16 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <label id="labelDowFilter">5) Día de semana</label>
 <select id="dowFilter" multiple="" size="8"></select>
 </div>
+<div class="fieldCard filter compact" id="paniniFilterWrap">
+<label id="labelPaniniFilter">6) Marca PANINI</label>
+<select id="paniniFilter">
+<option value="include">Incluir PANINI</option>
+<option value="exclude">Excluir PANINI</option>
+</select>
+<div class="fieldHint">Controla venta, delivery, One Pager y resumen para aislar el impacto de figuritas Mundial.</div>
+</div>
 <div class="fieldCard filter compact">
-<label id="labelInvWeeks">6) Inventario — semanas base (máx 4)</label>
+<label id="labelInvWeeks">7) Inventario — semanas base (máx 4)</label>
 <select id="invWeeks" multiple=""></select>
 </div>
 </div>
@@ -5598,6 +5648,13 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
         <option value="store">Mix por tienda</option>
       </select>
     </div>
+    <div class="albumField">
+      <label>Serie de tiempo</label>
+      <select id="albumTimeView">
+        <option value="daily">DaD · Día a día</option>
+        <option value="weekly">SaS · Semana a semana</option>
+      </select>
+    </div>
     <button class="albumApply" id="albumApply" type="button">Actualizar seguimiento</button>
   </div>
 
@@ -5609,9 +5666,9 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     <div class="albumKpi"><div class="k">Impacto venta general</div><div class="v">—</div><div class="s">Venta álbum / total tienda</div></div>
   </div>
 
-  <div class="albumGrid albumGrid2">
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Venta día a día</h3><p id="albumDailyMeta">Barras por fecha según filtros.</p></div></div><div class="albumChart"><canvas id="chart_album_daily"></canvas></div></div>
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Tendencia y acumulado</h3><p id="albumTrendMeta">Línea de acumulado mensual.</p></div></div><div class="albumChart"><canvas id="chart_album_trend"></canvas></div></div>
+  <div class="albumGrid albumGrid2 albumGridMainTimeline">
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumDailyTitle">Venta día a día</h3><p id="albumDailyMeta">Barras por fecha según filtros.</p></div></div><div class="albumChart"><canvas id="chart_album_daily"></canvas></div></div>
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumTrendTitle">Tendencia y acumulado</h3><p id="albumTrendMeta">Línea de acumulado mensual.</p></div></div><div class="albumChart"><canvas id="chart_album_trend"></canvas></div></div>
   </div>
 
   <div class="albumGrid albumGrid3 albumGridCharts">
@@ -5621,13 +5678,13 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
   </div>
 
   <div class="albumGrid albumGrid2 albumGridQty albumGridQtyCajas">
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Vta Diaria QTY Cajas DaD</h3><p id="albumStickerCajaDailyMeta">Caja Stickers Mundial Fifa + conversión Sobres/104.</p></div><span class="albumQtyNote">1 caja = 104 sobres</span></div><div class="albumChart qtyDaily"><canvas id="chart_album_sticker_cajas_daily"></canvas></div></div>
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Vta Acumulada QTY Cajas DaD</h3><p id="albumStickerCajaCumMeta">Caja Stickers Mundial Fifa + conversión Sobres/104.</p></div><span class="albumQtyNote">1 caja = 104 sobres</span></div><div class="albumChart qtyCum"><canvas id="chart_album_sticker_cajas_cum"></canvas></div></div>
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumStickerCajaDailyTitle">Vta Diaria QTY Cajas DaD</h3><p id="albumStickerCajaDailyMeta">Caja Stickers Mundial Fifa + conversión Sobres/104.</p></div><span class="albumQtyNote">1 caja = 104 sobres</span></div><div class="albumChart qtyDaily"><canvas id="chart_album_sticker_cajas_daily"></canvas></div></div>
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumStickerCajaCumTitle">Vta Acumulada QTY Cajas DaD</h3><p id="albumStickerCajaCumMeta">Caja Stickers Mundial Fifa + conversión Sobres/104.</p></div><span class="albumQtyNote">1 caja = 104 sobres</span></div><div class="albumChart qtyCum"><canvas id="chart_album_sticker_cajas_cum"></canvas></div></div>
   </div>
 
   <div class="albumGrid albumGrid2 albumGridQty albumGridQtyAlbum">
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Vta Diaria QTY Álbum DaD</h3><p id="albumAlbumSoftDailyMeta">Album Mundial Fifa Tapa Suave · QTY diaria.</p></div></div><div class="albumChart qtyDaily"><canvas id="chart_album_album_soft_daily"></canvas></div></div>
-    <div class="albumCard"><div class="albumCardHead"><div><h3>Vta Acumulada QTY Álbum DaD</h3><p id="albumAlbumSoftCumMeta">Album Mundial Fifa Tapa Suave · QTY acumulada.</p></div></div><div class="albumChart qtyCum"><canvas id="chart_album_album_soft_cum"></canvas></div></div>
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumAlbumSoftDailyTitle">Vta Diaria QTY Álbum DaD</h3><p id="albumAlbumSoftDailyMeta">Album Mundial Fifa Tapa Suave · QTY diaria.</p></div></div><div class="albumChart qtyDaily"><canvas id="chart_album_album_soft_daily"></canvas></div></div>
+    <div class="albumCard"><div class="albumCardHead"><div><h3 id="albumAlbumSoftCumTitle">Vta Acumulada QTY Álbum DaD</h3><p id="albumAlbumSoftCumMeta">Album Mundial Fifa Tapa Suave · QTY acumulada.</p></div></div><div class="albumChart qtyCum"><canvas id="chart_album_album_soft_cum"></canvas></div></div>
   </div>
 
   <div class="albumGrid albumGrid3 albumGridTables">
@@ -7166,6 +7223,178 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       }
       return '';
     }
+    function normalizePaniniText(v){
+      let s = String(v ?? '').trim();
+      try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(_e){}
+      return s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+    function isPaniniBrand(v){
+      const n = normalizePaniniText(v);
+      return n === 'panini' || n.includes('panini');
+    }
+    function getPaniniFilterMode(){
+      const sel = el('paniniFilter');
+      const raw = String((sel && sel.value) || (state && state.paniniMode) || localStorage.getItem('ampm_panini_mode') || 'include').trim().toLowerCase();
+      return raw === 'exclude' ? 'exclude' : 'include';
+    }
+    function isPaniniExcluded(){
+      return getPaniniFilterMode() === 'exclude';
+    }
+    function paniniFilterLabel(){
+      return isPaniniExcluded() ? 'PANINI excluida' : 'PANINI incluida';
+    }
+    function rowPassesPaniniFilter(row){
+      if(!isPaniniExcluded()) return true;
+      return !isPaniniBrand(row && row.brand);
+    }
+    function getPaniniScopedRows(rows){
+      const arr = Array.isArray(rows) ? rows : [];
+      return (typeof isPaniniExcluded === 'function' && isPaniniExcluded()) ? arr.filter(rowPassesPaniniFilter) : arr;
+    }
+    function resetPaniniRawScope(){
+      if(!state) return;
+      try{
+        delete state._paniniRawCuboSalesRows;
+        delete state._paniniRawCuboSalesDowRows;
+        delete state._paniniRawCuboTxRows;
+        delete state._paniniRawDailySalesRows;
+        delete state._paniniRawDailyDeliveryRows;
+        delete state._paniniRawMonthlyXfSalesRows;
+        delete state._paniniRawMonthlyXfTxRows;
+        state.__paniniRawScopeLabel = '';
+      }catch(_e){}
+    }
+    function capturePaniniRawScope(label){
+      if(!state) return;
+      try{
+        state._paniniRawCuboSalesRows = Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows.slice() : [];
+        state._paniniRawCuboSalesDowRows = Array.isArray(state.cuboSalesDowRows) ? state.cuboSalesDowRows.slice() : [];
+        state._paniniRawCuboTxRows = Array.isArray(state.cuboTxRows) ? state.cuboTxRows.slice() : [];
+        if(!Array.isArray(state._paniniRawDailySalesRows) && Array.isArray(state.dailySalesRows)) state._paniniRawDailySalesRows = state.dailySalesRows.slice();
+        if(!Array.isArray(state._paniniRawDailyDeliveryRows) && Array.isArray(state.dailyDeliveryRows)) state._paniniRawDailyDeliveryRows = state.dailyDeliveryRows.slice();
+        if(!Array.isArray(state._paniniRawMonthlyXfSalesRows) && Array.isArray(state.monthlyXfSalesRows)) state._paniniRawMonthlyXfSalesRows = state.monthlyXfSalesRows.slice();
+        if(!Array.isArray(state._paniniRawMonthlyXfTxRows) && Array.isArray(state.monthlyXfTxRows)) state._paniniRawMonthlyXfTxRows = state.monthlyXfTxRows.slice();
+        state.__paniniRawScopeLabel = label || state.__paniniRawScopeLabel || 'captured';
+      }catch(e){ console.warn('PANINI raw capture failed', e); }
+    }
+    function rebuildSalesMetricMapsFromRows(rows, txRows){
+      state.totalSalesByStoreMonth = new Map();
+      state.totalGrossMarginByStoreMonth = new Map();
+      state.deliverySalesByStoreMonth = new Map();
+      state.noDeliverySalesByStoreMonth = new Map();
+      state.deliverySalesByStoreMonthChannel = new Map();
+
+      (Array.isArray(rows) ? rows : []).forEach(r=>{
+        if(!r || !r.store || !r.ym) return;
+        const salesVal = Number(r.sales || 0) || 0;
+        const gmVal = Number(r.gross_margin || 0) || 0;
+        pushMetric(state.totalSalesByStoreMonth, r.store, r.ym, salesVal);
+        pushMetric(state.totalGrossMarginByStoreMonth, r.store, r.ym, gmVal);
+        const isDel = (r.is_delivery === true || String(r.is_delivery) === '1');
+        if(isDel){
+          pushMetric(state.deliverySalesByStoreMonth, r.store, r.ym, salesVal);
+          const ch = String(r.delivery_channel || '').trim() || '(Sin dato)';
+          pushMetricKeyed(state.deliverySalesByStoreMonthChannel, `${r.store}||${ch}`, r.ym, salesVal);
+        }else{
+          pushMetric(state.noDeliverySalesByStoreMonth, r.store, r.ym, salesVal);
+        }
+      });
+
+      state.totalTxByStoreMonth = new Map();
+      state.deliveryTxByStoreMonth = new Map();
+      state.noDeliveryTxByStoreMonth = new Map();
+      const filteredTx = (Array.isArray(txRows) ? txRows : []).filter(rowPassesPaniniFilter);
+      filteredTx.forEach(r=>{
+        if(!r || !r.store || !r.ym) return;
+        const txVal = Number(r.transactions || 0) || 0;
+        pushMetric(state.totalTxByStoreMonth, r.store, r.ym, txVal);
+        if(r.is_delivery === true || String(r.is_delivery) === '1'){
+          pushMetric(state.deliveryTxByStoreMonth, r.store, r.ym, txVal);
+        }else{
+          pushMetric(state.noDeliveryTxByStoreMonth, r.store, r.ym, txVal);
+        }
+      });
+    }
+    function rebuildDailySalesRowsFromFilteredDetail(rows, deliveryOnly){
+      const out = new Map();
+      (Array.isArray(rows) ? rows : []).forEach(r=>{
+        if(!r || !r.store) return;
+        if(deliveryOnly && !(r.is_delivery === true || String(r.is_delivery) === '1')) return;
+        const rawDate = r.date_sold || r.date || r.DateSold || r['Date Sold'];
+        if(!rawDate) return;
+        let dt = null;
+        try{ dt = toDateTime(rawDate); }catch(_e){ dt = null; }
+        if(!dt || isNaN(dt.getTime())) return;
+        const d = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+        const key = `${String(r.store || '').trim().toUpperCase()}||${d.getTime()}`;
+        if(!out.has(key)) out.set(key, {d, store:String(r.store || '').trim().toUpperCase(), sales:0});
+        out.get(key).sales += Number(r.sales || 0) || 0;
+      });
+      return Array.from(out.values()).sort((a,b)=> a.d - b.d || String(a.store).localeCompare(String(b.store)));
+    }
+    function updatePaniniFilterUi(){
+      const sel = el('paniniFilter');
+      const mode = getPaniniFilterMode();
+      if(sel && sel.value !== mode) sel.value = mode;
+      try{ document.body.classList.toggle('panini-excluded', mode === 'exclude'); }catch(_e){}
+      try{
+        const meta = el('meta');
+        if(meta && state && Array.isArray(state.stores) && Array.isArray(state.months) && state.stores.length){
+          meta.textContent = `${state.stores.length} tiendas • ${state.months.length} semanas • canales: ${state.channels?.length || 0} • ${paniniFilterLabel()}`;
+        }
+      }catch(_e){}
+    }
+    function applyPaniniSalesScope(){
+      if(!state) return;
+      const mode = getPaniniFilterMode();
+      state.paniniMode = mode;
+      try{ localStorage.setItem('ampm_panini_mode', mode); }catch(_e){}
+
+      if(!Array.isArray(state._paniniRawCuboSalesRows) || !Array.isArray(state._paniniRawCuboTxRows)){
+        capturePaniniRawScope('auto');
+      }
+
+      const salesRowsRaw = Array.isArray(state._paniniRawCuboSalesRows) ? state._paniniRawCuboSalesRows : (Array.isArray(state.cuboSalesRows) ? state.cuboSalesRows : []);
+      const dowRowsRaw = Array.isArray(state._paniniRawCuboSalesDowRows) ? state._paniniRawCuboSalesDowRows : (Array.isArray(state.cuboSalesDowRows) ? state.cuboSalesDowRows : salesRowsRaw);
+      const txRowsRaw = Array.isArray(state._paniniRawCuboTxRows) ? state._paniniRawCuboTxRows : (Array.isArray(state.cuboTxRows) ? state.cuboTxRows : []);
+
+      const salesRows = (mode === 'exclude') ? salesRowsRaw.filter(rowPassesPaniniFilter) : salesRowsRaw.slice();
+      const txRows = txRowsRaw.slice();
+
+      state.cuboSalesRows = salesRows;
+      state.cuboSalesDowRows = (mode === 'exclude') ? dowRowsRaw.filter(rowPassesPaniniFilter) : dowRowsRaw.slice();
+      state.cuboTxRows = txRows;
+      rebuildSalesMetricMapsFromRows(salesRows, txRows);
+
+      const xfSalesRaw = Array.isArray(state._paniniRawMonthlyXfSalesRows) ? state._paniniRawMonthlyXfSalesRows : (Array.isArray(state.monthlyXfSalesRows) ? state.monthlyXfSalesRows : []);
+      if(xfSalesRaw.length || Array.isArray(state.monthlyXfSalesRows)){
+        state.monthlyXfSalesRows = (mode === 'exclude') ? xfSalesRaw.filter(rowPassesPaniniFilter) : xfSalesRaw.slice();
+      }
+      const xfTxRaw = Array.isArray(state._paniniRawMonthlyXfTxRows) ? state._paniniRawMonthlyXfTxRows : (Array.isArray(state.monthlyXfTxRows) ? state.monthlyXfTxRows : []);
+      if(xfTxRaw.length || Array.isArray(state.monthlyXfTxRows)){
+        state.monthlyXfTxRows = xfTxRaw.slice();
+      }
+      try{ if(typeof applyMonthlyChartLongAuthorityFromXf === 'function') applyMonthlyChartLongAuthorityFromXf(); }catch(e){ console.warn('PANINI monthly chart authority failed', e); }
+
+      if(mode === 'exclude'){
+        const dailySales = rebuildDailySalesRowsFromFilteredDetail(salesRows, false);
+        const dailyDelivery = rebuildDailySalesRowsFromFilteredDetail(salesRows, true);
+        if(dailySales.length) state.dailySalesRows = dailySales;
+        if(dailyDelivery.length) state.dailyDeliveryRows = dailyDelivery;
+      }else{
+        if(Array.isArray(state._paniniRawDailySalesRows)) state.dailySalesRows = state._paniniRawDailySalesRows.slice();
+        if(Array.isArray(state._paniniRawDailyDeliveryRows)) state.dailyDeliveryRows = state._paniniRawDailyDeliveryRows.slice();
+      }
+
+      state._xfBase = state._xfBase || {};
+      state._xfBase.cuboSalesRows = (state.cuboSalesRows || []).slice();
+      state._xfBase.cuboSalesDowRows = (state.cuboSalesDowRows || []).slice();
+      state._xfBase.cuboTxRows = (state.cuboTxRows || []).slice();
+      if(!state._xfBase.cuboSbfRows) state._xfBase.cuboSbfRows = (state.cuboSbfProvRows || []).slice();
+
+      state._dowScoped = null;
+      updatePaniniFilterUi();
+    }
     function getMamChartBaseTitle(){
       return isMonthlyReport() ? 'MaM Delta vs LY' : `${getGlobalDowLabel()} SaS Delta SDYA`;
     }
@@ -7174,6 +7403,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       if(filtersText) lines.push(`Filtros: ${filtersText}`);
       const dayLine = chartTitleDayLine(tab);
       if(dayLine) lines.push(dayLine);
+      if(typeof paniniFilterLabel === 'function') lines.push(`Vista: ${paniniFilterLabel()}`);
       return lines;
     }
     function detectChartTab(chart){
@@ -7751,6 +7981,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 
 function applyUnifiedModeUI(){
       syncUnifiedModePayload();
+      try{ applyPaniniSalesScope(); }catch(e){ console.warn('PANINI filter apply failed', e); }
       const mode = getUnifiedReportMode();
       applyMonthlyChartViewport();
       const tagMap = { diario:'Cuadros Diarios', semanal:'Cuadros Semanales', mensual:'Cuadros Mensuales' };
@@ -7929,6 +8160,7 @@ function applyUnifiedModeUI(){
       months: [],
       channels: [],
       dowFilter: '__ALL__',
+      paniniMode: (localStorage.getItem('ampm_panini_mode') || 'include'),
       _dowScoped: null,
       huesoRows: [],
       huesoCurrentRows: [],
@@ -8162,7 +8394,8 @@ function applyUnifiedModeUI(){
       const delMode = String(state.deliveryMode || 'TOTAL').trim();
       const dowKey = String(getGlobalDowFilter() || '__ALL__').trim();
       const reportMode = String((typeof getUnifiedReportMode === 'function' ? getUnifiedReportMode() : (state?.reportMode || 'semanal')) || '').trim();
-      return [reportMode, currentYm || '', prevKey, storeKey, delMode, dowKey].join('||');
+      const paniniKey = String(typeof getPaniniFilterMode === 'function' ? getPaniniFilterMode() : (state?.paniniMode || 'include')).trim();
+      return [reportMode, currentYm || '', prevKey, storeKey, delMode, dowKey, paniniKey].join('||');
     }
 
     function rememberTabRender(tab, currentYm, prevYms, storeList){
@@ -8850,6 +9083,7 @@ state.mode = '—';
         state._xfBase.cuboSalesDowRows = (state.cuboSalesDowRows || []).slice();
         state._xfBase.cuboSbfRows = (state.cuboSbfProvRows || []).slice();
       }
+      try{ if(typeof capturePaniniRawScope === 'function') capturePaniniRawScope(isMonthlyReport() ? 'monthly-mode' : 'weekly-mode'); }catch(_e){}
     }
 
     function normalizeYm(v){
@@ -9515,6 +9749,7 @@ parseMetricDateRangesSheet(wb);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
+            const cDate = pickCol(k, ['Date Sold','Date','Fecha','Day Sold','Dia Venta']);
             const cDow = pickCol(k, ['DOW','Dow','Dia','Día','Weekday','Day','dayofweek']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
             const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','DeliveryChannel','DelivChannel','DeliveryChannelName','Channel','delivery_channel']);
@@ -9535,7 +9770,8 @@ parseMetricDateRangesSheet(wb);
 
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                return (store && ym) ? {store, ym, department, category, brand, daypart, dow, is_delivery, delivery_channel, sales, gross_margin} : null;
+                const date_sold = cDate ? String(r[cDate] ?? '').trim() : '';
+                return (store && ym) ? {store, ym, date_sold, department, category, brand, daypart, dow, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
 
               if (cGM){
@@ -9562,6 +9798,7 @@ parseMetricDateRangesSheet(wb);
             const cCat = pickCol(k, ['Category','Categoria','Categoría','category']);
             const cDay = pickCol(k, ['Daypart','Horario','Turno','daypart']);
             const cBrand = pickCol(k, ['Brand','Marca','brand']);
+            const cDate = pickCol(k, ['Date Sold','Date','Fecha','Day Sold','Dia Venta']);
             const cDel = pickCol(k, ['Is_Delivery','Is Delivery','IsDelivery','Delivery','is_delivery','isdelivery']);
             const cDelCh = pickCol(k, ['Delivery_Channel','Delivery Channel','DeliveryChannel','DelivChannel','DeliveryChannelName']);
             const cSales = pickCol(k, ['Sales','Total Sales','TotalSales','sales']);
@@ -9578,7 +9815,8 @@ parseMetricDateRangesSheet(wb);
                 const delivery_channel = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                return (store && ym) ? {store, ym, department, category, brand, daypart, is_delivery, delivery_channel, sales, gross_margin} : null;
+                const date_sold = cDate ? String(r[cDate] ?? '').trim() : '';
+                return (store && ym) ? {store, ym, date_sold, department, category, brand, daypart, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
               if (cGM){
                 state.cuboSalesRows.forEach(row => {
@@ -9613,7 +9851,7 @@ parseMetricDateRangesSheet(wb);
                 const is_delivery = cDel ? toBool(r[cDel]) : false;
                 const delivery_channel = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
                 const transactions = Number(r[cTx] ?? 0) || 0;
-                return (store && ym) ? {store, ym, daypart, dow, is_delivery, delivery_channel, transactions} : null;
+                return (store && ym) ? {store, ym, brand, daypart, dow, is_delivery, delivery_channel, transactions} : null;
               }).filter(Boolean);
             }
           }
@@ -10467,6 +10705,7 @@ try{
 
       el('meta').className = 'badge';
       el('meta').textContent = `${state.stores.length} tiendas • ${state.months.length} semanas • canales: ${state.channels.length || 0}`;
+      try{ updatePaniniFilterUi(); }catch(_e){}
     }
 
     function cleanCustomer(s){ if (s==null) return ''; return String(s).trim().replace(/\\s+/g,' '); }
@@ -11807,6 +12046,7 @@ try{
     function ventasMonthlyCalendarAuthorityAllowed(){
       try{
         if(!isMonthlyReport()) return false;
+        if(typeof isPaniniExcluded === 'function' && isPaniniExcluded()) return false;
         if(getGlobalDowFilter() !== '__ALL__') return false;
         const xf = state && state.xf && state.xf.ventas ? state.xf.ventas : {};
         const keys = ['department','category','brand','daypart','dow','is_delivery','delivery_channel'];
@@ -12268,6 +12508,7 @@ try{
       const st = String(store || '').trim().toUpperCase();
       const mapV = state._xfSummary?.ventas?.totalByStore || null;
       if (mapV) return strictMapGet(mapV, st, periodKey);
+      if(typeof isPaniniExcluded === 'function' && isPaniniExcluded()) return getTotalSales(store, periodKey);
       const type = chartLongPeriodType();
       const bucket = state.chartLong && state.chartLong.sales ? state.chartLong.sales : null;
       const key = `${st}||${chartLongDowKey()}`;
@@ -12294,6 +12535,7 @@ try{
       }
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
       if (mapCh && !stores.length) return strictMapGet(mapCh, ch, periodKey);
+      if(typeof isPaniniExcluded === 'function' && isPaniniExcluded()) return getDeliveryChannelSales(ch, periodKey, stores);
       const type = chartLongPeriodType();
       const bucket = state.chartLong && state.chartLong.delivery ? state.chartLong.delivery : null;
       const dow = chartLongDowKey();
@@ -19230,7 +19472,7 @@ function _sumSummarySales(periodKey, storeList, opts){
   const cfg = Object.assign({delivery:null}, opts || {});
   if(isMonthlyReport()){
     let used = false, sum = 0;
-    const rows = ((state.hallazgosData && Array.isArray(state.hallazgosData.salesRowsMonth) && state.hallazgosData.salesRowsMonth.length)
+    const rows = getPaniniScopedRows((state.hallazgosData && Array.isArray(state.hallazgosData.salesRowsMonth) && state.hallazgosData.salesRowsMonth.length)
       ? state.hallazgosData.salesRowsMonth
       : (state.cuboSalesRows || []));
     const wantKey = parseMonthKey(periodKey) || weekToMonthKey(normalizeYm(periodKey));
@@ -20635,7 +20877,7 @@ if(pctVta != null){
 
   const detailRows = isMonthlyReport()
     ? ((state.hallazgosData && Array.isArray(state.hallazgosData.salesRowsMonth) && state.hallazgosData.salesRowsMonth.length)
-        ? state.hallazgosData.salesRowsMonth
+        ? getPaniniScopedRows(state.hallazgosData.salesRowsMonth)
         : [])
     : [];
   if(detailRows.length){
@@ -20766,7 +21008,7 @@ if(pctVta != null){
   if(metaEl) metaEl.textContent = currentYm ? `${isMonthlyReport() ? 'Mes' : 'Semana'} ${fmtExecPeriodLabel(currentYm)} • ${scopeLabel}` : `Pendiente • ${scopeLabel}`;
 
   const salesSource = isMonthlyReport()
-    ? (((state.hallazgosData && Array.isArray(state.hallazgosData.salesRowsMonth) && state.hallazgosData.salesRowsMonth.length) ? state.hallazgosData.salesRowsMonth : (state.cuboSalesRows || [])))
+    ? (((state.hallazgosData && Array.isArray(state.hallazgosData.salesRowsMonth) && state.hallazgosData.salesRowsMonth.length) ? getPaniniScopedRows(state.hallazgosData.salesRowsMonth) : (state.cuboSalesRows || [])))
     : getDowScopedRows(state.cuboSalesRows || []);
 
   const getRowPeriod = (r) => isMonthlyReport() ? _monthlyRowPeriodKey(r) : _weeklyRowPeriodKey(r);
@@ -25321,7 +25563,10 @@ const options = {
           legend: { display: true, position: 'bottom', labels: { color: '#000000', boxWidth: 26, boxHeight: 10, padding: 14, font:{weight:'700', size:INNOVATION_UI.legend} } },
           title: { display: true, text: delTitle, color: '#000000', font:{weight:'800', size:15}, padding:{top:12,bottom:12} },
           tooltip: {
-            enabled: true,
+            // AMPM FIX: el tooltip nativo de Chart.js se desactiva en este gráfico
+            // porque existe un tooltip HTML propio (.ampmDeliveryTooltipV1). Evita doble tooltip.
+            enabled: false,
+            external: function(){},
             mode: 'index',
             intersect: false,
             position: 'nearest',
@@ -29013,6 +29258,7 @@ renderShareTable({
       state.__hallWorkbook = wb;
       state.__hallWorkbookName = sourceLabel || '';
       state.__hallWorkbookStamp = Date.now();
+      try{ if(typeof resetPaniniRawScope === 'function') resetPaniniRawScope(); }catch(_e){}
       state.__hallWorkbookParsedStamp = null;
       state.__hallModeCache = {};
       state.hallazgosDataReady = false;
@@ -29048,6 +29294,7 @@ renderShareTable({
       await uiYield(16);
       primeUnifiedModePayloads();
       syncUnifiedModePayload();
+      try{ applyPaniniSalesScope(); }catch(e){ console.warn('PANINI filter apply failed', e); }
       state._basePeriods = (state.months || []).slice().sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
       rebuildPeriodSelectors();
 
@@ -29259,6 +29506,7 @@ renderShareTable({
       markFiltersDirty(true);
     });
     const dowSel = el('dowFilter'); if (dowSel) dowSel.addEventListener('change', ()=>{ state.dowFilter = getGlobalDowFilter(); syncDowSelectFromToken(state.dowFilter); markFiltersDirty(true); });
+    const paniniSel = el('paniniFilter'); if(paniniSel){ paniniSel.value = getPaniniFilterMode(); paniniSel.addEventListener('change', ()=>{ state.paniniMode = getPaniniFilterMode(); try{ localStorage.setItem('ampm_panini_mode', state.paniniMode); }catch(_e){} markTabsDirty(ALL_REPORT_TABS); markFiltersDirty(true); updatePaniniFilterUi(); }); }
 
     const invSel = el('invWeeks'); if (invSel) invSel.addEventListener('change', () => { state.invWeeksManual = true; normalizeInvWeeks(el('currentMonth').value); markFiltersDirty(true); });
     el('refresh').addEventListener('click', refreshAll);
@@ -33970,7 +34218,7 @@ function innovationSourceRows(){
   }
   try{ if(typeof hallHydrateFromState === 'function') hallHydrateFromState(); }catch(_e){}
   const hall = state.hallazgosData || {};
-  let rows = isMonthlyReport() ? (hall.salesRowsMonth || hall.salesRows || []) : (hall.salesRowsWeek || hall.salesRows || []);
+  let rows = isMonthlyReport() ? getPaniniScopedRows(hall.salesRowsMonth || hall.salesRows || []) : getPaniniScopedRows(hall.salesRowsWeek || hall.salesRows || []);
   rows = Array.isArray(rows) ? rows.slice() : [];
   const looksDetailed = rows.some(r => {
     const desc = String(r?.description || r?.Description || r?.desc_key || r?.DescriptionKey || '').trim();
@@ -41279,6 +41527,10 @@ function renderOnePager(storeList, currentYm, prevYms){
   function qty(v){ return n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
   function qtySmart(v){ const x=n(v); const hasDecimals=Math.abs(x-Math.round(x))>0.0001; return x.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:hasDecimals?1:0}); }
   function pct(v){ return Number.isFinite(Number(v)) ? (Number(v)*100).toFixed(2)+'%' : '—'; }
+  function readTimeView(){ return byId('albumTimeView')?.value === 'weekly' ? 'weekly' : 'daily'; }
+  function timeViewTag(){ return readTimeView() === 'weekly' ? 'SaS' : 'DaD'; }
+  function timeViewLong(){ return readTimeView() === 'weekly' ? 'semana a semana' : 'día a día'; }
+  function setAlbumText(id, txt){ const el=byId(id); if(el) el.innerHTML = txt; }
   function safeTxt(v){ return String(v == null ? '' : v).trim(); }
   function norm(v){ return safeTxt(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim(); }
   function pick(keys, names){
@@ -41572,36 +41824,94 @@ function renderOnePager(storeList, currentYm, prevYms){
     const k=safeTxt(scope.scoped?.[0]?.dateKey || scope.baseRows?.[0]?.dateKey || '');
     return /^\d{4}/.test(k) ? k.slice(0,4) : String(new Date().getFullYear());
   }
-  function buildDailyCumulativeQty(scope, matcher, qtyFn){
-    const rows=(scope.baseRows || scope.rows || []).filter(r=>periodMatch(r, scope) && matcher(r));
-    const byDate=new Map();
-    rows.forEach(r=>{
-      const k=r.dateKey || isoDate(r.date);
+  function timelinePeriodMatch(row, scope, grain){
+    if(!row) return false;
+    if(grain === 'weekly' && scope.mode === 'daily'){
+      const d=toDate(scope.periodSel);
+      return d ? row.month === monthKey(d) : periodMatch(row, scope);
+    }
+    return periodMatch(row, scope);
+  }
+  function timelineKey(row, grain){ return grain === 'weekly' ? (row.week || isoWeek(row.date)) : (row.dateKey || isoDate(row.date)); }
+  function timelineSortKey(key, grain){
+    if(grain === 'weekly'){ const d=periodToDate(key, 1); return d ? d.getTime() : 0; }
+    const d=toDate(key); return d ? d.getTime() : 0;
+  }
+  function timelineCaption(key, grain){ return grain === 'weekly' ? periodLabel(key, 'weekly') : key; }
+  function timelinePrefix(grain){ return grain === 'weekly' ? 'S' : 'D'; }
+  function timelineMetricLabel(grain){ return grain === 'weekly' ? 'semanal' : 'diaria'; }
+  function buildTimelineRows(rows, scope, grain, valueFn, matcher){
+    const byKey=new Map();
+    (rows||[]).forEach(r=>{
+      if(!timelinePeriodMatch(r, scope, grain)) return;
+      if(matcher && !matcher(r)) return;
+      const k=timelineKey(r, grain);
       if(!k) return;
-      byDate.set(k, n(byDate.get(k)) + n(qtyFn(r)));
+      const cur=byKey.get(k) || {key:k,value:0,sort:timelineSortKey(k, grain)};
+      cur.value += n(valueFn(r));
+      byKey.set(k, cur);
     });
+    return Array.from(byKey.values()).sort((a,b)=>(a.sort-b.sort) || String(a.key).localeCompare(String(b.key))).map((r,i)=>({
+      key:r.key,
+      date:r.key,
+      caption:timelineCaption(r.key, grain),
+      label:timelinePrefix(grain)+String(i+1).padStart(2,'0'),
+      value:n(r.value)
+    }));
+  }
+  function ensureAlbumTimelineCanvas(canvasId, pointCount, opts){
+    const canvas=byId(canvasId); if(!canvas) return;
+    const outer=canvas.closest('.albumChart'); if(!outer) return;
+    outer.classList.add('timelineWide');
+    let inner=canvas.parentElement;
+    if(!inner || !inner.classList || !inner.classList.contains('albumChartInner')){
+      inner=document.createElement('div');
+      inner.className='albumChartInner';
+      canvas.parentNode.insertBefore(inner, canvas);
+      inner.appendChild(canvas);
+    }
+    const pxPer=Number(opts?.pxPer || 54);
+    const hardMin=Number(opts?.minWidth || 0);
+    let outerW=0;
+    try{
+      const cs=window.getComputedStyle ? window.getComputedStyle(outer) : null;
+      const pad=(cs ? (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0) : 0);
+      outerW=Math.max(0, (outer.clientWidth || 0) - pad - 2);
+    }catch(_e){ outerW=Math.max(0, outer.clientWidth || 0); }
+    const dynamicW=Math.ceil((Number(pointCount)||0) * pxPer);
+    const w=Math.max(760, hardMin, outerW, dynamicW);
+    inner.style.width=w+'px';
+    inner.style.minWidth=w+'px';
+  }
+  function buildDailyCumulativeQty(scope, matcher, qtyFn){ return buildCumulativeQty(scope, matcher, qtyFn, 'daily'); }
+  function buildCumulativeQty(scope, matcher, qtyFn, grain){
     let cum=0;
-    return Array.from(byDate.entries()).map(([date,value])=>({date,value:n(value)})).sort((a,b)=>a.date.localeCompare(b.date)).map((r,i)=>{
+    return buildTimelineRows((scope.baseRows || scope.rows || []), scope, grain || 'daily', qtyFn, matcher).map(r=>{
       cum += n(r.value);
-      return {date:r.date, label:'D'+String(i+1).padStart(2,'0'), daily:r.value, cum};
+      return Object.assign({}, r, {daily:r.value, cum});
     });
   }
   function renderAlbumQtyDailyCharts(scope){
     const year=periodYear(scope);
-    const cajaRows=buildDailyCumulativeQty(scope, r=>isStickerBoxItem(r) || isStickerEnvelopeItem(r), r=> isStickerEnvelopeItem(r) ? n(r.qty)/STICKERS_PER_CAJA : n(r.qty));
-    const albumRows=buildDailyCumulativeQty(scope, isAlbumSoftItem, r=>n(r.qty));
+    const grain=readTimeView();
+    const tag=timeViewTag();
+    const serie=timelineMetricLabel(grain);
+    const cajaRows=buildCumulativeQty(scope, r=>isStickerBoxItem(r) || isStickerEnvelopeItem(r), r=> isStickerEnvelopeItem(r) ? n(r.qty)/STICKERS_PER_CAJA : n(r.qty), grain);
+    const albumRows=buildCumulativeQty(scope, isAlbumSoftItem, r=>n(r.qty), grain);
+    setAlbumText('albumStickerCajaDailyTitle', `Vta ${grain==='weekly'?'Semanal':'Diaria'} QTY Cajas <span class="sasTag">${tag}</span>`);
+    setAlbumText('albumAlbumSoftDailyTitle', `Vta ${grain==='weekly'?'Semanal':'Diaria'} QTY Álbum <span class="sasTag">${tag}</span>`);
     const cajaMeta=byId('albumStickerCajaDailyMeta');
-    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)}`;
+    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)} · ${timeViewLong()}`;
     const albumMeta=byId('albumAlbumSoftDailyMeta');
-    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)}`;
+    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)} · ${timeViewLong()}`;
     function qtyDailyOptions(rows, color, bg, title){
       return chartOptions({
         layout:{padding:{top:28,right:18,left:10,bottom:0}},
         plugins:{
           legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},
           tooltip:{callbacks:{
-            title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; const r=rows[idx]||{}; return `${r.label || ''} · ${r.date || ''}`; },
-            label:function(ctx){ return `${title}: ${qtySmart(ctx.raw)} del día`; }
+            title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; const r=rows[idx]||{}; return `${r.label || ''} · ${r.caption || r.date || ''}`; },
+            label:function(ctx){ return `${title}: ${qtySmart(ctx.raw)} ${serie}`; }
           }},
           albumLabelPlugin:{valueFormat:'qty',labelPosition:'bottom',bottomColors:['#FFFFFF'],datasetColors:['#FFFFFF'],labelBackgrounds:[bg],labelBackgroundTextColors:['#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.30)'],bottomOffset:17,fontSize:11,fontWeight:'1000',offset:12}
         },
@@ -41611,33 +41921,40 @@ function renderOnePager(storeList, currentYm, prevYms){
         }
       });
     }
+    ensureAlbumTimelineCanvas('chart_album_sticker_cajas_daily', cajaRows.length, {pxPer:grain==='weekly'?86:52,minWidth:760});
     makeChart('chartAlbumStickerCajasDaily','chart_album_sticker_cajas_daily',{
       type:'bar',
-      data:{labels:cajaRows.map(r=>r.label),datasets:[{label:`Diario ${year}`,data:cajaRows.map(r=>r.daily),backgroundColor:'#F58320',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
+      data:{labels:cajaRows.map(r=>r.label),datasets:[{label:`${grain==='weekly'?'Semanal':'Diario'} ${year}`,data:cajaRows.map(r=>r.daily),backgroundColor:'#F58320',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
       options:qtyDailyOptions(cajaRows,'#F58320','rgba(245,131,32,.70)','QTY cajas')
     });
+    ensureAlbumTimelineCanvas('chart_album_album_soft_daily', albumRows.length, {pxPer:grain==='weekly'?86:52,minWidth:760});
     makeChart('chartAlbumAlbumSoftDaily','chart_album_album_soft_daily',{
       type:'bar',
-      data:{labels:albumRows.map(r=>r.label),datasets:[{label:`Diario ${year}`,data:albumRows.map(r=>r.daily),backgroundColor:'#005EA7',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
+      data:{labels:albumRows.map(r=>r.label),datasets:[{label:`${grain==='weekly'?'Semanal':'Diario'} ${year}`,data:albumRows.map(r=>r.daily),backgroundColor:'#005EA7',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
       options:qtyDailyOptions(albumRows,'#005EA7','rgba(17,40,74,.86)','QTY álbum')
     });
   }
   function renderAlbumQtyCumCharts(scope){
     const year=periodYear(scope);
-    const cajaRows=buildDailyCumulativeQty(scope, r=>isStickerBoxItem(r) || isStickerEnvelopeItem(r), r=> isStickerEnvelopeItem(r) ? n(r.qty)/STICKERS_PER_CAJA : n(r.qty));
-    const albumRows=buildDailyCumulativeQty(scope, isAlbumSoftItem, r=>n(r.qty));
+    const grain=readTimeView();
+    const tag=timeViewTag();
+    const serie=timelineMetricLabel(grain);
+    const cajaRows=buildCumulativeQty(scope, r=>isStickerBoxItem(r) || isStickerEnvelopeItem(r), r=> isStickerEnvelopeItem(r) ? n(r.qty)/STICKERS_PER_CAJA : n(r.qty), grain);
+    const albumRows=buildCumulativeQty(scope, isAlbumSoftItem, r=>n(r.qty), grain);
+    setAlbumText('albumStickerCajaCumTitle', `Vta Acumulada QTY Cajas <span class="sasTag">${tag}</span>`);
+    setAlbumText('albumAlbumSoftCumTitle', `Vta Acumulada QTY Álbum <span class="sasTag">${tag}</span>`);
     const cajaMeta=byId('albumStickerCajaCumMeta');
-    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)}`;
+    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)} · acumulado ${timeViewLong()}`;
     const albumMeta=byId('albumAlbumSoftCumMeta');
-    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)}`;
+    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)} · acumulado ${timeViewLong()}`;
     function qtyCumOptions(rows, color, bg, title){
       return chartOptions({
         layout:{padding:{top:28,right:18,left:10,bottom:0}},
         plugins:{
           legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},
           tooltip:{callbacks:{
-            title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; const r=rows[idx]||{}; return `${r.label || ''} · ${r.date || ''}`; },
-            label:function(ctx){ const r=rows[ctx.dataIndex]||{}; return `${title}: ${qtySmart(ctx.raw)} acumulado · Día: ${qtySmart(r.daily)}`; }
+            title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; const r=rows[idx]||{}; return `${r.label || ''} · ${r.caption || r.date || ''}`; },
+            label:function(ctx){ const r=rows[ctx.dataIndex]||{}; return `${title}: ${qtySmart(ctx.raw)} acumulado · ${grain==='weekly'?'Semana':'Día'}: ${qtySmart(r.daily)}`; }
           }},
           albumLabelPlugin:{valueFormat:'qty',labelPosition:'bottom',bottomColors:['#FFFFFF'],datasetColors:['#FFFFFF'],labelBackgrounds:[bg],labelBackgroundTextColors:['#FFFFFF'],labelBackgroundBorders:['rgba(255,255,255,.30)'],bottomOffset:17,fontSize:11,fontWeight:'1000',offset:12}
         },
@@ -41647,11 +41964,13 @@ function renderOnePager(storeList, currentYm, prevYms){
         }
       });
     }
+    ensureAlbumTimelineCanvas('chart_album_sticker_cajas_cum', cajaRows.length, {pxPer:grain==='weekly'?92:58,minWidth:980});
     makeChart('chartAlbumStickerCajasCum','chart_album_sticker_cajas_cum',{
       type:'bar',
       data:{labels:cajaRows.map(r=>r.label),datasets:[{label:`Acumulado ${year}`,data:cajaRows.map(r=>r.cum),backgroundColor:'#F58320',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
       options:qtyCumOptions(cajaRows,'#F58320','rgba(245,131,32,.70)','QTY cajas')
     });
+    ensureAlbumTimelineCanvas('chart_album_album_soft_cum', albumRows.length, {pxPer:grain==='weekly'?92:58,minWidth:980});
     makeChart('chartAlbumAlbumSoftCum','chart_album_album_soft_cum',{
       type:'bar',
       data:{labels:albumRows.map(r=>r.label),datasets:[{label:`Acumulado ${year}`,data:albumRows.map(r=>r.cum),backgroundColor:'#005EA7',borderRadius:0,maxBarThickness:42,valueFormat:'qty'}]},
@@ -41660,17 +41979,26 @@ function renderOnePager(storeList, currentYm, prevYms){
   }
   function renderCharts(scope){
     const mode=scope.mode;
+    const grain=readTimeView();
+    const tag=timeViewTag();
+    const metricLabel=timelineMetricLabel(grain);
     const daypartMeta=byId('albumDaypartMeta');
-    const dayAgg=topRows(aggregate(scope.rows, r=>r.dateKey, r=>r.sales), 999).sort((a,b)=>a.k.localeCompare(b.k));
-    const filteredDayAgg=dayAgg.filter(x=> mode==='daily' ? x.k===scope.periodSel : (mode==='weekly' ? isoWeek(toDate(x.k))===scope.periodSel : x.k.slice(0,7)===scope.periodSel));
-    const albumDayLabels = filteredDayAgg.map((x,i)=>'D'+String(i+1).padStart(2,'0'));
+    const filteredDayAgg=buildTimelineRows(scope.rows, scope, grain, r=>r.sales);
+    const albumDayLabels = filteredDayAgg.map(r=>r.label);
+    setAlbumText('albumDailyTitle', `Venta ${grain==='weekly'?'semana a semana':'día a día'} <span class="sasTag">${tag}</span>`);
+    setAlbumText('albumTrendTitle', `Tendencia y acumulado <span class="sasTag">${tag}</span>`);
     const albumDailyMeta=byId('albumDailyMeta');
-    if(albumDailyMeta) albumDailyMeta.textContent = 'Barra: venta diaria · línea: % impacto sobre venta general.';
+    if(albumDailyMeta) albumDailyMeta.textContent = `Barra: venta ${metricLabel} · línea: % impacto sobre venta general.`;
+    const albumTrendMeta=byId('albumTrendMeta');
+    if(albumTrendMeta) albumTrendMeta.textContent = `Línea de acumulado ${timeViewLong()} del periodo seleccionado.`;
     const dailyImpactBaseRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store));
+    const baseTimelineRows = buildTimelineRows(dailyImpactBaseRows, scope, grain, r=>r.sales);
+    const baseByKey = new Map(baseTimelineRows.map(r=>[r.key, r.value]));
     const dailyImpactPct = filteredDayAgg.map(x=>{
-      const total = dailyImpactBaseRows.filter(r=>r.dateKey===x.k).reduce((a,r)=>a+n(r.sales),0);
-      return total>0 ? (n(x.v)/total*100) : 0;
+      const total = n(baseByKey.get(x.key));
+      return total>0 ? (n(x.value)/total*100) : 0;
     });
+    ensureAlbumTimelineCanvas('chart_album_daily', filteredDayAgg.length, {pxPer:grain==='weekly'?92:58,minWidth:980});
     makeChart('chartAlbumDaily','chart_album_daily',{
       type:'bar',
       data:{
@@ -41678,8 +42006,8 @@ function renderOnePager(storeList, currentYm, prevYms){
         datasets:[
           {
             type:'bar',
-            label:'Venta diaria',
-            data:filteredDayAgg.map(x=>x.v),
+            label:`Venta ${metricLabel}`,
+            data:filteredDayAgg.map(x=>x.value),
             backgroundColor:'#005EA7',
             borderRadius:6,
             maxBarThickness:58,
@@ -41708,11 +42036,11 @@ function renderOnePager(storeList, currentYm, prevYms){
           tooltip:{callbacks:{
             title:function(items){
               const idx=items && items.length ? items[0].dataIndex : 0;
-              return `${albumDayLabels[idx] || ''} · ${filteredDayAgg[idx]?.k || ''}`;
+              const r=filteredDayAgg[idx]||{}; return `${albumDayLabels[idx] || ''} · ${r.caption || r.key || ''}`;
             },
             label:function(ctx){
               if(ctx.dataset?.yAxisID === 'y1') return `Impacto: ${Number(ctx.raw||0).toFixed(2)}%`;
-              return `Venta diaria: ${money(ctx.raw)}`;
+              return `Venta ${metricLabel}: ${money(ctx.raw)}`;
             },
             afterBody:function(items){
               const idx=items && items.length ? items[0].dataIndex : 0;
@@ -41744,8 +42072,9 @@ function renderOnePager(storeList, currentYm, prevYms){
         }
       })
     });
-    let cum=0; const trend=filteredDayAgg.map((x,i)=>{cum+=n(x.v); return {k:x.k,label:albumDayLabels[i] || ('D'+String(i+1).padStart(2,'0')),v:cum};});
-    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.label),datasets:[{label:'Acumulado',data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({plugins:{tooltip:{callbacks:{title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; return `${trend[idx]?.label || ''} · ${trend[idx]?.k || ''}`; },label:function(ctx){ return `Acumulado: ${money(ctx.raw)}`; }}},albumLabelPlugin:{offset:14}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}})});
+    let cum=0; const trend=filteredDayAgg.map((x,i)=>{cum+=n(x.value); return {k:x.key,caption:x.caption,label:albumDayLabels[i] || (timelinePrefix(grain)+String(i+1).padStart(2,'0')),v:cum,periodValue:x.value};});
+    ensureAlbumTimelineCanvas('chart_album_trend', trend.length, {pxPer:grain==='weekly'?96:62,minWidth:1040});
+    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.label),datasets:[{label:`Acumulado ${tag}`,data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({layout:{padding:{top:30,right:18,left:10,bottom:0}},plugins:{tooltip:{callbacks:{title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; return `${trend[idx]?.label || ''} · ${trend[idx]?.caption || trend[idx]?.k || ''}`; },label:function(ctx){ const r=trend[ctx.dataIndex]||{}; return `Acumulado: ${money(ctx.raw)} · ${grain==='weekly'?'Semana':'Día'}: ${money(r.periodValue)}`; }}},albumLabelPlugin:{offset:14,fontSize:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}})});
     renderAlbumQtyDailyCharts(scope);
     renderAlbumQtyCumCharts(scope);
     const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && periodKey(r, mode)===scope.periodSel).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
@@ -41873,7 +42202,7 @@ function renderOnePager(storeList, currentYm, prevYms){
   function boot(){
     try{ if(typeof ALL_REPORT_TABS !== 'undefined' && Array.isArray(ALL_REPORT_TABS) && !ALL_REPORT_TABS.includes(TAB)) ALL_REPORT_TABS.push(TAB); }catch(_e){}
     try{ if(typeof state !== 'undefined' && state){ if(!(state._tabDirty instanceof Set)) state._tabDirty=new Set(); state._tabDirty.add(TAB); } }catch(_e){}
-    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem') populateFilters(); renderAlbum(); }); });
+    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumTimeView','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem') populateFilters(); renderAlbum(); }); });
     document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="album"]')) scheduleRender(120); }catch(_e){} }, true);
     window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev?.detail?.tab||'')===TAB) scheduleRender(40); }catch(_e){} }, {passive:true});
     window.addEventListener('ampm:fileloaded', function(){ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB){ populateFilters(); scheduleRender(90); scheduleRender(450); } }catch(_e){} }, {passive:true});
@@ -67049,5 +67378,68 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
   setTimeout(function(){ try{ console.info('AMPM V6 full DetailHallazgos health', salesHealth()); }catch(_e){} }, 1500);
 })();
 </script>
+
+
+<!-- AMPM PATCH v2: Tooltip único en Delivery Vs LY -->
+<script id="ampm-delivery-tooltip-singleton-v2">
+(function(){
+  'use strict';
+  if(window.__AMPM_DELIVERY_TOOLTIP_SINGLETON_V2__) return;
+  window.__AMPM_DELIVERY_TOOLTIP_SINGLETON_V2__ = true;
+
+  function byId(id){ return document.getElementById(id); }
+  function disableNativeTooltip(){
+    try{
+      var canvas = byId('chart_delivery_mam');
+      if(!canvas || !window.Chart || typeof Chart.getChart !== 'function') return;
+      var chart = Chart.getChart(canvas) || Chart.getChart('chart_delivery_mam');
+      if(!chart || chart.__ampmDeliveryCustomV1) return;
+      chart.options = chart.options || {};
+      chart.options.plugins = chart.options.plugins || {};
+      chart.options.plugins.tooltip = Object.assign({}, chart.options.plugins.tooltip || {}, {
+        enabled:false,
+        external:function(){},
+        mode:'index',
+        intersect:false
+      });
+      if(!chart.$ampmDeliveryTooltipSingletonV2){
+        chart.$ampmDeliveryTooltipSingletonV2 = true;
+        try{ if(chart.tooltip && typeof chart.tooltip.setActiveElements === 'function') chart.tooltip.setActiveElements([], {x:0, y:0}); }catch(_e){}
+        try{ if(typeof chart.update === 'function') chart.update('none'); }catch(_e){}
+      }
+    }catch(_e){}
+  }
+  function normalizeHtmlTooltip(){
+    try{
+      var canvas = byId('chart_delivery_mam');
+      var viewport = canvas && (canvas.closest('.monthly-chart-viewport') || canvas.parentElement);
+      if(!viewport) return;
+      var tips = viewport.querySelectorAll('.ampmDeliveryTooltipV1');
+      tips.forEach(function(tip, idx){ if(idx > 0) tip.remove(); });
+    }catch(_e){}
+  }
+  function run(){ disableNativeTooltip(); normalizeHtmlTooltip(); }
+  function schedule(){
+    [0,80,220,520].forEach(function(ms){ setTimeout(run, ms); });
+  }
+
+  document.addEventListener('mousemove', function(ev){
+    try{ if(ev.target && ev.target.closest && ev.target.closest('#chart_delivery_mam')) run(); }catch(_e){}
+  }, true);
+  document.addEventListener('click', function(ev){
+    try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="delivery"],#ampmStoreFloatApply,.applyBtn')) schedule(); }catch(_e){}
+  }, true);
+  document.addEventListener('change', function(ev){
+    try{ if(/^(stores|storeFilter|currentMonth|prevMonths|dowFilter|viewMode|reportMode|deliveryMode|paniniFilter)$/i.test(String(ev.target && ev.target.id || ''))) schedule(); }catch(_e){}
+  }, true);
+  window.addEventListener('ampm:tabshown', function(ev){
+    try{ if(String(ev && ev.detail && ev.detail.tab || '').toLowerCase() === 'delivery') schedule(); }catch(_e){}
+  }, {passive:true});
+  window.addEventListener('resize', schedule, {passive:true});
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule, {once:true});
+  else schedule();
+})();
+</script>
+
 </body>
 </html>
