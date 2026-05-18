@@ -4474,6 +4474,46 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 }
 </style>
 
+
+<style id="ampm-vapes-album-delivery-filter-v1">
+/* AMPM v1: filtros de canal y gráficas Tienda + PEYA + Uber para Vapes y Álbum */
+.albumFilters{grid-template-columns:repeat(7,minmax(128px,1fr)) minmax(170px,.8fr) !important;}
+.albumChannelImpactCard .albumChart{height:360px!important;}
+.vapesRoot .vapesHeroActions{align-items:flex-start!important;}
+.vapesRoot .vapesField select:not([multiple]){min-height:auto!important;height:42px!important;}
+@media (max-width:1320px){.albumFilters{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}}
+@media (max-width:900px){.albumFilters{grid-template-columns:1fr 1fr !important;}}
+@media (max-width:620px){.albumFilters{grid-template-columns:1fr !important;}}
+</style>
+
+<style id="album-bars-compact-height-v1">
+/* Compactar altura de gráficas de barras en Álbum sin tocar tablas ni pastel */
+#albumWrap .albumChart:has(#chart_album_daily){height:310px !important;}
+#albumWrap .albumChart:has(#chart_album_trend){height:300px !important;}
+#albumWrap .albumChart:has(#chart_album_impact),
+#albumWrap .albumChart:has(#chart_album_daypart){height:235px !important;}
+#albumWrap .albumChannelImpactCard .albumChart{height:300px !important;}
+#albumWrap .albumGridQty .albumChart.qtyDaily,
+#albumWrap .albumGridQty .albumChart.qtyCum{height:305px !important;}
+
+@media (max-width:1100px){
+  #albumWrap .albumChart:has(#chart_album_daily){height:290px !important;}
+  #albumWrap .albumChart:has(#chart_album_trend){height:285px !important;}
+  #albumWrap .albumChannelImpactCard .albumChart,
+  #albumWrap .albumGridQty .albumChart.qtyDaily,
+  #albumWrap .albumGridQty .albumChart.qtyCum{height:285px !important;}
+}
+@media (max-width:620px){
+  #albumWrap .albumChart:has(#chart_album_daily),
+  #albumWrap .albumChart:has(#chart_album_trend),
+  #albumWrap .albumChart:has(#chart_album_impact),
+  #albumWrap .albumChart:has(#chart_album_daypart),
+  #albumWrap .albumChannelImpactCard .albumChart,
+  #albumWrap .albumGridQty .albumChart.qtyDaily,
+  #albumWrap .albumGridQty .albumChart.qtyCum{height:265px !important;}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -5655,6 +5695,16 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
         <option value="weekly">SaS · Semana a semana</option>
       </select>
     </div>
+    <div class="albumField">
+      <label>Canal venta</label>
+      <select id="albumDeliveryMode">
+        <option value="ALL">Todos</option>
+        <option value="STORE">Tienda física</option>
+        <option value="PYA">Pedidos Ya</option>
+        <option value="UBER">Uber Eats</option>
+        <option value="DELIVERY">Delivery total</option>
+      </select>
+    </div>
     <button class="albumApply" id="albumApply" type="button">Actualizar seguimiento</button>
   </div>
 
@@ -5675,6 +5725,10 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     <div class="albumCard"><div class="albumCardHead"><div><h3>Ventas vs impacto sobre venta general</h3><p>Barra: venta Álbum · línea: % de impacto.</p></div></div><div class="albumChart compact"><canvas id="chart_album_impact"></canvas></div></div>
     <div class="albumCard"><div class="albumCardHead"><div><h3>Gráfico de pastel</h3><p id="albumPieMeta">Mix de venta.</p></div></div><div class="albumChart compact"><canvas id="chart_album_pie"></canvas></div></div>
     <div class="albumCard"><div class="albumCardHead"><div><h3>Venta por horario Food Service</h3><p id="albumDaypartMeta">Franja / turno Food Service detectado en el cubo.</p></div></div><div class="albumChart compact"><canvas id="chart_album_daypart"></canvas></div></div>
+  </div>
+
+  <div class="albumGrid albumGrid2 albumGridMainTimeline">
+    <div class="albumCard albumChannelImpactCard"><div class="albumCardHead"><div><h3>Álbum • Venta por canal</h3><p>Barra compilada: Tienda física + Pedidos Ya + Uber Eats · línea: impacto Delivery sobre venta Álbum.</p></div></div><div class="albumChart"><canvas id="chart_album_channel_impact"></canvas></div></div>
   </div>
 
   <div class="albumGrid albumGrid2 albumGridQty albumGridQtyCajas">
@@ -13111,8 +13165,13 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
       }
       state.dowFilter = isDailyReport() ? getGlobalDowFilter() : '__ALL__';
       syncDowSelectFromToken(state.dowFilter);
-      buildDowScopedState(state.dowFilter);
+      /* AMPM FIX — PANINI + Resumen diario:
+         applyUnifiedModeUI() aplica el scope de PANINI y limpia state._dowScoped.
+         Por eso el resumen quedaba en $0 cuando se usaba día de semana (ej. Sábado)
+         después de excluir/incluir PANINI desde otra pestaña. Primero aplicamos PANINI
+         y luego reconstruimos el scope diario sobre la base ya filtrada. */
       applyUnifiedModeUI();
+      buildDowScopedState(state.dowFilter);
 
       const currentYm = el('currentMonth').value;
       const prevYms = getSelectedValues(el('prevMonths'));
@@ -31096,6 +31155,17 @@ async function ensureJsPDF(){
 .hallSavedMatrix thead th{ z-index:4; }
 </style>
 
+
+<style id="ampm-vapes-album-delivery-filter-v1">
+/* AMPM v1: filtros de canal y gráficas Tienda + PEYA + Uber para Vapes y Álbum */
+.albumFilters{grid-template-columns:repeat(7,minmax(128px,1fr)) minmax(170px,.8fr) !important;}
+.albumChannelImpactCard .albumChart{height:360px!important;}
+.vapesRoot .vapesHeroActions{align-items:flex-start!important;}
+.vapesRoot .vapesField select:not([multiple]){min-height:auto!important;height:42px!important;}
+@media (max-width:1320px){.albumFilters{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}}
+@media (max-width:900px){.albumFilters{grid-template-columns:1fr 1fr !important;}}
+@media (max-width:620px){.albumFilters{grid-template-columns:1fr !important;}}
+</style>
 </head>
 <body>
   <h1>${title}</h1>
@@ -31546,6 +31616,17 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
 }
 </style>
 
+
+<style id="ampm-vapes-album-delivery-filter-v1">
+/* AMPM v1: filtros de canal y gráficas Tienda + PEYA + Uber para Vapes y Álbum */
+.albumFilters{grid-template-columns:repeat(7,minmax(128px,1fr)) minmax(170px,.8fr) !important;}
+.albumChannelImpactCard .albumChart{height:360px!important;}
+.vapesRoot .vapesHeroActions{align-items:flex-start!important;}
+.vapesRoot .vapesField select:not([multiple]){min-height:auto!important;height:42px!important;}
+@media (max-width:1320px){.albumFilters{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}}
+@media (max-width:900px){.albumFilters{grid-template-columns:1fr 1fr !important;}}
+@media (max-width:620px){.albumFilters{grid-template-columns:1fr !important;}}
+</style>
 </head>
 ${bodyHtml}
 
@@ -41302,7 +41383,7 @@ function renderOnePager(storeList, currentYm, prevYms){
   const TAB = 'album';
   const COLORS = ['#005EA7','#F58320','#11284A','#0C4D8F','#E67425','#64748B','#FAA21E','#334155','#38BDF8','#94A3B8'];
   const STICKERS_PER_CAJA = 104;
-  const chartKeys = ['chartAlbumDaily','chartAlbumTrend','chartAlbumImpact','chartAlbumPie','chartAlbumDaypart','chartAlbumStickerCajasDaily','chartAlbumAlbumSoftDaily','chartAlbumStickerCajasCum','chartAlbumAlbumSoftCum'];
+  const chartKeys = ['chartAlbumDaily','chartAlbumTrend','chartAlbumImpact','chartAlbumPie','chartAlbumDaypart','chartAlbumChannelImpact','chartAlbumStickerCajasDaily','chartAlbumAlbumSoftDaily','chartAlbumStickerCajasCum','chartAlbumAlbumSoftCum'];
   const albumLabelPlugin = {
     id:'albumLabelPlugin',
     afterDatasetsDraw(chart, args, pluginOptions){
@@ -41356,6 +41437,39 @@ function renderOnePager(storeList, currentYm, prevYms){
         ctx.fill();
         if(border){ ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke(); }
         ctx.restore();
+      }
+      const occupiedLabelBoxes = [];
+      function labelBox(label, x, y, align){
+        const textW = ctx.measureText(label).width;
+        const w = textW + (labelBgPadX*2);
+        const h = fontSize + (labelBgPadY*2);
+        let rx = x - (w/2);
+        if(align === 'left') rx = x;
+        if(align === 'right') rx = x - w;
+        return {x1:rx,y1:y-(h/2),x2:rx+w,y2:y+(h/2),w,h};
+      }
+      function boxHits(a,b){ return !(a.x2<b.x1 || a.x1>b.x2 || a.y2<b.y1 || a.y1>b.y2); }
+      function boxIntersectsAny(box){ return occupiedLabelBoxes.some(function(b){ return boxHits(box,b); }); }
+      function fitLabel(label, x, y, align, preferUp){
+        const area = chart.chartArea || {};
+        const pad = Number(pluginOptions.labelGap == null ? 4 : pluginOptions.labelGap);
+        const topOverflow = Number(pluginOptions.topOverflow == null ? 30 : pluginOptions.topOverflow);
+        const leftLimit = Number(area.left || 0) + 2;
+        const rightLimit = Number(area.right || chart.width || 0) - 2;
+        const topLimit = Number(area.top || 0) - topOverflow;
+        const bottomLimit = Number(area.bottom || chart.height || 0) + 10;
+        let probe = labelBox(label, x, y, align);
+        if(probe.x1 < leftLimit) x += (leftLimit - probe.x1);
+        if(probe.x2 > rightLimit) x -= (probe.x2 - rightLimit);
+        const step = probe.h + pad;
+        const shifts = preferUp ? [0,-step,step,-step*2,step*2,-step*3,step*3] : [0,step,-step,step*2,-step*2,step*3,-step*3];
+        for(const shift of shifts){
+          const yy = y + shift;
+          const b = labelBox(label, x, yy, align);
+          if(b.y1 < topLimit || b.y2 > bottomLimit) continue;
+          if(!boxIntersectsAny(b)) return {x, y:yy, box:b};
+        }
+        return null;
       }
       function totalForDataset(di){
         const ds = chart.data?.datasets?.[di]?.data || [];
@@ -41444,6 +41558,9 @@ function renderOnePager(storeList, currentYm, prevYms){
               y = Math.max(topLimit, Math.min(bottomLimit, y));
             }
             const align = ctx.textAlign || 'center';
+            const fitted = fitLabel(label, x, y, align, (dsType === 'line' || type === 'line'));
+            if(!fitted) return;
+            x = fitted.x; y = fitted.y;
             const bg = labelBackgrounds ? labelBackgrounds[di] : null;
             const bgBorder = labelBackgroundBorders ? labelBackgroundBorders[di] : null;
             if(bg){
@@ -41452,6 +41569,7 @@ function renderOnePager(storeList, currentYm, prevYms){
               if(bgTextColor) ctx.fillStyle = bgTextColor;
             }
             ctx.fillText(label, x, y);
+            occupiedLabelBoxes.push(fitted.box);
           });
         });
       }
@@ -41598,6 +41716,11 @@ function renderOnePager(storeList, currentYm, prevYms){
     try{ if(typeof getSelectedStoresOrAll === 'function'){ const a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a.map(s=>safeTxt(s).toUpperCase()); } }catch(_e){}
     return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
   }
+  function albumDeliveryMode(){ const raw=safeTxt(byId('albumDeliveryMode')?.value || 'ALL').toUpperCase(); return /^(ALL|STORE|PYA|UBER|DELIVERY)$/.test(raw)?raw:'ALL'; }
+  function albumDeliveryLabel(mode){ mode=safeTxt(mode||albumDeliveryMode()).toUpperCase(); if(mode==='STORE')return 'Tienda física'; if(mode==='PYA')return 'Pedidos Ya'; if(mode==='UBER')return 'Uber Eats'; if(mode==='DELIVERY')return 'Delivery total'; return 'Todos los canales'; }
+  function albumRowIsDelivery(r){ const flag=norm(r?.delivery_flag || r?.is_delivery || r?.Delivery || ''); const ch=norm(r?.delivery_channel || r?.Delivery_Channel || r?.['Delivery Channel'] || ''); return flag==='1'||flag==='si'||flag==='yes'||flag==='true'||flag==='delivery'||!!ch; }
+  function albumRowDeliveryChannel(r){ const raw=safeTxt(r?.delivery_channel || r?.Delivery_Channel || r?.['Delivery Channel'] || ''); const ch=norm(raw); if(/uber/.test(ch))return 'Uber Eats'; if(/pedido|pedidos|pya/.test(ch))return 'Pedidos Ya'; return raw || 'Otros'; }
+  function albumDeliveryPass(r, mode){ mode=safeTxt(mode||albumDeliveryMode()).toUpperCase(); if(mode==='ALL')return true; const isDel=albumRowIsDelivery(r), ch=albumRowDeliveryChannel(r); if(mode==='STORE')return !isDel; if(mode==='DELIVERY')return isDel; if(mode==='UBER')return isDel&&ch==='Uber Eats'; if(mode==='PYA')return isDel&&ch==='Pedidos Ya'; return true; }
   function readRows(wb, sheet){ try{ if(typeof sheetRows === 'function') return sheetRows(wb, sheet, {defval:null, raw:true}) || []; }catch(_e){} try{ return XLSX.utils.sheet_to_json(wb.Sheets[sheet], {defval:null, raw:true}) || []; }catch(_e){ return []; } }
   function has(wb, sheet){ try{ if(typeof hasSheet === 'function') return hasSheet(wb, sheet); }catch(_e){} return !!(wb && wb.Sheets && wb.Sheets[sheet]); }
 
@@ -41618,6 +41741,8 @@ function renderOnePager(storeList, currentYm, prevYms){
     const cDaypart=pick(keys,['Daypart','Horario','Turno','Horario Food Service','Time Slot','Franja','Franja Horaria','Service Period','Meal Period']);
     const cHour=pick(keys,['Hour','Hora','Time','Hora Venta','Hora de venta','Time Sold']);
     const cDow=pick(keys,['DOW','Dow','DayOfWeek','DiaSemana','Dia de semana','Día de semana','Día','dayofweek']);
+    const cDelFlag=pick(keys,['Is_Delivery','Is Delivery','Delivery','Es Delivery','EsDelivery']);
+    const cDelChannel=pick(keys,['Delivery_Channel','Delivery Channel','Canal Delivery','Canal','Channel','Plataforma','App']);
     const cQty=pick(keys,['Qty Sold','Qty','Cantidad','Quantity','Unidades','Uds']);
     const cSales=pick(keys,['Sales','Total Sales','TotalSales','Venta','Ventas','Monto','Amount']);
     if(!cStore || !cSales || (!cDate && !cPeriod && !cMonth)) return null;
@@ -41636,7 +41761,7 @@ function renderOnePager(storeList, currentYm, prevYms){
       const row={
         store, date:d, dateKey:isoDate(d), week, month,
         department:cDept ? safeTxt(r[cDept]) : '', category:cCat ? safeTxt(r[cCat]) : '', supplier:cSupp ? safeTxt(r[cSupp]) : '', brand:cBrand ? safeTxt(r[cBrand]) : '', description:cDesc ? safeTxt(r[cDesc]) : '', sku:cSku ? safeTxt(r[cSku]) : '',
-        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0
+        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), delivery_flag:cDelFlag ? safeTxt(r[cDelFlag]) : '', delivery_channel:cDelChannel ? safeTxt(r[cDelChannel]) : '', sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0
       };
       row.item = row.description || row.brand || row.category || row.supplier || 'Sin descripción';
       all.push(row);
@@ -41722,7 +41847,8 @@ function renderOnePager(storeList, currentYm, prevYms){
     const payload=getSalesPayload();
     const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
     const itemFilter=byId('albumItem')?.value || '__ALL__';
-    let baseRows=payload.albumRows.filter(r=>storeSet.has(r.store));
+    const dmode=albumDeliveryMode();
+    let baseRows=payload.albumRows.filter(r=>storeSet.has(r.store) && albumDeliveryPass(r,dmode));
     let rows=baseRows.slice();
     if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item === itemFilter);
     const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
@@ -41738,7 +41864,8 @@ function renderOnePager(storeList, currentYm, prevYms){
     const storeOpts=[{value:'__GLOBAL__',label:'Tiendas del filtro global'},{value:'__ALL__',label:'Todas las tiendas'}].concat(globalStores.map(s=>({value:s,label:s})));
     setOptions('albumStore', storeOpts);
     const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
-    let rows=payload.albumRows.filter(r=>storeSet.has(r.store));
+    const dmode=albumDeliveryMode();
+    let rows=payload.albumRows.filter(r=>storeSet.has(r.store) && albumDeliveryPass(r,dmode));
     const itemCounts=topRows(aggregate(rows, r=>r.item, r=>r.sales), 200);
     setOptions('albumItem', [{value:'__ALL__',label:'Todos los items'}].concat(itemCounts.map(x=>({value:x.k,label:`${x.k} · ${money(x.v)}`}))));
     const itemFilter=byId('albumItem')?.value || '__ALL__'; if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item===itemFilter);
@@ -41757,14 +41884,14 @@ function renderOnePager(storeList, currentYm, prevYms){
     const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
     const itemFilter=scope.itemFilter; const scopedInv = itemFilter==='__ALL__' ? invRows : invRows.filter(r=>(r.description||r.category||r.brand)===itemFilter || norm(r.description||'').includes(norm(itemFilter)) || norm(itemFilter).includes(norm(r.description||'')) );
     const stock=scopedInv.reduce((a,r)=>a+n(r.qty),0);
-    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && periodKey(r, scope.mode)===scope.periodSel);
+    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && albumDeliveryPass(r, albumDeliveryMode()) && periodKey(r, scope.mode)===scope.periodSel);
     const totalStoreSales = totalRows.reduce((a,r)=>a+n(r.sales),0);
     const impact = totalStoreSales>0 ? totalSales/totalStoreSales : NaN;
     const topStore=topRows(aggregate(scope.scoped, r=>r.store, r=>r.sales),1)[0];
     const defs=[['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${periodLabel(scope.periodSel, scope.mode)}`],['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],['Existencias', qty(stock), `${scopedInv.length} filas de inventario`],['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']];
     kpis.innerHTML=defs.map(d=>`<div class="albumKpi"><div class="k">${d[0]}</div><div class="v">${d[1]}</div><div class="s">${d[2]}</div></div>`).join('');
     const source=byId('albumSourceChip'); if(source) source.textContent = `Fuente: ${scope.payload.source || 'pendiente'}`;
-    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'}`;
+    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'} · ${albumDeliveryLabel(albumDeliveryMode())}`;
   }
   function renderTables(scope){
     const salesAgg=new Map();
@@ -41977,6 +42104,101 @@ function renderOnePager(storeList, currentYm, prevYms){
       options:qtyCumOptions(albumRows,'#005EA7','rgba(17,40,74,.86)','QTY álbum')
     });
   }
+  function renderAlbumChannelImpact(scope){
+    // La gráfica de canal debe seguir la misma lectura temporal del álbum:
+    // DaD = D01, D02... dentro del periodo activo; SaS = S01, S02...
+    const grain=readTimeView();
+    const tag=timeViewTag();
+    const metricLabel=timelineMetricLabel(grain);
+    const timeline=buildTimelineRows(scope.rows || [], scope, grain, r=>r.sales);
+    const periods=timeline.map(r=>r.key);
+    const labels=timeline.map(r=>r.label);
+    const captionByKey=new Map(timeline.map(r=>[r.key, r.caption || r.key]));
+    const canvas=byId('chart_album_channel_impact');
+    const card=canvas ? canvas.closest('.albumCard') : null;
+    if(card){
+      const h=card.querySelector('.albumCardHead h3');
+      const p=card.querySelector('.albumCardHead p');
+      if(h) h.innerHTML = `Álbum • Venta por canal <span class="sasTag">${tag}</span>`;
+      if(p) p.textContent = `Barra compilada ${metricLabel}: Tienda física + Pedidos Ya + Uber Eats · línea: impacto Delivery sobre venta Álbum.`;
+    }
+    ensureAlbumTimelineCanvas('chart_album_channel_impact', periods.length, {pxPer:grain==='weekly'?92:58,minWidth:980});
+    const by={store:{},pya:{},uber:{},other:{},total:{},share:{}};
+    periods.forEach(p=>{by.store[p]=0;by.pya[p]=0;by.uber[p]=0;by.other[p]=0;by.total[p]=0;by.share[p]=0;});
+    (scope.rows || []).forEach(r=>{
+      if(!timelinePeriodMatch(r, scope, grain)) return;
+      const k=timelineKey(r, grain);
+      if(!k || !periods.includes(k)) return;
+      const v=n(r.sales), isDel=albumRowIsDelivery(r), ch=albumRowDeliveryChannel(r);
+      if(!isDel) by.store[k]+=v;
+      else if(ch==='Uber Eats') by.uber[k]+=v;
+      else if(ch==='Pedidos Ya') by.pya[k]+=v;
+      else by.other[k]+=v;
+      by.total[k]+=v;
+    });
+    periods.forEach(p=>{
+      const del=n(by.pya[p])+n(by.uber[p])+n(by.other[p]);
+      by.share[p]=by.total[p]>0 ? del/by.total[p]*100 : 0;
+    });
+    const datasets=[
+      {label:'Tienda física',data:periods.map(p=>by.store[p]||0),backgroundColor:'#005EA7',borderRadius:5,stack:'canal'},
+      {label:'Pedidos Ya',data:periods.map(p=>by.pya[p]||0),backgroundColor:'#FF0000',borderRadius:5,stack:'canal'},
+      {label:'Uber Eats',data:periods.map(p=>by.uber[p]||0),backgroundColor:'#0B8F49',borderRadius:5,stack:'canal'}
+    ];
+    if(periods.some(p=>n(by.other[p])>0)) datasets.push({label:'Otros delivery',data:periods.map(p=>by.other[p]||0),backgroundColor:'#94A3B8',borderRadius:5,stack:'canal'});
+    datasets.push({type:'line',label:'Impacto Delivery %',data:periods.map(p=>by.share[p]||0),yAxisID:'y1',borderColor:'#11284A',backgroundColor:'#11284A',borderWidth:3,pointRadius:4,tension:.25,fill:false});
+    makeChart('chartAlbumChannelImpact','chart_album_channel_impact',{
+      type:'bar',
+      data:{labels,datasets},
+      options:chartOptions({
+        layout:{padding:{top:60,right:44,left:10,bottom:0}},
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},
+          albumAxisPillPlugin:{display:true,text:'Impacto %',axis:'y1',color:'#11284A',fill:'rgba(17,40,74,.10)',stroke:'rgba(17,40,74,.22)',offsetX:14},
+          tooltip:{callbacks:{
+            title:function(items){
+              const idx=items && items.length ? items[0].dataIndex : 0;
+              const p=periods[idx];
+              return `${labels[idx] || ''} · ${captionByKey.get(p) || p || ''}`;
+            },
+            label:function(ctx){
+              const raw=n(ctx.raw), idx=ctx.dataIndex, p=periods[idx];
+              if(ctx.dataset?.yAxisID==='y1') return `Impacto Delivery: ${raw.toFixed(1)}%`;
+              const total=n(by.total[p]); const share=total?raw/total*100:0;
+              return [`${ctx.dataset?.label}: ${money(raw)}`, `Impacto en Álbum: ${share.toFixed(1)}%`];
+            },
+            footer:function(items){
+              const idx=items&&items.length?items[0].dataIndex:0;
+              const p=periods[idx];
+              return `Total Álbum: ${money(by.total[p]||0)} · Canal filtro: ${albumDeliveryLabel(albumDeliveryMode())}`;
+            }
+          }},
+          albumLabelPlugin:{
+            labelPositions:['bottom','bottom','bottom','bottom','top'],
+            bottomColors:['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#11284A'],
+            datasetColors:['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#11284A'],
+            labelBackgrounds:['rgba(17,40,74,.86)','rgba(198,40,40,.86)','rgba(15,160,74,.86)','rgba(100,116,139,.86)','rgba(17,40,74,.92)'],
+            labelBackgroundTextColors:['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF'],
+            labelBackgroundBorders:['rgba(255,255,255,.24)','rgba(255,255,255,.24)','rgba(255,255,255,.24)','rgba(255,255,255,.24)','rgba(17,40,74,.24)'],
+            bottomOffset:16,
+            offset:12,
+            color:'#11284A',
+            fontSize:10,
+            fontWeight:'1000',
+            avoidOverlap:true,
+            topOverflow:34,
+            labelGap:5
+          }
+        },
+        scales:{
+          x:{stacked:true,ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},
+          y:{stacked:true,beginAtZero:true,grace:'15%',ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},grid:{color:'rgba(148,163,184,.20)'}},
+          y1:{beginAtZero:true,position:'right',grace:'15%',ticks:{callback:v=>v+'%',color:'#11284A',font:{size:10,weight:'900'}},grid:{drawOnChartArea:false}}
+        }
+      })
+    });
+  }
+
   function renderCharts(scope){
     const mode=scope.mode;
     const grain=readTimeView();
@@ -42147,6 +42369,7 @@ function renderOnePager(storeList, currentYm, prevYms){
         }
       })
     });
+    renderAlbumChannelImpact(scope);
     const pieMode=byId('albumPieMode')?.value || 'item'; const pieAgg=topRows(aggregate(scope.scoped, r=>pieMode==='store'?r.store:r.item, r=>r.sales), 8);
     makeChart('chartAlbumPie','chart_album_pie',{type:'doughnut',data:{labels:pieAgg.map(x=>x.k),datasets:[{data:pieAgg.map(x=>x.v),backgroundColor:pieAgg.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){return `${ctx.label}: ${money(ctx.raw)}`;}}},albumLabelPlugin:{display:true,fontSize:10,fontWeight:'900'}},cutout:'54%'}});
     const daypartAgg=topRows(aggregate(scope.scoped, r=>safeTxt(r.daypart)||'Sin horario', r=>r.sales), 10);
@@ -42202,7 +42425,7 @@ function renderOnePager(storeList, currentYm, prevYms){
   function boot(){
     try{ if(typeof ALL_REPORT_TABS !== 'undefined' && Array.isArray(ALL_REPORT_TABS) && !ALL_REPORT_TABS.includes(TAB)) ALL_REPORT_TABS.push(TAB); }catch(_e){}
     try{ if(typeof state !== 'undefined' && state){ if(!(state._tabDirty instanceof Set)) state._tabDirty=new Set(); state._tabDirty.add(TAB); } }catch(_e){}
-    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumTimeView','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem') populateFilters(); renderAlbum(); }); });
+    ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumTimeView','albumDeliveryMode','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem'||id==='albumDeliveryMode') populateFilters(); renderAlbum(); }); });
     document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="album"]')) scheduleRender(120); }catch(_e){} }, true);
     window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev?.detail?.tab||'')===TAB) scheduleRender(40); }catch(_e){} }, {passive:true});
     window.addEventListener('ampm:fileloaded', function(){ try{ if(String(document.querySelector('.tabBtn.active')?.dataset?.tab||'')===TAB){ populateFilters(); scheduleRender(90); scheduleRender(450); } }catch(_e){} }, {passive:true});
@@ -65977,7 +66200,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
   if(window.__AMPM_VAPES_MODULE_V7__) return;
   window.__AMPM_VAPES_MODULE_V7__ = true;
   var TAB='vapes';
-  var C={blue:'#0C4D8F',orange:'#F58320',navy:'#11284A',gray:'#334155',green:'#0FA04A',red:'#C62828'};
+  var C={blue:'#0C4D8F',orange:'#F58320',navy:'#11284A',gray:'#334155',green:'#0B8F49',red:'#FF0000'};
   var local={timer:0,sheets:null,stamp:null,fallback:null,fallbackStamp:null,supplierSig:''};
   var charts={};
   function byId(id){return document.getElementById(id);} 
@@ -66004,15 +66227,53 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
   function getModeLive(){try{if(typeof getUnifiedReportMode==='function')return txt(getUnifiedReportMode()).toLowerCase();}catch(e){}return txt(byId('reportMode')&&byId('reportMode').value).toLowerCase()||'semanal';}
   function currentPeriodLive(){return txt(byId('currentMonth')&&byId('currentMonth').value);}
   function selectedStoresLive(){var arr=[];try{if(typeof getSelectedStoresOrAll==='function')arr=getSelectedStoresOrAll()||[];}catch(e){}if(!arr.length){var sel=byId('stores');if(sel)arr=Array.from(sel.selectedOptions||[]).map(function(o){return o.value;});}if(!arr.length){var st=appState();if(st&&Array.isArray(st.stores))arr=st.stores.slice();}return Array.from(new Set((arr||[]).map(nstore).filter(Boolean)));}
-  function selectedSuppliersLive(){var sel=byId('vapesSupplierFilter');return new Set(sel?Array.from(sel.selectedOptions||[]).map(function(o){return key(o.value);}).filter(Boolean):[]);}
-  function captureVapesFilterSnapshot(){local.appliedFilters={mode:getModeLive(),current:currentPeriodLive(),stores:selectedStoresLive(),suppliers:Array.from(selectedSuppliersLive())};return local.appliedFilters;}
+  function supplierLiveState(){
+    var sel=byId('vapesSupplierFilter');
+    var opts=sel?Array.from(sel.options||[]):[];
+    var selected=opts.filter(function(o){return o.selected;}).map(function(o){return key(o.value);}).filter(Boolean);
+    return {hasOptions:opts.length>0, selected:selected, none:opts.length>0&&selected.length===0};
+  }
+  function selectedSuppliersLive(){return new Set(supplierLiveState().selected);}
+  function deliveryLiveMode(){
+    var sel=byId('vapesDeliveryFilter');
+    var raw=txt((sel&&sel.value)||'ALL').toUpperCase();
+    return /^(ALL|STORE|PYA|UBER|DELIVERY)$/.test(raw)?raw:'ALL';
+  }
+  function deliveryModeLabel(mode){
+    mode=txt(mode||'ALL').toUpperCase();
+    if(mode==='STORE')return 'Tienda física';
+    if(mode==='PYA')return 'Pedidos Ya';
+    if(mode==='UBER')return 'Uber Eats';
+    if(mode==='DELIVERY')return 'Delivery total';
+    return 'Todos los canales';
+  }
+  function captureVapesFilterSnapshot(){
+    var sf=supplierLiveState();
+    local.appliedFilters={mode:getModeLive(),current:currentPeriodLive(),stores:selectedStoresLive(),suppliers:sf.selected,supplierNone:sf.none,delivery:deliveryLiveMode()};
+    return local.appliedFilters;
+  }
+  function applyVapesSupplierFilter(){
+    var snap=vapesFilterSnapshot(), sf=supplierLiveState();
+    local.appliedFilters={
+      mode:snap.mode,
+      current:snap.current,
+      stores:(snap.stores||[]).slice(),
+      suppliers:sf.selected,
+      supplierNone:sf.none,
+      delivery:deliveryLiveMode()
+    };
+    local.pendingSupplierFilter=false;
+    reset();
+    schedule(20);
+  }
   function vapesFilterSnapshot(){return local.appliedFilters||captureVapesFilterSnapshot();}
+  function selectedDeliveryMode(){var snap=vapesFilterSnapshot();return txt((snap&&snap.delivery)||'ALL').toUpperCase()||'ALL';}
   function getMode(){return txt(vapesFilterSnapshot().mode).toLowerCase()||'semanal';}
   function ptype(){var m=getMode();if(m.indexOf('mens')>=0||m==='month')return 'month';if(m.indexOf('diar')>=0||m==='day')return 'day';return 'week';}
   function currentPeriod(){return txt(vapesFilterSnapshot().current);}
   function pRank(p){var m=txt(p).match(/(20\d{2})-W(\d{1,2})/i);if(m)return Number(m[1])*100+Number(m[2]);m=txt(p).match(/(20\d{2})-(\d{1,2})-(\d{1,2})/);if(m)return Number(m[1])*10000+Number(m[2])*100+Number(m[3]);m=txt(p).match(/(20\d{2})-(\d{1,2})/);if(m)return Number(m[1])*100+Number(m[2]);return 0;}
   function selectedStores(){return (vapesFilterSnapshot().stores||[]).slice();}
-  function selectedSuppliers(){return new Set((vapesFilterSnapshot().suppliers||[]).slice());}
+  function selectedSuppliers(){var snap=vapesFilterSnapshot();if(snap&&snap.supplierNone)return new Set(['__NO_SUPPLIER_SELECTED__']);return new Set((snap.suppliers||[]).slice());}
   function sheetReal(wb,name){try{if(!wb||!Array.isArray(wb.SheetNames))return name;var want=key(name);return wb.SheetNames.find(function(n){return key(n)===want;})||name;}catch(e){return name;}}
   function wbRows(name){var st=appState(),wb=st&&st.__hallWorkbook;if(!wb)return[];var real=sheetReal(wb,name);try{if(wb.__rowsBySheet&&Array.isArray(wb.__rowsBySheet[real]))return wb.__rowsBySheet[real];}catch(e){}try{if(typeof innovationWorkbookSheetRows==='function')return innovationWorkbookSheetRows(wb,real)||[];}catch(e){}try{if(typeof sheetRows==='function')return sheetRows(wb,real,{defval:null,raw:true})||[];}catch(e){}try{if(wb.Sheets&&wb.Sheets[real]&&window.XLSX)return XLSX.utils.sheet_to_json(wb.Sheets[real],{defval:null,raw:true})||[];}catch(e){}return[];}
   function stamp(){var st=appState();return st&&st.__hallWorkbookStamp?st.__hallWorkbookStamp:0;}
@@ -66061,29 +66322,80 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
   function sheetsFromState(){var s=stamp();if(local.sheets&&local.stamp===s&&s)return local.sheets;var out={periods:wbRows('Vapes_Periods'),supplier:wbRows('Vapes_Supplier'),sku:wbRows('Vapes_SKU'),inventory:wbRows('Vapes_Inventory'),transfers:wbRows('Vapes_Transfers'),source:'Vapes_*'};if(out.periods.length||out.supplier.length||out.sku.length||out.inventory.length){out=applyInventoryRopAnalysis(out);local.sheets=out;local.stamp=s||Date.now();return out;}var fb=buildFallbackSheets();if(fb&&(fb.periods.length||fb.supplier.length||fb.sku.length||fb.inventory.length)){fb=applyInventoryRopAnalysis(fb);local.sheets=fb;local.stamp=s||Date.now();return fb;}return null;}
   async function loadSheets(){return sheetsFromState();}
   function installTab(){var tabs=document.querySelector('.tabsbar .tabs')||document.querySelector('.tabs');if(!tabs)return;var btn=document.querySelector('.tabBtn[data-tab="vapes"]');if(!btn){btn=document.createElement('button');btn.className='tabBtn';btn.dataset.tab='vapes';btn.dataset.short='V';btn.type='button';btn.title='Vapes';var after=document.querySelector('.tabBtn[data-tab="innovacion"]')||document.querySelector('.tabBtn[data-tab="delivery"]');if(after&&after.parentNode)after.parentNode.insertBefore(btn,after.nextSibling);else tabs.appendChild(btn);}btn.innerHTML='<span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.75h4"></path><path d="M10 2.75v2.1c0 .49-.16.96-.46 1.35l-.88 1.14A4.55 4.55 0 0 0 7.7 10.1v7.55A3.6 3.6 0 0 0 11.3 21.25h1.4a3.6 3.6 0 0 0 3.6-3.6V10.1c0-1-.33-1.98-.96-2.76l-.88-1.14A2.22 2.22 0 0 1 14 4.85v-2.1"></path><path d="M8.8 9.2h6.4"></path><path d="M8.8 16.4h6.4"></path></svg></span><span class="tabLabel">Vapes</span>';btn.onclick=function(ev){ev.preventDefault();showTab();};}
-  function installPage(){if(byId('vapesRoot'))return;var root=document.createElement('div');root.id='vapesRoot';root.className='vapesRoot';root.setAttribute('data-tabpage','vapes');root.style.display='none';root.innerHTML=`<div class="vapesHero"><div><h2>VAPES • Categoría en crecimiento</h2><p>Venta, margen, mix contra cigarros, proveedores, inventario crítico, ROP sugerido y traslados. Respeta tienda, período y vista del dashboard.</p></div><div class="vapesHeroActions"><span class="vapesPill">Vista: <b id="vapesModeBadge">—</b></span><span class="vapesPill">Rango: <b id="vapesRangeBadge">—</b></span><span class="vapesPill">Fuente: <b id="vapesSourceBadge">—</b></span><div class="vapesField"><label>Proveedor Vapes</label><select id="vapesSupplierFilter" class="vapesSelect" multiple></select><div class="vapesMiniActions"><button id="vapesSupplierAll" class="vapesMiniBtn" type="button">Todos</button><button id="vapesSupplierNone" class="vapesMiniBtn" type="button">Limpiar</button></div></div></div></div><div id="vapesNoData" class="vapesNoData" style="display:none"></div><div id="vapesKpis" class="vapesKpiGrid"></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Venta • Cigarros vs Vapes</h3><div class="sub">Barras: ventas | Diamante: % Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartSales"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>Margen • Cigarros vs Vapes</h3><div class="sub">Barras: margen bruto | Diamante: % margen Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartMargin"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Ventas apiladas • Cigarros + Vapes</h3><div class="sub">Barras apiladas + diamante total</div></div></div><div class="vapesCanvas"><canvas id="vapesChartStack"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>% Margen • Cigarros / Vapes</h3><div class="sub">Margen bruto / venta por período</div></div></div><div class="vapesCanvas"><canvas id="vapesChartGmPct"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Vapes por Delivery</h3><div class="sub">Barras apiladas: Uber Eats verde + Pedidos Ya rojo | Diamante: share delivery sobre venta total vapes</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartDelivery"></canvas></div></div></div><div class="vapesGrid2 vapesProviderRow"><div class="vapesCard vapesSupplierBarCard"><div class="vapesCardHead"><div><h3>Vapes por proveedor</h3><div class="sub">Top proveedores filtrables + total</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplier"></canvas></div></div><div class="vapesCard vapesSupplierPieCard"><div class="vapesCardHead"><div><h3>Mix venta por proveedor</h3><div class="sub">Pastel de participación del período actual seleccionado</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplierPie"></canvas></div></div></div><div class="vapesGrid2 vapesSkuInvRow"><div class="vapesCard vapesSkuChartCard"><div class="vapesCardHead"><div><h3>Top SKU Vapes</h3><div class="sub">Ranking por venta del período actual seleccionado • color por proveedor</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSku"></canvas></div></div><div class="vapesCard vapesExistenceCard"><div class="vapesCardHead"><div><h3>Existencias Vapes por tienda</h3><div class="sub">Inventario actual por SKU y tienda • sin scroll horizontal</div></div></div><div class="vapesTableWrap vapesExistenceWrap"><table id="vapesExistenceTable" class="vapesTable vapesExistenceTable"></table></div></div></div><div class="vapesFullTables"><div class="vapesCard vapesWideTableCard vapesRopCard"><div class="vapesCardHead"><div><h3>Sugerencia ROP — Ajustes por impacto económico real</h3><div class="sub">Listado directo para subir o bajar ROP • ordenado por importancia $ del ajuste</div></div></div><div id="vapesRopSummary" class="vapesRopSummary"></div><div class="vapesTableWrap vapesWideTableWrap vapesRopWrap"><table id="vapesRopTable" class="vapesTable vapesRopTable"></table></div></div><div class="vapesCard vapesWideTableCard"><div class="vapesCardHead"><div><h3>Traslados sugeridos</h3><div class="sub">Balanceo entre tiendas según inventario origen/destino y ROP propuesto</div></div></div><div class="vapesTableWrap vapesWideTableWrap"><table id="vapesTransferTable" class="vapesTable vapesTransferTable"></table></div></div></div>`;(byId('noteBox')||document.querySelector('.ampm-mainInner')||document.body).appendChild(root);var all=byId('vapesSupplierAll'),none=byId('vapesSupplierNone'),sel=byId('vapesSupplierFilter');if(all)all.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=true;});local.pendingSupplierFilter=true;};if(none)none.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=false;});local.pendingSupplierFilter=true;};if(sel)sel.onchange=function(){local.pendingSupplierFilter=true;};}
+  function installPage(){if(byId('vapesRoot'))return;var root=document.createElement('div');root.id='vapesRoot';root.className='vapesRoot';root.setAttribute('data-tabpage','vapes');root.style.display='none';root.innerHTML=`<div class="vapesHero"><div><h2>VAPES • Categoría en crecimiento</h2><p>Venta, margen, mix contra cigarros, proveedores, inventario crítico, ROP sugerido y traslados. Respeta tienda, período y vista del dashboard.</p></div><div class="vapesHeroActions"><span class="vapesPill">Vista: <b id="vapesModeBadge">—</b></span><span class="vapesPill">Rango: <b id="vapesRangeBadge">—</b></span><span class="vapesPill">Fuente: <b id="vapesSourceBadge">—</b></span><div class="vapesField"><label>Proveedor Vapes</label><select id="vapesSupplierFilter" class="vapesSelect" multiple></select><div class="vapesMiniActions"><button id="vapesSupplierAll" class="vapesMiniBtn" type="button">Todos</button><button id="vapesSupplierNone" class="vapesMiniBtn" type="button">Limpiar</button></div></div><div class="vapesField"><label>Canal venta</label><select id="vapesDeliveryFilter" class="vapesSelect"><option value="ALL">Todos</option><option value="STORE">Tienda física</option><option value="PYA">Pedidos Ya</option><option value="UBER">Uber Eats</option><option value="DELIVERY">Delivery total</option></select></div></div></div><div id="vapesNoData" class="vapesNoData" style="display:none"></div><div id="vapesKpis" class="vapesKpiGrid"></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Venta • Cigarros vs Vapes</h3><div class="sub">Barras: ventas | Diamante: % Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartSales"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>Margen • Cigarros vs Vapes</h3><div class="sub">Barras: margen bruto | Diamante: % margen Vapes sobre Cigarros</div></div></div><div class="vapesCanvas"><canvas id="vapesChartMargin"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Ventas apiladas • Cigarros + Vapes</h3><div class="sub">Barras apiladas + diamante total</div></div></div><div class="vapesCanvas"><canvas id="vapesChartStack"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>% Margen • Cigarros / Vapes</h3><div class="sub">Margen bruto / venta por período</div></div></div><div class="vapesCanvas"><canvas id="vapesChartGmPct"></canvas></div></div></div><div class="vapesGrid2"><div class="vapesCard"><div class="vapesCardHead"><div><h3>Vapes por Delivery</h3><div class="sub">Barras apiladas: Uber Eats verde + Pedidos Ya rojo | Diamante: share delivery sobre venta total vapes</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartDelivery"></canvas></div></div><div class="vapesCard"><div class="vapesCardHead"><div><h3>Vapes • Venta por canal</h3><div class="sub">Barra compilada: Tienda física + Pedidos Ya + Uber Eats | Línea: venta total Vapes de los 3 canales</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartChannelImpact"></canvas></div></div></div><div class="vapesGrid2 vapesProviderRow"><div class="vapesCard vapesSupplierBarCard"><div class="vapesCardHead"><div><h3>Vapes por proveedor</h3><div class="sub">Top proveedores filtrables + total</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplier"></canvas></div></div><div class="vapesCard vapesSupplierPieCard"><div class="vapesCardHead"><div><h3>Mix venta por proveedor</h3><div class="sub">Pastel de participación del período actual seleccionado</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSupplierPie"></canvas></div></div></div><div class="vapesGrid2 vapesSkuInvRow"><div class="vapesCard vapesSkuChartCard"><div class="vapesCardHead"><div><h3>Top SKU Vapes</h3><div class="sub">Ranking por venta del período actual seleccionado • color por proveedor</div></div></div><div class="vapesCanvas tall"><canvas id="vapesChartSku"></canvas></div></div><div class="vapesCard vapesExistenceCard"><div class="vapesCardHead"><div><h3>Existencias Vapes por tienda</h3><div class="sub">Inventario actual por SKU y tienda • sin scroll horizontal</div></div></div><div class="vapesTableWrap vapesExistenceWrap"><table id="vapesExistenceTable" class="vapesTable vapesExistenceTable"></table></div></div></div><div class="vapesFullTables"><div class="vapesCard vapesWideTableCard vapesRopCard"><div class="vapesCardHead"><div><h3>Sugerencia ROP — Ajustes por impacto económico real</h3><div class="sub">Listado directo para subir o bajar ROP • ordenado por importancia $ del ajuste</div></div></div><div id="vapesRopSummary" class="vapesRopSummary"></div><div class="vapesTableWrap vapesWideTableWrap vapesRopWrap"><table id="vapesRopTable" class="vapesTable vapesRopTable"></table></div></div><div class="vapesCard vapesWideTableCard"><div class="vapesCardHead"><div><h3>Traslados sugeridos</h3><div class="sub">Balanceo entre tiendas según inventario origen/destino y ROP propuesto</div></div></div><div class="vapesTableWrap vapesWideTableWrap"><table id="vapesTransferTable" class="vapesTable vapesTransferTable"></table></div></div></div>`;(byId('noteBox')||document.querySelector('.ampm-mainInner')||document.body).appendChild(root);var all=byId('vapesSupplierAll'),none=byId('vapesSupplierNone'),sel=byId('vapesSupplierFilter'),dsel=byId('vapesDeliveryFilter');if(all)all.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=true;});local.pendingSupplierFilter=true;applyVapesSupplierFilter();};if(none)none.onclick=function(){Array.from(sel.options).forEach(function(o){o.selected=false;});local.pendingSupplierFilter=true;applyVapesSupplierFilter();};if(sel)sel.onchange=function(){local.pendingSupplierFilter=true;applyVapesSupplierFilter();};if(dsel){dsel.value=selectedDeliveryMode();dsel.onchange=function(){applyVapesSupplierFilter();};}}
   function displayFor(n){return n.id==='vapesRoot'?'block':'';} 
   function showTab(){installPage();document.querySelectorAll('.tabBtn').forEach(function(b){b.classList.toggle('active',txt(b.dataset.tab)==='vapes');});document.body.setAttribute('data-active-tab','vapes');try{var st=appState();if(st){st.tab='vapes';st._lastActiveTab='vapes';}localStorage.setItem('ampm_tab','vapes');}catch(e){}document.querySelectorAll('[data-tabpage]').forEach(function(n){var owner=txt(n.getAttribute('data-tabpage')).toLowerCase();n.style.display=owner==='vapes'?displayFor(n):'none';});try{window.dispatchEvent(new CustomEvent('ampm:tabshown',{detail:{tab:'vapes'}}));}catch(e){}schedule(50);}
-  function updateSuppliers(sheets){var sel=byId('vapesSupplierFilter');if(!sel)return;var rows=sheets.supplier||[];var map={};rows.forEach(function(r){var k=supKey(r),name=txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)';if(k)map[k]=name;});var sig=Object.keys(map).sort().join('|');if(sig===local.supplierSig)return;local.supplierSig=sig;sel.innerHTML=Object.keys(map).sort(function(a,b){return map[a].localeCompare(map[b]);}).map(function(k){return '<option value="'+esc(k)+'" selected>'+esc(map[k])+'</option>';}).join('');}
+  function updateSuppliers(sheets){
+    var sel=byId('vapesSupplierFilter');if(!sel)return;
+    var current=Array.from(sel.selectedOptions||[]).map(function(o){return key(o.value);}).filter(Boolean);
+    var hadOptions=(sel.options||[]).length>0;
+    var keepNone=hadOptions&&current.length===0;
+    var rows=sheets.supplier||[], map={};
+    rows.forEach(function(r){var k=supKey(r),name=txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)';if(k)map[k]=name;});
+    var keys=Object.keys(map).sort(function(a,b){return map[a].localeCompare(map[b]);});
+    var sig=keys.join('|');if(sig===local.supplierSig)return;
+    local.supplierSig=sig;
+    sel.innerHTML=keys.map(function(k){
+      var selected=(!hadOptions&&!keepNone)||(!keepNone&&(!current.length||current.indexOf(k)>=0));
+      return '<option value="'+esc(k)+'" '+(selected?'selected':'')+'>'+esc(map[k])+'</option>';
+    }).join('');
+  }
   function filterStoresRows(rows,totalPreferred){var stores=selectedStores();if(totalPreferred&&(!stores.length||stores.length>1)){var tot=rows.filter(function(r){return rowStore(r)==='TOTALEMPRESA'||txt(val(r,['Store']))==='Total empresa';});if(tot.length)return tot;}return stores.length?rows.filter(function(r){return stores.indexOf(rowStore(r))>=0;}):rows;}
   function choosePeriods(rows,t){var keys=Array.from(new Set(rows.filter(function(r){return rowPeriodType(r)===t;}).map(rowPeriodKey).filter(Boolean))).sort(function(a,b){return pRank(a)-pRank(b);});var cur=currentPeriod();var idx=keys.indexOf(cur);var max=t==='month'?6:(t==='week'?15:15);if(idx>=0)return keys.slice(Math.max(0,idx-max+1),idx+1);return keys.slice(-max);}
+  function emptyAggregate(periods){
+    var out={periods:periods||[],cigar:{sales:{},gm:{},qty:{}},vape:{sales:{},gm:{},qty:{}},suppliers:{},skus:{},stores:{}};
+    (periods||[]).forEach(function(p){out.cigar.sales[p]=0;out.cigar.gm[p]=0;out.cigar.qty[p]=0;out.vape.sales[p]=0;out.vape.gm[p]=0;out.vape.qty[p]=0;});
+    return out;
+  }
+  function choosePeriodsFromRaw(rows,t){
+    var keys=Array.from(new Set((rows||[]).map(function(r){return rowPeriodByType(r,t);}).filter(Boolean))).sort(function(a,b){return pRank(a)-pRank(b);});
+    var cur=currentPeriod();var idx=keys.indexOf(cur);var max=t==='month'?6:(t==='week'?15:15);
+    if(idx>=0)return keys.slice(Math.max(0,idx-max+1),idx+1);
+    return keys.slice(-max);
+  }
+  function aggregateFromRawByChannel(sheets){
+    var t=ptype(), stores=selectedStores(), storeSet=new Set(stores), sfilter=selectedSuppliers(), dmode=selectedDeliveryMode();
+    var rows=(wbRows('Cubo_Sales_DetailHallazgos')||[]).filter(function(r){
+      var st=rowStore(r);
+      if(storeSet.size&&storeSet.has(st)===false)return false;
+      if(!vapesDeliveryPass(r,dmode))return false;
+      return isVape(r)||isCigar(r);
+    });
+    var periods=choosePeriodsFromRaw(rows,t), pset=new Set(periods), out=emptyAggregate(periods);
+    rows.forEach(function(r){
+      var p=rowPeriodByType(r,t);if(!pset.has(p))return;
+      if(isCigar(r)){
+        out.cigar.sales[p]+=rowSales(r);out.cigar.gm[p]+=rowMargin(r);out.cigar.qty[p]+=rowQty(r);
+      }else if(isVape(r)){
+        if(sfilter.size&&!sfilter.has(supKey(r)))return;
+        var sk=supKey(r),dk=descKey(r),name=txt(val(r,['Supplier','supplier','Proveedor']))||'(Sin proveedor)',desc=txt(val(r,['Description','description','Descripcion']))||'(Sin descripción)',brand=txt(val(r,['Brand','Marca','brand']))||'';
+        var sales=rowSales(r),gm=rowMargin(r),qty=rowQty(r),skuKey=sk+'|'+dk;
+        out.vape.sales[p]+=sales;out.vape.gm[p]+=gm;out.vape.qty[p]+=qty;
+        if(!out.suppliers[sk])out.suppliers[sk]={name:name,sales:{},gm:{},qty:{},total:0};
+        out.suppliers[sk].sales[p]=(out.suppliers[sk].sales[p]||0)+sales;
+        out.suppliers[sk].gm[p]=(out.suppliers[sk].gm[p]||0)+gm;
+        out.suppliers[sk].qty[p]=(out.suppliers[sk].qty[p]||0)+qty;
+        out.suppliers[sk].total+=sales;
+        if(!out.skus[skuKey])out.skus[skuKey]={name:desc,sales:0,qty:0,gm:0,salesByPeriod:{},qtyByPeriod:{},gmByPeriod:{},supplierKey:sk,supplier:name,brand:brand};
+        out.skus[skuKey].sales+=sales;out.skus[skuKey].qty+=qty;out.skus[skuKey].gm+=gm;
+        out.skus[skuKey].salesByPeriod[p]=(out.skus[skuKey].salesByPeriod[p]||0)+sales;
+        out.skus[skuKey].qtyByPeriod[p]=(out.skus[skuKey].qtyByPeriod[p]||0)+qty;
+        out.skus[skuKey].gmByPeriod[p]=(out.skus[skuKey].gmByPeriod[p]||0)+gm;
+      }
+      var st=rowStore(r); if(st&&st!=='TOTALEMPRESA'){
+        if(!out.stores[st])out.stores[st]={v:0,c:0};
+        if(isVape(r))out.stores[st].v+=rowSales(r);else if(isCigar(r))out.stores[st].c+=rowSales(r);
+      }
+    });
+    return out;
+  }
   function aggregate(sheets){
     var t=ptype();
+    if(selectedDeliveryMode()!=='ALL')return aggregateFromRawByChannel(sheets);
     var periodRows=filterStoresRows(sheets.periods||[],true);
     var periods=choosePeriods(periodRows,t);
     var pset=new Set(periods);
-    var out={
-      periods:periods,
-      cigar:{sales:{},gm:{},qty:{}},
-      vape:{sales:{},gm:{},qty:{}},
-      suppliers:{},
-      skus:{},
-      stores:{}
-    };
-    periods.forEach(function(p){
-      out.cigar.sales[p]=0;out.cigar.gm[p]=0;out.cigar.qty[p]=0;
-      out.vape.sales[p]=0;out.vape.gm[p]=0;out.vape.qty[p]=0;
-    });
+    var out=emptyAggregate(periods);
     periodRows.filter(function(r){return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r));}).forEach(function(r){
       var g=rowGroup(r).indexOf('VAPE')>=0?out.vape:out.cigar;
       var p=rowPeriodKey(r);
@@ -66093,7 +66405,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     var sr=filterStoresRows(sheets.supplier||[],true).filter(function(r){
       return rowPeriodType(r)===t&&pset.has(rowPeriodKey(r))&&(!sfilter.size||sfilter.has(supKey(r)));
     });
-    if(sr.length){
+    if(sfilter.size||sr.length){
       periods.forEach(function(p){out.vape.sales[p]=0;out.vape.gm[p]=0;out.vape.qty[p]=0;});
     }
     sr.forEach(function(r){
@@ -66132,6 +66444,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     });
     return out;
   }
+
   function currentAnalysisPeriod(a){
     var cur=currentPeriod();
     if(a&&Array.isArray(a.periods)&&a.periods.indexOf(cur)>=0)return cur;
@@ -66139,7 +66452,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
   }
   function alerts(sheets){var stores=selectedStores(),sf=selectedSuppliers();var invAll=(sheets.inventory||[]).filter(function(r){return (!sf.size||sf.has(supKey(r)));});var inv=invAll.filter(function(r){return (!stores.length||stores.indexOf(rowStore(r))>=0);});var low=inv.filter(function(r){var a=norm(val(r,['Alert Level','AlertLevel']));return /CRITICO|CRITICAL|BAJO|COBERTURA/.test(a);}).sort(function(a,b){return num(val(b,['Priority Score','PriorityScore','ROP Impact $','Sales S4']))-num(val(a,['Priority Score','PriorityScore','ROP Impact $','Sales S4']));});var rop=inv.filter(function(r){var sug=num(val(r,['Suggested ROP','SuggestedROP','ROP Propuesto Inventario'])),qty=num(val(r,['Quantity'])),delta=num(val(r,['Delta ROP','DeltaROP']));return sug>0&&(qty<sug||delta!==0);}).sort(function(a,b){return num(val(b,['ROP Impact $','Priority Score','PriorityScore','Sales S4']))-num(val(a,['ROP Impact $','Priority Score','PriorityScore','Sales S4']));});var transAll=(sheets.transfers||[]).filter(function(r){return (!sf.size||sf.has(supKey(r)));});var tr=transAll.filter(function(r){return (!stores.length||stores.indexOf(nstore(val(r,['From Store','FromStore'])))>=0||stores.indexOf(nstore(val(r,['To Store','ToStore'])))>=0);});return{low:low,rop:rop,trans:tr,transAll:transAll,inv:inv,invAll:invAll};}
   function destroyCharts(){Object.keys(charts).forEach(function(k){try{charts[k].destroy();}catch(e){}});charts={};}
-  var vapesValueLabels={id:'vapesValueLabels',afterDatasetsDraw:function(chart,args,pluginOpts){var opt=(chart.options&&chart.options.plugins&&chart.options.plugins.vapesValueLabels)||{};if(opt.enabled===false)return;var ctx=chart.ctx,area=chart.chartArea,boxes=[],max=opt.maxLabels||80;ctx.save();ctx.font='800 10px Arial';ctx.textBaseline='middle';ctx.textAlign='center';function intersects(b){return boxes.some(function(a){return !(b.x2<a.x1||b.x1>a.x2||b.y2<a.y1||b.y1>a.y2);});}function drawLabel(text,x,y,color){var padX=5,padY=3,w=ctx.measureText(text).width+padX*2,h=16,xx=Math.max(area.left+2,Math.min(x-w/2,area.right-w-2)),yy=y-h/2,box={x1:xx,y1:yy,x2:xx+w,y2:yy+h};var tries=0;while(intersects(box)&&tries<10){yy-=h+3;box={x1:xx,y1:yy,x2:xx+w,y2:yy+h};tries++;}if(box.y1<area.top+2||box.y2>area.bottom+20||intersects(box))return;ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle=color||'#11284A';ctx.lineWidth=1;var r=5;ctx.beginPath();ctx.moveTo(xx+r,yy);ctx.lineTo(xx+w-r,yy);ctx.quadraticCurveTo(xx+w,yy,xx+w,yy+r);ctx.lineTo(xx+w,yy+h-r);ctx.quadraticCurveTo(xx+w,yy+h,xx+w-r,yy+h);ctx.lineTo(xx+r,yy+h);ctx.quadraticCurveTo(xx,yy+h,xx,yy+h-r);ctx.lineTo(xx,yy+r);ctx.quadraticCurveTo(xx,yy,xx+r,yy);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#11284A';ctx.fillText(text,xx+w/2,yy+h/2+.3);boxes.push(box);}var horizontal=chart.options&&chart.options.indexAxis==='y';(chart.data.datasets||[]).forEach(function(ds,di){if(chart.isDatasetVisible&&!chart.isDatasetVisible(di))return;var meta=chart.getDatasetMeta(di),isLine=meta.type==='line'||ds.type==='line',isPct=(ds.vapesValueFormat==='pct')||/%/.test(ds.label||''),data=ds.data||[];var color=(Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.borderColor||ds.backgroundColor)||'#11284A';(meta.data||[]).forEach(function(el,i){if(boxes.length>=max)return;var v=Number(data[i]||0);if(!Number.isFinite(v)||Math.abs(v)<.01)return;var pos=el.tooltipPosition?el.tooltipPosition():{x:el.x,y:el.y};var x=pos.x,y=pos.y;if(horizontal){x=Math.max(el.x||pos.x,el.base||0)+26;y=pos.y;}else if(isLine){y=pos.y-18;}else{var baseY=Number(el.base||area.bottom);var topY=Number(el.y||pos.y);if(opt.barPosition==='top'){if(Math.abs(baseY-topY)<18)return;y=Math.min(topY,baseY)-13;}else{y=Math.min(area.bottom-16,Math.max(area.top+14,baseY-17));}}var text=isPct?pct(v,Math.abs(v)>=10?0:1):money(v);drawLabel(text,x,y,color);});});ctx.restore();}};
+  var vapesValueLabels={id:'vapesValueLabels',afterDatasetsDraw:function(chart,args,pluginOpts){var opt=(chart.options&&chart.options.plugins&&chart.options.plugins.vapesValueLabels)||{};if(opt.enabled===false)return;var ctx=chart.ctx,area=chart.chartArea,boxes=[],max=opt.maxLabels||80,topOverflow=Number(opt.topOverflow==null?30:opt.topOverflow),gap=Number(opt.labelGap==null?4:opt.labelGap);ctx.save();ctx.font='800 10px Arial';ctx.textBaseline='middle';ctx.textAlign='center';function intersects(b){return boxes.some(function(a){return !(b.x2<a.x1||b.x1>a.x2||b.y2<a.y1||b.y1>a.y2);});}function drawLabel(text,x,y,color,preferDown){var padX=5,padY=3,w=ctx.measureText(text).width+padX*2,h=16,xx=Math.max(area.left+2,Math.min(x-w/2,area.right-w-2)),baseY=y-h/2,tryShifts=preferDown?[0,h+gap,-h-gap,(h+gap)*2,-(h+gap)*2,(h+gap)*3,-(h+gap)*3]:[0,-h-gap,h+gap,-(h+gap)*2,(h+gap)*2,-(h+gap)*3,(h+gap)*3],yy=baseY,box=null;for(var ti=0;ti<tryShifts.length;ti++){yy=baseY+tryShifts[ti];box={x1:xx,y1:yy,x2:xx+w,y2:yy+h};if(box.y1<area.top-topOverflow||box.y2>area.bottom+22)continue;if(!intersects(box))break;box=null;}if(!box||intersects(box))return;ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle=color||'#11284A';ctx.lineWidth=1;var r=5;ctx.beginPath();ctx.moveTo(xx+r,yy);ctx.lineTo(xx+w-r,yy);ctx.quadraticCurveTo(xx+w,yy,xx+w,yy+r);ctx.lineTo(xx+w,yy+h-r);ctx.quadraticCurveTo(xx+w,yy+h,xx+w-r,yy+h);ctx.lineTo(xx+r,yy+h);ctx.quadraticCurveTo(xx,yy+h,xx,yy+h-r);ctx.lineTo(xx,yy+r);ctx.quadraticCurveTo(xx,yy,xx+r,yy);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#11284A';ctx.fillText(text,xx+w/2,yy+h/2+.3);boxes.push(box);}var horizontal=chart.options&&chart.options.indexAxis==='y';(chart.data.datasets||[]).forEach(function(ds,di){if(chart.isDatasetVisible&&!chart.isDatasetVisible(di))return;var meta=chart.getDatasetMeta(di),isLine=meta.type==='line'||ds.type==='line',isPct=(ds.vapesValueFormat==='pct')||/%/.test(ds.label||''),data=ds.data||[];var color=(Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.borderColor||ds.backgroundColor)||'#11284A';(meta.data||[]).forEach(function(el,i){if(boxes.length>=max)return;var v=Number(data[i]||0);if(!Number.isFinite(v)||Math.abs(v)<.01)return;var pos=el.tooltipPosition?el.tooltipPosition():{x:el.x,y:el.y};var x=pos.x,y=pos.y,preferDown=false;if(horizontal){x=Math.max(el.x||pos.x,el.base||0)+26;y=pos.y;}else if(isLine){y=pos.y-18;}else{var baseY=Number(el.base||area.bottom);var topY=Number(el.y||pos.y);if(opt.barPosition==='top'){if(Math.abs(baseY-topY)<18)return;y=Math.min(topY,baseY)-13;}else{y=Math.min(area.bottom-16,Math.max(area.top+14,baseY-17));}}var text=isPct?pct(v,Math.abs(v)>=10?0:1):money(v);drawLabel(text,x,y,color,preferDown);});});ctx.restore();}};
   function normalizeVapesComboChart(id,cfg){
     try{
       if(!cfg||String(id||'').indexOf('vapesChart')!==0)return cfg;
@@ -66265,7 +66578,18 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
   function rowPeriodByType(r,t){if(t==='month')return txt(val(r,['CalMonth','PeriodKey']));if(t==='day')return txt(val(r,['Date Sold','Date','PeriodKey']));return txt(val(r,['YearWeek','YearMonth','PeriodKey']));}
   function rowIsDelivery(r){var flag=norm(val(r,['Is_Delivery','Is Delivery','Delivery']));var ch=norm(val(r,['Delivery_Channel','Channel','Delivery Channel']));return flag==='1'||flag==='SI'||flag==='YES'||flag==='TRUE'||flag==='DELIVERY'||!!ch;}
   function rowDeliveryChannel(r){var ch=norm(val(r,['Delivery_Channel','Channel','Delivery Channel']));if(/UBER/.test(ch))return 'Uber Eats';if(/PEDIDOS|PEDIDO|PYA/.test(ch))return 'Pedidos Ya';return ch?txt(val(r,['Delivery_Channel','Channel','Delivery Channel'])):'Otros';}
-  function aggregateVapesDelivery(periods,a){var t=ptype(),pset=new Set(periods||[]),stores=selectedStores(),sf=selectedSuppliers(),rows=wbRows('Cubo_Sales_DetailHallazgos')||[],out={uber:{},pya:{},other:{},total:{},share:{},qtyUber:{},qtyPya:{},qtyOther:{}};(periods||[]).forEach(function(p){out.uber[p]=0;out.pya[p]=0;out.other[p]=0;out.total[p]=0;out.share[p]=0;out.qtyUber[p]=0;out.qtyPya[p]=0;out.qtyOther[p]=0;});rows.forEach(function(r){if(!isVape(r)||!rowIsDelivery(r))return;var pk=rowPeriodByType(r,t);if(!pset.has(pk))return;var st=rowStore(r);if(stores.length&&stores.indexOf(st)<0)return;if(sf.size&&!sf.has(supKey(r)))return;var sale=rowSales(r),qty=rowQty(r),ch=rowDeliveryChannel(r);if(ch==='Uber Eats'){out.uber[pk]+=sale;out.qtyUber[pk]+=qty;}else if(ch==='Pedidos Ya'){out.pya[pk]+=sale;out.qtyPya[pk]+=qty;}else{out.other[pk]+=sale;out.qtyOther[pk]+=qty;}out.total[pk]+=sale;});(periods||[]).forEach(function(p){var base=num(a&&a.vape&&a.vape.sales&&a.vape.sales[p]);out.share[p]=base?out.total[p]/base*100:0;});return out;}
+  function vapesDeliveryPass(r,mode){
+    mode=txt(mode||selectedDeliveryMode()||'ALL').toUpperCase();
+    if(mode==='ALL')return true;
+    var isDel=rowIsDelivery(r), ch=rowDeliveryChannel(r);
+    if(mode==='STORE')return !isDel;
+    if(mode==='DELIVERY')return isDel;
+    if(mode==='UBER')return isDel&&ch==='Uber Eats';
+    if(mode==='PYA')return isDel&&ch==='Pedidos Ya';
+    return true;
+  }
+  function aggregateVapesDelivery(periods,a){var t=ptype(),pset=new Set(periods||[]),stores=selectedStores(),sf=selectedSuppliers(),rows=wbRows('Cubo_Sales_DetailHallazgos')||[],dmode=selectedDeliveryMode(),out={uber:{},pya:{},other:{},total:{},share:{},qtyUber:{},qtyPya:{},qtyOther:{}};(periods||[]).forEach(function(p){out.uber[p]=0;out.pya[p]=0;out.other[p]=0;out.total[p]=0;out.share[p]=0;out.qtyUber[p]=0;out.qtyPya[p]=0;out.qtyOther[p]=0;});rows.forEach(function(r){if(!isVape(r)||!rowIsDelivery(r)||!vapesDeliveryPass(r,dmode))return;var pk=rowPeriodByType(r,t);if(!pset.has(pk))return;var st=rowStore(r);if(stores.length&&stores.indexOf(st)<0)return;if(sf.size&&!sf.has(supKey(r)))return;var sale=rowSales(r),qty=rowQty(r),ch=rowDeliveryChannel(r);if(ch==='Uber Eats'){out.uber[pk]+=sale;out.qtyUber[pk]+=qty;}else if(ch==='Pedidos Ya'){out.pya[pk]+=sale;out.qtyPya[pk]+=qty;}else{out.other[pk]+=sale;out.qtyOther[pk]+=qty;}out.total[pk]+=sale;});(periods||[]).forEach(function(p){var base=num(a&&a.vape&&a.vape.sales&&a.vape.sales[p]);out.share[p]=base?out.total[p]/base*100:0;});return out;}
+  function aggregateVapesChannelImpact(periods){var t=ptype(),pset=new Set(periods||[]),stores=selectedStores(),sf=selectedSuppliers(),rows=wbRows('Cubo_Sales_DetailHallazgos')||[],dmode=selectedDeliveryMode(),out={store:{},pya:{},uber:{},other:{},total:{},delShare:{}};(periods||[]).forEach(function(p){out.store[p]=0;out.pya[p]=0;out.uber[p]=0;out.other[p]=0;out.total[p]=0;out.delShare[p]=0;});rows.forEach(function(r){if(!isVape(r)||!vapesDeliveryPass(r,dmode))return;var pk=rowPeriodByType(r,t);if(!pset.has(pk))return;var st=rowStore(r);if(stores.length&&stores.indexOf(st)<0)return;if(sf.size&&!sf.has(supKey(r)))return;var sale=rowSales(r),ch=rowDeliveryChannel(r),isDel=rowIsDelivery(r);if(!isDel)out.store[pk]+=sale;else if(ch==='Uber Eats')out.uber[pk]+=sale;else if(ch==='Pedidos Ya')out.pya[pk]+=sale;else out.other[pk]+=sale;out.total[pk]+=sale;});(periods||[]).forEach(function(p){var del=num(out.pya[p])+num(out.uber[p])+num(out.other[p]);out.delShare[p]=out.total[p]?del/out.total[p]*100:0;});return out;}
 
   function renderCharts(a){
     var p=a.periods,labels=p.map(lab),currentKey=currentAnalysisPeriod(a);
@@ -66289,6 +66613,11 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     chart('vapesChartSku',{type:'bar',data:{labels:sku.map(function(x){return x.name.length>32?x.name.slice(0,31)+'…':x.name;}),datasets:[{label:'Venta período actual',data:sku.map(function(x){return x.salesCurrent;}),backgroundColor:sku.map(function(x){return supPalette[x.supplierKey]||C.blue;}),borderRadius:5}]},options:opts({indexAxis:'y',interaction:{mode:'nearest',axis:'y',intersect:true},plugins:{legend:{display:false},vapesValueLabels:{enabled:true,maxLabels:20},tooltip:{enabled:true,displayColors:true,callbacks:{title:function(items){var item=sku[(items&&items[0]&&items[0].dataIndex)||0]||{};return item.name||'';},label:function(ctx){var item=sku[ctx.dataIndex]||{};return ['Venta período actual: '+money(ctx.raw),'Unidades período actual: '+fint(item.qtyCurrent)+' uds','Proveedor: '+(item.supplier||'Sin proveedor')];},afterLabel:function(){return '';}}}},scales:{x:{beginAtZero:true,ticks:{callback:function(v){return money(v);},color:'#000'}},y:{ticks:{color:'#000',font:{weight:'800',size:11}}}}})});
     var deliveryShareVals=p.map(function(k){return delivery.share[k]||0;});
     chart('vapesChartDelivery',{type:'bar',data:{labels:labels,datasets:[{label:'Pedidos Ya',data:p.map(function(k){return delivery.pya[k]||0;}),backgroundColor:C.red,borderColor:C.red,borderWidth:1,borderRadius:5,stack:'delivery'},{label:'Uber Eats',data:p.map(function(k){return delivery.uber[k]||0;}),backgroundColor:C.green,borderColor:C.green,borderWidth:1,borderRadius:5,stack:'delivery'},{label:'% Delivery / Vapes',type:'line',yAxisID:'y1',vapesValueFormat:'pct',data:deliveryShareVals,borderColor:C.navy,backgroundColor:C.navy,tension:.25,pointRadius:4,borderWidth:3}]},options:opts({layout:{padding:{top:48,right:8,left:4,bottom:4}},plugins:{tooltip:{callbacks:{label:function(ctx){var raw=num(ctx.raw);if(ctx.dataset.yAxisID==='y1'||String(ctx.dataset.label||'').indexOf('%')>=0)return ctx.dataset.label+': '+pct(raw);var qty=(ctx.dataset.label==='Uber Eats')?(delivery.qtyUber[p[ctx.dataIndex]]||0):(delivery.qtyPya[p[ctx.dataIndex]]||0);return [ctx.dataset.label+': '+money(raw),'Unidades: '+fint(qty)+' uds'];},footer:function(items){if(!items||!items.length)return '';var idx=items[0].dataIndex,key=p[idx];var totalDel=num(delivery.total[key]),share=num(delivery.share[key]),other=num(delivery.other[key]);var lines=['Delivery total: '+money(totalDel),'Share delivery / total vapes: '+pct(share)];if(other>0)lines.push('Otros canales: '+money(other));return lines;}}},vapesValueLabels:{enabled:true,maxLabels:45}},scales:{x:{stacked:true,ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{callback:function(v){return money(v);},color:'#000'}},y1:{position:'right',beginAtZero:true,max:pctAxisMax(deliveryShareVals,80),grid:{display:false,drawOnChartArea:false,drawTicks:false,drawBorder:false,color:'transparent'},border:{display:false,color:'transparent'},ticks:{callback:function(v){return v+'%';},color:'#2F6F95',padding:4,font:{weight:'900'}}}}})});
+    var chImpact=aggregateVapesChannelImpact(p), chTotalVals=p.map(function(k){return chImpact.total[k]||0;}), chDatasets=[{label:'Tienda física',data:p.map(function(k){return chImpact.store[k]||0;}),backgroundColor:C.blue,borderColor:C.blue,borderWidth:1,borderRadius:5,stack:'canal'},{label:'Pedidos Ya',data:p.map(function(k){return chImpact.pya[k]||0;}),backgroundColor:C.red,borderColor:C.red,borderWidth:1,borderRadius:5,stack:'canal'},{label:'Uber Eats',data:p.map(function(k){return chImpact.uber[k]||0;}),backgroundColor:C.green,borderColor:C.green,borderWidth:1,borderRadius:5,stack:'canal'}];
+    if(p.some(function(k){return num(chImpact.other[k])>0;}))chDatasets.push({label:'Otros delivery',data:p.map(function(k){return chImpact.other[k]||0;}),backgroundColor:'#94A3B8',borderColor:'#94A3B8',borderWidth:1,borderRadius:5,stack:'canal'});
+    chDatasets.push({label:'Total Vapes',type:'line',yAxisID:'y',vapesValueFormat:'money',data:chTotalVals,borderColor:C.navy,backgroundColor:C.navy,tension:.25,pointRadius:5,pointHoverRadius:7,pointStyle:'rectRot',borderWidth:3,clip:false});
+    var chAxisMax=Math.max(1,Math.max.apply(null,chTotalVals));
+    chart('vapesChartChannelImpact',{type:'bar',data:{labels:labels,datasets:chDatasets},options:opts({layout:{padding:{top:68,right:8,left:4,bottom:4}},plugins:{tooltip:{callbacks:{label:function(ctx){var raw=num(ctx.raw);if(ctx.dataset.type==='line'||ctx.dataset.label==='Total Vapes')return 'Total Vapes: '+money(raw);var total=num(chImpact.total[p[ctx.dataIndex]]);var share=total?raw/total*100:0;return [ctx.dataset.label+': '+money(raw),'Mix sobre total Vapes: '+pct(share)];},footer:function(items){if(!items||!items.length)return '';var idx=items[0].dataIndex,key=p[idx];return 'Total Vapes: '+money(chImpact.total[key]||0)+' · Filtro canal: '+deliveryModeLabel(selectedDeliveryMode());}}},vapesValueLabels:{enabled:true,maxLabels:70,topOverflow:38,labelGap:5}},scales:{x:{stacked:true,ticks:{color:'#000',font:{weight:'800',size:11},maxRotation:0}},y:{stacked:true,beginAtZero:true,suggestedMax:chAxisMax*1.18,ticks:{callback:function(v){return money(v);},color:'#000'}}}})});
   }
   function makeTable(node,heads,rows){
     if(!node)return;
@@ -66464,7 +66793,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     // Se respeta el filtro de proveedor, pero no se recorta la matriz por tienda seleccionada.
     renderVapesTransferMatrix(byId('vapesTransferTable'), (al.invAll||invRows), (al.transAll||al.trans));
   }
-  async function render(){installTab();installPage();var mode=byId('vapesModeBadge'),source=byId('vapesSourceBadge'),range=byId('vapesRangeBadge'),no=byId('vapesNoData');if(mode)mode.textContent=ptype().toUpperCase();var sheets=await loadSheets();if(source)source.textContent=sheets?(sheets.source||'Vapes_*'):'Sin hojas';if(!sheets||!(sheets.periods||[]).length){if(no){no.style.display='';no.innerHTML='Sin data para Vapes en el cubo cargado.<br>Ejecutá el <b>compactar_excel.py</b> nuevo para generar hojas <b>Vapes_Periods</b>, <b>Vapes_Supplier</b>, <b>Vapes_SKU</b>, <b>Vapes_Inventory</b>.';}destroyCharts();return;}if(no)no.style.display='none';updateSuppliers(sheets);var a=aggregate(sheets),al=alerts(sheets);if(range)range.textContent=a.periods.length?a.periods[0]+' → '+a.periods[a.periods.length-1]:'—';if(!a.periods.length){if(no){no.style.display='';no.textContent='Hay data Vapes, pero no coincide con el período o filtros activos.';}destroyCharts();return;}renderStatic(a,al);renderCharts(a);}
+  async function render(){installTab();installPage();var dsel=byId('vapesDeliveryFilter');if(dsel)dsel.value=selectedDeliveryMode();var mode=byId('vapesModeBadge'),source=byId('vapesSourceBadge'),range=byId('vapesRangeBadge'),no=byId('vapesNoData');if(mode)mode.textContent=ptype().toUpperCase()+' · '+deliveryModeLabel(selectedDeliveryMode());var sheets=await loadSheets();if(source)source.textContent=sheets?(sheets.source||'Vapes_*'):'Sin hojas';if(!sheets||!(sheets.periods||[]).length){if(no){no.style.display='';no.innerHTML='Sin data para Vapes en el cubo cargado.<br>Ejecutá el <b>compactar_excel.py</b> nuevo para generar hojas <b>Vapes_Periods</b>, <b>Vapes_Supplier</b>, <b>Vapes_SKU</b>, <b>Vapes_Inventory</b>.';}destroyCharts();return;}if(no)no.style.display='none';updateSuppliers(sheets);var a=aggregate(sheets),al=alerts(sheets);if(range)range.textContent=a.periods.length?a.periods[0]+' → '+a.periods[a.periods.length-1]:'—';if(!a.periods.length){if(no){no.style.display='';no.textContent='Hay data Vapes, pero no coincide con el período o filtros activos.';}destroyCharts();return;}renderStatic(a,al);renderCharts(a);}
   function reset(){local.sheets=null;local.stamp=null;}
   function schedule(ms){clearTimeout(local.timer);local.timer=setTimeout(function(){render().catch(function(e){console.warn('Vapes render error',e);});},ms==null?120:ms);}
   function bind(){window.addEventListener('ampm:fileloaded',function(){captureVapesFilterSnapshot();reset();local.fallback=null;local.fallbackStamp=null;schedule(160);});window.addEventListener('ampm:tabshown',function(e){if(txt(e.detail&&e.detail.tab)==='vapes')schedule(80);});['reportMode','currentMonth','prevMonths','stores','dowFilter'].forEach(function(id){var n=byId(id);if(n)n.addEventListener('change',function(){local.pendingGlobalFilter=true;},true);});document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){setTimeout(function(){local.pendingGlobalFilter=false;local.pendingSupplierFilter=false;captureVapesFilterSnapshot();reset();schedule(20);},90);}},true);setTimeout(function(){schedule(0);},1000);}
