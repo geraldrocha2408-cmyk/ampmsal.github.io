@@ -4514,6 +4514,145 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 }
 </style>
 
+
+<style id="album-inventory-kpis-v2">
+/* KPI ejecutivos adicionales para Álbum: valor de inventario y días inventario por run rate */
+#albumWrap .albumKpiGrid{grid-template-columns:repeat(7,minmax(0,1fr)) !important;}
+#albumWrap .albumKpi{min-height:96px;}
+#albumWrap .albumKpi .v{font-size:22px;}
+#albumWrap .albumKpi .s{line-height:1.15;font-size:10px;}
+@media (max-width:1500px){#albumWrap .albumKpiGrid{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}}
+@media (max-width:1080px){#albumWrap .albumKpiGrid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}}
+@media (max-width:760px){#albumWrap .albumKpiGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}}
+@media (max-width:520px){#albumWrap .albumKpiGrid{grid-template-columns:1fr !important;}}
+</style>
+
+
+<style id="album-multiselect-v1">
+#albumWrap .albumField{position:relative;}
+#albumWrap select[data-album-multi="1"]{display:none !important;}
+#albumWrap .albumMulti{position:relative;width:100%;}
+#albumWrap .albumMultiBtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;border:1px solid rgba(15,23,42,.12);padding:10px 12px;background:#fff;color:#11284A;font-size:13px;font-weight:900;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);min-height:42px;}
+#albumWrap .albumMultiBtn:hover{border-color:rgba(12,77,143,.35);background:#f8fbff;}
+#albumWrap .albumMultiBtn.open{border-color:rgba(245,131,32,.45);box-shadow:0 0 0 3px rgba(245,131,32,.12);}
+#albumWrap .albumMultiLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+#albumWrap .albumMultiCaret{flex:0 0 auto;color:#64748b;font-size:11px;}
+#albumWrap .albumMultiPanel{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:1200;max-height:300px;overflow:auto;border:1px solid rgba(15,23,42,.14);border-radius:14px;background:#fff;box-shadow:0 18px 42px rgba(2,6,23,.22);padding:8px;}
+#albumWrap .albumMulti.open .albumMultiPanel{display:block;}
+#albumWrap .albumMultiSearch{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:12px;font-weight:800;outline:none;}
+#albumWrap .albumMultiSearch:focus{border-color:rgba(12,77,143,.42);box-shadow:0 0 0 3px rgba(12,77,143,.10);}
+#albumWrap .albumMultiOpt{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border-radius:10px;color:#11284A;font-size:12px;font-weight:800;line-height:1.2;cursor:pointer;}
+#albumWrap .albumMultiOpt:hover{background:rgba(0,94,167,.08);}
+#albumWrap .albumMultiOpt input{width:15px;height:15px;flex:0 0 auto;margin-top:0;accent-color:#F58320;}
+#albumWrap .albumMultiOpt span{min-width:0;word-break:break-word;}
+#albumWrap .albumMultiActions{display:flex;gap:6px;margin-bottom:8px;}
+#albumWrap .albumMultiAction{flex:1;border:1px solid rgba(12,77,143,.16);background:#f8fbff;color:#0C4D8F;border-radius:10px;padding:7px 8px;font-size:11px;font-weight:1000;cursor:pointer;}
+#albumWrap .albumMultiAction:hover{background:#eef6ff;}
+</style>
+
+
+<style id="album-filter-font-compact-v1">
+/* Álbum: filtros compactos para multiselección y selects nativos */
+#albumWrap .albumField label{
+  font-size:10px !important;
+  line-height:1.05 !important;
+  letter-spacing:.035em !important;
+}
+#albumWrap .albumField select,
+#albumWrap .albumApply{
+  font-size:11.5px !important;
+  line-height:1.08 !important;
+}
+#albumWrap .albumMultiBtn{
+  min-height:38px !important;
+  padding:8px 10px !important;
+  font-size:11.5px !important;
+  line-height:1.05 !important;
+}
+#albumWrap .albumMultiLabel{
+  font-size:11.5px !important;
+  line-height:1.05 !important;
+}
+#albumWrap .albumMultiCaret{
+  font-size:10px !important;
+}
+#albumWrap .albumMultiPanel{
+  max-height:280px !important;
+  padding:7px !important;
+}
+#albumWrap .albumMultiSearch{
+  padding:6px 8px !important;
+  margin-bottom:6px !important;
+  font-size:10.5px !important;
+  line-height:1.05 !important;
+}
+#albumWrap .albumMultiActions{
+  gap:5px !important;
+  margin-bottom:6px !important;
+}
+#albumWrap .albumMultiAction{
+  padding:6px 7px !important;
+  font-size:10px !important;
+  line-height:1.05 !important;
+}
+#albumWrap .albumMultiOpt{
+  gap:7px !important;
+  padding:6px 7px !important;
+  font-size:10.2px !important;
+  line-height:1.08 !important;
+  font-weight:850 !important;
+}
+#albumWrap .albumMultiOpt input{
+  width:13px !important;
+  height:13px !important;
+  flex-basis:13px !important;
+  margin-top:0 !important;
+}
+#albumWrap .albumMultiOpt span{
+  line-height:1.08 !important;
+}
+</style>
+
+<style id="album-table-totals-fit-v1">
+/* Álbum: columnas más ejecutivas + total visible al cierre de cada tabla */
+#albumSalesTable th:first-child,
+#albumSalesTable td:first-child,
+#albumStockTable th:first-child,
+#albumStockTable td:first-child{
+  min-width:78px !important;
+  width:78px !important;
+  max-width:78px !important;
+  white-space:nowrap !important;
+  word-break:normal !important;
+  overflow:visible !important;
+}
+#albumSalesTable th:nth-child(2),
+#albumSalesTable td:nth-child(2),
+#albumStockTable th:nth-child(2),
+#albumStockTable td:nth-child(2){
+  min-width:160px !important;
+}
+#albumStockTable th:nth-child(3),
+#albumStockTable td:nth-child(3),
+#albumStockTable th:nth-child(4),
+#albumStockTable td:nth-child(4){
+  min-width:86px !important;
+}
+#albumWrap .albumGridTables .albumTable tbody tr.total td{
+  background:#fff200 !important;
+  color:#11284A !important;
+  font-weight:1000 !important;
+  border-top:2px solid rgba(17,40,74,.24) !important;
+  position:sticky;
+  bottom:0;
+  z-index:3;
+  box-shadow:0 -3px 8px rgba(15,23,42,.08);
+}
+#albumWrap .albumGridTables .albumTable tbody tr.total:hover td{
+  background:#fff200 !important;
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -5671,15 +5810,15 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     </div>
     <div class="albumField">
       <label>Periodo</label>
-      <select id="albumPeriod"></select>
+      <select id="albumPeriod" multiple data-album-multi="1" aria-label="Periodo"></select>
     </div>
     <div class="albumField">
       <label>Tienda</label>
-      <select id="albumStore"></select>
+      <select id="albumStore" multiple data-album-multi="1" aria-label="Tienda"></select>
     </div>
     <div class="albumField">
       <label>Item</label>
-      <select id="albumItem"></select>
+      <select id="albumItem" multiple data-album-multi="1" aria-label="Item"></select>
     </div>
     <div class="albumField">
       <label>Lectura de pastel</label>
@@ -5697,8 +5836,8 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     </div>
     <div class="albumField">
       <label>Canal venta</label>
-      <select id="albumDeliveryMode">
-        <option value="ALL">Todos</option>
+      <select id="albumDeliveryMode" multiple data-album-multi="1" aria-label="Canal venta">
+        <option value="ALL" selected>Todos</option>
         <option value="STORE">Tienda física</option>
         <option value="PYA">Pedidos Ya</option>
         <option value="UBER">Uber Eats</option>
@@ -5713,6 +5852,8 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     <div class="albumKpi"><div class="k">Unidades periodo</div><div class="v">—</div><div class="s">Figuritas / álbum</div></div>
     <div class="albumKpi"><div class="k">Acumulado mes</div><div class="v">—</div><div class="s">MTD del mes activo</div></div>
     <div class="albumKpi"><div class="k">Existencias</div><div class="v">—</div><div class="s">Inventario actual</div></div>
+    <div class="albumKpi"><div class="k">Inventario $ total</div><div class="v">—</div><div class="s">Monto actual</div></div>
+    <div class="albumKpi"><div class="k">Días inventario</div><div class="v">—</div><div class="s">Dinámico hasta 28 días / rolling 28</div></div>
     <div class="albumKpi"><div class="k">Impacto venta general</div><div class="v">—</div><div class="s">Venta álbum / total tienda</div></div>
   </div>
 
@@ -7459,6 +7600,10 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       if(dayLine) lines.push(dayLine);
       if(typeof paniniFilterLabel === 'function') lines.push(`Vista: ${paniniFilterLabel()}`);
       return lines;
+    }
+    function buildChartTitleLinesNoPanini(baseTitle, filtersText, tab){
+      const lines = buildChartTitleLines(baseTitle, filtersText, tab);
+      return Array.isArray(lines) ? lines.filter(line => !/^\s*Vista\s*:/i.test(String(line || ''))) : lines;
     }
     function detectChartTab(chart){
       try{
@@ -22554,7 +22699,7 @@ function getMonthlyTotalSeries(storeList){
           },
           plugins: {
             legend: { display: true, position: 'bottom', labels: { color: '#0F172A', usePointStyle: true, boxWidth: 14, boxHeight: 14, padding: 16, font:{ size: 12, weight: '700' } } },
-            title: { display: true, text: buildChartTitleLines(`${isMonthlyReport() ? 'Sales MaM' : 'Sales SaS'} ${displayLabel}`, xfFiltersTextNoStore('ventas'), 'ventas'), color: '#000000', font:{weight:'800', size:INNOVATION_UI.title}, padding:{top:4,bottom:10} },
+            title: { display: true, text: buildChartTitleLinesNoPanini(`${isMonthlyReport() ? 'Sales MaM' : 'Sales SaS'} ${displayLabel}`, xfFiltersTextNoStore('ventas'), 'ventas'), color: '#000000', font:{weight:'800', size:INNOVATION_UI.title}, padding:{top:4,bottom:10} },
             tooltip: { enabled: false }
           }
         },
@@ -25726,7 +25871,7 @@ const options = {
       const maxDelta = Math.max(...deltas.filter(v=>v!=null).map(v=>Number(v)), 1.2);
       const y1Max = Math.max(1.2, Math.ceil((maxDelta + 0.15) * 10) / 10);
       const displayLabel = titleLabel || store || 'Total general';
-      const title = buildChartTitleLines(`${isMonthlyReport() ? 'Delivery MaM' : 'Delivery SaS'} ${displayLabel}`, (typeof xfFiltersTextNoStore==='function') ? xfFiltersTextNoStore('delivery') : '', 'delivery');
+      const title = buildChartTitleLinesNoPanini(`${isMonthlyReport() ? 'Delivery MaM' : 'Delivery SaS'} ${displayLabel}`, (typeof xfFiltersTextNoStore==='function') ? xfFiltersTextNoStore('delivery') : '', 'delivery');
       return new Chart(canvas.getContext('2d'), {
         data: {
           labels,
@@ -39384,7 +39529,9 @@ function initAmpmTabPages(){
   function deptTrendTitleLines(tab, group){
     const baseTitle = `${tab === 'delivery' ? 'Delivery' : 'Ventas'} ${isMonthlyReport() ? 'MaM' : 'SaS'} ${group?.title || ''}`.trim();
     const filters = (typeof xfFiltersText === 'function') ? xfFiltersText(tab) : '';
-    return buildChartTitleLines(baseTitle, filters, tab);
+    const builder = (typeof buildChartTitleLinesNoPanini === 'function') ? buildChartTitleLinesNoPanini : buildChartTitleLines;
+    const lines = builder(baseTitle, filters, tab);
+    return Array.isArray(lines) ? lines.filter(line => !/^\s*Vista\s*:/i.test(String(line || ''))) : lines;
   }
 
 
@@ -41710,17 +41857,43 @@ function renderOnePager(storeList, currentYm, prevYms){
     const [y,m]=String(key).split('-'); const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${months[(Number(m)||1)-1] || m} ${y}`;
   }
   function selectedStores(){
-    const own = byId('albumStore')?.value || '__GLOBAL__';
-    if(own && own !== '__GLOBAL__' && own !== '__ALL__') return [own];
-    if(own === '__ALL__') return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
-    try{ if(typeof getSelectedStoresOrAll === 'function'){ const a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a.map(s=>safeTxt(s).toUpperCase()); } }catch(_e){}
-    return ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
+    const vals=selectedValues('albumStore');
+    const globalStores=((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
+    if(vals.includes('__GLOBAL__') || !vals.length){
+      try{ if(typeof getSelectedStoresOrAll === 'function'){ const a=getSelectedStoresOrAll(); if(Array.isArray(a) && a.length) return a.map(s=>safeTxt(s).toUpperCase()); } }catch(_e){}
+      return globalStores;
+    }
+    if(vals.includes('__ALL__')) return globalStores;
+    return vals.map(s=>safeTxt(s).toUpperCase()).filter(Boolean);
   }
-  function albumDeliveryMode(){ const raw=safeTxt(byId('albumDeliveryMode')?.value || 'ALL').toUpperCase(); return /^(ALL|STORE|PYA|UBER|DELIVERY)$/.test(raw)?raw:'ALL'; }
-  function albumDeliveryLabel(mode){ mode=safeTxt(mode||albumDeliveryMode()).toUpperCase(); if(mode==='STORE')return 'Tienda física'; if(mode==='PYA')return 'Pedidos Ya'; if(mode==='UBER')return 'Uber Eats'; if(mode==='DELIVERY')return 'Delivery total'; return 'Todos los canales'; }
+  function albumDeliveryModes(){
+    const allowed=new Set(['ALL','STORE','PYA','UBER','DELIVERY']);
+    let vals=selectedValues('albumDeliveryMode').map(v=>safeTxt(v).toUpperCase()).filter(v=>allowed.has(v));
+    if(!vals.length || vals.includes('ALL')) vals=['ALL'];
+    return Array.from(new Set(vals));
+  }
+  function albumDeliveryMode(){ return albumDeliveryModes()[0] || 'ALL'; }
+  function albumDeliveryLabel(mode){
+    const labels={STORE:'Tienda física',PYA:'Pedidos Ya',UBER:'Uber Eats',DELIVERY:'Delivery total',ALL:'Todos los canales'};
+    const arr=Array.isArray(mode) ? mode : (mode ? [mode] : albumDeliveryModes());
+    const clean=arr.map(v=>safeTxt(v).toUpperCase()).filter(Boolean);
+    if(!clean.length || clean.includes('ALL')) return labels.ALL;
+    return clean.map(v=>labels[v]||v).join(' + ');
+  }
   function albumRowIsDelivery(r){ const flag=norm(r?.delivery_flag || r?.is_delivery || r?.Delivery || ''); const ch=norm(r?.delivery_channel || r?.Delivery_Channel || r?.['Delivery Channel'] || ''); return flag==='1'||flag==='si'||flag==='yes'||flag==='true'||flag==='delivery'||!!ch; }
   function albumRowDeliveryChannel(r){ const raw=safeTxt(r?.delivery_channel || r?.Delivery_Channel || r?.['Delivery Channel'] || ''); const ch=norm(raw); if(/uber/.test(ch))return 'Uber Eats'; if(/pedido|pedidos|pya/.test(ch))return 'Pedidos Ya'; return raw || 'Otros'; }
-  function albumDeliveryPass(r, mode){ mode=safeTxt(mode||albumDeliveryMode()).toUpperCase(); if(mode==='ALL')return true; const isDel=albumRowIsDelivery(r), ch=albumRowDeliveryChannel(r); if(mode==='STORE')return !isDel; if(mode==='DELIVERY')return isDel; if(mode==='UBER')return isDel&&ch==='Uber Eats'; if(mode==='PYA')return isDel&&ch==='Pedidos Ya'; return true; }
+  function albumDeliveryPass(r, mode){
+    const modes=Array.isArray(mode) ? mode.map(v=>safeTxt(v).toUpperCase()) : (mode ? [safeTxt(mode).toUpperCase()] : albumDeliveryModes());
+    if(!modes.length || modes.includes('ALL')) return true;
+    const isDel=albumRowIsDelivery(r), ch=albumRowDeliveryChannel(r);
+    return modes.some(m=>{
+      if(m==='STORE') return !isDel;
+      if(m==='DELIVERY') return isDel;
+      if(m==='UBER') return isDel && ch==='Uber Eats';
+      if(m==='PYA') return isDel && ch==='Pedidos Ya';
+      return false;
+    });
+  }
   function readRows(wb, sheet){ try{ if(typeof sheetRows === 'function') return sheetRows(wb, sheet, {defval:null, raw:true}) || []; }catch(_e){} try{ return XLSX.utils.sheet_to_json(wb.Sheets[sheet], {defval:null, raw:true}) || []; }catch(_e){ return []; } }
   function has(wb, sheet){ try{ if(typeof hasSheet === 'function') return hasSheet(wb, sheet); }catch(_e){} return !!(wb && wb.Sheets && wb.Sheets[sheet]); }
 
@@ -41745,6 +41918,8 @@ function renderOnePager(storeList, currentYm, prevYms){
     const cDelChannel=pick(keys,['Delivery_Channel','Delivery Channel','Canal Delivery','Canal','Channel','Plataforma','App']);
     const cQty=pick(keys,['Qty Sold','Qty','Cantidad','Quantity','Unidades','Uds']);
     const cSales=pick(keys,['Sales','Total Sales','TotalSales','Venta','Ventas','Monto','Amount']);
+    const cGross=pick(keys,['Total Gross Margin','Gross Margin','TotalGrossMargin','GrossMargin','Margen Bruto','MargenBruto','Margen','Margin']);
+    const cCost=pick(keys,['COGS','Cost of Goods Sold','Costo de Venta','Costo Venta','Costo Ventas','Costo','Cost']);
     if(!cStore || !cSales || (!cDate && !cPeriod && !cMonth)) return null;
     const all=[]; const album=[];
     raw.forEach(r=>{
@@ -41761,8 +41936,12 @@ function renderOnePager(storeList, currentYm, prevYms){
       const row={
         store, date:d, dateKey:isoDate(d), week, month,
         department:cDept ? safeTxt(r[cDept]) : '', category:cCat ? safeTxt(r[cCat]) : '', supplier:cSupp ? safeTxt(r[cSupp]) : '', brand:cBrand ? safeTxt(r[cBrand]) : '', description:cDesc ? safeTxt(r[cDesc]) : '', sku:cSku ? safeTxt(r[cSku]) : '',
-        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), delivery_flag:cDelFlag ? safeTxt(r[cDelFlag]) : '', delivery_channel:cDelChannel ? safeTxt(r[cDelChannel]) : '', sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0
+        item:'', daypart:cDaypart ? safeTxt(r[cDaypart]) : '', hour:cHour ? safeTxt(r[cHour]) : '', dow:dow || ((d.getDay()||7)), delivery_flag:cDelFlag ? safeTxt(r[cDelFlag]) : '', delivery_channel:cDelChannel ? safeTxt(r[cDelChannel]) : '', sales:n(r[cSales]), qty:cQty ? n(r[cQty]) : 0,
+        grossMargin:cGross ? n(r[cGross]) : 0, cogs:cCost ? n(r[cCost]) : null
       };
+      if(row.cogs == null || !Number.isFinite(row.cogs)){
+        row.cogs = cGross ? Math.max(0, n(row.sales) - n(row.grossMargin)) : 0;
+      }
       row.item = row.description || row.brand || row.category || row.supplier || 'Sin descripción';
       all.push(row);
       if(isAlbumRow(row)) album.push(row);
@@ -41835,82 +42014,397 @@ function renderOnePager(storeList, currentYm, prevYms){
     out.scales.y.grid = Object.assign({}, base.scales.y.grid, extra?.scales?.y?.grid||{});
     return out;
   }
+  const ALBUM_MULTI_IDS = new Set(['albumPeriod','albumStore','albumItem','albumDeliveryMode']);
+  const ALBUM_MULTI_DEFAULTS = {albumStore:'__GLOBAL__', albumItem:'__ALL__', albumDeliveryMode:'ALL'};
+  function isAlbumMulti(id){ return ALBUM_MULTI_IDS.has(String(id||'')); }
+  function selectedValues(id){
+    const el=byId(id); if(!el) return [];
+    if(el.multiple) return Array.from(el.options||[]).filter(o=>o.selected).map(o=>String(o.value)).filter(Boolean);
+    const v=safeTxt(el.value); return v ? [v] : [];
+  }
+  function setSelectedValues(id, vals){
+    const el=byId(id); if(!el) return;
+    const set=new Set((Array.isArray(vals)?vals:[vals]).map(v=>String(v)).filter(Boolean));
+    Array.from(el.options||[]).forEach(o=>{ o.selected=set.has(String(o.value)); });
+    normalizeAlbumMultiSelection(id);
+    syncAlbumMultiControl(id);
+  }
+  function normalizeAlbumMultiSelection(id, changedVal){
+    const el=byId(id); if(!el || !el.multiple) return;
+    let vals=selectedValues(id);
+    const hasOpt=v=>Array.from(el.options||[]).some(o=>String(o.value)===String(v));
+    if(id==='albumStore'){
+      if(changedVal==='__GLOBAL__' || changedVal==='__ALL__') vals=[changedVal];
+      else if(vals.some(v=>v!=='__GLOBAL__' && v!=='__ALL__')) vals=vals.filter(v=>v!=='__GLOBAL__' && v!=='__ALL__');
+      if(!vals.length) vals=[hasOpt('__GLOBAL__')?'__GLOBAL__':(hasOpt('__ALL__')?'__ALL__':String(el.options[0]?.value||''))];
+    }else if(id==='albumItem'){
+      if(changedVal==='__ALL__') vals=['__ALL__'];
+      else if(vals.some(v=>v!=='__ALL__')) vals=vals.filter(v=>v!=='__ALL__');
+      if(!vals.length) vals=[hasOpt('__ALL__')?'__ALL__':String(el.options[0]?.value||'')];
+    }else if(id==='albumDeliveryMode'){
+      if(changedVal==='ALL') vals=['ALL'];
+      else if(vals.some(v=>v!=='ALL')) vals=vals.filter(v=>v!=='ALL');
+      if(!vals.length) vals=['ALL'];
+    }else if(id==='albumPeriod'){
+      vals=vals.filter(v=>hasOpt(v));
+      if(!vals.length && el.options.length) vals=[String(el.options[el.options.length-1].value)];
+    }
+    const set=new Set(vals.filter(Boolean));
+    Array.from(el.options||[]).forEach(o=>{ o.selected=set.has(String(o.value)); });
+  }
+  function albumMultiSummary(id){
+    const el=byId(id); if(!el) return '—';
+    const selected=Array.from(el.options||[]).filter(o=>o.selected);
+    if(!selected.length) return '—';
+    const labels=selected.map(o=>safeTxt(o.textContent||o.label||o.value));
+    if(id==='albumItem'){
+      if(selected.some(o=>o.value==='__ALL__')) return 'Todos los items';
+      return selected.length===1 ? labels[0] : `${selected.length} items seleccionados`;
+    }
+    if(id==='albumStore'){
+      if(selected.some(o=>o.value==='__GLOBAL__')) return 'Tiendas del filtro global';
+      if(selected.some(o=>o.value==='__ALL__')) return 'Todas las tiendas';
+      return selected.length<=2 ? labels.join(', ') : `${selected.length} tiendas seleccionadas`;
+    }
+    if(id==='albumPeriod') return selected.length<=2 ? labels.join(', ') : `${selected.length} periodos seleccionados`;
+    if(id==='albumDeliveryMode'){
+      if(selected.some(o=>o.value==='ALL')) return 'Todos';
+      return selected.length<=2 ? labels.join(' + ') : `${selected.length} canales seleccionados`;
+    }
+    return selected.length<=2 ? labels.join(', ') : `${selected.length} seleccionados`;
+  }
+  function syncAlbumMultiControl(id){
+    const el=byId(id); if(!el || !isAlbumMulti(id)) return;
+    const host=document.querySelector(`.albumMulti[data-for="${id}"]`); if(!host) return;
+    const label=host.querySelector('.albumMultiLabel'); if(label) label.textContent=albumMultiSummary(id);
+    const panel=host.querySelector('.albumMultiPanel'); if(!panel) return;
+    const q=norm(host.querySelector('.albumMultiSearch')?.value || '');
+    const checked=new Set(selectedValues(id));
+    const opts=Array.from(el.options||[]);
+    const hasMany=opts.length>8;
+    panel.innerHTML=`${hasMany?'<input class="albumMultiSearch" type="text" placeholder="Buscar opción..." autocomplete="off">':''}<div class="albumMultiActions"><button type="button" class="albumMultiAction" data-act="all">Marcar todo</button><button type="button" class="albumMultiAction" data-act="clear">Limpiar</button></div><div class="albumMultiList"></div>`;
+    const search=panel.querySelector('.albumMultiSearch'); if(search){ search.value=host.__albumMultiQuery||''; search.addEventListener('input', ()=>{ host.__albumMultiQuery=search.value; syncAlbumMultiControl(id); setTimeout(()=>{ const h=document.querySelector(`.albumMulti[data-for="${id}"] .albumMultiSearch`); if(h) h.focus(); },0); }); }
+    const list=panel.querySelector('.albumMultiList');
+    const query=norm(host.__albumMultiQuery||'');
+    opts.forEach(o=>{
+      const txt=safeTxt(o.textContent||o.label||o.value);
+      if(query && !norm(txt).includes(query)) return;
+      const row=document.createElement('label'); row.className='albumMultiOpt';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.value=String(o.value); cb.checked=checked.has(String(o.value));
+      const sp=document.createElement('span'); sp.textContent=txt;
+      row.appendChild(cb); row.appendChild(sp); list.appendChild(row);
+      cb.addEventListener('change', ()=>{
+        o.selected=cb.checked;
+        normalizeAlbumMultiSelection(id, String(o.value));
+        syncAlbumMultiControl(id);
+        el.dispatchEvent(new Event('change', {bubbles:true}));
+      });
+    });
+    panel.querySelectorAll('.albumMultiAction').forEach(btn=>btn.addEventListener('click', ()=>{
+      const act=btn.getAttribute('data-act');
+      if(act==='clear'){
+        Array.from(el.options||[]).forEach(o=>{o.selected=false;});
+      }else if(act==='all'){
+        Array.from(el.options||[]).forEach(o=>{o.selected=true;});
+        if(id==='albumStore') Array.from(el.options||[]).forEach(o=>{ if(o.value==='__GLOBAL__'||o.value==='__ALL__') o.selected=false; });
+        if(id==='albumItem') Array.from(el.options||[]).forEach(o=>{ if(o.value==='__ALL__') o.selected=false; });
+        if(id==='albumDeliveryMode') Array.from(el.options||[]).forEach(o=>{ if(o.value==='ALL') o.selected=false; });
+      }
+      normalizeAlbumMultiSelection(id);
+      syncAlbumMultiControl(id);
+      el.dispatchEvent(new Event('change', {bubbles:true}));
+    }));
+  }
+  function syncAlbumMultiControls(){ ALBUM_MULTI_IDS.forEach(id=>syncAlbumMultiControl(id)); }
+  function ensureAlbumMultiControls(){
+    ALBUM_MULTI_IDS.forEach(id=>{
+      const el=byId(id); if(!el || el.__albumMultiReady) return;
+      el.multiple=true;
+      el.style.display='none';
+      const host=document.createElement('div'); host.className='albumMulti'; host.dataset.for=id;
+      const btn=document.createElement('button'); btn.type='button'; btn.className='albumMultiBtn'; btn.innerHTML='<span class="albumMultiLabel">—</span><span class="albumMultiCaret">▾</span>';
+      const panel=document.createElement('div'); panel.className='albumMultiPanel';
+      host.appendChild(btn); host.appendChild(panel); el.insertAdjacentElement('afterend', host);
+      btn.addEventListener('click', (ev)=>{ ev.preventDefault(); ev.stopPropagation(); document.querySelectorAll('#albumWrap .albumMulti.open').forEach(x=>{ if(x!==host){ x.classList.remove('open'); x.querySelector('.albumMultiBtn')?.classList.remove('open'); } }); host.classList.toggle('open'); btn.classList.toggle('open', host.classList.contains('open')); syncAlbumMultiControl(id); });
+      el.__albumMultiReady=true;
+      normalizeAlbumMultiSelection(id);
+      syncAlbumMultiControl(id);
+    });
+    if(!document.__albumMultiCloseBound){
+      document.__albumMultiCloseBound=true;
+      document.addEventListener('click', (ev)=>{ if(ev.target && ev.target.closest && ev.target.closest('#albumWrap .albumMulti')) return; document.querySelectorAll('#albumWrap .albumMulti.open').forEach(x=>{ x.classList.remove('open'); x.querySelector('.albumMultiBtn')?.classList.remove('open'); }); }, true);
+    }
+  }
   function setOptions(sel, opts, val){
     const el=byId(sel); if(!el) return;
-    const cur=val != null ? val : el.value;
-    el.innerHTML=(opts||[]).map(o=>`<option value="${String(o.value).replace(/"/g,'&quot;')}">${o.label}</option>`).join('');
-    if((opts||[]).some(o=>String(o.value)===String(cur))) el.value=cur;
-    else if(opts && opts.length) el.value=opts[0].value;
+    const options=opts||[];
+    const prevVals=el.multiple ? selectedValues(sel) : [el.value];
+    const requested=val != null ? (Array.isArray(val)?val:[val]) : prevVals;
+    const esc=v=>String(v==null?'':v).replace(/"/g,'&quot;');
+    el.innerHTML=options.map(o=>`<option value="${esc(o.value)}">${o.label}</option>`).join('');
+    if(el.multiple || isAlbumMulti(sel)){
+      el.multiple=true;
+      const valid=new Set(options.map(o=>String(o.value)));
+      let next=(requested||[]).map(v=>String(v)).filter(v=>valid.has(v));
+      if(!next.length){
+        if(val != null && valid.has(String(val))) next=[String(val)];
+        else if(sel==='albumPeriod' && options.length) next=[String(options[options.length-1].value)];
+        else if(ALBUM_MULTI_DEFAULTS[sel] && valid.has(ALBUM_MULTI_DEFAULTS[sel])) next=[ALBUM_MULTI_DEFAULTS[sel]];
+        else if(options.length) next=[String(options[0].value)];
+      }
+      const set=new Set(next);
+      Array.from(el.options||[]).forEach(o=>{ o.selected=set.has(String(o.value)); });
+      normalizeAlbumMultiSelection(sel);
+      syncAlbumMultiControl(sel);
+    }else{
+      const cur=requested[0];
+      if(options.some(o=>String(o.value)===String(cur))) el.value=cur;
+      else if(options.length) el.value=options[0].value;
+    }
   }
   function currentScope(){
     const mode=byId('albumMode')?.value || 'daily';
     const payload=getSalesPayload();
     const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
-    const itemFilter=byId('albumItem')?.value || '__ALL__';
-    const dmode=albumDeliveryMode();
-    let baseRows=payload.albumRows.filter(r=>storeSet.has(r.store) && albumDeliveryPass(r,dmode));
+    const itemVals=selectedValues('albumItem');
+    const itemSet=(!itemVals.length || itemVals.includes('__ALL__')) ? null : new Set(itemVals.map(String));
+    const deliveryModes=albumDeliveryModes();
+    let baseRows=payload.albumRows.filter(r=>storeSet.has(r.store) && albumDeliveryPass(r,deliveryModes));
     let rows=baseRows.slice();
-    if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item === itemFilter);
+    if(itemSet) rows=rows.filter(r=>itemSet.has(String(r.item)));
     const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
-    const periodSel=byId('albumPeriod')?.value || periods[periods.length-1] || '';
-    let scoped = rows.filter(r=>periodKey(r, mode) === periodSel);
-    if(mode==='monthly') scoped = rows.filter(r=>r.month === periodSel);
-    return {mode,payload,stores,storeSet,itemFilter,baseRows,rows,periods,periodSel,scoped};
+    let selectedPeriods=selectedValues('albumPeriod').filter(p=>periods.includes(p));
+    if(!selectedPeriods.length && periods.length) selectedPeriods=[periods[periods.length-1]];
+    const periodSet=new Set(selectedPeriods);
+    let scoped = rows.filter(r=>periodSet.has(periodKey(r, mode)));
+    if(mode==='monthly') scoped = rows.filter(r=>periodSet.has(r.month));
+    const periodSel=selectedPeriods[selectedPeriods.length-1] || '';
+    const periodLabelText=selectedPeriods.length>1 ? `${selectedPeriods.length} periodos seleccionados` : periodLabel(periodSel, mode);
+    const periodMonthsSet=new Set(selectedPeriods.map(p=>{
+      if(mode==='monthly') return p;
+      const d=mode==='weekly' ? periodToDate(p,1) : toDate(p);
+      return d ? monthKey(d) : '';
+    }).filter(Boolean));
+    return {mode,payload,stores,storeSet,itemVals,itemSet,deliveryModes,baseRows,rows,periods,selectedPeriods,periodSet,periodSel,periodLabelText,periodMonthsSet,scoped};
   }
   function populateFilters(){
+    ensureAlbumMultiControls();
     const mode=byId('albumMode')?.value || 'daily';
     const payload=getSalesPayload();
     const globalStores = ((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores.slice() : []);
     const storeOpts=[{value:'__GLOBAL__',label:'Tiendas del filtro global'},{value:'__ALL__',label:'Todas las tiendas'}].concat(globalStores.map(s=>({value:s,label:s})));
     setOptions('albumStore', storeOpts);
     const stores=selectedStores(); const storeSet=new Set(stores.map(s=>safeTxt(s).toUpperCase()));
-    const dmode=albumDeliveryMode();
+    const dmode=albumDeliveryModes();
     let rows=payload.albumRows.filter(r=>storeSet.has(r.store) && albumDeliveryPass(r,dmode));
     const itemCounts=topRows(aggregate(rows, r=>r.item, r=>r.sales), 200);
     setOptions('albumItem', [{value:'__ALL__',label:'Todos los items'}].concat(itemCounts.map(x=>({value:x.k,label:`${x.k} · ${money(x.v)}`}))));
-    const itemFilter=byId('albumItem')?.value || '__ALL__'; if(itemFilter !== '__ALL__') rows=rows.filter(r=>r.item===itemFilter);
+    const itemVals=selectedValues('albumItem'); const itemSet=(!itemVals.length || itemVals.includes('__ALL__')) ? null : new Set(itemVals.map(String));
+    if(itemSet) rows=rows.filter(r=>itemSet.has(String(r.item)));
     const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
     setOptions('albumPeriod', periods.map(p=>({value:p,label:periodLabel(p,mode)})), periods[periods.length-1] || '');
+    syncAlbumMultiControls();
+  }
+
+  function albumInventoryMatchesItem(r, itemSet){
+    if(!itemSet) return true;
+    const filters = Array.from(itemSet||[]).map(v=>String(v));
+    if(!filters.length) return true;
+    const rowNorms = [r.description,r.category,r.brand,r.supplier,r.item]
+      .map(v=>norm(v||''))
+      .filter(Boolean);
+    return filters.some(itemFilter=>{
+      const nf = norm(itemFilter||'');
+      if(!nf) return false;
+      return rowNorms.some(rv=>rv===nf || rv.includes(nf) || nf.includes(rv));
+    });
+  }
+  function albumKpiEquivalentQty(r){
+    const q = n(r && (r.qty ?? r.Quantity ?? r['Qty Sold'] ?? r.quantity ?? r.Qty));
+    if(isStickerEnvelopeItem(r)) return q / STICKERS_PER_CAJA;
+    if(isStickerBoxItem(r)) return q;
+    return q;
+  }
+  function albumKpiEquivalentLabel(rows){
+    const arr = (rows||[]).filter(Boolean);
+    const hasSticker = arr.some(r=>isStickerEnvelopeItem(r) || isStickerBoxItem(r));
+    const hasOther = arr.some(r=>!(isStickerEnvelopeItem(r) || isStickerBoxItem(r)));
+    if(hasSticker && !hasOther) return 'cajas eq.';
+    if(hasSticker && hasOther) return 'unid. eq.';
+    return 'und.';
+  }
+  function albumCostAmount(r){
+    if(!r) return 0;
+    const explicit = n(r.cogs ?? r.COGS ?? r.cost ?? r.Cost ?? r['Costo de Venta'] ?? r['Costo Venta']);
+    if(explicit > 0) return explicit;
+    const sale = n(r.sales ?? r.Sales ?? r['Total Sales'] ?? r.Venta);
+    const margin = n(r.grossMargin ?? r['Total Gross Margin'] ?? r['Gross Margin'] ?? r.Margen);
+    return Math.max(0, sale - margin);
+  }
+  function albumAddDays(d, days){
+    if(!d) return null;
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() + Number(days||0));
+    return x;
+  }
+  function albumDaysInclusive(a,b){
+    if(!a || !b) return 0;
+    const aa = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+    const bb = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+    return Math.max(0, Math.round((bb-aa)/86400000) + 1);
+  }
+  function albumIsStickerFamilyRow(r){ return isStickerBoxItem(r) || isStickerEnvelopeItem(r); }
+  function albumCoverageBase(scope, invRows){
+    const cleanSales=(scope.rows||[]).filter(r=>r && r.date && !isNaN(r.date));
+    const selectedFilters = scope.itemSet ? Array.from(scope.itemSet||[]).map(v=>norm(v)).filter(Boolean) : [];
+    const selectedHasSticker = selectedFilters.some(v=>(/sticker|sobre|caja|figurit|lamina/.test(v) && /mundial|fifa/.test(v)) || /caja\s+stickers/.test(v) || /sobres\s+stickers/.test(v));
+    const baseInv=(invRows||[]).filter(r=>albumInventoryMatchesItem(r, scope.itemSet));
+    const hasStickerBase = cleanSales.some(albumIsStickerFamilyRow) || baseInv.some(albumIsStickerFamilyRow);
+
+    if((!scope.itemSet && hasStickerBase) || selectedHasSticker){
+      return {
+        salesRows: cleanSales.filter(albumIsStickerFamilyRow),
+        invRows: baseInv.filter(albumIsStickerFamilyRow),
+        label: 'Stickers Mundial: cajas + sobres/104',
+        forceUnit: 'cajas eq.'
+      };
+    }
+    return {
+      salesRows: cleanSales,
+      invRows: baseInv,
+      label: scope.itemSet ? 'Items seleccionados' : 'Todos los items comparables',
+      forceUnit: ''
+    };
   }
   function renderKpis(scope){
     const kpis=byId('albumKpis'); if(!kpis) return;
     const totalSales=scope.scoped.reduce((a,r)=>a+n(r.sales),0);
     const totalQty=scope.scoped.reduce((a,r)=>a+n(r.qty),0);
-    const selDate = scope.mode==='daily' ? toDate(scope.periodSel) : null;
-    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (selDate ? monthKey(selDate) : (scope.scoped[0]?.month || scope.periodSel.slice(0,7)));
+    const selDates = scope.mode==='daily' ? (scope.selectedPeriods||[]).map(p=>toDate(p)).filter(Boolean).sort((a,b)=>a-b) : [];
+    const selDate = selDates.length ? selDates[selDates.length-1] : null;
+    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (selDate ? monthKey(selDate) : (scope.scoped[0]?.month || safeTxt(scope.periodSel).slice(0,7)));
     let mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
     if(scope.mode==='daily' && selDate) mtdRows=mtdRows.filter(r=>r.date<=selDate);
     const mtdSales=mtdRows.reduce((a,r)=>a+n(r.sales),0);
+
     const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
-    const itemFilter=scope.itemFilter; const scopedInv = itemFilter==='__ALL__' ? invRows : invRows.filter(r=>(r.description||r.category||r.brand)===itemFilter || norm(r.description||'').includes(norm(itemFilter)) || norm(itemFilter).includes(norm(r.description||'')) );
+    const coverageBase=albumCoverageBase(scope, invRows);
+    const scopedInv = coverageBase.invRows;
     const stock=scopedInv.reduce((a,r)=>a+n(r.qty),0);
-    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && albumDeliveryPass(r, albumDeliveryMode()) && periodKey(r, scope.mode)===scope.periodSel);
+    const invAmount=scopedInv.reduce((a,r)=>a+n(r.amount),0);
+    const stockEq=scopedInv.reduce((a,r)=>a+albumKpiEquivalentQty(r),0);
+
+    const salesRowsForCoverage=coverageBase.salesRows;
+    const salesDates=Array.from(new Set(salesRowsForCoverage.map(r=>isoDate(r.date)).filter(Boolean))).sort();
+    const firstLoadedDate=salesDates.length ? toDate(salesDates[0]) : null;
+    const lastLoadedDate=salesDates.length ? toDate(salesDates[salesDates.length-1]) : null;
+    let windowStartDate=firstLoadedDate;
+    let coverageDays=(firstLoadedDate && lastLoadedDate) ? albumDaysInclusive(firstLoadedDate,lastLoadedDate) : 0;
+    let coverageMode='Desde inicio de venta cargado';
+    if(coverageDays>28 && lastLoadedDate){
+      windowStartDate=albumAddDays(lastLoadedDate,-27);
+      coverageDays=28;
+      coverageMode='Rolling últimos 28 días cargados';
+    }
+    const coverageRows=(windowStartDate && lastLoadedDate)
+      ? salesRowsForCoverage.filter(r=>{ const d=toDate(r.date); return d && d>=windowStartDate && d<=lastLoadedDate; })
+      : [];
+    const coverageSales=coverageRows.reduce((a,r)=>a+n(r.sales),0);
+    const coverageQtyEq=coverageRows.reduce((a,r)=>a+albumKpiEquivalentQty(r),0);
+    const coverageCost=coverageRows.reduce((a,r)=>a+albumCostAmount(r),0);
+    const avgDailyCost=coverageDays>0 ? (coverageCost/coverageDays) : 0;
+    const lastDayCost=lastLoadedDate ? coverageRows.filter(r=>isoDate(r.date)===isoDate(lastLoadedDate)).reduce((a,r)=>a+albumCostAmount(r),0) : 0;
+    const eqUnitLabel=coverageBase.forceUnit || albumKpiEquivalentLabel(coverageRows.concat(scopedInv));
+    const inventoryDays=avgDailyCost>0 ? (invAmount/avgDailyCost) : NaN;
+    const coverageLabel=(windowStartDate && lastLoadedDate) ? `${coverageMode}: ${isoDate(windowStartDate)} → ${isoDate(lastLoadedDate)} · ${coverageDays} días` : 'Sin venta base';
+    const daysLabel=Number.isFinite(inventoryDays) ? `${qtySmart(inventoryDays)} días` : '—';
+    const stockLabel=(eqUnitLabel==='cajas eq.' || Math.abs(stockEq-stock)>0.0001) ? `${qtySmart(stockEq)} ${eqUnitLabel}` : qty(stock);
+    const stockSub=(eqUnitLabel==='cajas eq.' || Math.abs(stockEq-stock)>0.0001) ? `${coverageBase.label} · Stock base ${qty(stock)} und. · ${scopedInv.length} filas` : `${coverageBase.label} · ${scopedInv.length} filas de inventario`;
+    const daysWindowShort=(coverageDays>=28 && /rolling/i.test(coverageMode)) ? 'Rolling 28d' : `Base ${coverageDays}d`;
+    const daysSub=Number.isFinite(inventoryDays)
+      ? `${daysWindowShort} · Inv ${money(invAmount)} · Costo vta ${money(coverageCost)} · Prom ${money(avgDailyCost)}/día`
+      : 'Sin venta base al costo';
+
+    const totalRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && albumDeliveryPass(r, scope.deliveryModes) && scope.periodSet.has(periodKey(r, scope.mode)));
     const totalStoreSales = totalRows.reduce((a,r)=>a+n(r.sales),0);
     const impact = totalStoreSales>0 ? totalSales/totalStoreSales : NaN;
     const topStore=topRows(aggregate(scope.scoped, r=>r.store, r=>r.sales),1)[0];
-    const defs=[['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${periodLabel(scope.periodSel, scope.mode)}`],['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],['Existencias', qty(stock), `${scopedInv.length} filas de inventario`],['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']];
+    const defs=[
+      ['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${scope.periodLabelText}`],
+      ['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],
+      ['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],
+      ['Existencias', stockLabel, stockSub],
+      ['Inventario $ total', money(invAmount), `Monto actual · ${coverageBase.label}`],
+      ['Días inventario', daysLabel, daysSub],
+      ['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']
+    ];
     kpis.innerHTML=defs.map(d=>`<div class="albumKpi"><div class="k">${d[0]}</div><div class="v">${d[1]}</div><div class="s">${d[2]}</div></div>`).join('');
     const source=byId('albumSourceChip'); if(source) source.textContent = `Fuente: ${scope.payload.source || 'pendiente'}`;
-    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'} · ${albumDeliveryLabel(albumDeliveryMode())}`;
+    const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'} · ${albumDeliveryLabel(scope.deliveryModes)}`;
   }
   function renderTables(scope){
+    const salesTotalBase = scope.scoped.reduce((a,x)=>a+n(x.sales),0);
     const salesAgg=new Map();
-    scope.scoped.forEach(r=>{ const k=r.store+'||'+r.item; const cur=salesAgg.get(k)||{store:r.store,item:r.item,sales:0,qty:0}; cur.sales+=n(r.sales); cur.qty+=n(r.qty); salesAgg.set(k,cur); });
-    const salesRows=Array.from(salesAgg.values()).sort((a,b)=>b.sales-a.sales).slice(0,80);
-    fillTable('albumSalesTable',['Tienda','Item','Venta','Unidades','Share'],salesRows.map(r=>[r.store,r.item,money(r.sales),qty(r.qty),pct(r.sales/(scope.scoped.reduce((a,x)=>a+n(x.sales),0)||NaN))]));
-    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
-    const invAgg=new Map(); invRows.forEach(r=>{ const item=r.description||r.category||r.brand||'Sin descripción'; const k=r.store+'||'+item; const cur=invAgg.get(k)||{store:r.store,item,qty:0,amount:0}; cur.qty+=n(r.qty); cur.amount+=n(r.amount); invAgg.set(k,cur); });
-    fillTable('albumStockTable',['Tienda','Item','Existencias','Valor inv.'],Array.from(invAgg.values()).sort((a,b)=>b.qty-a.qty).slice(0,80).map(r=>[r.store,r.item,qty(r.qty),money(r.amount)]));
-    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (scope.scoped[0]?.month || scope.periodSel.slice(0,7));
+    scope.scoped.forEach(r=>{
+      const k=r.store+'||'+r.item;
+      const cur=salesAgg.get(k)||{store:r.store,item:r.item,sales:0,qty:0};
+      cur.sales+=n(r.sales);
+      cur.qty+=n(r.qty);
+      salesAgg.set(k,cur);
+    });
+    const salesAll=Array.from(salesAgg.values()).sort((a,b)=>b.sales-a.sales);
+    const salesRows=salesAll.slice(0,80);
+    const salesTotal={sales:salesAll.reduce((a,r)=>a+n(r.sales),0), qty:salesAll.reduce((a,r)=>a+n(r.qty),0)};
+    fillTable(
+      'albumSalesTable',
+      ['Tienda','Item','Venta','Unidades','Share'],
+      salesRows.map(r=>[r.store,r.item,money(r.sales),qty(r.qty),pct(r.sales/(salesTotalBase||NaN))]),
+      salesAll.length ? ['TOTAL','',money(salesTotal.sales),qty(salesTotal.qty),pct(salesTotalBase ? 1 : NaN)] : null
+    );
+
+    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r) && albumInventoryMatchesItem(r, scope.itemSet));
+    const invAgg=new Map();
+    invRows.forEach(r=>{
+      const item=r.description||r.category||r.brand||'Sin descripción';
+      const k=r.store+'||'+item;
+      const cur=invAgg.get(k)||{store:r.store,item,qty:0,amount:0};
+      cur.qty+=n(r.qty);
+      cur.amount+=n(r.amount);
+      invAgg.set(k,cur);
+    });
+    const invAll=Array.from(invAgg.values()).sort((a,b)=>b.amount-a.amount || b.qty-a.qty);
+    const invRowsTop=invAll.slice(0,80);
+    const invTotal={qty:invAll.reduce((a,r)=>a+n(r.qty),0), amount:invAll.reduce((a,r)=>a+n(r.amount),0)};
+    fillTable(
+      'albumStockTable',
+      ['Tienda','Item','Existencias','Valor inv.'],
+      invRowsTop.map(r=>[r.store,r.item,qty(r.qty),money(r.amount)]),
+      invAll.length ? ['TOTAL','',qty(invTotal.qty),money(invTotal.amount)] : null
+    );
+
+    const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (scope.scoped[0]?.month || safeTxt(scope.periodSel).slice(0,7));
     const mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
     const mtdAgg=topRows(aggregate(mtdRows, r=>r.item, r=>r.sales),80);
-    fillTable('albumMtdTable',['Item','Venta MTD','Share MTD'],mtdAgg.map(r=>[r.k,money(r.v),pct(r.v/(mtdAgg.reduce((a,x)=>a+n(x.v),0)||NaN))]));
+    const mtdTotal=mtdRows.reduce((a,r)=>a+n(r.sales),0);
+    fillTable(
+      'albumMtdTable',
+      ['Item','Venta MTD','Share MTD'],
+      mtdAgg.map(r=>[r.k,money(r.v),pct(r.v/(mtdTotal||NaN))]),
+      mtdAgg.length ? ['TOTAL',money(mtdTotal),pct(mtdTotal ? 1 : NaN)] : null
+    );
   }
-  function fillTable(id, headers, rows){
+  function fillTable(id, headers, rows, totalRow){
     const t=byId(id); if(!t) return; const th=t.querySelector('thead'), tb=t.querySelector('tbody');
     th.innerHTML='<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-    if(!rows.length){ tb.innerHTML=`<tr><td colspan="${headers.length}" class="muted">Sin data para la selección actual.</td></tr>`; return; }
-    tb.innerHTML=rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+    const bodyRows = Array.isArray(rows) ? rows : [];
+    const hasTotal = Array.isArray(totalRow) && totalRow.length;
+    if(!bodyRows.length && !hasTotal){
+      tb.innerHTML=`<tr><td colspan="${headers.length}" class="muted">Sin data para la selección actual.</td></tr>`;
+      return;
+    }
+    const bodyHtml = bodyRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+    const totalHtml = hasTotal ? '<tr class="total">'+totalRow.map(c=>`<td>${c}</td>`).join('')+'</tr>' : '';
+    tb.innerHTML = bodyHtml + totalHtml;
   }
   function albumItemText(r){ return norm([r.item,r.description,r.category,r.brand,r.supplier].join(' ')); }
   function hasAlbumWord(t, word){
@@ -41942,11 +42436,12 @@ function renderOnePager(storeList, currentYm, prevYms){
   }
   function periodMatch(row, scope){
     if(!row) return false;
-    if(scope.mode === 'monthly') return row.month === scope.periodSel;
-    return periodKey(row, scope.mode) === scope.periodSel;
+    const set=scope.periodSet || new Set([scope.periodSel].filter(Boolean));
+    if(scope.mode === 'monthly') return set.has(row.month);
+    return set.has(periodKey(row, scope.mode));
   }
   function periodYear(scope){
-    const p=safeTxt(scope.periodSel);
+    const p=safeTxt(scope.periodSel || scope.selectedPeriods?.[0]);
     if(/^\d{4}/.test(p)) return p.slice(0,4);
     const k=safeTxt(scope.scoped?.[0]?.dateKey || scope.baseRows?.[0]?.dateKey || '');
     return /^\d{4}/.test(k) ? k.slice(0,4) : String(new Date().getFullYear());
@@ -41954,8 +42449,8 @@ function renderOnePager(storeList, currentYm, prevYms){
   function timelinePeriodMatch(row, scope, grain){
     if(!row) return false;
     if(grain === 'weekly' && scope.mode === 'daily'){
-      const d=toDate(scope.periodSel);
-      return d ? row.month === monthKey(d) : periodMatch(row, scope);
+      const monthSet=scope.periodMonthsSet || new Set();
+      return monthSet.size ? monthSet.has(row.month) : periodMatch(row, scope);
     }
     return periodMatch(row, scope);
   }
@@ -42028,9 +42523,9 @@ function renderOnePager(storeList, currentYm, prevYms){
     setAlbumText('albumStickerCajaDailyTitle', `Vta ${grain==='weekly'?'Semanal':'Diaria'} QTY Cajas <span class="sasTag">${tag}</span>`);
     setAlbumText('albumAlbumSoftDailyTitle', `Vta ${grain==='weekly'?'Semanal':'Diaria'} QTY Álbum <span class="sasTag">${tag}</span>`);
     const cajaMeta=byId('albumStickerCajaDailyMeta');
-    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)} · ${timeViewLong()}`;
+    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${scope.periodLabelText} · ${timeViewLong()}`;
     const albumMeta=byId('albumAlbumSoftDailyMeta');
-    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)} · ${timeViewLong()}`;
+    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${scope.periodLabelText} · ${timeViewLong()}`;
     function qtyDailyOptions(rows, color, bg, title){
       return chartOptions({
         layout:{padding:{top:28,right:18,left:10,bottom:0}},
@@ -42071,9 +42566,9 @@ function renderOnePager(storeList, currentYm, prevYms){
     setAlbumText('albumStickerCajaCumTitle', `Vta Acumulada QTY Cajas <span class="sasTag">${tag}</span>`);
     setAlbumText('albumAlbumSoftCumTitle', `Vta Acumulada QTY Álbum <span class="sasTag">${tag}</span>`);
     const cajaMeta=byId('albumStickerCajaCumMeta');
-    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${periodLabel(scope.periodSel, scope.mode)} · acumulado ${timeViewLong()}`;
+    if(cajaMeta) cajaMeta.textContent = `Caja Stickers Mundial Fifa + Sobres/104 · ${scope.periodLabelText} · acumulado ${timeViewLong()}`;
     const albumMeta=byId('albumAlbumSoftCumMeta');
-    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${periodLabel(scope.periodSel, scope.mode)} · acumulado ${timeViewLong()}`;
+    if(albumMeta) albumMeta.textContent = `Album Mundial Fifa Tapa Suave · ${scope.periodLabelText} · acumulado ${timeViewLong()}`;
     function qtyCumOptions(rows, color, bg, title){
       return chartOptions({
         layout:{padding:{top:28,right:18,left:10,bottom:0}},
@@ -42170,7 +42665,7 @@ function renderOnePager(storeList, currentYm, prevYms){
             footer:function(items){
               const idx=items&&items.length?items[0].dataIndex:0;
               const p=periods[idx];
-              return `Total Álbum: ${money(by.total[p]||0)} · Canal filtro: ${albumDeliveryLabel(albumDeliveryMode())}`;
+              return `Total Álbum: ${money(by.total[p]||0)} · Canal filtro: ${albumDeliveryLabel(scope.deliveryModes)}`;
             }
           }},
           albumLabelPlugin:{
@@ -42299,7 +42794,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.label),datasets:[{label:`Acumulado ${tag}`,data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({layout:{padding:{top:30,right:18,left:10,bottom:0}},plugins:{tooltip:{callbacks:{title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; return `${trend[idx]?.label || ''} · ${trend[idx]?.caption || trend[idx]?.k || ''}`; },label:function(ctx){ const r=trend[ctx.dataIndex]||{}; return `Acumulado: ${money(ctx.raw)} · ${grain==='weekly'?'Semana':'Día'}: ${money(r.periodValue)}`; }}},albumLabelPlugin:{offset:14,fontSize:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}})});
     renderAlbumQtyDailyCharts(scope);
     renderAlbumQtyCumCharts(scope);
-    const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && periodKey(r, mode)===scope.periodSel).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
+    const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && scope.periodSet.has(periodKey(r, mode))).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
     makeChart('chartAlbumImpact','chart_album_impact',{
       type:'bar',
       data:{
@@ -42425,6 +42920,7 @@ function renderOnePager(storeList, currentYm, prevYms){
   function boot(){
     try{ if(typeof ALL_REPORT_TABS !== 'undefined' && Array.isArray(ALL_REPORT_TABS) && !ALL_REPORT_TABS.includes(TAB)) ALL_REPORT_TABS.push(TAB); }catch(_e){}
     try{ if(typeof state !== 'undefined' && state){ if(!(state._tabDirty instanceof Set)) state._tabDirty=new Set(); state._tabDirty.add(TAB); } }catch(_e){}
+    ensureAlbumMultiControls();
     ['albumMode','albumPeriod','albumStore','albumItem','albumPieMode','albumTimeView','albumDeliveryMode','albumApply'].forEach(id=>{ const el=byId(id); if(!el || el.__albumBound) return; el.__albumBound=true; el.addEventListener(id==='albumApply'?'click':'change', ()=>{ if(id==='albumMode'||id==='albumStore'||id==='albumItem'||id==='albumDeliveryMode') populateFilters(); renderAlbum(); }); });
     document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('.tabBtn[data-tab="album"]')) scheduleRender(120); }catch(_e){} }, true);
     window.addEventListener('ampm:tabshown', function(ev){ try{ if(String(ev?.detail?.tab||'')===TAB) scheduleRender(40); }catch(_e){} }, {passive:true});
@@ -67767,6 +68263,38 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
   window.addEventListener('resize', schedule, {passive:true});
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule, {once:true});
   else schedule();
+})();
+</script>
+
+
+<script id="dept-trend-no-panini-title-hardfix">
+(function(){
+  function stripVistaLinesFromDeptTrendCharts(){
+    try{
+      if(!window.Chart || !Chart.instances) return;
+      var list = Chart.instances;
+      var arr = Array.isArray(list) ? list : Object.keys(list).map(function(k){ return list[k]; });
+      arr.forEach(function(ch){
+        try{
+          var id = ch && ch.canvas && ch.canvas.id ? String(ch.canvas.id) : '';
+          if(!/^(ventas|delivery)_dept_trend_/i.test(id)) return;
+          var title = ch.options && ch.options.plugins && ch.options.plugins.title;
+          if(!title || title.text == null) return;
+          var lines = Array.isArray(title.text) ? title.text : [title.text];
+          var cleaned = lines.filter(function(line){ return !/^\s*Vista\s*:/i.test(String(line || '')); });
+          if(JSON.stringify(lines) !== JSON.stringify(cleaned)){
+            title.text = cleaned;
+            ch.update('none');
+          }
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+  window.addEventListener('ampm:tabshown', stripVistaLinesFromDeptTrendCharts);
+  window.addEventListener('ampm:datarefreshed', stripVistaLinesFromDeptTrendCharts);
+  document.addEventListener('click', function(){ setTimeout(stripVistaLinesFromDeptTrendCharts, 120); }, true);
+  setTimeout(stripVistaLinesFromDeptTrendCharts, 600);
+  setTimeout(stripVistaLinesFromDeptTrendCharts, 1600);
 })();
 </script>
 
