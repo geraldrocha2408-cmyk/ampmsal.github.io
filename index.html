@@ -42202,7 +42202,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     const itemVals=selectedValues('albumItem'); const itemSet=(!itemVals.length || itemVals.includes('__ALL__')) ? null : new Set(itemVals.map(String));
     if(itemSet) rows=rows.filter(r=>itemSet.has(String(r.item)));
     const periods=Array.from(new Set(rows.map(r=>periodKey(r, mode)).filter(Boolean))).sort();
-    setOptions('albumPeriod', periods.map(p=>({value:p,label:periodLabel(p,mode)})), periods[periods.length-1] || '');
+    setOptions('albumPeriod', periods.map(p=>({value:p,label:periodLabel(p,mode)})));
     syncAlbumMultiControls();
   }
 
