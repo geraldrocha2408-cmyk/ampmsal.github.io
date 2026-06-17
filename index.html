@@ -2354,6 +2354,12 @@ body.report-mode-mensual #sbf_provider_trend_cards{
 .invSemaphoreCard.yellow .v{color:#b45309;}
 .invSemaphoreCard .s{font-size:10.5px;font-weight:800;line-height:1.2;margin-top:5px;color:#64748b;}
 .invSemaphoreCard.black .s{color:rgba(255,255,255,.78);}
+.invSemaphoreBlackStoreSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:-2px 0 8px;}
+.invSemaphoreBlackStoreSummary:empty{display:none;}
+.invSemaphoreBlackStoreSummary .invBlackStoreChip{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 8px;border-radius:10px;background:#0b1020;color:#fff;border:1px solid rgba(2,6,23,.28);box-shadow:0 6px 14px rgba(2,6,23,.10);min-width:0;}
+.invSemaphoreBlackStoreSummary .name{font-size:10px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em;}
+.invSemaphoreBlackStoreSummary .count{font-size:15px;font-weight:1000;font-variant-numeric:tabular-nums;}
+.invSemaphoreBlackStoreSummary .amt{grid-column:1 / -1;color:rgba(255,255,255,.70);font-size:9.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .invSemaphoreListHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px;margin-bottom:6px;font-size:12px;font-weight:1000;color:#11284A;}
 .invSemaphoreListHead small{font-size:10.5px;font-weight:900;color:#64748b;white-space:nowrap;}
 .invSemaphoreList{flex:1 1 auto;min-height:0;overflow:auto;border:1px solid rgba(15,23,42,.08);border-radius:12px;background:#fff;}
@@ -2375,6 +2381,7 @@ body.report-mode-mensual #sbf_provider_trend_cards{
 }
 @media (max-width:760px){
   .invSemaphoreGrid{grid-template-columns:1fr;}
+  .invSemaphoreBlackStoreSummary{grid-template-columns:1fr;}
   .invSemaphoreItem{grid-template-columns:64px minmax(0,1fr) 70px;}
 }
 </style>
@@ -5999,6 +6006,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     <span class="invSemaphoreBadge">ROP</span>
   </div>
   <div class="invSemaphoreGrid" id="invSemaphoreCards"></div>
+  <div class="invSemaphoreBlackStoreSummary" id="invSemaphoreBlackStoreSummary"></div>
   <div class="invSemaphoreListHead">
     <span>Top alertas</span>
     <small id="invSemaphoreListMeta">—</small>
@@ -7440,11 +7448,24 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     }
     function rowPassesPaniniFilter(row){
       if(!isPaniniExcluded()) return true;
-      return !isPaniniBrand(row && row.brand);
+      const probes = [
+        row && row.brand,
+        row && row.Brand,
+        row && row.marca,
+        row && row.Marca,
+        row && row.description,
+        row && row.Description,
+        row && row.desc,
+        row && row.descripcion
+      ];
+      return !probes.some(isPaniniBrand);
     }
     function getPaniniScopedRows(rows){
       const arr = Array.isArray(rows) ? rows : [];
       return (typeof isPaniniExcluded === 'function' && isPaniniExcluded()) ? arr.filter(rowPassesPaniniFilter) : arr;
+    }
+    function getInventoryScopedRows(rows){
+      return getPaniniScopedRows(rows);
     }
     function resetPaniniRawScope(){
       if(!state) return;
@@ -17530,7 +17551,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       state._invStoreSet = storeSet;
       state._invWeeks = weeks;
 
-      const inv = (state.invItems && state.invItems.length) ? state.invItems.filter(r=>storeSet.has(r.store)) : [];
+      const inv = (state.invItems && state.invItems.length) ? getInventoryScopedInvItems(storeSet) : [];
       if(!inv.length || !(state.cuboSalesSkuWeekRows && state.cuboSalesSkuWeekRows.length) || !(weeks && weeks.length)){
         if(tBody) tBody.innerHTML = '<tr><td colspan="12" class="muted">Sin data para ROP sugerido (falta Inventario_Items o base SKU compatible desde Cubo_Sales_DetailHallazgos).</td></tr>';
         if(nBody) nBody.innerHTML = '<tr><td colspan="10" class="muted">Sin data para Top No comprar (falta Inventario_Items o base SKU compatible desde Cubo_Sales_DetailHallazgos).</td></tr>';
@@ -18010,7 +18031,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
 
       const colSpan0 = 3 + (storeSet ? storeSet.size : 0);
 
-      const invAll = (state.invItems && state.invItems.length) ? state.invItems : [];
+      const invAll = (state.invItems && state.invItems.length) ? getInventoryScopedInvItems(storeSet) : [];
       if(!invAll.length || !(weeks && weeks.length) || !(state.cuboSalesSkuWeekRows && state.cuboSalesSkuWeekRows.length)){
         tBody.innerHTML = `<tr><td colspan="${colSpan0}" class="muted">Sin data para Traslados (falta Inventario_Items o base SKU compatible desde Cubo_Sales_DetailHallazgos).</td></tr>`;
         if(c1) c1.textContent = '—';
@@ -18552,14 +18573,67 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
 
 
 
+    function getInventoryScopedInvItems(storeSet=null){
+      const rows = getInventoryScopedRows(Array.isArray(state.invItems) ? state.invItems : []);
+      if(!(storeSet instanceof Set) || !storeSet.size) return rows;
+      return rows.filter(r=> storeSet.has(String(r && r.store || '').trim().toUpperCase()));
+    }
+
+    function getInventoryScopedInvDetail(storeSet=null){
+      const rows = getInventoryScopedRows(Array.isArray(state.invDetail) ? state.invDetail : []);
+      if(!(storeSet instanceof Set) || !storeSet.size) return rows;
+      return rows.filter(r=> storeSet.has(String(r && r.store || '').trim().toUpperCase()));
+    }
+
+    function buildInventoryScopedAmountMaps(storeSet=null){
+      const storeTotal = new Map();
+      const storeDept = new Map();
+      const deptTotal = new Map();
+      const add = (store, deptKey, deptRaw, amount)=>{
+        const st = String(store || '').trim().toUpperCase();
+        const dk = stripAccents(String(deptKey || deptRaw || '')).trim();
+        const amt = Number(amount || 0) || 0;
+        if(!st || !dk) return;
+        if(storeSet instanceof Set && storeSet.size && !storeSet.has(st)) return;
+        if(deptRaw && state.deptDisplay) state.deptDisplay.set(dk, String(deptRaw || dk).trim() || dk);
+        const key = `${st}|${dk}`;
+        storeTotal.set(st, Number(storeTotal.get(st) || 0) + amt);
+        storeDept.set(key, Number(storeDept.get(key) || 0) + amt);
+        deptTotal.set(dk, Number(deptTotal.get(dk) || 0) + amt);
+      };
+
+      const detailRows = getInventoryScopedInvDetail(storeSet);
+      if(detailRows.length){
+        detailRows.forEach(r=> add(r.store, r.deptKey, r.deptRaw, r.amount));
+        return {storeTotal, storeDept, deptTotal, source:'detail', detailRows, itemRows:getInventoryScopedInvItems(storeSet)};
+      }
+
+      const itemRows = getInventoryScopedInvItems(storeSet);
+      if(itemRows.length){
+        itemRows.forEach(r=> add(r.store, r.department, r.department, r.amount));
+        return {storeTotal, storeDept, deptTotal, source:'items', detailRows:[], itemRows};
+      }
+
+      if(!isPaniniExcluded() && state.invStoreDept && state.invStoreDept.size){
+        for(const [k, amt] of state.invStoreDept.entries()){
+          const parts = String(k).split('|');
+          add(parts[0], parts.slice(1).join('|'), parts.slice(1).join('|'), amt);
+        }
+        return {storeTotal, storeDept, deptTotal, source:'aggregate', detailRows:[], itemRows:[]};
+      }
+
+      return {storeTotal, storeDept, deptTotal, source:'empty', detailRows:[], itemRows};
+    }
+
     function renderInventorySemaphorePanel(storeList){
       const host = document.getElementById('invSemaphorePanel');
       if(!host) return;
       const cardsEl = document.getElementById('invSemaphoreCards');
+      const blackStoreEl = document.getElementById('invSemaphoreBlackStoreSummary');
       const listEl = document.getElementById('invSemaphoreList');
       const metaEl = document.getElementById('invSemaphoreMeta');
       const listMetaEl = document.getElementById('invSemaphoreListMeta');
-      const invRows = Array.isArray(state.invItems) ? state.invItems : [];
+      const invRows = getInventoryScopedRows(Array.isArray(state.invItems) ? state.invItems : []);
       const stores = (Array.isArray(storeList) && storeList.length)
         ? storeList
         : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
@@ -18628,6 +18702,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
           (Array.isArray(list) ? list : []).forEach(r=>{
             const st = String(r && r.store || '').trim().toUpperCase();
             if(!st || (storeSet.size && !storeSet.has(st))) return;
+            if(!rowPassesPaniniFilter({brand:r && r.brand, description:r && (r.desc || r.description)})) return;
             const rop = Number((r && r.rop) ?? 0) || 0;
             if(!(rop > 0.000001)) return;
             const desc = String(r && (r.desc || r.description) || '').trim();
@@ -18642,6 +18717,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
               lookup: String(r && r.lookup || '').trim(),
               department: String(r && r.dept || '').trim(),
               category: String(r && r.cat || '').trim(),
+              brand: String(r && r.brand || '').trim(),
               qty: 0,
               amount: 0,
               rop,
@@ -18669,7 +18745,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         selectedStores.forEach(st=>{ total += Number(m.get(String(st||'').trim().toUpperCase()) ?? 0) || 0; });
         return total;
       };
-      const redCountAuthoritative = prd0RedCountFromStoreTotals();
+      const redCountAuthoritative = isPaniniExcluded() ? null : prd0RedCountFromStoreTotals();
       const redCount = (redCountAuthoritative !== null) ? redCountAuthoritative : buckets.red.length;
 
       const riskTotal = buckets.black.length + redCount + buckets.yellow.length;
@@ -18677,7 +18753,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         ? Array.from(storeSet).join(', ')
         : 'Todas las tiendas';
       if(metaEl){
-        metaEl.textContent = `${fmtInt(scoped.length)} items evaluados · ${storeLabel} · Rojo alineado a PRD en cero`;
+        metaEl.textContent = `${fmtInt(scoped.length)} items evaluados · ${storeLabel} · ${paniniFilterLabel()} · Rojo alineado a PRD en cero`;
       }
 
       const amountSum = (arr)=> arr.reduce((acc,it)=>acc + (Number(it.amount ?? 0) || 0), 0);
@@ -18693,6 +18769,26 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
             <div class="s">${esc(x.sub)}<br>${money(x.amount)} inv.</div>
           </div>`;
         }).join('');
+      }
+
+      if(blackStoreEl){
+        const byStore = new Map();
+        buckets.black.forEach(it=>{
+          const st = String(it && it.store || '').trim().toUpperCase() || '(Sin tienda)';
+          if(!byStore.has(st)) byStore.set(st, {store:st, count:0, amount:0});
+          const o = byStore.get(st);
+          o.count += 1;
+          o.amount += Number(it.amount || 0) || 0;
+        });
+        const blackRows = Array.from(byStore.values())
+          .sort((a,b)=> (b.count - a.count) || Math.abs(b.amount) - Math.abs(a.amount) || a.store.localeCompare(b.store));
+        blackStoreEl.innerHTML = blackRows.length
+          ? blackRows.map(r=>`<div class="invBlackStoreChip" title="${esc(r.store)}">
+              <span class="name">${esc(r.store)}</span>
+              <span class="count">${fmtInt(r.count)}</span>
+              <span class="amt">${money(r.amount)} inv.</span>
+            </div>`).join('')
+          : '';
       }
 
       const rows = buckets.black.concat(buckets.red, buckets.yellow)
@@ -18754,7 +18850,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         });
       }
 
-      const invRows = Array.isArray(state.invItems) ? state.invItems : [];
+      const invRows = getInventoryScopedRows(Array.isArray(state.invItems) ? state.invItems : []);
       const selectedStores = (Array.isArray(storeList) && storeList.length)
         ? storeList
         : ((typeof getSelectedStoresOrAll === 'function') ? getSelectedStoresOrAll() : (state.stores || []));
@@ -18886,9 +18982,10 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       const tbodyStore = document.getElementById('tbody_inv_store');
       const tbodyDept  = document.getElementById('tbody_inv_dept');
       if(!tbodyDept) return;
-      const hasInv = state.invStoreDept && state.invStoreDept.size;
       const hasCogs = state.cogsStoreWeek && state.cogsStoreWeek.size;
-      const storeSet = new Set(storeList && storeList.length ? storeList : state.stores);
+      const storeSet = new Set((storeList && storeList.length ? storeList : state.stores).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean));
+      const invScope = buildInventoryScopedAmountMaps(storeSet);
+      const hasInv = invScope.storeDept.size || invScope.storeTotal.size;
       try{ renderInventorySemaphorePanel(Array.from(storeSet)); }catch(e){ console.warn('Inventory semaphore failed', e); }
       try{ renderInventoryStockSearch(Array.from(storeSet)); }catch(e){ console.warn('Inventory stock search failed', e); }
       const basePeriods = getInvWeeks(currentYm);
@@ -18904,9 +19001,25 @@ return;
       }
 
       let selectedIdealMeta = null;
+      const scopedDetailCogsByStore = new Map();
+      const scopedDetailCogsByStoreDept = new Map();
+      if(isPaniniExcluded() && invScope.detailRows && invScope.detailRows.length){
+        invScope.detailRows.forEach(r=>{
+          const st = String(r && r.store || '').trim().toUpperCase();
+          const dk = stripAccents(String(r && r.deptKey || r && r.deptRaw || '')).trim();
+          const cogs = Number(r && r.cogs4w || 0) || 0;
+          if(st && cogs){
+            scopedDetailCogsByStore.set(st, Number(scopedDetailCogsByStore.get(st) || 0) + cogs);
+            if(dk) scopedDetailCogsByStoreDept.set(`${st}|${dk}`, Number(scopedDetailCogsByStoreDept.get(`${st}|${dk}`) || 0) + cogs);
+          }
+        });
+      }
 
       const sumCogsStoreWeeks = (store) => {
-        const m = state.cogsStoreWeek.get(store);
+        const stKey = String(store || '').trim().toUpperCase();
+        const scopedCogs = Number(scopedDetailCogsByStore.get(stKey) || 0);
+        if(scopedCogs > 0) return scopedCogs;
+        const m = state.cogsStoreWeek.get(stKey);
         if(!m) return 0;
         let s = 0;
         for(const w of weeks){ s += Number(m.get(w) ?? 0); }
@@ -18916,13 +19029,14 @@ return;
       let totalInv = 0, totalCogs = 0;
       const rowsStore = [];
       (storeList && storeList.length ? storeList : state.stores).forEach(store => {
-        if(!storeSet.has(store)) return;
-        const inv = Number(state.invStoreTotal.get(store) ?? 0);
-        const cogs = sumCogsStoreWeeks(store);
+        const stKey = String(store || '').trim().toUpperCase();
+        if(!storeSet.has(stKey)) return;
+        const inv = Number(invScope.storeTotal.get(stKey) ?? 0);
+        const cogs = sumCogsStoreWeeks(stKey);
         const days = (cogs > 0) ? (inv * 28 / cogs) : null;
         totalInv += inv;
         totalCogs += cogs;
-        rowsStore.push({store, inv, cogs, days});
+        rowsStore.push({store:stKey, inv, cogs, days});
       });
 
       rowsStore.sort((a,b)=> (b.inv - a.inv));
@@ -19062,7 +19176,7 @@ return;
         return rows;
       }
 
-      const detail = (state.invDetail && state.invDetail.length) ? state.invDetail.filter(r=>storeSet.has(r.store)) : [];
+      const detail = getInventoryScopedInvDetail(storeSet);
       let summaryDaysInv = null;
       let summaryDaysInvIdeal = null;
 
@@ -19099,7 +19213,7 @@ return;
 
         const planMap = new Map();
         if(state.invItems && state.invItems.length){
-          for(const it of state.invItems){
+          for(const it of getInventoryScopedInvItems(storeSet)){
             if(!it || !storeSet.has(String(it.store||'').trim().toUpperCase())) continue;
             const k = skuKey(it.store, it.supplier, it.description, it.supplier_key, it.desc_key);
             const p = Number(it.plan||0)||0;
@@ -19314,8 +19428,8 @@ return;
       const qtyS4ByDept = new Map();
       const {qtyMap: s4QtyMap} = buildSalesS4Maps(storeSet, weeks);
 
-      for(const it of (state.invItems || [])){
-        if(!it || !storeSet.has(it.store)) continue;
+      for(const it of getInventoryScopedInvItems(storeSet)){
+        if(!it || !storeSet.has(String(it.store||'').trim().toUpperCase())) continue;
         const deptKey = stripAccents(String(it.department ?? '')).trim();
         if(!deptKey) continue;
         const qInv = Number(it.qty ?? 0) || 0;
@@ -19325,9 +19439,9 @@ return;
         qtyS4ByDept.set(deptKey, Number(qtyS4ByDept.get(deptKey) ?? 0) + qS4);
       }
 
-      for(const [k, amt] of state.invStoreDept.entries()){
+      for(const [k, amt] of invScope.storeDept.entries()){
         const parts = String(k).split('|');
-        const store = parts[0];
+        const store = String(parts[0] || '').trim().toUpperCase();
         const deptKey = parts.slice(1).join('|');
         if(!storeSet.has(store)) continue;
         invByDept.set(deptKey, Number(invByDept.get(deptKey) ?? 0) + Number(amt ?? 0));
@@ -19335,11 +19449,13 @@ return;
 
       for(const [k, m] of state.cogsStoreDeptWeek.entries()){
         const parts = String(k).split('|');
-        const store = parts[0];
+        const store = String(parts[0] || '').trim().toUpperCase();
         const deptKey = parts.slice(1).join('|');
         if(!storeSet.has(store)) continue;
         let s = 0;
-        for(const w of weeks){ s += Number(m.get(w) ?? 0); }
+        const scopedCogs = Number(scopedDetailCogsByStoreDept.get(`${store}|${deptKey}`) || 0);
+        if(scopedCogs > 0) s = scopedCogs;
+        else for(const w of weeks){ s += Number(m.get(w) ?? 0); }
         if(s !== 0){
           cogsByDept.set(deptKey, Number(cogsByDept.get(deptKey) ?? 0) + s);
         }
@@ -19407,9 +19523,7 @@ return;
 
       const weeks = (state._invWeeks && state._invWeeks.length) ? state._invWeeks : getInvWeeks(currentYm);
 
-      const detail = (state.invDetail && state.invDetail.length)
-        ? state.invDetail.filter(r => r && storeSet.has(String(r.store||'').trim().toUpperCase()))
-        : [];
+      const detail = getInventoryScopedInvDetail(storeSet);
 
       if(detail.length){
         const salesMaps = buildSalesS4Maps(storeSet, weeks || []);
@@ -19417,7 +19531,7 @@ return;
 
         const planMap = new Map();
         if(state.invItems && state.invItems.length){
-          for(const it of state.invItems){
+          for(const it of getInventoryScopedInvItems(storeSet)){
             if(!it || !storeSet.has(String(it.store||'').trim().toUpperCase())) continue;
             const k = skuKey(it.store, it.supplier, it.description, it.supplier_key, it.desc_key);
             const p = Number(it.plan || 0) || 0;
@@ -19458,8 +19572,10 @@ return;
           totalAmtIdeal += amountIdeal;
         }
 
-        let totalCogs = 0;
-        if(state.cogsStoreDeptWeek && state.cogsStoreDeptWeek.size && weeks && weeks.length){
+        let totalCogs = isPaniniExcluded()
+          ? detail.reduce((acc, r)=> acc + (Number(r.cogs4w ?? 0) || 0), 0)
+          : 0;
+        if(!(totalCogs > 0) && state.cogsStoreDeptWeek && state.cogsStoreDeptWeek.size && weeks && weeks.length){
           for(const dk of deptKeys){
             const deptKey = String(dk || '').trim();
             if(!deptKey) continue;
@@ -19483,8 +19599,9 @@ return;
       }
 
       let totalAmt = 0, totalCogs = 0;
-      if(state.invStoreDept && state.invStoreDept.size){
-        for(const [k, amt] of state.invStoreDept.entries()){
+      const invSummaryScope = buildInventoryScopedAmountMaps(storeSet);
+      if(invSummaryScope.storeDept && invSummaryScope.storeDept.size){
+        for(const [k, amt] of invSummaryScope.storeDept.entries()){
           const parts = String(k).split('|');
           const st = String(parts[0] || '').trim().toUpperCase();
           if(!storeSet.has(st)) continue;
@@ -23315,7 +23432,7 @@ function renderSalesBubbleChart(storeList){
 function getInventoryBubbleData(storeList, currentYm){
       const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
       const storeSet = new Set(stores.map(s => String(s||'').trim().toUpperCase()));
-      const rows = Array.isArray(state.invDetail) ? state.invDetail.filter(r => r && storeSet.has(String(r.store||'').trim().toUpperCase())) : [];
+      const rows = getInventoryScopedInvDetail(storeSet);
       const weeks = getInvWeeks(currentYm);
       const safeLabel = (v)=> String(v == null || String(v).trim()==='' ? '(Sin dato)' : v).trim();
       const rootMode = state.invBubbleRootMode || 'department';
@@ -23347,6 +23464,7 @@ function getInventoryBubbleData(storeList, currentYm){
       }
 
       const resolveRowCogs = (r)=>{
+        if(isPaniniExcluded()) return Number(r.cogs4w || 0) || 0;
         const deptKey = `${String(r.store||'').trim().toUpperCase()}|${String(r.deptKey||'').trim()}`;
         const selected = Number(deptSelectedCogs.get(deptKey) || 0);
         if (!(selected > 0)) return Number(r.cogs4w || 0) || 0;
@@ -27503,7 +27621,7 @@ const options = {
       return td;
     }
 
-    function renderMetricTableCustom({theadId, tbodyId, currentYm, prevYms, rowNames, getValueByRowYm, fmtBase, fmtProm, fmtDif, totalLabel='Total', totalCalculator=null}) {
+    function renderMetricTableCustom({theadId, tbodyId, currentYm, prevYms, rowNames, getValueByRowYm, fmtBase, fmtProm, fmtDif, totalLabel='Total', totalCalculator=null, totalRowNames=null}) {
       if (!currentYm) return null;
       const prevSorted = resolvePrevPeriods(currentYm, prevYms);
       const {lmYm, lyYm, showPrevCompare} = buildHeaders(theadId, currentYm, prevSorted);
@@ -27527,6 +27645,7 @@ const options = {
 
         return {name, ly, prevVals, curr, prom, deltaProm, difProm, deltaLM, difLM, deltaLY, difLY};
       });
+      const totalRows = Array.isArray(totalRowNames) ? totalRowNames : rowNames;
 
       rows.forEach(r => {
         const tr = document.createElement('tr');
@@ -27548,10 +27667,10 @@ const options = {
 
       const calcTotalAt = (ym) => {
         if (typeof totalCalculator === 'function') return Number(totalCalculator(ym));
-        return rows.reduce((s,r)=>s + Number(getValueByRowYm(r.name, ym) ?? 0), 0);
+        return totalRows.reduce((s,name)=>s + Number(getValueByRowYm(name, ym) ?? 0), 0);
       };
 
-      if (rowNames.length){
+      if (rowNames.length || totalRows.length){
         const lyT = calcTotalAt(lyYm);
         const prevTotals = prevSorted.map(ym => calcTotalAt(ym));
         const currT = calcTotalAt(currentYm);
@@ -27893,12 +28012,14 @@ const options = {
         if (!canvas) return;
         if (state.chartSbfByStore[key]){ try{ state.chartSbfByStore[key].destroy(); }catch(e){} }
         state.chartSbfByStore[key] = renderSbfSingleStoreChart(canvas, item.stores[0], item.stores, item.label);
-        requestAnimationFrame(() => {
+        const paintRank = () => {
           try{
             const ds = state.chartSbfByStore[key]?.data?.datasets?.find(d => d.label === 'TX SBF');
             renderBottomRankRow(rankId, state.chartSbfByStore[key]?.data?.labels || [], (ds?.data || []).map(v => v == null ? -Infinity : Number(v)), {label:'Top', chart: state.chartSbfByStore[key]});
           }catch(e){}
-        });
+        };
+        paintRank();
+        requestAnimationFrame(paintRank);
       });
     }
 
@@ -29019,7 +29140,8 @@ renderShareTable({
         currentYm, prevYms, rowNames: catRows,
         getValueByRowYm:(c,ym)=> mapGet(catSales,c,ym),
         fmtBase: money, fmtProm: money, fmtDif: money,
-        totalLabel:'Total general'
+        totalLabel:'Total general',
+        totalRowNames: allCats
       });
 
       const allBrands = Array.from(brandSales.keys()).filter(k => k && k !== '(Sin dato)');
@@ -29041,7 +29163,8 @@ renderShareTable({
         currentYm, prevYms, rowNames: brandRows,
         getValueByRowYm:(b,ym)=> mapGet(brandSales,b,ym),
         fmtBase: money, fmtProm: money, fmtDif: money,
-        totalLabel:'Total general'
+        totalLabel:'Total general',
+        totalRowNames: allBrands
       });
       }
       const allCatsDel = Array.from(catSalesDel.keys()).filter(k => k && k !== '(Sin dato)');
@@ -29063,7 +29186,8 @@ renderShareTable({
         currentYm, prevYms, rowNames: catDelRows,
         getValueByRowYm:(c,ym)=> mapGet(catSalesDel,c,ym),
         fmtBase: money, fmtProm: money, fmtDif: money,
-        totalLabel:'Total general'
+        totalLabel:'Total general',
+        totalRowNames: allCatsDel
       });
 
       const allBrandsDel = Array.from(brandSalesDel.keys()).filter(k => k && k !== '(Sin dato)');
@@ -29085,7 +29209,8 @@ renderShareTable({
         currentYm, prevYms, rowNames: brandDelRows,
         getValueByRowYm:(b,ym)=> mapGet(brandSalesDel,b,ym),
         fmtBase: money, fmtProm: money, fmtDif: money,
-        totalLabel:'Total general'
+        totalLabel:'Total general',
+        totalRowNames: allBrandsDel
       });
       }
 
@@ -29920,8 +30045,25 @@ renderShareTable({
         }
       }
 
+      function getExportStoreList(){
+        try{
+          if(typeof getSelectedStoresOrAll === 'function'){
+            const stores = getSelectedStoresOrAll();
+            if(Array.isArray(stores) && stores.length) return stores.slice();
+          }
+        }catch(_e){}
+        try{
+          const selected = $qa('#stores option:checked').map(o=>String(o.value || '').trim()).filter(Boolean);
+          if(selected.length) return selected;
+        }catch(_e){}
+        try{
+          if(window.state && Array.isArray(window.state.stores) && window.state.stores.length) return window.state.stores.slice();
+        }catch(_e){}
+        return [];
+      }
+
       async function prepareActiveTabVisualsForExport(activeTab){
-        const tab = String(activeTab || '').trim();
+        const tab = String(activeTab || '').trim().toLowerCase();
         try{
           let rebuilt = false;
           if(tab === 'merma'){
@@ -29931,6 +30073,12 @@ renderShareTable({
             if(needsRefresh){
               try{ refreshVisibleTabCharts(tab, false); rebuilt = true; }catch(e){ console.warn('Export: refreshVisibleTabCharts failed', e); }
             }
+          }
+          if(tab === 'sbf'){
+            const exportStores = getExportStoreList();
+            try{ if(typeof renderSbfMamChart === 'function') renderSbfMamChart(exportStores); rebuilt = true; }catch(e){ console.warn('Export: renderSbfMamChart failed', e); }
+            try{ if(typeof renderSbfStoreCards === 'function') renderSbfStoreCards(exportStores); rebuilt = true; }catch(e){ console.warn('Export: renderSbfStoreCards failed', e); }
+            try{ if(typeof renderSbfProviderTrendCards === 'function') renderSbfProviderTrendCards(exportStores); }catch(_e){}
           }
           try{ if(typeof resizeCharts === 'function') resizeCharts(); }catch(e){}
           if(typeof window.requestAnimationFrame === 'function'){
@@ -30076,6 +30224,117 @@ renderShareTable({
         });
       }
 
+      function normalizeSbfStoreRankRowsForExport(root){
+        try{
+          $qa('.chartBottomRank[id^="rank_sbf_store_"]', root).forEach(host=>{
+            const rankEls = $qa('.sbfTopIsoBadge', host);
+            let ranks = rankEls.map(el => String(el.textContent || '').trim()).filter(Boolean);
+
+            if(!ranks.length){
+              const key = String(host.id || '').replace(/^rank_sbf_store_/, '');
+              const charts = (window.state && window.state.chartSbfByStore) ? window.state.chartSbfByStore : {};
+              const normKey = (v)=> String(v || '').replace(/[^A-Za-z0-9_-]+/g, '_');
+              const chartKey = Object.keys(charts || {}).find(k => k === key || normKey(k) === key);
+              const chart = chartKey ? charts[chartKey] : null;
+              const labels = chart && chart.data && Array.isArray(chart.data.labels) ? chart.data.labels : [];
+              const totals = Array.isArray(chart && chart.$totals)
+                ? chart.$totals
+                : ((chart && chart.data && chart.data.datasets || [])
+                    .filter(ds => ds && ds.type !== 'line' && String(ds.label || '').toLowerCase().indexOf('delta') < 0)
+                    .reduce((acc, ds) => {
+                      (ds.data || []).forEach((v, i) => { acc[i] = Number(acc[i] || 0) + (Number(v) || 0); });
+                      return acc;
+                    }, []));
+              if(labels.length && totals.length){
+                const sorted = totals.map((v, i) => ({i, v:Number.isFinite(Number(v)) ? Number(v) : -Infinity}))
+                  .sort((a,b)=> b.v === a.v ? a.i - b.i : b.v - a.v);
+                ranks = Array(labels.length).fill('');
+                sorted.forEach((it, idx)=>{ ranks[it.i] = String(idx + 1); });
+              }
+            }
+
+            if(!ranks.length) return;
+
+            const escText = (v)=> String(v == null ? '' : v);
+            const table = document.createElement('table');
+            table.setAttribute('role', 'presentation');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.borderSpacing = '0';
+            table.style.tableLayout = 'fixed';
+            table.style.margin = '0';
+            table.style.fontFamily = 'Calibri, Arial, sans-serif';
+
+            const colgroup = document.createElement('colgroup');
+            const labelCol = document.createElement('col');
+            labelCol.style.width = '58px';
+            colgroup.appendChild(labelCol);
+            ranks.forEach(()=> colgroup.appendChild(document.createElement('col')));
+            const rightCol = document.createElement('col');
+            rightCol.style.width = '52px';
+            colgroup.appendChild(rightCol);
+            table.appendChild(colgroup);
+
+            const tr = document.createElement('tr');
+            const labelTd = document.createElement('td');
+            labelTd.textContent = 'Top';
+            labelTd.style.padding = '0 8px 0 0';
+            labelTd.style.textAlign = 'right';
+            labelTd.style.verticalAlign = 'middle';
+            labelTd.style.fontWeight = '900';
+            labelTd.style.fontSize = '12px';
+            labelTd.style.lineHeight = '22px';
+            labelTd.style.color = '#111827';
+            tr.appendChild(labelTd);
+
+            ranks.forEach(rank => {
+              const td = document.createElement('td');
+              td.style.padding = '0';
+              td.style.textAlign = 'center';
+              td.style.verticalAlign = 'middle';
+              td.style.height = '26px';
+
+              const chip = document.createElement('span');
+              chip.textContent = escText(rank);
+              chip.style.display = 'inline-block';
+              chip.style.minWidth = '24px';
+              chip.style.height = '22px';
+              chip.style.padding = '0 7px';
+              chip.style.borderRadius = '5px';
+              chip.style.background = '#DDEBD2';
+              chip.style.border = '1px solid #B8D1A9';
+              chip.style.color = '#355E2A';
+              chip.style.fontWeight = '900';
+              chip.style.fontSize = '12px';
+              chip.style.lineHeight = '22px';
+              chip.style.textAlign = 'center';
+              chip.style.boxSizing = 'border-box';
+              td.appendChild(chip);
+              tr.appendChild(td);
+            });
+
+            tr.appendChild(document.createElement('td'));
+            table.appendChild(tr);
+
+            host.classList.remove('sbfTopIso');
+            host.innerHTML = '';
+            host.style.position = 'relative';
+            host.style.display = 'block';
+            host.style.width = '100%';
+            host.style.maxWidth = '100%';
+            host.style.height = '40px';
+            host.style.minHeight = '40px';
+            host.style.marginTop = '12px';
+            host.style.padding = '5px 0 8px';
+            host.style.overflow = 'visible';
+            host.style.boxSizing = 'border-box';
+            host.appendChild(table);
+          });
+        }catch(e){
+          console.warn('Export: no pude normalizar Top SBF por tienda', e);
+        }
+      }
+
       function buildSectionBlocks(){
         const panel = document.querySelector('.panel') || document.body;
         const sections = Array.from(panel.querySelectorAll('div.section'));
@@ -30118,7 +30377,7 @@ renderShareTable({
           document.querySelector('.tabBtn.active')?.dataset?.tab ||
           localStorage.getItem('ampm_tab') ||
           'resumen'
-        ).trim();
+        ).trim().toLowerCase();
       }
 
       function getActiveTabLabelForExport(tab){
@@ -30226,6 +30485,7 @@ renderShareTable({
         function finalizeBlock(block){
           block.dataset.hasChart = '1';
           convertCanvasesToImages(block);
+          normalizeSbfStoreRankRowsForExport(block);
           expandForExport(block);
           blocks.push(block);
         }
@@ -30261,6 +30521,16 @@ renderShareTable({
         }
 
         if(activeTab === 'sbf'){
+          try{
+            const exportStores = getExportStoreList();
+            const host = document.getElementById('sbf_store_cards');
+            const existingCards = host ? host.querySelectorAll(':scope > .chartCard').length : 0;
+            const needsStoreRender = !existingCards || (exportStores.length && existingCards < exportStores.length);
+            if(host && needsStoreRender && typeof renderSbfStoreCards === 'function'){
+              renderSbfStoreCards(exportStores);
+            }
+          }catch(e){ console.warn('Export: no pude preparar tarjetas SBF por tienda', e); }
+
           const sbfGeneralCard = document.getElementById('chart_sbf_mam')?.closest('.chartCard');
           if(sbfGeneralCard) buildBlockFromNode(sbfGeneralCard);
 
@@ -30283,6 +30553,11 @@ renderShareTable({
                 headerNode: idx === 0 ? sbfStoreHeader : null,
                 prependNodes: idx === 0 ? sbfStoreIntro : []
               });
+            });
+          }else if(sbfStoreHost && isNodeVisibleForExport(sbfStoreHost)){
+            buildBlockFromNode(sbfStoreHost, {
+              headerNode: sbfStoreHeader,
+              prependNodes: sbfStoreIntro
             });
           }
 
@@ -30667,6 +30942,203 @@ renderShareTable({
         return canvas;
       }
 
+      async function renderSbfStoreBlockToCanvas(block){
+        try{
+          const rankHosts = block && block.querySelectorAll
+            ? Array.from(block.querySelectorAll('.chartBottomRank[id="rank_sbf_mam"], .chartBottomRank[id^="rank_sbf_store_"]'))
+            : [];
+          if(rankHosts.length !== 1) return null;
+          const rankHost = rankHosts[0];
+          if(!rankHost) return null;
+          try{ if(block && block.__exportCanvasReady) await block.__exportCanvasReady; }catch(_e){}
+
+          const rankId = String(rankHost.id || '');
+          const isGeneralSbf = rankId === 'rank_sbf_mam';
+          const rankKey = rankId.replace(/^rank_sbf_store_/, '');
+          const charts = (window.state && window.state.chartSbfByStore) ? window.state.chartSbfByStore : {};
+          const normKey = (v)=> String(v || '').replace(/[^A-Za-z0-9_-]+/g, '_');
+          const chartKey = Object.keys(charts || {}).find(k => k === rankKey || normKey(k) === rankKey);
+          const chart = isGeneralSbf
+            ? ((window.state && window.state.chartSbfMam) ? window.state.chartSbfMam : null)
+            : (chartKey ? charts[chartKey] : null);
+          const srcCanvas = chart && chart.canvas ? chart.canvas : null;
+          const srcImg = block.querySelector('.monthly-chart-viewport img, img');
+          if(srcImg) await waitForImageDecode(srcImg);
+          const srcDrawable = (srcCanvas && typeof srcCanvas.getContext === 'function') ? srcCanvas : (srcImg && srcImg.src ? srcImg : null);
+          if(!srcDrawable) return null;
+
+          const rankTextFromHost = () => {
+            let vals = Array.from(rankHost.querySelectorAll('.sbfTopIsoBadge'))
+              .map(el => String(el.textContent || '').trim())
+              .filter(Boolean);
+            if(vals.length) return vals;
+            vals = Array.from(rankHost.querySelectorAll('td span'))
+              .map(el => String(el.textContent || '').trim())
+              .filter(v => v && v.toLowerCase() !== 'top' && /^-?\d+$/.test(v));
+            if(vals.length) return vals;
+            vals = Array.from(rankHost.querySelectorAll('td'))
+              .slice(1)
+              .map(el => String(el.textContent || '').trim())
+              .filter(v => v && /^-?\d+$/.test(v));
+            return vals;
+          };
+
+          let labels = chart && chart.data && Array.isArray(chart.data.labels) ? chart.data.labels.slice() : [];
+          const hostRanks = rankTextFromHost();
+          if(!labels.length && hostRanks.length) labels = hostRanks.map((_, i) => String(i + 1));
+
+          const totals = Array.isArray(chart && chart.$totals)
+            ? chart.$totals.map(v => Number(v) || 0)
+            : (((chart && chart.data && chart.data.datasets) || [])
+                .filter(ds => ds && ds.type !== 'line' && String(ds.label || '').toLowerCase().indexOf('delta') < 0)
+                .reduce((acc, ds) => {
+                  (ds.data || []).forEach((v, i) => { acc[i] = Number(acc[i] || 0) + (Number(v) || 0); });
+                  return acc;
+                }, []));
+          if(!labels.length || (!totals.length && !hostRanks.length)) return null;
+
+          let ranks = hostRanks.length ? hostRanks.slice(0, labels.length) : [];
+          if(!ranks.length){
+            const sorted = totals.map((v, i) => ({i, v:Number.isFinite(Number(v)) ? Number(v) : -Infinity}))
+              .sort((a,b)=> b.v === a.v ? a.i - b.i : b.v - a.v);
+            ranks = Array(labels.length).fill('');
+            sorted.forEach((it, idx)=>{ ranks[it.i] = String(idx + 1); });
+          }
+
+          const padX = 18;
+          const padTop = 16;
+          const padBottom = 18;
+          const chipH = 22;
+          const rankH = 50;
+          const targetPxW = 2828;
+          const targetPxH = 1360;
+          const DPR = 2.2;
+          const outW = targetPxW / DPR;
+          const outH = targetPxH / DPR;
+          const cssW = outW - padX * 2;
+          const headerTitle = String(block.querySelector('.section h2')?.textContent || '').trim();
+          const introNode = Array.from(block.children || []).find(ch => ch && ch.classList && ch.classList.contains('muted'));
+          const introText = String(introNode?.textContent || '').replace(/\s+/g, ' ').trim();
+
+          const measureCanvas = document.createElement('canvas');
+          const mctx = measureCanvas.getContext('2d');
+          const wrapText = (txt, maxW, font) => {
+            const out = [];
+            const raw = String(txt || '').trim();
+            if(!raw) return out;
+            mctx.font = font;
+            let line = '';
+            raw.split(/\s+/).forEach(word => {
+              const next = line ? line + ' ' + word : word;
+              if(line && mctx.measureText(next).width > maxW){
+                out.push(line);
+                line = word;
+              }else{
+                line = next;
+              }
+            });
+            if(line) out.push(line);
+            return out;
+          };
+
+          const titleFont = '900 15px Arial, Calibri, sans-serif';
+          const introFont = '800 12px Arial, Calibri, sans-serif';
+          const introLines = wrapText(introText, cssW, introFont);
+          const titleH = headerTitle ? 26 : 0;
+          const introH = introLines.length ? (introLines.length * 16 + 10) : 0;
+          const chartSpaceH = outH - padTop - titleH - introH - rankH - padBottom;
+          const cssH = Math.max(300, Math.min(520, chartSpaceH));
+          const canvas = document.createElement('canvas');
+          canvas.width = targetPxW;
+          canvas.height = targetPxH;
+          const ctx = canvas.getContext('2d');
+          ctx.scale(DPR, DPR);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, outW, outH);
+          ctx.textBaseline = 'middle';
+
+          const roundRect = (x,y,w,h,r, fillStyle, strokeStyle) => {
+            const rr = Math.max(0, Math.min(r || 0, w/2, h/2));
+            ctx.beginPath();
+            ctx.moveTo(x+rr, y);
+            ctx.arcTo(x+w, y, x+w, y+h, rr);
+            ctx.arcTo(x+w, y+h, x, y+h, rr);
+            ctx.arcTo(x, y+h, x, y, rr);
+            ctx.arcTo(x, y, x+w, y, rr);
+            ctx.closePath();
+            if(fillStyle){ ctx.fillStyle = fillStyle; ctx.fill(); }
+            if(strokeStyle){ ctx.strokeStyle = strokeStyle; ctx.lineWidth = 1; ctx.stroke(); }
+          };
+
+          let y = padTop;
+          if(headerTitle){
+            ctx.font = titleFont;
+            const titleW = Math.min(cssW, Math.max(148, Math.ceil(ctx.measureText(headerTitle).width + 18)));
+            roundRect(padX, y, titleW, 24, 5, '#F58320', null);
+            ctx.fillStyle = '#0b1220';
+            ctx.textAlign = 'left';
+            ctx.fillText(headerTitle, padX + 9, y + 12);
+            y += titleH;
+          }
+
+          if(introLines.length){
+            ctx.font = introFont;
+            ctx.fillStyle = '#64748b';
+            ctx.textAlign = 'left';
+            introLines.forEach(line => {
+              ctx.fillText(line, padX, y + 8);
+              y += 16;
+            });
+            y += 10;
+          }
+
+          ctx.drawImage(srcDrawable, padX, y, cssW, cssH);
+          const chartTop = y;
+          y += cssH;
+
+          const chartW = Number((chart && chart.width) || cssW) || cssW;
+          const scaleX = cssW / Math.max(1, chartW);
+          const chartArea = (chart && chart.chartArea) || {};
+          const areaLeft = Number.isFinite(Number(chartArea.left)) ? Number(chartArea.left) : 62;
+          const areaRight = Number.isFinite(Number(chartArea.right)) ? Number(chartArea.right) : (chartW - 58);
+          const getX = (i) => {
+            let x = NaN;
+            try{ if(chart && Array.isArray(chart.$xPositions)) x = Number(chart.$xPositions[i]); }catch(_e){}
+            try{
+              if(chart && !Number.isFinite(x) && typeof chart.getDatasetMeta === 'function'){
+                const meta = chart.getDatasetMeta(0);
+                x = Number(meta && meta.data && meta.data[i] && meta.data[i].x);
+              }
+            }catch(_e){}
+            if(!Number.isFinite(x)){
+              x = areaLeft + (areaRight - areaLeft) * ((i + 0.5) / Math.max(1, labels.length));
+            }
+            return padX + x * scaleX;
+          };
+
+          const rankY = y + 8;
+          const badgeW = labels.length > 20 ? 30 : 34;
+          ctx.font = '900 12px Arial, Calibri, sans-serif';
+          ctx.fillStyle = '#111827';
+          ctx.textAlign = 'right';
+          const labelX = Math.max(44, padX + areaLeft * scaleX - 10);
+          ctx.fillText('Top', labelX, rankY + chipH / 2);
+          ctx.textAlign = 'center';
+          ranks.forEach((rank, i) => {
+            const x = getX(i);
+            const left = Math.max(padX, Math.min(padX + cssW - badgeW, x - badgeW/2));
+            roundRect(left, rankY, badgeW, chipH, 5, '#DDEBD2', '#B8D1A9');
+            ctx.fillStyle = '#355E2A';
+            ctx.fillText(String(rank || ''), left + badgeW/2, rankY + chipH/2 + 0.5);
+          });
+
+          return canvas;
+        }catch(e){
+          console.warn('Export: no pude renderizar SBF por tienda como imagen directa', e);
+          return null;
+        }
+      }
+
       async function renderBlockToSingleCanvas(block, scratch){
         scratch.innerHTML = '';
 
@@ -30676,6 +31148,9 @@ renderShareTable({
           const headerNode = block.querySelector('.section') || null;
           return await renderDeliverySplitBlockToCanvas(sourceWrap, headerNode);
         }
+
+        const sbfStoreCanvas = await renderSbfStoreBlockToCanvas(block);
+        if(sbfStoreCanvas) return sbfStoreCanvas;
 
         try{ expandForExport(block); }catch(_e){}
         scratch.appendChild(block);
@@ -30798,7 +31273,28 @@ async function ensureJsPDF(){
           const fileName = ($q('#file')?.files && $q('#file').files[0]) ? $q('#file').files[0].name : '';
           const activeTabKey = getActiveTabKeyForExport();
           await prepareActiveTabVisualsForExport(activeTabKey);
-          const activeExport = buildChartBlocksForActiveTab();
+          let activeExport = buildChartBlocksForActiveTab();
+          if(activeExport.tab === 'sbf'){
+            const countStoreBlocks = (exportSpec) => (exportSpec.blocks || []).reduce((acc, b) =>
+              acc + (b && b.querySelectorAll ? b.querySelectorAll('.chartBottomRank[id^="rank_sbf_store_"]').length : 0)
+            , 0);
+            const expectedStores = getExportStoreList();
+            if(expectedStores.length && countStoreBlocks(activeExport) < expectedStores.length){
+              try{
+                if(typeof renderSbfStoreCards === 'function') renderSbfStoreCards(expectedStores);
+                if(typeof resizeCharts === 'function') resizeCharts();
+                if(typeof window.requestAnimationFrame === 'function'){
+                  await new Promise(resolve => requestAnimationFrame(resolve));
+                  await new Promise(resolve => requestAnimationFrame(resolve));
+                }
+                await _sleep(360);
+                if(typeof resizeCharts === 'function') resizeCharts();
+                activeExport = buildChartBlocksForActiveTab();
+              }catch(e){
+                console.warn('Export: reintento SBF por tienda falló', e);
+              }
+            }
+          }
           const title = `Reporte ${activeExport.label} — Gráficas`;
           const meta = `Pestaña: ${activeExport.label}  |  Mes actual: ${ym || '—'}  |  Tiendas: ${stores.length || '—'}  |  Generado: ${now.toLocaleString()}`;
           const meta2 = fileName ? `Archivo: ${fileName}` : '';
@@ -30821,7 +31317,7 @@ async function ensureJsPDF(){
               continue;
             }
             const pages = await renderBlockToCanvases(b, scratch);
-            pages.forEach(src => allPages.push({
+            pages.filter(src => /^data:image\/png;base64,/i.test(String(src || ''))).forEach(src => allPages.push({
               src,
               kind: isDeliverySplit ? 'delivery-split' : 'chart'
             }));
