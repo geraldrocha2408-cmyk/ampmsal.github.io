@@ -4469,9 +4469,9 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 .albumGridQty{grid-template-columns:1fr !important;align-items:stretch !important;}
 .albumGridQty>.albumCard{grid-column:1 / -1 !important;width:100% !important;max-width:100% !important;}
 .albumGridQty .albumChart.qtyDaily,.albumGridQty .albumChart.qtyCum{height:365px !important;}
-.albumChart.timelineWide{width:100% !important;max-width:100% !important;overflow-x:auto !important;overflow-y:hidden !important;padding:10px 10px 14px !important;}
-.albumChart.timelineWide .albumChartInner{height:100% !important;position:relative !important;max-width:none !important;}
-.albumChart.timelineWide canvas{display:block !important;width:100% !important;height:100% !important;max-width:none !important;max-height:none !important;}
+.albumChart.timelineWide{width:100% !important;max-width:100% !important;overflow-x:hidden !important;overflow-y:hidden !important;padding:10px 10px 14px !important;}
+.albumChart.timelineWide .albumChartInner{height:100% !important;position:relative !important;width:100% !important;min-width:0 !important;max-width:100% !important;}
+.albumChart.timelineWide canvas{display:block !important;width:100% !important;height:100% !important;max-width:100% !important;max-height:none !important;}
 @media (max-width:1100px){
   .albumGridMainTimeline .albumChart{height:340px !important;}
   .albumGridQty .albumChart.qtyDaily,.albumGridQty .albumChart.qtyCum{height:330px !important;}
@@ -28024,10 +28024,11 @@ const options = {
     }
 
 
-    const SBF_PROVIDER_ORDER = ['PEYA','PuntoXpress','RECARGAS','RapiBac','N1CO','Western Union','Promerica','Loto','Aki Pago','Smart Ticket'];
+    const SBF_PROVIDER_ORDER = ['PEYA','PuntoXpress','Banpro','RECARGAS','RapiBac','N1CO','Western Union','Promerica','Loto','Aki Pago','Smart Ticket'];
     const SBF_PROVIDER_THEME = {
       'PEYA': { bar:'#ED1C24', accent:'#d61f26' },
       'PuntoXpress': { bar:'#6D28D9', accent:'#7C3AED' },
+      'Banpro': { bar:'#00843D', accent:'#009A44' },
       'RECARGAS': { bar:'#005EA7', accent:'#0C4D8F' },
       'RapiBac': { bar:'#9F1239', accent:'#B91C1C' },
       'N1CO': { bar:'#111111', accent:'#111111' },
@@ -28043,12 +28044,13 @@ const options = {
       const norm = opNormText(raw);
       if(!norm) return '';
       if(norm.includes('peya')) return 'PEYA';
+      if(norm.includes('banpro') || (norm.includes('banco') && norm.includes('produccion')) || (norm.includes('bco') && norm.includes('produccion'))) return 'Banpro';
+      if(norm.includes('promerica') || norm.includes('proamerica') || norm.includes('pro america')) return 'Promerica';
       if(norm.includes('puntoxpress') || norm.includes('puntoexpress')) return 'PuntoXpress';
       if(norm.includes('recarga')) return 'RECARGAS';
       if(norm.includes('rapibac') || norm.includes('rapibank') || norm === 'bac' || norm.includes('bac')) return 'RapiBac';
       if(norm.includes('n1co')) return 'N1CO';
       if(norm.includes('western') || norm === 'wu' || norm.includes('union')) return 'Western Union';
-      if(norm.includes('promerica')) return 'Promerica';
       if(norm.includes('loto')) return 'Loto';
       if(norm.includes('akipago') || (norm.includes('aki') && norm.includes('pago'))) return 'Aki Pago';
       if(norm.includes('smartticket') || (norm.includes('smart') && norm.includes('ticket'))) return 'Smart Ticket';
@@ -42133,8 +42135,8 @@ function renderOnePager(storeList, currentYm, prevYms){
         }
         if(pluginOptions.valueFormat === 'qty' || ds.valueFormat === 'qty') return qtySmart(val);
         if(ds.yAxisID === 'y1' || /impacto/i.test(String(ds.label || ''))) return Number(val).toFixed(1)+'%';
-        if(canvasId === 'chart_album_impact') return money(val);
-        return money(val);
+        if(canvasId === 'chart_album_impact') return albumMoneyCompact(val);
+        return albumMoneyCompact(val);
       }
       ctx.save();
       ctx.font = `${fontWeight} ${fontSize}px Arial`;
@@ -42285,6 +42287,13 @@ function renderOnePager(storeList, currentYm, prevYms){
   function byId(id){ return document.getElementById(id); }
   function n(v){ const x=Number(v); return Number.isFinite(x) ? x : 0; }
   function money(v){ return '$' + n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
+  function albumMoneyCompact(v){
+    const x=n(v), sign=x<0?'-':'', a=Math.abs(x);
+    const trim=(num,digits)=>String(Number(num.toFixed(digits)));
+    if(a>=1000000) return sign+'$'+trim(a/1000000, a>=10000000?0:1)+'M';
+    if(a>=1000) return sign+'$'+trim(a/1000, 1)+'K';
+    return sign+'$'+Math.round(a).toLocaleString('en-US');
+  }
   function qty(v){ return n(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
   function qtySmart(v){ const x=n(v); const hasDecimals=Math.abs(x-Math.round(x))>0.0001; return x.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:hasDecimals?1:0}); }
   function pct(v){ return Number.isFinite(Number(v)) ? (Number(v)*100).toFixed(2)+'%' : '—'; }
@@ -42301,7 +42310,12 @@ function renderOnePager(storeList, currentYm, prevYms){
     return '';
   }
   function albumMatchText(r){ return norm([r.category,r.description,r.brand,r.supplier,r.department].join(' ')); }
-  function isAlbumRow(r){ const txt = albumMatchText(r); return /\balbum\b/.test(txt) || /\bfigurit/.test(txt) || /\bsticker/.test(txt) || /\blamina/.test(txt); }
+  function isAlbumExcludedRow(r){ const txt = albumMatchText(r); return /\bcopa\s+america\b/.test(txt); }
+  function isAlbumRow(r){
+    const txt = albumMatchText(r);
+    if(isAlbumExcludedRow(r)) return false;
+    return /\bsticker/.test(txt) || /\bfigurit/.test(txt) || /\blamina/.test(txt) || (/\balbum\b/.test(txt) && (/\bmundial\b/.test(txt) || /\bfifa\b/.test(txt) || /\bpanini\b/.test(txt)));
+  }
   function toDate(v){
     if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
     if(typeof v === 'number' && typeof XLSX !== 'undefined' && XLSX && XLSX.SSF && XLSX.SSF.parse_date_code){
@@ -42491,7 +42505,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     return state[key];
   }
   function chartOptions(extra){
-    const base={responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:18,right:18,left:10,bottom:0}},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){ const y=ctx.parsed && (ctx.parsed.y != null ? ctx.parsed.y : ctx.parsed); return `${ctx.dataset?.label || ctx.label}: ${money(y)}`; }}},albumLabelPlugin:{display:true,color:'#F58320',fontSize:11,fontWeight:'1000',offset:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}};
+    const base={responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:18,right:18,left:10,bottom:0}},plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11,weight:'800'},color:'#11284A'}},tooltip:{callbacks:{label:function(ctx){ const y=ctx.parsed && (ctx.parsed.y != null ? ctx.parsed.y : ctx.parsed); return `${ctx.dataset?.label || ctx.label}: ${money(y)}`; }}},albumLabelPlugin:{display:true,color:'#F58320',fontSize:11,fontWeight:'1000',offset:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:45,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>albumMoneyCompact(v)},grid:{color:'rgba(148,163,184,.20)'}}}};
     const out=Object.assign({}, base, extra||{});
     out.plugins = Object.assign({}, base.plugins, (extra&&extra.plugins)||{});
     out.plugins.legend = Object.assign({}, base.plugins.legend, extra?.plugins?.legend||{});
@@ -42772,20 +42786,68 @@ function renderOnePager(storeList, currentYm, prevYms){
       forceUnit: ''
     };
   }
+  function albumPaniniSelloutCutoff(scope){
+    try{
+      const months = scope && scope.periodMonthsSet instanceof Set ? scope.periodMonthsSet : new Set();
+      const hasPaniniWindow = months.has('2026-05') && months.has('2026-06') && (scope.selectedPeriods || []).length >= 2;
+      if(!hasPaniniWindow) return {applies:false};
+      const dates = Array.from(new Set((scope.scoped || [])
+        .map(r=>isoDate(r && r.date))
+        .filter(Boolean)))
+        .sort();
+      if(!dates.length) return {applies:false};
+      const startIso = dates[0];
+      const cutoffIso = dates[Math.min(29, dates.length - 1)];
+      return {
+        applies:true,
+        day: Math.min(30, dates.length),
+        startIso,
+        cutoffIso,
+        startDate: toDate(startIso),
+        cutoffDate: toDate(cutoffIso),
+        label: `D${String(Math.min(30, dates.length)).padStart(2,'0')} Panini`
+      };
+    }catch(_e){
+      return {applies:false};
+    }
+  }
   function renderKpis(scope){
     const kpis=byId('albumKpis'); if(!kpis) return;
     const totalSales=scope.scoped.reduce((a,r)=>a+n(r.sales),0);
     const totalQty=scope.scoped.reduce((a,r)=>a+n(r.qty),0);
+    const paniniCutoff=albumPaniniSelloutCutoff(scope);
+    const cutoffRows=paniniCutoff.applies
+      ? scope.scoped.filter(r=>{
+          const d=toDate(r && r.date);
+          return d && d>=paniniCutoff.startDate && d<=paniniCutoff.cutoffDate;
+        })
+      : scope.scoped;
+    const cutoffSales=cutoffRows.reduce((a,r)=>a+n(r.sales),0);
+    const paniniMixRows=(scope.payload.albumRows||[]).filter(r=>{
+      if(!scope.storeSet.has(r.store)) return false;
+      if(scope.itemSet && !scope.itemSet.has(String(r.item))) return false;
+      if(!scope.periodSet.has(periodKey(r, scope.mode))) return false;
+      if(!paniniCutoff.applies) return true;
+      const d=toDate(r && r.date);
+      return d && d>=paniniCutoff.startDate && d<=paniniCutoff.cutoffDate;
+    });
+    const paniniMixTotalSales=paniniMixRows.reduce((a,r)=>a+n(r.sales),0);
+    const paniniDeliverySales=paniniMixRows.filter(albumRowIsDelivery).reduce((a,r)=>a+n(r.sales),0);
+    const paniniDeliveryShare=paniniMixTotalSales>0 ? paniniDeliverySales/paniniMixTotalSales : NaN;
+    const paniniDeliverySub=paniniMixTotalSales>0 ? `${money(paniniDeliverySales)} delivery · ${money(paniniMixTotalSales)} total` : 'Sin venta Panini base';
     const selDates = scope.mode==='daily' ? (scope.selectedPeriods||[]).map(p=>toDate(p)).filter(Boolean).sort((a,b)=>a-b) : [];
     const selDate = selDates.length ? selDates[selDates.length-1] : null;
     const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (selDate ? monthKey(selDate) : (scope.scoped[0]?.month || safeTxt(scope.periodSel).slice(0,7)));
     let mtdRows=scope.rows.filter(r=>r.month===mtdMonth);
     if(scope.mode==='daily' && selDate) mtdRows=mtdRows.filter(r=>r.date<=selDate);
     const mtdSales=mtdRows.reduce((a,r)=>a+n(r.sales),0);
+    const accumTitle=paniniCutoff.applies ? 'Acumulado D30' : 'Acumulado mes';
+    const accumValue=paniniCutoff.applies ? cutoffSales : mtdSales;
+    const accumSub=paniniCutoff.applies ? `Venta hasta ${paniniCutoff.label} (${paniniCutoff.cutoffIso})` : `MTD ${mtdMonth || 'â€”'}`;
 
     const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
     const coverageBase=albumCoverageBase(scope, invRows);
-    const scopedInv = coverageBase.invRows;
+    const scopedInv = paniniCutoff.applies ? [] : coverageBase.invRows;
     const stock=scopedInv.reduce((a,r)=>a+n(r.qty),0);
     const invAmount=scopedInv.reduce((a,r)=>a+n(r.amount),0);
     const stockEq=scopedInv.reduce((a,r)=>a+albumKpiEquivalentQty(r),0);
@@ -42825,20 +42887,40 @@ function renderOnePager(storeList, currentYm, prevYms){
     const totalStoreSales = totalRows.reduce((a,r)=>a+n(r.sales),0);
     const impact = totalStoreSales>0 ? totalSales/totalStoreSales : NaN;
     const topStore=topRows(aggregate(scope.scoped, r=>r.store, r=>r.sales),1)[0];
+    let impactFinal=impact;
+    let impactSubFinal=topStore ? `Top tienda: ${topStore.k}` : 'Sin base total';
+    if(paniniCutoff.applies){
+      const totalRowsCutoff=totalRows.filter(r=>{
+        const d=toDate(r && r.date);
+        return d && d>=paniniCutoff.startDate && d<=paniniCutoff.cutoffDate;
+      });
+      const totalStoreSalesCutoff=totalRowsCutoff.reduce((a,r)=>a+n(r.sales),0);
+      const topStoreCutoff=topRows(aggregate(cutoffRows, r=>r.store, r=>r.sales),1)[0];
+      impactFinal=totalStoreSalesCutoff>0 ? cutoffSales/totalStoreSalesCutoff : NaN;
+      impactSubFinal=`Corte ${paniniCutoff.label} · Top tienda: ${topStoreCutoff ? topStoreCutoff.k : '—'}`;
+    }
     const defs=[
       ['Venta periodo', money(totalSales), `${scope.scoped.length} registros · ${scope.periodLabelText}`],
       ['Unidades periodo', qty(totalQty), 'Cantidad vendida detectada'],
       ['Acumulado mes', money(mtdSales), `MTD ${mtdMonth || '—'}`],
-      ['Existencias', stockLabel, stockSub],
+      ['% vta Panini delivery', pct(paniniDeliveryShare), paniniDeliverySub],
       ['Inventario $ total', money(invAmount), `Monto actual · ${coverageBase.label}`],
       ['Días inventario', daysLabel, daysSub],
       ['Impacto venta general', pct(impact), topStore ? `Top tienda: ${topStore.k}` : 'Sin base total']
     ];
+    if(paniniCutoff.applies){
+      defs[2]=[accumTitle, money(accumValue), accumSub];
+      defs[3]=['% vta Panini delivery', pct(paniniDeliveryShare), `${paniniDeliverySub} · Corte ${paniniCutoff.label}`];
+      defs[4]=['Inventario $ total', money(0), 'Monto actual: sin inventario'];
+      defs[5]=['Días inventario', '0 días', `Corte ${paniniCutoff.label}: inventario agotado`];
+      defs[6]=['Impacto venta general', pct(impactFinal), impactSubFinal];
+    }
     kpis.innerHTML=defs.map(d=>`<div class="albumKpi"><div class="k">${d[0]}</div><div class="v">${d[1]}</div><div class="s">${d[2]}</div></div>`).join('');
     const source=byId('albumSourceChip'); if(source) source.textContent = `Fuente: ${scope.payload.source || 'pendiente'}`;
     const scopeChip=byId('albumScopeChip'); if(scopeChip) scopeChip.textContent = `Tiendas: ${scope.stores.length ? (scope.stores.length<=3 ? scope.stores.join(', ') : scope.stores.slice(0,2).join(', ')+' +'+(scope.stores.length-2)) : '—'} · ${albumDeliveryLabel(scope.deliveryModes)}`;
   }
   function renderTables(scope){
+    const paniniCutoff=albumPaniniSelloutCutoff(scope);
     const salesTotalBase = scope.scoped.reduce((a,x)=>a+n(x.sales),0);
     const salesAgg=new Map();
     scope.scoped.forEach(r=>{
@@ -42858,7 +42940,7 @@ function renderOnePager(storeList, currentYm, prevYms){
       salesAll.length ? ['TOTAL','',money(salesTotal.sales),qty(salesTotal.qty),pct(salesTotalBase ? 1 : NaN)] : null
     );
 
-    const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r) && albumInventoryMatchesItem(r, scope.itemSet));
+    const invRows=paniniCutoff.applies ? [] : getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r) && albumInventoryMatchesItem(r, scope.itemSet));
     const invAgg=new Map();
     invRows.forEach(r=>{
       const item=r.description||r.category||r.brand||'Sin descripción';
@@ -42875,7 +42957,7 @@ function renderOnePager(storeList, currentYm, prevYms){
       'albumStockTable',
       ['Tienda','Item','Existencias','Valor inv.'],
       invRowsTop.map(r=>[r.store,r.item,qty(r.qty),money(r.amount)]),
-      invAll.length ? ['TOTAL','',qty(invTotal.qty),money(invTotal.amount)] : null
+      paniniCutoff.applies ? ['TOTAL','',qty(0),money(0)] : (invAll.length ? ['TOTAL','',qty(invTotal.qty),money(invTotal.amount)] : null)
     );
 
     const mtdMonth = scope.mode==='monthly' ? scope.periodSel : (scope.scoped[0]?.month || safeTxt(scope.periodSel).slice(0,7));
@@ -42996,10 +43078,12 @@ function renderOnePager(storeList, currentYm, prevYms){
       const pad=(cs ? (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0) : 0);
       outerW=Math.max(0, (outer.clientWidth || 0) - pad - 2);
     }catch(_e){ outerW=Math.max(0, outer.clientWidth || 0); }
-    const dynamicW=Math.ceil((Number(pointCount)||0) * pxPer);
-    const w=Math.max(760, hardMin, outerW, dynamicW);
-    inner.style.width=w+'px';
-    inner.style.minWidth=w+'px';
+      const w=Math.max(0, outerW || outer.clientWidth || 0);
+      inner.style.width='100%';
+      inner.style.minWidth='0';
+      inner.style.maxWidth='100%';
+      canvas.style.width='100%';
+      canvas.style.maxWidth='100%';
   }
   function buildDailyCumulativeQty(scope, matcher, qtyFn){ return buildCumulativeQty(scope, matcher, qtyFn, 'daily'); }
   function buildCumulativeQty(scope, matcher, qtyFn, grain){
@@ -43183,7 +43267,7 @@ function renderOnePager(storeList, currentYm, prevYms){
         },
         scales:{
           x:{stacked:true,ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},
-          y:{stacked:true,beginAtZero:true,grace:'15%',ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},grid:{color:'rgba(148,163,184,.20)'}},
+          y:{stacked:true,beginAtZero:true,grace:'15%',ticks:{callback:v=>albumMoneyCompact(v),color:'#11284A',font:{size:10,weight:'800'}},grid:{color:'rgba(148,163,184,.20)'}},
           y1:{beginAtZero:true,position:'right',grace:'15%',ticks:{callback:v=>v+'%',color:'#11284A',font:{size:10,weight:'900'}},grid:{drawOnChartArea:false}}
         }
       })
@@ -43195,6 +43279,12 @@ function renderOnePager(storeList, currentYm, prevYms){
     const grain=readTimeView();
     const tag=timeViewTag();
     const metricLabel=timelineMetricLabel(grain);
+    const paniniCutoff=albumPaniniSelloutCutoff(scope);
+    const rowWithinPaniniCutoff=(r)=>{
+      if(!paniniCutoff.applies) return true;
+      const d=toDate(r && r.date);
+      return d && d>=paniniCutoff.startDate && d<=paniniCutoff.cutoffDate;
+    };
     const daypartMeta=byId('albumDaypartMeta');
     const filteredDayAgg=buildTimelineRows(scope.rows, scope, grain, r=>r.sales);
     const albumDayLabels = filteredDayAgg.map(r=>r.label);
@@ -43204,7 +43294,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     if(albumDailyMeta) albumDailyMeta.textContent = `Barra: venta ${metricLabel} · línea: % impacto sobre venta general.`;
     const albumTrendMeta=byId('albumTrendMeta');
     if(albumTrendMeta) albumTrendMeta.textContent = `Línea de acumulado ${timeViewLong()} del periodo seleccionado.`;
-    const dailyImpactBaseRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store));
+    const dailyImpactBaseRows = scope.payload.allRows.filter(r=>scope.storeSet.has(r.store) && albumDeliveryPass(r, scope.deliveryModes));
     const baseTimelineRows = buildTimelineRows(dailyImpactBaseRows, scope, grain, r=>r.sales);
     const baseByKey = new Map(baseTimelineRows.map(r=>[r.key, r.value]));
     const dailyImpactPct = filteredDayAgg.map(x=>{
@@ -43271,7 +43361,7 @@ function renderOnePager(storeList, currentYm, prevYms){
             position:'left',
             grace:'16%',
             title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            ticks:{callback:v=>albumMoneyCompact(v),color:'#11284A',font:{size:10,weight:'800'}},
             grid:{color:'rgba(148,163,184,.20)'}
           },
           y1:{
@@ -43287,10 +43377,16 @@ function renderOnePager(storeList, currentYm, prevYms){
     });
     let cum=0; const trend=filteredDayAgg.map((x,i)=>{cum+=n(x.value); return {k:x.key,caption:x.caption,label:albumDayLabels[i] || (timelinePrefix(grain)+String(i+1).padStart(2,'0')),v:cum,periodValue:x.value};});
     ensureAlbumTimelineCanvas('chart_album_trend', trend.length, {pxPer:grain==='weekly'?96:62,minWidth:1040});
-    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.label),datasets:[{label:`Acumulado ${tag}`,data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({layout:{padding:{top:30,right:18,left:10,bottom:0}},plugins:{tooltip:{callbacks:{title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; return `${trend[idx]?.label || ''} · ${trend[idx]?.caption || trend[idx]?.k || ''}`; },label:function(ctx){ const r=trend[ctx.dataIndex]||{}; return `Acumulado: ${money(ctx.raw)} · ${grain==='weekly'?'Semana':'Día'}: ${money(r.periodValue)}`; }}},albumLabelPlugin:{offset:14,fontSize:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>money(v)},grid:{color:'rgba(148,163,184,.20)'}}}})});
+    makeChart('chartAlbumTrend','chart_album_trend',{type:'line',data:{labels:trend.map(x=>x.label),datasets:[{label:`Acumulado ${tag}`,data:trend.map(x=>x.v),borderColor:'#F58320',backgroundColor:'rgba(245,131,32,.12)',fill:true,tension:.28,pointRadius:3}]},options:chartOptions({layout:{padding:{top:30,right:18,left:10,bottom:0}},plugins:{tooltip:{callbacks:{title:function(items){ const idx=items && items.length ? items[0].dataIndex : 0; return `${trend[idx]?.label || ''} · ${trend[idx]?.caption || trend[idx]?.k || ''}`; },label:function(ctx){ const r=trend[ctx.dataIndex]||{}; return `Acumulado: ${money(ctx.raw)} · ${grain==='weekly'?'Semana':'Día'}: ${money(r.periodValue)}`; }}},albumLabelPlugin:{offset:14,fontSize:10}},scales:{x:{ticks:{color:'#11284A',font:{size:10,weight:'800'},maxRotation:0,minRotation:0},grid:{display:false}},y:{beginAtZero:true,grace:'8%',ticks:{color:'#11284A',font:{size:10,weight:'800'},callback:v=>albumMoneyCompact(v)},grid:{color:'rgba(148,163,184,.20)'}}}})});
     renderAlbumQtyDailyCharts(scope);
     renderAlbumQtyCumCharts(scope);
-    const impactRows=scope.stores.map(st=>{ const album=scope.scoped.filter(r=>r.store===st).reduce((a,r)=>a+n(r.sales),0); const total=scope.payload.allRows.filter(r=>r.store===st && scope.periodSet.has(periodKey(r, mode))).reduce((a,r)=>a+n(r.sales),0); return {store:st,impact:total>0?album/total:0,album,total}; }).sort((a,b)=>b.impact-a.impact);
+    const impactRows=scope.stores.map(st=>{
+      const albumRows=(scope.scoped||[]).filter(r=>r.store===st && rowWithinPaniniCutoff(r));
+      const baseRows=(scope.payload.allRows||[]).filter(r=>r.store===st && albumDeliveryPass(r, scope.deliveryModes) && scope.periodSet.has(periodKey(r, mode)) && rowWithinPaniniCutoff(r));
+      const album=albumRows.reduce((a,r)=>a+n(r.sales),0);
+      const total=baseRows.reduce((a,r)=>a+n(r.sales),0);
+      return {store:st,impact:total>0?album/total:0,album,total};
+    }).sort((a,b)=>b.impact-a.impact);
     makeChart('chartAlbumImpact','chart_album_impact',{
       type:'bar',
       data:{
@@ -43346,7 +43442,7 @@ function renderOnePager(storeList, currentYm, prevYms){
             position:'left',
             grace:'18%',
             title:{display:true,text:'Ventas',color:'#11284A',font:{size:10,weight:'900'}},
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            ticks:{callback:v=>albumMoneyCompact(v),color:'#11284A',font:{size:10,weight:'800'}},
             grid:{color:'rgba(148,163,184,.20)'}
           },
           y1:{
@@ -43391,7 +43487,7 @@ function renderOnePager(storeList, currentYm, prevYms){
           y:{
             beginAtZero:true,
             grace:'15%',
-            ticks:{callback:v=>money(v),color:'#11284A',font:{size:10,weight:'800'}},
+            ticks:{callback:v=>albumMoneyCompact(v),color:'#11284A',font:{size:10,weight:'800'}},
             grid:{color:'rgba(148,163,184,.20)'}
           }
         }
@@ -44445,6 +44541,13 @@ function renderOnePager(storeList, currentYm, prevYms){
     if(arr.length === 2) return cut[0] + ' y ' + cut[1];
     return cut.slice(0, -1).join(', ') + (arr.length > max ? ` y ${arr.length-max} más` : ` y ${cut[cut.length-1]}`);
   }
+  function hallJoinSelectedNames(names, max=6){
+    const arr = (names || []).map(x=>hallText(x)).filter(Boolean);
+    const limit = Math.max(1, Number(max) || 6);
+    if(!arr.length) return hallJoinNames(arr, limit);
+    if(arr.length <= limit) return hallJoinNames(arr, limit);
+    return arr.slice(0, limit).join(', ') + ` y ${arr.length-limit} m\u00e1s`;
+  }
   function hallLeadPhrase(level, names, isNegative){
     const one = (names || []).length <= 1;
     const mapUp = {
@@ -44742,19 +44845,24 @@ function renderOnePager(storeList, currentYm, prevYms){
     const rows = hallSelectedRows(level);
     if(!rows.length) return '';
     const focus = hallReasonMode();
-    const topRows = rows.slice().sort((a,b)=>{
+    const sortedRows = rows.slice().sort((a,b)=>{
       const av = hallMetricView(a, focus);
       const bv = hallMetricView(b, focus);
       const aAbs = Math.abs(Number.isFinite(av.diff) ? av.diff : 0);
       const bAbs = Math.abs(Number.isFinite(bv.diff) ? bv.diff : 0);
       if(bAbs !== aAbs) return bAbs - aAbs;
       return Number(b.cur || 0) - Number(a.cur || 0);
-    }).slice(0, level === 'description' ? 1 : 3);
-    const names = hallJoinNames(topRows.map(r=>r.label), level === 'description' ? 1 : 3);
+    });
+    const topRows = level === 'description' ? sortedRows : sortedRows.slice(0, 3);
+    const names = level === 'description'
+      ? hallJoinSelectedNames(topRows.map(r=>r.label), 6)
+      : hallJoinNames(topRows.map(r=>r.label), 3);
     const agg = hallAggregateRows(topRows);
     if(!agg) return '';
     const view = hallMetricView(agg, focus);
-    const lead = hallLeadPhrase(level, topRows, Number(view.diff) < 0);
+    const lead = (level === 'description' && topRows.length > 1)
+      ? 'Los \u00edtems seleccionados son'
+      : hallLeadPhrase(level, topRows, Number(view.diff) < 0);
     const bucketPrefix = hallBucketPrefix(level);
     const bucketSummary = ((level === 'daypart' || level === 'dow') && hallText(bucketPrefix)) ? hallBucketSummary(level) : '';
     const isBucketOnly = (level === 'daypart' && topRows.length === 1 && /^(Turno\sAM|Turno\sPM)$/i.test(String(topRows[0].label || ''))) || (level === 'dow' && topRows.length === 1 && /^(Día\sSem|Fin\sde\sSem)$/i.test(String(topRows[0].label || '')));
@@ -44767,6 +44875,12 @@ function renderOnePager(storeList, currentYm, prevYms){
         return `${r.label} (delta ${hallFmtRatio(rv.ratio)}, ${hallGapWord()} ${hallFmtSignedK(rv.diff)})`;
       }).join('; ');
       txt = `${lead} ${detail}.`;
+    } else if(level === 'description' && topRows.length > 1){
+      const detail = topRows.slice(0, 4).map(r=>{
+        const rv = hallMetricView(r, focus);
+        return `${r.label} (delta ${hallFmtRatio(rv.ratio)}, ${hallGapWord()} ${hallFmtSignedK(rv.diff)})`;
+      }).join('; ');
+      txt = `${lead} ${names}. En conjunto: delta ${hallFmtRatio(view.ratio)} y ${hallGapWord()} ${hallFmtSignedK(view.diff)}. Principales impactos: ${detail}.`;
     } else {
       txt = `${lead} ${names}: delta ${hallFmtRatio(view.ratio)} y ${hallGapWord()} ${hallFmtSignedK(view.diff)}.`;
     }
