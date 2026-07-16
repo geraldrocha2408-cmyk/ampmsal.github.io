@@ -44312,6 +44312,16 @@ function renderOnePager(storeList, currentYm, prevYms){
         const looseRows = (salesRows || []).filter(r=>hallFilterSalesLoose(r, ctx, picks));
         if(looseRows.some(r=>hallHasUsefulLabel(r[field]))) rows = looseRows;
       }
+      if(!rows.some(r=>hallHasUsefulLabel(r[field])) && picks?.description?.length){
+        const relaxed = Object.assign({}, picks, {description:[]});
+        const relaxedRows = (salesRows || []).filter(r=>hallFilterSales(r, ctx, relaxed));
+        if(relaxedRows.some(r=>hallHasUsefulLabel(r[field]))){
+          rows = relaxedRows;
+        }else{
+          const relaxedLooseRows = (salesRows || []).filter(r=>hallFilterSalesLoose(r, ctx, relaxed));
+          if(relaxedLooseRows.some(r=>hallHasUsefulLabel(r[field]))) rows = relaxedLooseRows;
+        }
+      }
       if(rows.some(r=>hallHasUsefulLabel(r[field]))){
         rows = rows.filter(r=>hallHasUsefulLabel(r[field]));
       }
@@ -44570,8 +44580,21 @@ function renderOnePager(storeList, currentYm, prevYms){
     return map[level] || (one ? (isNegative ? 'El foco con más afectación es' : 'El foco de mayor aporte es') : (isNegative ? 'Los focos con más afectación son' : 'Los focos de mayor aporte son'));
   }
 
+  function hallShortReasonLabel(level, count){
+    const plural = Number(count || 0) > 1;
+    const labels = {
+      supplier: plural ? 'Proveedores' : 'Proveedor',
+      store: plural ? 'Tiendas' : 'Tienda',
+      brand: plural ? 'Marcas' : 'Marca',
+      description: plural ? '\u00cdtems' : '\u00cdtem',
+      daypart: plural ? 'Horarios' : 'Horario',
+      dow: plural ? 'D\u00edas' : 'D\u00eda'
+    };
+    return labels[level] || 'Foco';
+  }
+
   function hallDeliveryRepresentation(agg){
-    if(!agg) return '';
+    if(!agg || !hallHasDeliverySignal(agg, 'prom')) return '';
     const diffBase = Number(agg.diffProm);
     const delDiff = Number(agg.deliveryDiffProm);
     if(Number.isFinite(diffBase) && Math.abs(diffBase) > 1e-9 && Number.isFinite(delDiff)){
@@ -44585,6 +44608,44 @@ function renderOnePager(storeList, currentYm, prevYms){
       return `${pct.toFixed(0)}% de la venta ${isMonthlyReport() ? 'mensual' : 'semanal'}`;
     }
     return '';
+  }
+
+  function hallHasDeliverySignal(agg, focus){
+    if(!agg) return false;
+    const mode = focus === 'ly' ? 'ly' : 'prom';
+    const cur = Number(agg.deliveryCur);
+    const base = mode === 'ly' ? Number(agg.deliveryLy) : Number(agg.deliveryProm);
+    const ratio = mode === 'ly' ? Number(agg.deliveryDeltaLy) : Number(agg.deliveryDeltaProm);
+    const diff = mode === 'ly' ? Number(agg.deliveryDiffLy) : Number(agg.deliveryDiffProm);
+    const hasVolume = [cur, base].some(v => Number.isFinite(v) && Math.abs(v) > 0.5);
+    const hasDiff = Number.isFinite(diff) && Math.abs(diff) > 0.5;
+    const hasRatio = Number.isFinite(ratio) && Math.abs(ratio - 1) > 0.0001 && hasVolume;
+    return hasVolume || hasDiff || hasRatio;
+  }
+
+  function hallDescriptionParentDeliveryAgg(baseAgg, focus){
+    if(!baseAgg || hallHasDeliverySignal(baseAgg, focus)) return baseAgg;
+    try{
+      const hb = ensureHallState();
+      const ctx = hallCurrentContext();
+      const picks = hallCloneBuilderState(hb).selected || {};
+      picks.description = [];
+      const rows = (Array.isArray(state?.hallazgosData?.salesRows) ? state.hallazgosData.salesRows : [])
+        .filter(r => r && r.is_delivery && hallFilterSalesLoose(r, ctx, picks));
+      const m = hallMetricFromRows(rows, ctx, {deliveryOnly:true});
+      const out = Object.assign({}, baseAgg, {
+        deliveryCur: m.cur,
+        deliveryProm: m.prom,
+        deliveryLy: m.ly,
+        deliveryDeltaProm: m.deltaProm,
+        deliveryDiffProm: m.diffProm,
+        deliveryDeltaLy: m.deltaLy,
+        deliveryDiffLy: m.diffLy
+      });
+      return hallHasDeliverySignal(out, focus) ? out : baseAgg;
+    }catch(e){
+      return baseAgg;
+    }
   }
 
   function hallReasonMode(){
@@ -44818,11 +44879,11 @@ function renderOnePager(storeList, currentYm, prevYms){
       parts.push(`${names}: delta ${hallFmtRatio(agg.deltaProm)} y ${hallGapWord()} ${hallFmtSignedK(agg.diffProm)}.`);
       if(Number.isFinite(agg.deltaLy)) parts.push(`Referencia vs LY ${hallFmtRatio(agg.deltaLy)}.`);
     }
-    if(Number.isFinite(agg.deliveryDeltaProm) || Number.isFinite(agg.deliveryDiffProm) || Number.isFinite(agg.deliveryDeltaLy) || Number.isFinite(agg.deliveryDiffLy)){
+    if(hallHasDeliverySignal(agg, focus)){
       if(focus === 'ly'){
         let del = `Delivery delta ${hallFmtRatio(agg.deliveryDeltaLy)}`;
         if(Number.isFinite(agg.deliveryDiffLy)) del += ` y ${hallGapWord()} ${hallFmtSignedK(agg.deliveryDiffLy)}`;
-        if(Number.isFinite(agg.deliveryDeltaProm) || Number.isFinite(agg.deliveryDiffProm)){
+        if(hallHasDeliverySignal(agg, 'prom')){
           let ref = ` Referencia vs ${hallPromLabel()}`;
           if(Number.isFinite(agg.deliveryDeltaProm)) ref += ` ${hallFmtRatio(agg.deliveryDeltaProm)}`;
           if(Number.isFinite(agg.deliveryDiffProm)) ref += ` y ${hallGapWord()} ${hallFmtSignedK(agg.deliveryDiffProm)}`;
@@ -44874,28 +44935,30 @@ function renderOnePager(storeList, currentYm, prevYms){
         const rv = hallMetricView(r, focus);
         return `${r.label} (delta ${hallFmtRatio(rv.ratio)}, ${hallGapWord()} ${hallFmtSignedK(rv.diff)})`;
       }).join('; ');
-      txt = `${lead} ${detail}.`;
+      txt = `${hallShortReasonLabel(level, topRows.length)}: ${detail}.`;
     } else if(level === 'description' && topRows.length > 1){
-      const detail = topRows.slice(0, 4).map(r=>{
-        const rv = hallMetricView(r, focus);
-        return `${r.label} (delta ${hallFmtRatio(rv.ratio)}, ${hallGapWord()} ${hallFmtSignedK(rv.diff)})`;
-      }).join('; ');
-      txt = `${lead} ${names}. En conjunto: delta ${hallFmtRatio(view.ratio)} y ${hallGapWord()} ${hallFmtSignedK(view.diff)}. Principales impactos: ${detail}.`;
+      const top = topRows[0];
+      const tv = hallMetricView(top, focus);
+      const impactLabel = Number(tv.diff) < 0 ? 'mayor afectaci\u00f3n' : 'mayor impacto';
+      txt = `\u00cdtems: ${names}. Conjunto: delta ${hallFmtRatio(view.ratio)}, ${hallGapWord()} ${hallFmtSignedK(view.diff)}. ${impactLabel}: ${top.label} (delta ${hallFmtRatio(tv.ratio)}, ${hallGapWord()} ${hallFmtSignedK(tv.diff)}).`;
     } else {
-      txt = `${lead} ${names}: delta ${hallFmtRatio(view.ratio)} y ${hallGapWord()} ${hallFmtSignedK(view.diff)}.`;
+      txt = `${hallShortReasonLabel(level, topRows.length)}: ${names} (delta ${hallFmtRatio(view.ratio)}, ${hallGapWord()} ${hallFmtSignedK(view.diff)}).`;
     }
     if(bucketSummary && !isBucketOnly) txt = `${bucketSummary} ${txt}`;
     if(level === 'description') txt += hallQtySentence(agg, focus);
-    if(level === 'description' && focus === 'prom' && (Number.isFinite(view.deliveryRatio) || Number.isFinite(view.deliveryDiff))){
-      let delTxt = ` Delivery delta ${hallFmtRatio(view.deliveryRatio)} y ${hallGapWord()} ${hallFmtSignedK(view.deliveryDiff)}`;
-      const share = hallDeliveryRepresentation(agg);
-      if(share) delTxt += `, representa ${share}`;
+    const deliveryAgg = level === 'description' ? hallDescriptionParentDeliveryAgg(agg, focus) : agg;
+    const deliveryView = deliveryAgg === agg ? view : hallMetricView(deliveryAgg, focus);
+    if(level === 'description' && focus === 'prom' && hallHasDeliverySignal(deliveryAgg, 'prom')){
+      let delTxt = ` Delivery delta ${hallFmtRatio(deliveryView.deliveryRatio)}`;
+      if(Number.isFinite(deliveryView.deliveryDiff)) delTxt += ` y ${hallGapWord()} ${hallFmtSignedK(deliveryView.deliveryDiff)}`;
+      const share = hallDeliveryRepresentation(deliveryAgg);
+      if(share) delTxt += ` (${share})`;
       delTxt += '.';
       txt += delTxt;
     }
-    if(level === 'description' && focus === 'ly' && (Number.isFinite(view.deliveryRatio) || Number.isFinite(view.deliveryDiff))){
-      let delTxt = ` Delivery delta ${hallFmtRatio(view.deliveryRatio)}`;
-      if(Number.isFinite(view.deliveryDiff)) delTxt += ` y ${hallGapWord()} ${hallFmtSignedK(view.deliveryDiff)}`;
+    if(level === 'description' && focus === 'ly' && hallHasDeliverySignal(deliveryAgg, 'ly')){
+      let delTxt = ` Delivery delta ${hallFmtRatio(deliveryView.deliveryRatio)}`;
+      if(Number.isFinite(deliveryView.deliveryDiff)) delTxt += ` y ${hallGapWord()} ${hallFmtSignedK(deliveryView.deliveryDiff)}`;
       delTxt += '.';
       txt += delTxt;
     }
@@ -44904,6 +44967,8 @@ function renderOnePager(storeList, currentYm, prevYms){
   function hallGenerateReasons(){
     const focus = hallReasonMode();
     const parts = ['supplier','store','brand','description','daypart','dow'].map(hallReasonSentence).filter(Boolean);
+    if(!parts.length) return `${hallFocusLabel(focus)}: selecciona supplier, tienda, marca, item, horario y d\u00eda para armar razones.`;
+    return `${hallFocusLabel(focus)}: ${parts.join(' ')}`;
     if(!parts.length) return `Enfoque razones ${hallFocusLabel(focus)}. A medida que avances en supplier, tienda, marca, item, horario y día, aquí se armarán las razones en cascada.`;
     return `Enfoque razones ${hallFocusLabel(focus)}. ${parts.join(' ')}`;
   }
