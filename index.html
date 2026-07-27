@@ -69121,5 +69121,1085 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
 })();
 </script>
 
+<style id="ampm-proyecciones-module-v1-style">
+  .projRoot{
+    margin:0;
+    color:#11284A;
+  }
+  .projHero{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    align-items:flex-start;
+    margin:0 0 18px;
+    padding:18px 20px;
+    border:1px solid rgba(12,77,143,.20);
+    border-radius:16px;
+    background:linear-gradient(135deg,rgba(12,77,143,.18),rgba(255,255,255,.88) 48%,rgba(245,131,32,.18));
+    box-shadow:0 16px 34px rgba(17,40,74,.10);
+  }
+  .projHero h2{
+    margin:0 0 6px;
+    font-size:26px;
+    line-height:1.05;
+    color:#11284A;
+  }
+  .projHero p{
+    margin:0;
+    color:#526581;
+    font-weight:800;
+    font-size:13px;
+  }
+  .projBadge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(12,77,143,.18);
+    font-size:12px;
+    font-weight:1000;
+    white-space:nowrap;
+    box-shadow:0 8px 18px rgba(17,40,74,.08);
+  }
+  .projControls{
+    display:grid;
+    grid-template-columns:repeat(7,minmax(130px,1fr));
+    gap:10px;
+    margin:0 0 14px;
+    padding:14px;
+    border:1px solid rgba(12,77,143,.16);
+    border-radius:16px;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 12px 28px rgba(17,40,74,.08);
+  }
+  .projField{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+  .projField label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:1000;
+    color:#526581;
+  }
+  .projSelect{
+    width:100%;
+    min-height:38px;
+    border-radius:12px;
+    border:1px solid rgba(12,77,143,.24);
+    background:#fff;
+    color:#11284A;
+    font-size:13px;
+    font-weight:900;
+    padding:8px 10px;
+    outline:none;
+  }
+  .projSelect[multiple]{
+    height:126px;
+    padding:6px;
+  }
+  .projActions{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .projBtn{
+    border:0;
+    border-radius:13px;
+    padding:11px 12px;
+    background:linear-gradient(180deg,#F7931A,#F58320);
+    color:#fff;
+    font-size:13px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:0 10px 18px rgba(245,131,32,.22);
+  }
+  .projBtn.secondary{
+    background:#fff;
+    color:#11284A;
+    border:1px solid rgba(12,77,143,.22);
+    box-shadow:0 8px 16px rgba(17,40,74,.07);
+  }
+  .projCheck{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+    font-weight:900;
+    color:#334155;
+  }
+  .projSummary{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(150px,1fr));
+    gap:10px;
+    margin:0 0 14px;
+  }
+  .projKpi{
+    position:relative;
+    overflow:hidden;
+    min-height:92px;
+    border:1px solid rgba(12,77,143,.16);
+    border-radius:14px;
+    background:#fff;
+    padding:14px 14px 14px 18px;
+    box-shadow:0 12px 26px rgba(17,40,74,.08);
+  }
+  .projKpi:before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:6px;
+    background:linear-gradient(180deg,#005EA7,#0C4D8F);
+  }
+  .projKpi.orange:before{background:linear-gradient(180deg,#F7931A,#F58320);}
+  .projKpi.green:before{background:linear-gradient(180deg,#12B455,#0FA04A);}
+  .projKpi.red:before{background:linear-gradient(180deg,#EF4444,#C62828);}
+  .projKpi.orange{background:linear-gradient(135deg,#fff7ed,#ffffff);}
+  .projKpi.green{background:linear-gradient(135deg,#ecfdf5,#ffffff);}
+  .projKpi.red{background:linear-gradient(135deg,#fff1f2,#ffffff);}
+  .projKpi span{
+    display:block;
+    color:#526581;
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .projKpi b{
+    display:block;
+    margin-top:7px;
+    font-size:23px;
+    line-height:1;
+    color:#11284A;
+  }
+  .projKpi small{
+    display:block;
+    margin-top:7px;
+    color:#526581;
+    font-size:12px;
+    font-weight:900;
+  }
+  .projCard{
+    border:1px solid rgba(12,77,143,.16);
+    border-radius:16px;
+    background:#fff;
+    box-shadow:0 14px 30px rgba(17,40,74,.09);
+    overflow:hidden;
+  }
+  .projCardHead{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(12,77,143,.12);
+    background:linear-gradient(180deg,#fff,#f8fbff);
+  }
+  .projCardHead h3{
+    margin:0;
+    font-size:18px;
+    color:#0C4D8F;
+  }
+  .projCardHead .sub{
+    margin-top:4px;
+    color:#526581;
+    font-size:12px;
+    font-weight:800;
+  }
+  .projTableWrap{
+    position:relative;
+    max-height:680px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-gutter:stable;
+    border-top:1px solid rgba(12,77,143,.12);
+  }
+  .projTable{
+    width:100%;
+    min-width:0;
+    border-collapse:separate;
+    border-spacing:0;
+    table-layout:fixed;
+    border:0;
+    border-radius:0;
+    overflow:visible !important;
+  }
+  .projTable th{
+    position:sticky;
+    top:0;
+    z-index:30;
+    background:#0C4D8F;
+    color:#fff;
+    padding:6px 3px;
+    border-right:1px solid rgba(255,255,255,.16);
+    font-size:9.4px;
+    line-height:1.02;
+    text-align:right;
+    white-space:normal;
+    word-break:break-word;
+    box-shadow:0 1px 0 rgba(255,255,255,.16), 0 2px 6px rgba(17,40,74,.16);
+  }
+  .projTable thead{
+    position:relative;
+    z-index:35;
+  }
+  .projTable thead tr:first-child th{
+    top:0;
+    z-index:42;
+    height:28px;
+  }
+  .projTable thead tr:nth-child(2) th{
+    top:28px;
+    z-index:41;
+  }
+  .projTable th:first-child{
+    text-align:left;
+  }
+  .projTable td{
+    padding:6px 3px;
+    border-top:1px solid rgba(12,77,143,.10);
+    text-align:right;
+    font-size:10.4px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    background:#fff;
+  }
+  .projTable td:first-child{
+    text-align:left;
+    white-space:nowrap;
+    word-break:normal;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .projTable tbody tr.projItemRow:hover td{
+    background:#dbeafe !important;
+    box-shadow:inset 0 1px 0 rgba(12,77,143,.16), inset 0 -1px 0 rgba(12,77,143,.16);
+  }
+  .projTable tbody tr.projItemRow:hover td:first-child{
+    background:#cfe3fb !important;
+    color:#071f3e;
+  }
+  .projColItem{width:14.2%;}
+  .projColMirror{background:rgba(12,77,143,.055) !important;}
+  .projColCurrent{background:rgba(245,131,32,.070) !important;}
+  .projColImpact{background:rgba(255,242,0,.120) !important;}
+  .projColCalc{background:rgba(14,165,233,.080) !important;}
+  .projColInv{background:rgba(15,160,74,.075) !important;}
+  .projColRop{background:rgba(245,131,32,.115) !important;}
+  .projRopNuevoCell{
+    background:linear-gradient(180deg,#fff1df,#ffd9ad) !important;
+    border-left:2px solid rgba(168,73,8,.55) !important;
+    border-right:1px solid rgba(168,73,8,.28) !important;
+    color:#11284A !important;
+    font-size:11.4px !important;
+    font-weight:1000 !important;
+    box-shadow:inset 0 0 0 1px rgba(245,131,32,.18);
+  }
+  .projTable tbody tr.projItemRow:hover td.projRopNuevoCell{
+    background:linear-gradient(180deg,#ffd6a1,#ffbd69) !important;
+    box-shadow:inset 0 0 0 1px rgba(168,73,8,.45), 0 0 0 1px rgba(245,131,32,.20);
+  }
+  .projStart{border-left:2px solid rgba(17,40,74,.28) !important;}
+  .projTable col.projItemCol{width:12.5%;}
+  .projTable col.projWeekCol{width:3.2%;}
+  .projTable col.projImpactCol{width:3.35%;}
+  .projTable col.projCalcCol{width:3.65%;}
+  .projTable col.projInvCol{width:3.45%;}
+  .projTable col.projRopCol{width:4.15%;}
+  .projTable th.projColMirror{background:#0C4D8F !important;}
+  .projTable th.projColCurrent{background:#D96912 !important;}
+  .projTable th.projColImpact{background:#7C5800 !important;}
+  .projTable th.projColCalc{background:#0B6D95 !important;}
+  .projTable th.projColInv{background:#0B6F3A !important;}
+  .projTable th.projColRop{background:#A84908 !important;}
+  .projHeadGroup{
+    top:0 !important;
+    text-align:center !important;
+    font-size:11px !important;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .projHeadGroup.item{background:#11284A !important;}
+  .projHeadGroup.mirror{background:#0C4D8F !important;}
+  .projHeadGroup.current{background:#D96912 !important;}
+  .projHeadGroup.impact{background:#7C5800 !important;}
+  .projHeadGroup.calc{background:#0B6D95 !important;}
+  .projHeadGroup.inv{background:#0B6F3A !important;}
+  .projHeadGroup.rop{background:#A84908 !important;}
+  .projInfoIcon{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:13px;
+    height:13px;
+    margin-left:3px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.58);
+    background:rgba(255,255,255,.18);
+    color:#fff;
+    font-size:8px;
+    font-weight:1000;
+    line-height:1;
+    cursor:help;
+    vertical-align:middle;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .projTable th .projInfoIcon:hover{
+    background:#fff;
+    color:#11284A;
+  }
+  .projInfoIcon::after{
+    content:attr(data-tip);
+    display:none;
+    position:absolute;
+    left:50%;
+    top:calc(100% + 7px);
+    transform:translateX(-50%);
+    z-index:999;
+    width:max-content;
+    max-width:245px;
+    padding:8px 10px;
+    border-radius:9px;
+    background:#11284A;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.20);
+    box-shadow:0 12px 28px rgba(2,8,23,.28);
+    font-size:10.5px;
+    font-weight:800;
+    line-height:1.25;
+    text-align:left;
+    white-space:normal;
+    text-transform:none;
+    letter-spacing:0;
+    pointer-events:none;
+  }
+  .projInfoIcon::before{
+    content:"";
+    display:none;
+    position:absolute;
+    left:50%;
+    top:calc(100% + 2px);
+    transform:translateX(-50%) rotate(45deg);
+    z-index:998;
+    width:9px;
+    height:9px;
+    background:#11284A;
+    pointer-events:none;
+  }
+  .projInfoIcon:hover::after,
+  .projInfoIcon:hover::before{
+    display:block;
+  }
+  .projSupplierRow td{
+    background:linear-gradient(90deg,#eaf4ff,#fff7ed) !important;
+    color:#11284A;
+    font-weight:1000;
+    border-top:2px solid rgba(12,77,143,.26);
+    padding:8px 9px;
+    font-size:12px;
+    text-align:left !important;
+  }
+  .projSupplierCell{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    white-space:normal;
+  }
+  .projSupplierToggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    flex:0 0 24px;
+    border-radius:8px;
+    border:1px solid rgba(12,77,143,.22);
+    background:#fff;
+    color:#11284A;
+    font-weight:1000;
+    cursor:pointer;
+  }
+  .projSupplierMeta{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    color:#526581;
+    font-size:10px;
+    font-weight:900;
+  }
+  .projSupplierMeta b{color:#11284A;}
+  .projItemName{
+    color:#11284A;
+    font-weight:800;
+    line-height:1.12;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+  .projItemCell{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    width:100%;
+    min-width:0;
+  }
+  .projItemCell span{
+    display:block;
+    flex:1 1 auto;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .projCopyItemBtn{
+    box-sizing:border-box !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 0 20px !important;
+    width:20px !important;
+    min-width:20px !important;
+    max-width:20px !important;
+    height:20px !important;
+    min-height:20px !important;
+    padding:0 !important;
+    border:1px solid rgba(12,77,143,.22) !important;
+    border-radius:6px !important;
+    background:#fff;
+    color:#0C4D8F;
+    cursor:pointer;
+    font-size:9px;
+    font-weight:1000;
+    line-height:1;
+    text-align:center !important;
+    box-shadow:none !important;
+    white-space:nowrap !important;
+  }
+  .projCopyItemBtn:hover,
+  .projCopyItemBtn.copied{
+    background:#0C4D8F;
+    color:#fff;
+  }
+  .projDiffPos{color:#0B8F49;font-weight:1000;}
+  .projDiffNeg{color:#C62828;font-weight:1000;}
+  .projMuted{color:#64748B;font-weight:800;}
+  .projDeltaBad{color:#C62828 !important;font-weight:1000;}
+  .projDeltaGood{color:#0B8F49 !important;font-weight:1000;}
+  .projDeltaNeutral{color:#334155 !important;font-weight:1000;}
+  .projNoData{
+    padding:18px;
+    margin:0 0 14px;
+    border:1px solid rgba(245,131,32,.35);
+    border-radius:14px;
+    background:#fff7ed;
+    color:#11284A;
+    font-weight:900;
+  }
+  .tabBtn[data-tab="proyecciones"].active{
+    background:linear-gradient(180deg,#F7931A,#F58320)!important;
+    color:#fff!important;
+    border-color:rgba(255,255,255,0)!important;
+    box-shadow:0 10px 20px rgba(245,131,32,.26), inset 0 1px 0 rgba(255,255,255,.22)!important;
+  }
+  @media(max-width:1500px){
+    .projControls{grid-template-columns:repeat(3,minmax(150px,1fr));}
+    .projSummary{grid-template-columns:repeat(3,minmax(150px,1fr));}
+  }
+  @media(max-width:900px){
+    .projHero{display:block;}
+    .projHero .projBadge{margin-top:10px;}
+    .projControls,.projSummary{grid-template-columns:1fr;}
+  }
+</style>
+
+<script id="ampm-proyecciones-module-v1">
+(function(){
+  'use strict';
+  if(window.__AMPM_PROYECCIONES_MODULE_V1__) return;
+  window.__AMPM_PROYECCIONES_MODULE_V1__ = true;
+  var TAB = 'proyecciones';
+  var local = { timer:0, rows:null, stamp:null, controlsReady:false, collapsed:{}, applied:null, pending:false };
+  var STORE_NAMES = { AMPM01:'Proceres', AMPM02:'Tuscania', AMPM03:'Masferrer' };
+  var MIRROR_WEEK_LIMIT = 4;
+  var DELTA_CAP = 3.5;
+  var DELTA_FALLBACK = 1.15;
+
+  function byId(id){ return document.getElementById(id); }
+  function appState(){ try{ if(typeof state !== 'undefined' && state) return state; }catch(e){} try{ return window.state || null; }catch(e){ return null; } }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function esc(v){ return txt(v).replace(/[&<>'"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]; }); }
+  function norm(v){ try{ return txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim(); }catch(e){ return txt(v).toUpperCase(); } }
+  function key(v){ return norm(v).replace(/\s+/g,''); }
+  function val(r, keys){ for(var i=0;i<keys.length;i++){ var k=keys[i]; if(r && Object.prototype.hasOwnProperty.call(r,k) && r[k] != null && r[k] !== '') return r[k]; } return ''; }
+  function fmtInt(v){ return Math.round(num(v)).toLocaleString('en-US'); }
+  function fmtDec(v){ return Math.round(num(v)).toLocaleString('en-US'); }
+  function fmtRatio(v){ return num(v).toFixed(2).replace(/\.00$/,''); }
+  function fmtMoney(v){ var n=num(v), s=n<0?'-':'', a=Math.abs(n); if(a>=1000000) return s+'$'+(a/1000000).toFixed(1).replace(/\.0$/,'')+'M'; if(a>=1000) return s+'$'+(a/1000).toFixed(1).replace(/\.0$/,'')+'K'; return s+'$'+Math.round(a).toLocaleString('en-US'); }
+  function pct(v){ return Number.isFinite(Number(v)) ? (Number(v)*100).toFixed(0)+'%' : '--'; }
+  function storeKey(v){ var s=key(v); if(/^AMPM\d+$/.test(s)) return 'AMPM'+String(parseInt(s.replace('AMPM',''),10)).padStart(2,'0'); if(/^\d+$/.test(s)) return 'AMPM'+String(parseInt(s,10)).padStart(2,'0'); return s; }
+  function storeLabel(s){ s=storeKey(s); return STORE_NAMES[s] ? STORE_NAMES[s]+' '+s : s; }
+  function rowStore(r){ return storeKey(val(r,['Store','store','Tienda','Store Name'])); }
+  function rowQty(r){ return num(val(r,['Qty Sold','QtySold','Qty','Quantity','Cantidad'])); }
+  function rowSales(r){ return num(val(r,['Sales','sales','Total Sales','TotalSales'])); }
+  function supplierName(r){ return txt(val(r,['Supplier','supplier','Proveedor'])) || '(Sin proveedor)'; }
+  function supplierKey(r){ return key(val(r,['SupplierKey','supplierKey','Supplier','supplier','Proveedor']) || '(Sin proveedor)'); }
+  function supplierRopAvgPct(supplier){
+    var k=key(supplier);
+    if(k.indexOf('LACONSTANCIA')>=0 || k.indexOf('INVERSIONESVIDA')>=0) return 0.5;
+    return 1;
+  }
+  function descName(r){ return txt(val(r,['Description','description','Descripcion'])) || '(Sin descripcion)'; }
+  function descKey(r){ return key(val(r,['DescriptionKey','descriptionKey','Description','description','Descripcion']) || ''); }
+  function brandName(r){ return txt(val(r,['Brand','brand','Marca'])); }
+  function weekFromValue(v){
+    var m = txt(v).match(/(20\d{2})-W?(\d{1,2})/i);
+    if(!m) return null;
+    var y=Number(m[1]), w=Number(m[2]);
+    if(!y || !w) return null;
+    return { year:y, week:w, key:y+'-W'+String(w).padStart(2,'0') };
+  }
+  function weekKey(year, week){ return String(year)+'-W'+String(Number(week)||0).padStart(2,'0'); }
+  function weekLabel(week){ return 'S'+String(Number(week)||0).padStart(2,'0'); }
+  function sheetReal(wb,name){ try{ if(!wb || !Array.isArray(wb.SheetNames)) return name; var want=key(name); return wb.SheetNames.find(function(n){ return key(n)===want; }) || name; }catch(e){ return name; } }
+  function wbRows(name){
+    var st=appState(), wb=st && st.__hallWorkbook;
+    if(!wb) return [];
+    var real=sheetReal(wb,name);
+    try{ if(wb.__rowsBySheet && Array.isArray(wb.__rowsBySheet[real])) return wb.__rowsBySheet[real]; }catch(e){}
+    try{ if(typeof innovationWorkbookSheetRows === 'function') return innovationWorkbookSheetRows(wb, real) || []; }catch(e){}
+    try{ if(typeof sheetRows === 'function') return sheetRows(wb, real, {defval:null, raw:true}) || []; }catch(e){}
+    try{ if(wb.Sheets && wb.Sheets[real] && window.XLSX) return XLSX.utils.sheet_to_json(wb.Sheets[real], {defval:null, raw:true}) || []; }catch(e){}
+    return [];
+  }
+  function stamp(){ var st=appState(); return st && st.__hallWorkbookStamp ? st.__hallWorkbookStamp : 0; }
+  function activeStoresFromGlobal(){
+    var arr=[];
+    try{ if(typeof getSelectedStoresOrAll === 'function') arr=getSelectedStoresOrAll() || []; }catch(e){}
+    if(!arr.length){
+      var sel=byId('stores');
+      if(sel) arr=Array.from(sel.selectedOptions || []).map(function(o){ return o.value; });
+    }
+    if(!arr.length){
+      var st=appState();
+      if(st && Array.isArray(st.stores)) arr=st.stores.slice();
+    }
+    return Array.from(new Set((arr || []).map(storeKey).filter(Boolean)));
+  }
+  function resolveStores(){
+    var s=byId('projStore'), v=txt(s && s.value);
+    if(v && v !== '__FILTER__') return [storeKey(v)];
+    return activeStoresFromGlobal();
+  }
+  function addOpt(sel,value,label,selected){
+    var o=document.createElement('option');
+    o.value=value;
+    o.textContent=label;
+    if(selected) o.selected=true;
+    sel.appendChild(o);
+  }
+  function allWeeksData(){
+    var rows=wbRows('Cubo_Sales_DetailHallazgos'), years={}, stores={};
+    rows.forEach(function(r){
+      var wk=weekFromValue(val(r,['YearWeek','Week','Semana']));
+      if(wk){ (years[wk.year]=years[wk.year]||new Set()).add(wk.week); }
+      var st=rowStore(r); if(st) stores[st]=true;
+    });
+    var outYears=Object.keys(years).map(Number).sort(function(a,b){ return a-b; });
+    return { years:outYears, weeksByYear:years, stores:Object.keys(stores).sort() };
+  }
+  function supplierOptions(stores){
+    var set=new Set(stores || []), found={};
+    function take(r){
+      var st=rowStore(r);
+      if(set.size && !set.has(st)) return;
+      var sk=supplierKey(r), nm=supplierName(r);
+      if(sk) found[sk]=nm;
+    }
+    (wbRows('Cubo_Sales_DetailHallazgos') || []).forEach(take);
+    (wbRows('Inventario_Items') || []).forEach(take);
+    return Object.keys(found).map(function(k){ return {key:k,name:found[k]}; }).sort(function(a,b){ return a.name.localeCompare(b.name); });
+  }
+  function populateSupplierFilter(stores){
+    var sel=byId('projSupplierFilter');
+    if(!sel) return;
+    var current=txt(sel.value) || '__ALL__';
+    sel.innerHTML='';
+    addOpt(sel,'__ALL__','Todos los suppliers',current==='__ALL__');
+    supplierOptions(stores).forEach(function(s){ addOpt(sel,s.key,s.name,current===s.key); });
+    if(!sel.value) sel.value='__ALL__';
+  }
+  function selectValues(sel){ return sel ? Array.from(sel.selectedOptions || []).map(function(o){ return o.value; }) : []; }
+  function selectedMirrorWeeks(){
+    var vals=selectValues(byId('projMirrorWeeks')).map(Number).filter(function(v){ return v>0; });
+    vals=Array.from(new Set(vals)).sort(function(a,b){ return a-b; });
+    if(vals.length > MIRROR_WEEK_LIMIT) vals=vals.slice(vals.length-MIRROR_WEEK_LIMIT);
+    return vals;
+  }
+  function ensureSixWeekLimit(){
+    var sel=byId('projMirrorWeeks');
+    if(!sel) return;
+    var selected=Array.from(sel.selectedOptions || []);
+    if(selected.length <= MIRROR_WEEK_LIMIT) return;
+    var keep=new Set(selected.slice(selected.length-MIRROR_WEEK_LIMIT).map(function(o){ return o.value; }));
+    Array.from(sel.options || []).forEach(function(o){ o.selected=keep.has(o.value); });
+  }
+  function populateControls(force){
+    var data=allWeeksData();
+    var curSel=byId('projCurrentYear'), lySel=byId('projMirrorYear'), tgtSel=byId('projTargetWeek'), wkSel=byId('projMirrorWeeks'), stSel=byId('projStore');
+    if(!curSel || !lySel || !tgtSel || !wkSel || !stSel) return;
+    var currentYear = Number(curSel.value) || data.years[data.years.length-1] || new Date().getFullYear();
+    var mirrorYear = Number(lySel.value) || (currentYear-1);
+    if(force || !curSel.options.length){
+      curSel.innerHTML='';
+      data.years.forEach(function(y){ addOpt(curSel,String(y),String(y), y===currentYear); });
+    }
+    if(force || !lySel.options.length){
+      lySel.innerHTML='';
+      data.years.forEach(function(y){ addOpt(lySel,String(y),String(y), y===mirrorYear); });
+    }
+    currentYear = Number(curSel.value) || currentYear;
+    mirrorYear = Number(lySel.value) || mirrorYear;
+    var currentWeeks=Array.from(data.weeksByYear[currentYear] || []).sort(function(a,b){ return a-b; });
+    var mirrorWeeks=Array.from(data.weeksByYear[mirrorYear] || []).sort(function(a,b){ return a-b; });
+    var possible=mirrorWeeks.length ? mirrorWeeks : Array.from({length:53},function(_,i){return i+1;});
+    var maxCurrent=currentWeeks.length ? currentWeeks[currentWeeks.length-1] : 1;
+    var defaultTarget=Math.min(53, maxCurrent + 3);
+    var previousTarget=Number(tgtSel.value) || defaultTarget;
+    tgtSel.innerHTML='';
+    possible.forEach(function(w){ addOpt(tgtSel,String(w),weekLabel(w),w===previousTarget); });
+    if(!tgtSel.value) tgtSel.value=String(defaultTarget);
+    var targetWeek=Number(tgtSel.value) || defaultTarget;
+    var oldWeeks=selectedMirrorWeeks();
+    var eligible=currentWeeks.filter(function(w){ return mirrorWeeks.indexOf(w)>=0 && w<targetWeek; });
+    if(!eligible.length) eligible=currentWeeks.filter(function(w){ return mirrorWeeks.indexOf(w)>=0; });
+    var defWeeks=eligible.slice(-MIRROR_WEEK_LIMIT);
+    wkSel.innerHTML='';
+    eligible.forEach(function(w){ addOpt(wkSel,String(w),weekLabel(w), oldWeeks.length ? oldWeeks.indexOf(w)>=0 : defWeeks.indexOf(w)>=0); });
+    if(!selectValues(wkSel).length){
+      Array.from(wkSel.options).forEach(function(o){ o.selected=defWeeks.indexOf(Number(o.value))>=0; });
+    }
+    var currentStore=txt(stSel.value) || '__FILTER__';
+    stSel.innerHTML='';
+    addOpt(stSel,'__FILTER__','Tiendas del filtro', currentStore==='__FILTER__');
+    data.stores.forEach(function(s){ addOpt(stSel,s,storeLabel(s), currentStore===s); });
+    if(!stSel.value) stSel.value='__FILTER__';
+    populateSupplierFilter(stSel.value==='__FILTER__' ? activeStoresFromGlobal() : [stSel.value]);
+    updateMirrorCount();
+  }
+  function installTab(){
+    var tabs=document.querySelector('.tabsbar .tabs') || document.querySelector('.tabs');
+    if(!tabs) return;
+    var btn=document.querySelector('.tabBtn[data-tab="'+TAB+'"]');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.className='tabBtn';
+      btn.dataset.tab=TAB;
+      btn.dataset.short='PY';
+      btn.type='button';
+      btn.title='Proyecciones';
+      var after=document.querySelector('.tabBtn[data-tab="criticos"]') || document.querySelector('.tabBtn[data-tab="prd0"]') || document.querySelector('.tabBtn[data-tab="ventas"]');
+      if(after && after.parentNode) after.parentNode.insertBefore(btn, after.nextSibling);
+      else tabs.appendChild(btn);
+    }
+    btn.innerHTML='<span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 15l4-4 3 3 5-7"></path><path d="M15 7h4v4"></path></svg></span><span class="tabLabel">Proyecciones</span>';
+    btn.onclick=function(ev){ ev.preventDefault(); showTab(); };
+  }
+  function installPage(){
+    if(byId('projRoot')) return;
+    var root=document.createElement('div');
+    root.id='projRoot';
+    root.className='projRoot';
+    root.setAttribute('data-tabpage',TAB);
+    root.style.display='none';
+    root.innerHTML=
+      '<div class="projHero"><div><h2>Proyecciones de ROP</h2><p>Preparacion por semanas espejo, tienda e inventario actual.</p></div><span class="projBadge" id="projScopeBadge">Pendiente de carga</span></div>'+
+      '<div class="projControls">'+
+        '<div class="projField"><label>Tienda</label><select class="projSelect" id="projStore"></select></div>'+
+        '<div class="projField"><label>Supplier</label><select class="projSelect" id="projSupplierFilter"></select></div>'+
+        '<div class="projField"><label>Ano actual</label><select class="projSelect" id="projCurrentYear"></select></div>'+
+        '<div class="projField"><label>Ano espejo</label><select class="projSelect" id="projMirrorYear"></select></div>'+
+        '<div class="projField"><label>Semana a proyectar</label><select class="projSelect" id="projTargetWeek"></select></div>'+
+        '<div class="projField"><label>Semanas espejo <span id="projMirrorCount"></span></label><select class="projSelect" id="projMirrorWeeks" multiple></select></div>'+
+        '<div class="projActions"><label class="projCheck"><input type="checkbox" id="projOnlyDiff" checked> Solo diferencias ROP</label><button class="projBtn" id="projApply" type="button">Actualizar proyeccion</button><button class="projBtn secondary" id="projCsv" type="button">Descargar CSV</button></div>'+
+      '</div>'+
+      '<div class="projNoData" id="projNoData" style="display:none"></div>'+
+      '<div class="projSummary" id="projSummary"></div>'+
+      '<div class="projCard"><div class="projCardHead"><div><h3>Tabla de proyeccion por supplier e item</h3><div class="sub" id="projTableSub">QTY proyectada y ROP nuevo calculado por tienda.</div></div><span class="projBadge" id="projRowsBadge">0 items</span></div><div class="projTableWrap"><table class="projTable" id="projTable"></table></div></div>';
+    (byId('noteBox') || document.querySelector('.ampm-mainInner') || document.body).appendChild(root);
+    ['projStore','projSupplierFilter','projCurrentYear','projMirrorYear','projTargetWeek'].forEach(function(id){
+      var n=byId(id); if(n) n.addEventListener('change',function(){ populateControls(false); markProjectionPending(); });
+    });
+    var wk=byId('projMirrorWeeks');
+    if(wk) wk.addEventListener('change',function(){ ensureSixWeekLimit(); updateMirrorCount(); markProjectionPending(); });
+    var diff=byId('projOnlyDiff');
+    if(diff) diff.addEventListener('change',function(){ markProjectionPending(); });
+    var apply=byId('projApply');
+    if(apply) apply.addEventListener('click',function(){ populateControls(false); render(true); });
+    var csv=byId('projCsv');
+    if(csv) csv.addEventListener('click',downloadCsv);
+    root.addEventListener('click',function(ev){
+      var copyBtn=ev.target && ev.target.closest ? ev.target.closest('[data-copy-item]') : null;
+      if(copyBtn){
+        ev.preventDefault();
+        copyItemText(txt(copyBtn.getAttribute('data-copy-item')), copyBtn);
+        return;
+      }
+      var btn=ev.target && ev.target.closest ? ev.target.closest('[data-supplier-toggle]') : null;
+      if(!btn) return;
+      ev.preventDefault();
+      var k=txt(btn.getAttribute('data-supplier-toggle'));
+      if(!k) return;
+      local.collapsed[k]=!local.collapsed[k];
+      render();
+    });
+  }
+  function markProjectionPending(){
+    local.pending=true;
+    var btn=byId('projApply');
+    if(btn) btn.textContent='Aplicar cambios';
+  }
+  function clearProjectionPending(){
+    local.pending=false;
+    var btn=byId('projApply');
+    if(btn) btn.textContent='Actualizar proyeccion';
+  }
+  function readProjectionControls(){
+    return {
+      currentYear:Number(byId('projCurrentYear') && byId('projCurrentYear').value) || 0,
+      mirrorYear:Number(byId('projMirrorYear') && byId('projMirrorYear').value) || 0,
+      targetWeek:Number(byId('projTargetWeek') && byId('projTargetWeek').value) || 0,
+      weeks:selectedMirrorWeeks(),
+      stores:resolveStores(),
+      supplierFilter:txt(byId('projSupplierFilter') && byId('projSupplierFilter').value),
+      onlyDiff:!!(byId('projOnlyDiff') && byId('projOnlyDiff').checked)
+    };
+  }
+  function copyItemText(text, btn){
+    if(!text) return;
+    function mark(ok){
+      if(!btn) return;
+      var old=btn.textContent;
+      btn.textContent=ok ? 'OK' : 'Error';
+      btn.classList.toggle('copied', !!ok);
+      setTimeout(function(){ btn.textContent=old || 'Copiar'; btn.classList.remove('copied'); }, 900);
+    }
+    function fallback(){
+      try{
+        var ta=document.createElement('textarea');
+        ta.value=text;
+        ta.setAttribute('readonly','readonly');
+        ta.style.position='fixed';
+        ta.style.left='-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok=document.execCommand('copy');
+        ta.remove();
+        mark(ok);
+      }catch(e){ mark(false); }
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ mark(true); }, fallback);
+      }else fallback();
+    }catch(e){ fallback(); }
+  }
+  function displayFor(n){ return n && n.id === 'projRoot' ? 'block' : ''; }
+  function setContext(){
+    try{
+      var k=byId('ampmContextKicker'), t=byId('ampmContextTitle'), s=byId('ampmContextSubtitle'), tab=byId('ampmContextTab'), chips=byId('ampmContextChips');
+      if(k) k.textContent='Planeacion comercial';
+      if(t) t.textContent='Proyecciones por semanas espejo';
+      if(tab) tab.textContent='Proyecciones';
+      if(s) s.textContent='ROP sugerido por QTY, tienda seleccionada e inventario actual.';
+      if(chips) chips.innerHTML='<span class="chip">Vista <b>Semanal</b></span><span class="chip">Base <b>QTY</b></span>';
+    }catch(e){}
+  }
+  function showTab(){
+    installTab();
+    installPage();
+    document.querySelectorAll('.tabBtn').forEach(function(b){ b.classList.toggle('active', txt(b.dataset.tab) === TAB); });
+    try{ document.body.setAttribute('data-active-tab',TAB); }catch(e){}
+    try{ var st=appState(); if(st){ st.tab=TAB; st._lastActiveTab=TAB; } localStorage.setItem('ampm_tab',TAB); }catch(e){}
+    document.querySelectorAll('[data-tabpage]').forEach(function(n){
+      var owner=txt(n.getAttribute('data-tabpage')).toLowerCase();
+      n.style.display = owner === TAB ? displayFor(n) : 'none';
+    });
+    setContext();
+    try{ window.dispatchEvent(new CustomEvent('ampm:tabshown',{detail:{tab:TAB}})); }catch(e){}
+    schedule(40);
+  }
+  function inventoryMap(stores){
+    var set=new Set(stores || []), map={};
+    (wbRows('Inventario_Items') || []).forEach(function(r){
+      var st=rowStore(r);
+      if(set.size && !set.has(st)) return;
+      var sk=supplierKey(r), dk=descKey(r);
+      if(!sk || !dk) return;
+      var k=sk+'|'+dk;
+      var m=map[k] || (map[k]={qty:0, amount:0, rop:0, plan:0, supplier:supplierName(r), description:descName(r), brand:brandName(r)});
+      m.qty += num(val(r,['Quantity','Qty','Existencia']));
+      m.amount += num(val(r,['Amount','Monto']));
+      m.rop += num(val(r,['ROP','Rop']));
+      m.plan += num(val(r,['Planimetria','Plan']));
+    });
+    return map;
+  }
+  function emptyItem(supplier, sk, desc, dk, brand){
+    return {supplier:supplier, supplierKey:sk, description:desc, descKey:dk, brand:brand, qty:{}, sales:{}, inv:null};
+  }
+  function buildModel(config){
+    var cfg=config || local.applied || readProjectionControls();
+    var currentYear=Number(cfg.currentYear) || 0;
+    var mirrorYear=Number(cfg.mirrorYear) || 0;
+    var targetWeek=Number(cfg.targetWeek) || 0;
+    var preWeek=Math.max(1,targetWeek-1);
+    var weeks=(cfg.weeks || []).slice();
+    var stores=(cfg.stores || []).slice();
+    var inv=inventoryMap(stores);
+    var rows=wbRows('Cubo_Sales_DetailHallazgos') || [];
+    var itemMap={};
+    var wantedYears=new Set([currentYear,mirrorYear]);
+    var wantedWeeks=new Set(weeks.concat([targetWeek,preWeek]));
+    var storeSet=new Set(stores);
+    rows.forEach(function(r){
+      var st=rowStore(r);
+      if(storeSet.size && !storeSet.has(st)) return;
+      var wk=weekFromValue(val(r,['YearWeek','Week','Semana']));
+      if(!wk || !wantedYears.has(wk.year) || !wantedWeeks.has(wk.week)) return;
+      var sk=supplierKey(r), dk=descKey(r);
+      if(!sk || !dk) return;
+      var id=sk+'|'+dk;
+      var item=itemMap[id] || (itemMap[id]=emptyItem(supplierName(r),sk,descName(r),dk,brandName(r)));
+      var p=weekKey(wk.year,wk.week);
+      item.qty[p]=(item.qty[p]||0)+rowQty(r);
+      item.sales[p]=(item.sales[p]||0)+rowSales(r);
+    });
+    Object.keys(itemMap).forEach(function(id){
+      if(inv[id]) itemMap[id].inv=inv[id];
+    });
+    var items=Object.keys(itemMap).map(function(id){
+      var it=itemMap[id], invRow=it.inv || inv[id] || {qty:0,rop:0,plan:0,amount:0};
+      var mirrorVals=weeks.map(function(w){ return num(it.qty[weekKey(mirrorYear,w)]); });
+      var currentVals=weeks.map(function(w){ return num(it.qty[weekKey(currentYear,w)]); });
+      var mirrorAvg=mirrorVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
+      var currentAvg=currentVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
+      var targetLy=num(it.qty[weekKey(mirrorYear,targetWeek)]);
+      var preLy=num(it.qty[weekKey(mirrorYear,preWeek)]);
+      var factorRaw=mirrorAvg>0 ? targetLy/mirrorAvg : ((targetLy>0 || currentAvg>0) ? DELTA_FALLBACK : 0);
+      var factor=Math.min(factorRaw, DELTA_CAP);
+      var projection=currentAvg*factor;
+      var maxBase=Math.max.apply(Math,[projection,targetLy,preLy].concat(currentVals));
+      var ropActual=num(invRow.rop), plan=num(invRow.plan), exist=num(invRow.qty);
+      var ropAvgPct=supplierRopAvgPct(it.supplier);
+      var ropAdd=currentAvg*ropAvgPct;
+      var ropNuevo=Math.ceil(Math.max(maxBase+ropAdd,plan));
+      var diff=ropNuevo-Math.round(ropActual);
+      var salesCurrent=weeks.reduce(function(a,w){ return a+num(it.sales[weekKey(currentYear,w)]); },0);
+      var qtyCurrent=weeks.reduce(function(a,w){ return a+num(it.qty[weekKey(currentYear,w)]); },0);
+      return {
+        id:id, supplier:it.supplier, supplierKey:it.supplierKey, description:it.description, descKey:it.descKey, brand:it.brand,
+        mirrorVals:mirrorVals, currentVals:currentVals, mirrorAvg:mirrorAvg, currentAvg:currentAvg,
+        targetLy:targetLy, preLy:preLy, factor:factor, factorRaw:factorRaw, projection:projection, maxBase:maxBase, ropAvgPct:ropAvgPct, ropAdd:ropAdd,
+        ropActual:ropActual, plan:plan, exist:exist, ropNuevo:ropNuevo, diff:diff,
+        salesCurrent:salesCurrent, qtyCurrent:qtyCurrent
+      };
+    }).filter(function(r){ return r.salesCurrent || r.qtyCurrent || r.targetLy || r.preLy || r.exist || r.ropActual || r.plan; });
+    var supplierFilter=txt(cfg.supplierFilter);
+    if(supplierFilter && supplierFilter !== '__ALL__'){
+      items=items.filter(function(r){ return r.supplierKey===supplierFilter; });
+    }
+    var onlyDiff=!!cfg.onlyDiff;
+    var displayItems=onlyDiff ? items.filter(function(r){ return Math.round(r.diff)!==0; }) : items;
+    displayItems.sort(function(a,b){
+      var s=(b.salesCurrent-a.salesCurrent);
+      if(s) return s;
+      return a.description.localeCompare(b.description);
+    });
+    var bySupplier={};
+    displayItems.forEach(function(r){ (bySupplier[r.supplierKey]=bySupplier[r.supplierKey]||{name:r.supplier, sales:0, items:[]}).items.push(r); bySupplier[r.supplierKey].sales+=r.salesCurrent; });
+    var suppliers=Object.keys(bySupplier).map(function(k){ bySupplier[k].key=k; return bySupplier[k]; }).sort(function(a,b){ return b.sales-a.sales; });
+    return {currentYear:currentYear, mirrorYear:mirrorYear, targetWeek:targetWeek, preWeek:preWeek, weeks:weeks, stores:stores, items:displayItems, allItems:items, suppliers:suppliers, onlyDiff:onlyDiff};
+  }
+  function sumArr(rows, prop){ return rows.reduce(function(a,r){ return a+num(r[prop]); },0); }
+  function renderSummary(model){
+    var node=byId('projSummary'); if(!node) return;
+    var qtyProj=sumArr(model.items,'projection'), ropNew=sumArr(model.items,'ropNuevo'), ropOld=sumArr(model.items,'ropActual'), exist=sumArr(model.items,'exist'), sales=sumArr(model.items,'salesCurrent');
+    node.innerHTML=
+      '<div class="projKpi"><span>Tienda</span><b>'+esc(model.stores.length===1?storeLabel(model.stores[0]):model.stores.length+' tiendas')+'</b><small>'+esc(model.stores.join(', ') || 'Sin filtro')+'</small></div>'+
+      '<div class="projKpi orange"><span>Semana objetivo</span><b>'+esc(weekLabel(model.targetWeek))+'</b><small>Pre-semana '+esc(weekLabel(model.preWeek))+'</small></div>'+
+      '<div class="projKpi"><span>Items con ROP</span><b>'+fmtInt(model.items.length)+'</b><small>'+fmtInt(model.allItems.length)+' items evaluados</small></div>'+
+      '<div class="projKpi green"><span>Proyeccion QTY</span><b>'+fmtInt(qtyProj)+'</b><small>Venta base '+fmtMoney(sales)+'</small></div>'+
+      '<div class="projKpi red"><span>ROP nuevo</span><b>'+fmtInt(ropNew)+'</b><small>Dif vs ROP actual '+fmtInt(ropNew-ropOld)+' | Exist '+fmtInt(exist)+'</small></div>';
+    var badge=byId('projScopeBadge');
+    if(badge) badge.textContent='Espejo '+model.mirrorYear+' vs '+model.currentYear+' | '+model.weeks.map(weekLabel).join(', ');
+    var rowsBadge=byId('projRowsBadge');
+    if(rowsBadge) rowsBadge.textContent=fmtInt(model.items.length)+' items';
+    var sub=byId('projTableSub');
+    if(sub) sub.textContent='Ordenado por supplier y venta actual. Proyeccion en QTY.';
+  }
+  function supplierTotalRows(items, weeks){
+    var total={mirrorVals:weeks.map(function(){return 0;}),currentVals:weeks.map(function(){return 0;}),mirrorAvg:0,currentAvg:0,targetLy:0,preLy:0,factor:0,projection:0,maxBase:0,ropAdd:0,ropActual:0,plan:0,exist:0,ropNuevo:0,diff:0,salesCurrent:0};
+    items.forEach(function(r){
+      weeks.forEach(function(_,i){ total.mirrorVals[i]+=num(r.mirrorVals[i]); total.currentVals[i]+=num(r.currentVals[i]); });
+      ['projection','maxBase','ropAdd','ropActual','plan','exist','ropNuevo','diff','salesCurrent','targetLy','preLy'].forEach(function(p){ total[p]+=num(r[p]); });
+    });
+    total.mirrorAvg=total.mirrorVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
+    total.currentAvg=total.currentVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
+    total.factor=total.mirrorAvg>0 ? total.targetLy/total.mirrorAvg : 0;
+    return total;
+  }
+  function rowHtml(r, model, isSupplier, name){
+    var cells=[];
+    cells.push('<td class="projItemName" title="'+esc(r.description)+'"><div class="projItemCell"><span>'+esc(r.description)+'</span><button class="projCopyItemBtn" type="button" data-copy-item="'+esc(r.description)+'" title="Copiar item">C</button></div></td>');
+    r.mirrorVals.forEach(function(v,i){ cells.push('<td class="projColMirror '+(i===0?'projStart':'')+'">'+fmtDec(v)+'</td>'); });
+    r.currentVals.forEach(function(v,i){ cells.push('<td class="projColCurrent '+(i===0?'projStart':'')+'">'+fmtDec(v)+'</td>'); });
+    cells.push('<td class="projColImpact projStart">'+fmtDec(r.preLy)+'</td>');
+    cells.push('<td class="projColImpact">'+fmtDec(r.targetLy)+'</td>');
+    var deltaCls=num(r.factor)<1?'projDeltaBad':(num(r.factor)>1?'projDeltaGood':'projDeltaNeutral');
+    cells.push('<td class="projColCalc projStart '+deltaCls+'">'+fmtRatio(r.factor)+'</td>');
+    cells.push('<td class="projColCalc">'+fmtDec(r.currentAvg)+'</td>');
+    cells.push('<td class="projColCalc"><b>'+fmtInt(r.projection)+'</b></td>');
+    cells.push('<td class="projColCalc">'+fmtInt(r.maxBase)+'</td>');
+    cells.push('<td class="projColInv projStart">'+fmtInt(r.ropActual)+'</td>');
+    cells.push('<td class="projColInv">'+fmtInt(r.plan)+'</td>');
+    cells.push('<td class="projColInv">'+fmtInt(r.exist)+'</td>');
+    cells.push('<td class="projColRop projStart projRopNuevoCell"><b>'+fmtInt(r.ropNuevo)+'</b></td>');
+    var cls=num(r.diff)>0?'projDiffPos':(num(r.diff)<0?'projDiffNeg':'projMuted');
+    cells.push('<td class="projColRop '+cls+'">'+(num(r.diff)>0?'+':'')+fmtInt(r.diff)+'</td>');
+    return '<tr class="projItemRow" data-supplier-row="'+esc(r.supplierKey)+'">'+cells.join('')+'</tr>';
+  }
+  function infoIcon(tip){
+    return '<span class="projInfoIcon" data-tip="'+esc(tip)+'" aria-label="'+esc(tip)+'">i</span>';
+  }
+  function supplierGroupHtml(s,total,model,colCount,collapsed){
+    return '<tr class="projSupplierRow" data-supplier-group="'+esc(s.key)+'"><td colspan="'+colCount+'"><div class="projSupplierCell">'
+      +'<div><button class="projSupplierToggle" type="button" data-supplier-toggle="'+esc(s.key)+'" title="'+(collapsed?'Expandir':'Contraer')+'">'+(collapsed?'+':'-')+'</button> '
+      +'<span>'+esc(s.name)+'</span></div>'
+      +'</div></td></tr>';
+  }
+  function renderTable(model){
+    var table=byId('projTable'); if(!table) return;
+    var h1=[], h2=[];
+    h1.push('<th class="projHeadGroup item" rowspan="2">Item</th>');
+    h1.push('<th class="projHeadGroup mirror" colspan="'+model.weeks.length+'">Espejo '+model.mirrorYear+'</th>');
+    h1.push('<th class="projHeadGroup current" colspan="'+model.weeks.length+'">Base '+model.currentYear+'</th>');
+    h1.push('<th class="projHeadGroup impact" colspan="2">Impacto</th>');
+    h1.push('<th class="projHeadGroup calc" colspan="4">Calculo QTY</th>');
+    h1.push('<th class="projHeadGroup inv" colspan="3">Inventario</th>');
+    h1.push('<th class="projHeadGroup rop" colspan="2">ROP</th>');
+    model.weeks.forEach(function(w,i){ h2.push('<th class="projColMirror '+(i===0?'projStart':'')+'">'+weekLabel(w)+'</th>'); });
+    model.weeks.forEach(function(w,i){ h2.push('<th class="projColCurrent '+(i===0?'projStart':'')+'">'+weekLabel(w)+'</th>'); });
+    h2.push('<th class="projColImpact projStart">Pre<br>'+weekLabel(model.preWeek)+'</th>');
+    h2.push('<th class="projColImpact">Obj<br>'+weekLabel(model.targetWeek)+'</th>');
+    h2.push('<th class="projColCalc projStart">Delta'+infoIcon('Semana objetivo espejo dividido entre el promedio de semanas espejo. Si no hay base espejo, usa 1.15. Tope maximo: 3.5.')+'</th><th class="projColCalc">Prom'+infoIcon('Promedio de QTY de las semanas base del ano actual seleccionadas.')+'</th><th class="projColCalc">Proy'+infoIcon('Promedio actual multiplicado por Delta. Si Delta real supera 3.5, usa 3.5.')+'</th><th class="projColCalc">Max'+infoIcon('Mayor valor entre Proy, semana objetivo espejo, pre-semana espejo y semanas base actuales.')+'</th>');
+    h2.push('<th class="projColInv projStart">ROP<br>act</th><th class="projColInv">Plan</th><th class="projColInv">Exist</th>');
+    h2.push('<th class="projColRop projStart">ROP<br>nuevo'+infoIcon('General: Max + Prom QTY. Constancia/Inversiones Vida: Max + 50% del Prom QTY. Si Plan es mayor, usa Plan.')+'</th><th class="projColRop">Dif'+infoIcon('ROP nuevo menos ROP actual. Verde sube ROP; rojo baja ROP.')+'</th>');
+    var body=[];
+    var colCount=1+(model.weeks.length*2)+2+4+3+2;
+    model.suppliers.forEach(function(s){
+      var total=supplierTotalRows(s.items, model.weeks);
+      var collapsed=!!local.collapsed[s.key];
+      body.push(supplierGroupHtml(s,total,model,colCount,collapsed));
+      if(!collapsed) s.items.forEach(function(r){ body.push(rowHtml(r, model, false)); });
+    });
+    var cg=['<col class="projItemCol">'];
+    for(var ci=0;ci<model.weeks.length*2;ci++) cg.push('<col class="projWeekCol">');
+    cg.push('<col class="projImpactCol"><col class="projImpactCol">');
+    cg.push('<col class="projCalcCol"><col class="projCalcCol"><col class="projCalcCol"><col class="projCalcCol">');
+    cg.push('<col class="projInvCol"><col class="projInvCol"><col class="projInvCol">');
+    cg.push('<col class="projRopCol"><col class="projRopCol">');
+    table.innerHTML='<colgroup>'+cg.join('')+'</colgroup><thead><tr>'+h1.join('')+'</tr><tr>'+h2.join('')+'</tr></thead><tbody>'+body.join('')+'</tbody>';
+  }
+  function updateMirrorCount(){
+    var n=byId('projMirrorCount');
+    if(n) n.textContent='('+selectedMirrorWeeks().length+'/'+MIRROR_WEEK_LIMIT+')';
+  }
+  function render(applyPending){
+    installTab();
+    installPage();
+    var no=byId('projNoData');
+    var sales=wbRows('Cubo_Sales_DetailHallazgos');
+    if(!sales || !sales.length){
+      if(no){ no.style.display=''; no.textContent='Carga primero el Cubo_Semanal_Compactado.xlsx para calcular proyecciones.'; }
+      return;
+    }
+    if(no) no.style.display='none';
+    populateControls(!local.controlsReady);
+    local.controlsReady=true;
+    updateMirrorCount();
+    if(applyPending || !local.applied) local.applied=readProjectionControls();
+    var model=buildModel(local.applied);
+    local.rows=model;
+    if(model.weeks.length !== MIRROR_WEEK_LIMIT && no){
+      no.style.display='';
+      no.textContent='Selecciona '+MIRROR_WEEK_LIMIT+' semanas espejo. El calculo puede verse con '+model.weeks.length+', pero la base ideal son '+MIRROR_WEEK_LIMIT+'.';
+    }else if(no){
+      no.style.display='none';
+    }
+    renderSummary(model);
+    renderTable(model);
+    if(applyPending || !local.pending) clearProjectionPending();
+  }
+  function schedule(ms){
+    clearTimeout(local.timer);
+    local.timer=setTimeout(function(){ try{ render(); }catch(e){ console.warn('Proyecciones render error', e); } }, ms == null ? 120 : ms);
+  }
+  function csvCell(v){ v=txt(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+  function downloadCsv(){
+    var model=local.rows || buildModel();
+    var headers=['Supplier','Item'].concat(
+      model.weeks.map(function(w){return model.mirrorYear+' '+weekLabel(w);}),
+      model.weeks.map(function(w){return model.currentYear+' '+weekLabel(w);}),
+      [model.mirrorYear+' '+weekLabel(model.preWeek),model.mirrorYear+' '+weekLabel(model.targetWeek),'Delta','Prom '+model.currentYear,'Proy QTY','Max base','ROP actual','Plan','Exist','ROP nuevo','Dif ROP']
+    );
+    var lines=[headers.map(csvCell).join(',')];
+    model.suppliers.forEach(function(s){
+      var total=supplierTotalRows(s.items, model.weeks);
+      [Object.assign({supplier:s.name,description:'Total supplier'},total)].concat(s.items).forEach(function(r){
+        var vals=[r.supplier || s.name, r.description].concat(r.mirrorVals,r.currentVals,[r.preLy,r.targetLy,r.factor,r.currentAvg,r.projection,r.maxBase,r.ropActual,r.plan,r.exist,r.ropNuevo,r.diff]);
+        lines.push(vals.map(csvCell).join(','));
+      });
+    });
+    var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='Proyecciones_ROP_'+Date.now()+'.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+  }
+  function bind(){
+    installTab();
+    installPage();
+    window.addEventListener('ampm:fileloaded',function(){ local.controlsReady=false; local.rows=null; local.applied=null; local.pending=false; schedule(160); },{passive:true});
+    window.addEventListener('ampm:tabshown',function(ev){ try{ if(txt(ev.detail && ev.detail.tab).toLowerCase()===TAB) schedule(80); }catch(e){} },{passive:true});
+    document.addEventListener('click',function(ev){
+      try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){ setTimeout(function(){ local.controlsReady=false; local.applied=null; local.pending=false; schedule(120); },120); } }catch(e){}
+    },true);
+    document.addEventListener('change',function(ev){
+      try{ if(ev.target && /^(stores|currentMonth|prevMonths|reportMode)$/i.test(String(ev.target.id||''))){ local.controlsReady=false; local.applied=null; local.pending=false; if((document.body.getAttribute('data-active-tab')||'')===TAB) schedule(160); } }catch(e){}
+    },true);
+    try{ if(localStorage.getItem('ampm_tab')===TAB) showTab(); }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',bind,{once:true});
+  else bind();
+  window.renderProyeccionesDashboard=render;
+  window.showProyeccionesTab=showTab;
+})();
+</script>
+
 </body>
 </html>
