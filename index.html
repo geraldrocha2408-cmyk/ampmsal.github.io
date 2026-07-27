@@ -69949,11 +69949,18 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       var sk=supplierKey(r), dk=descKey(r);
       if(!sk || !dk) return;
       var k=sk+'|'+dk;
-      var m=map[k] || (map[k]={qty:0, amount:0, rop:0, plan:0, supplier:supplierName(r), description:descName(r), brand:brandName(r)});
+      var m=map[k] || (map[k]={qty:0, amount:0, rop:0, plan:0, _planByStore:{}, supplier:supplierName(r), description:descName(r), brand:brandName(r)});
       m.qty += num(val(r,['Quantity','Qty','Existencia']));
       m.amount += num(val(r,['Amount','Monto']));
       m.rop += num(val(r,['ROP','Rop']));
-      m.plan += num(val(r,['Planimetria','Plan']));
+      var planValue = num(val(r,['Planimetria','Plan']));
+      m._planByStore[st] = Math.max(num(m._planByStore[st]), planValue);
+    });
+    Object.keys(map).forEach(function(k){
+      var m=map[k], totalPlan=0;
+      Object.keys(m._planByStore || {}).forEach(function(st){ totalPlan += num(m._planByStore[st]); });
+      m.plan = totalPlan;
+      delete m._planByStore;
     });
     return map;
   }
