@@ -5618,7 +5618,15 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="xfChips" id="xfchips_ventas"></div>
 </div>
 <button class="btn mini secondary" id="xfclear_ventas" type="button">Limpiar filtros</button>
-</div><div class="section" data-tabpage="ventas"><h2>Sales</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales"><thead><tr id="thead_sales"></tr></thead><tbody id="tbody_sales"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Prom x día</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_pxd"><thead><tr id="thead_pxd"></tr></thead><tbody id="tbody_pxd"></tbody></table></div></div><div class="section" data-tabpage="innovacion"><h2>Seguimientos PRD Nuevos</h2></div><div class="innovationGrid" data-tabpage="innovacion">
+</div><div class="section" data-tabpage="ventas"><h2>Sales</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales"><thead><tr id="thead_sales"></tr></thead><tbody id="tbody_sales"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Prom x día</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_pxd"><thead><tr id="thead_pxd"></tr></thead><tbody id="tbody_pxd"></tbody></table></div></div><div class="section" data-tabpage="innovacion"><h2>Seguimientos PRD Nuevos</h2></div><div class="innovationGrid innovationHotdogSpecialtyGrid" data-tabpage="innovacion">
+<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
+<div class="innovationChartWrap"><canvas aria-label="Innovacion Big Dog BBQ Escabeche" id="chart_innovation_bigdog_bbq"></canvas></div>
+</div>
+<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
+<div class="innovationChartWrap"><canvas aria-label="Innovacion Hot Dog total vs Big Dog BBQ Escabeche" id="chart_innovation_hotdog_bigdog_effect"></canvas></div>
+</div>
+</div>
+<div class="innovationGrid" data-tabpage="innovacion">
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
 <div class="innovationChartWrap"><canvas aria-label="Innovación hamburguesa doble" id="chart_innovation_double"></canvas></div>
 </div>
@@ -11913,7 +11921,7 @@ try{
       const raw = String(v ?? '').trim();
       if (!raw) return '';
       const s = raw.toLowerCase()
-        .normalize('NFD').replace(/[̀-ͯ]/g,'')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
         .replace(/[^a-z0-9]/g,'');
       const m = {
         '1':'1','lun':'1','lunes':'1','mon':'1','monday':'1',
@@ -15360,7 +15368,7 @@ function prd0BuildPedYaAuditFromWorkbook(storeList, uploadedRows){
 
       if (negativeNoDelDetected){
         el('meta').className = 'badge warn';
-        el('meta').textContent = '⚠️ Inconsistencia: Delivery > Total en al menos un mes (Sin Delivery clamp a 0). Revisar origen/cubo.';
+        el('meta').textContent = 'Alerta: Inconsistencia: Delivery > Total en al menos un mes (Sin Delivery clamp a 0). Revisar origen/cubo.';
       } else {
 
       el('meta').className = 'badge';
@@ -15831,7 +15839,7 @@ function prd0BuildPedYaAuditFromWorkbook(storeList, uploadedRows){
     function mermaNormKey(v){
       let s = stripAccents(String(v ?? '')).toUpperCase();
       s = s.replace(/\bAND\b/g, 'Y').replace(/&/g, ' Y ');
-      s = s.replace(/[’'`´]/g, '');
+      s = s.replace(/[’'`Â´]/g, '');
       s = s.replace(/\b(\d+)\s+ML\b/g, '$1ML');
       s = s.replace(/\b(\d+)\s+S\b/g, '$1S');
       s = s.replace(/\bX\s+(\d+)\b/g, 'X$1');
@@ -17355,7 +17363,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         const item = document.createElement('div');
         item.className = 'actionItem';
         item.innerHTML = `
-          <span class="sev ${a.sev}">${a.sev==='r'?'!':(a.sev==='a'?'⚑':'✓')}</span>
+          <span class="sev ${a.sev}">${a.sev==='r'?'!':(a.sev==='a'?'!':'✓')}</span>
           <div style="min-width:0">
             <p class="actionTitle">${esc(a.title)}</p>
             <p class="actionDesc">${esc(a.desc)}</p>
@@ -17490,7 +17498,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
     function normSkuKey(v){
       let s = stripAccents(String(v ?? '')).toUpperCase();
       s = s
-        .replace(/[’'´`]/g, '')
+        .replace(/[’'Â´`]/g, '')
         .replace(/&/g, ' Y ')
         .replace(/\bAND\b/g, ' Y ')
         .replace(/\b(\d+)\s+S\b/g, '$1S')
@@ -17897,7 +17905,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
               <td style="text-align:left">${action}</td>
               <td>${esc(r.store)}</td>
               <td style="text-align:left">${esc(r.supplier)}</td>
-              <td style="text-align:left"${descClass}><div class="ropDescCellWrap"><span class="ropDescText">${esc(r.description)}</span><button type="button" class="ropCopyBtn" onclick="return ropCopyDescription(this, this.dataset.text)" data-text="${esc(r.description)}" data-done-text="✓" aria-label="Copiar descripción" title="Copiar descripción">⧉</button></div></td>
+              <td style="text-align:left"${descClass}><div class="ropDescCellWrap"><span class="ropDescText">${esc(r.description)}</span><button type="button" class="ropCopyBtn" onclick="return ropCopyDescription(this, this.dataset.text)" data-text="${esc(r.description)}" data-done-text="✓" aria-label="Copiar descripción" title="Copiar descripción">C</button></div></td>
               <td>${money(r.amount)}</td>
               <td>${fmtInt(r.qty)}</td>
               <td>${fmtInt(r.s4q)}</td>
@@ -21472,10 +21480,10 @@ if(pctVta != null){
     const shareCmp = (Number.isFinite(cmpSales) && cmpSales) ? (safeCmpDel / cmpSales) : NaN;
     const sharePp = (Number.isFinite(shareCur) && Number.isFinite(shareCmp)) ? ((shareCur - shareCmp) * 100) : NaN;
     let txt = `${scope}: ${fmtMoney(safeCurDel)} vs ${compareLabel} ${fmtMoney(safeCmpDel)}`;
-    if(Number.isFinite(deltaDel)) txt += ` ⇒ Δ ${_execFmtDeltaMoney(deltaDel)}`;
+    if(Number.isFinite(deltaDel)) txt += ` => Δ ${_execFmtDeltaMoney(deltaDel)}`;
     if(Number.isFinite(pctDel)) txt += ` (${_execFmtSignedPct(pctDel)})`;
     if(Number.isFinite(shareCur) && Number.isFinite(shareCmp)){
-      txt += `; share ${fmtPct(shareCur)} vs ${fmtPct(shareCmp)} ⇒ ${sharePp >= 0 ? '+' : ''}${sharePp.toFixed(1)} pp`;
+      txt += `; share ${fmtPct(shareCur)} vs ${fmtPct(shareCmp)} => ${sharePp >= 0 ? '+' : ''}${sharePp.toFixed(1)} pp`;
     }
     return txt + '.';
   }
@@ -21517,13 +21525,13 @@ if(pctVta != null){
     const cmpDel = compareYm ? sumSalesScoped(compareYm, {delivery:true}) : NaN;
 
     const bullets = [];
-    bullets.push(`Ventas: ${fmtExecPeriodLabel(currentYm)} ${fmtMoney(curSales)} vs ${fmtExecPeriodLabel(compareYm)} ${fmtMoney(cmpSales)} ⇒ Δ ${Number.isFinite(deltaSales) ? _execFmtDeltaMoney(deltaSales) : 'Pendiente'}${Number.isFinite(pctSales) ? ` (${_execFmtSignedPct(pctSales)})` : ''}.`);
+    bullets.push(`Ventas: ${fmtExecPeriodLabel(currentYm)} ${fmtMoney(curSales)} vs ${fmtExecPeriodLabel(compareYm)} ${fmtMoney(cmpSales)} => Δ ${Number.isFinite(deltaSales) ? _execFmtDeltaMoney(deltaSales) : 'Pendiente'}${Number.isFinite(pctSales) ? ` (${_execFmtSignedPct(pctSales)})` : ''}.`);
     bullets.push(_execBuildDeliveryBullet(curSales, cmpSales, curDel, cmpDel, fmtExecPeriodLabel(compareYm)));
     bullets.push(storeTxt);
     bullets.push(_execDriversText(deptDrivers, 'Departamento'));
     bullets.push(_execDriversText(catDrivers, 'Categoría'));
     if(Number.isFinite(gmCurPct) && Number.isFinite(gmCmpPct)){
-      bullets.push(`Margen: ${fmtPct(gmCurPct)} vs ${fmtPct(gmCmpPct)} ⇒ ${gmPp >= 0 ? '+' : ''}${gmPp.toFixed(1)} pp.`);
+      bullets.push(`Margen: ${fmtPct(gmCurPct)} vs ${fmtPct(gmCmpPct)} => ${gmPp >= 0 ? '+' : ''}${gmPp.toFixed(1)} pp.`);
     } else {
       const txTxt = Number.isFinite(curTx) && Number.isFinite(cmpTx) ? `TX: ${fmtInt(curTx)} vs ${fmtInt(cmpTx)}.` : 'TX: Pendiente.';
       const dropTxt = Number.isFinite(curDrop) && Number.isFinite(cmpDrop) ? ` Drop: ${fmtMoney(curDrop)} vs ${fmtMoney(cmpDrop)}.` : '';
@@ -21602,13 +21610,13 @@ if(pctVta != null){
     const cmpDel = avgAcrossPeriods((p)=> sumSalesScoped(p, {delivery:true}), comparePeriods);
 
     const bullets = [];
-    bullets.push(`Ventas: ${fmtExecPeriodLabel(currentYm)} ${fmtMoney(curSales)} vs ${getPrevCompareLabel()} ${fmtMoney(cmpSales)} ⇒ Δ ${Number.isFinite(deltaSales) ? _execFmtDeltaMoney(deltaSales) : 'Pendiente'}${Number.isFinite(pctSales) ? ` (${_execFmtSignedPct(pctSales)})` : ''}.`);
+    bullets.push(`Ventas: ${fmtExecPeriodLabel(currentYm)} ${fmtMoney(curSales)} vs ${getPrevCompareLabel()} ${fmtMoney(cmpSales)} => Δ ${Number.isFinite(deltaSales) ? _execFmtDeltaMoney(deltaSales) : 'Pendiente'}${Number.isFinite(pctSales) ? ` (${_execFmtSignedPct(pctSales)})` : ''}.`);
     bullets.push(_execBuildDeliveryBullet(curSales, cmpSales, curDel, cmpDel, getPrevCompareLabel().toLowerCase()));
     bullets.push(storeTxt);
     bullets.push(_execDriversText(deptDrivers, 'Departamento'));
     bullets.push(_execDriversText(catDrivers, 'Categoría'));
     if(Number.isFinite(gmCurPct) && Number.isFinite(gmCmpPct)){
-      bullets.push(`Margen: ${fmtPct(gmCurPct)} vs ${getPrevCompareLabel()} ${fmtPct(gmCmpPct)} ⇒ ${gmPp >= 0 ? '+' : ''}${gmPp.toFixed(1)} pp.`);
+      bullets.push(`Margen: ${fmtPct(gmCurPct)} vs ${getPrevCompareLabel()} ${fmtPct(gmCmpPct)} => ${gmPp >= 0 ? '+' : ''}${gmPp.toFixed(1)} pp.`);
     } else {
       const txTxt = Number.isFinite(curTx) && Number.isFinite(cmpTx) ? `TX: ${fmtInt(curTx)} vs ${getPrevCompareLabel()} ${fmtInt(cmpTx)}.` : 'TX: Pendiente.';
       const dropTxt = Number.isFinite(curDrop) && Number.isFinite(cmpDrop) ? ` Drop: ${fmtMoney(curDrop)} vs ${fmtMoney(cmpDrop)}.` : '';
@@ -29488,7 +29496,7 @@ renderShareTable({
     function normalizeSheetAlias(name){
       if(name == null) return '';
       let s = String(name).trim();
-      try{ s = s.normalize('NFD').replace(/[̀-ͯ]/g,''); }catch(e){}
+      try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){}
       return s.toLowerCase().replace(/[^a-z0-9]+/g,'');
     }
 
@@ -33932,9 +33940,10 @@ function innovationPptGroups(){
   const groups = [];
   const grids = Array.from(document.querySelectorAll('.innovationGrid[data-tabpage="innovacion"]')).filter(innovationPptRenderableNode);
 
-  innovationPptPushGroup(groups, 'Innovación | Seguimientos PRD Nuevos', 'Gráficos reales del HTML.', [grids[0], grids[1]], { kind:'quad_charts' });
-  innovationPptPushGroup(groups, 'Innovación | Mix y Matahambrita', 'Gráficos reales del HTML.', [grids[2]]);
-  innovationPptPushGroup(groups, 'Innovación | Combos del día y Postres', 'Gráficos reales del HTML.', [grids[3], grids[4]], { kind:'quad_charts' });
+  innovationPptPushGroup(groups, 'Innovación | Hot Dog BBQ Escabeche', 'Gráficos reales del HTML.', [grids[0]]);
+  innovationPptPushGroup(groups, 'Innovación | Seguimientos PRD Nuevos', 'Gráficos reales del HTML.', [grids[1], grids[2]], { kind:'quad_charts' });
+  innovationPptPushGroup(groups, 'Innovación | Mix y Matahambrita', 'Gráficos reales del HTML.', [grids[3]]);
+  innovationPptPushGroup(groups, 'Innovación | Combos del día y Postres', 'Gráficos reales del HTML.', [grids[4], grids[5]], { kind:'quad_charts' });
 
   const fsExec = document.getElementById('innovation_fs_exec_section');
   if(innovationPptRenderableNode(fsExec)){
@@ -34584,7 +34593,7 @@ function innovationSyntheticNormKey(v){
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g,'')
       .toUpperCase()
-      .replace(/[’'`´]/g,'')
+      .replace(/[’'`Â´]/g,'')
       .replace(/&/g,' Y ')
       .replace(/\bAND\b/g,' Y ')
       .replace(/[^A-Z0-9]+/g,' ')
@@ -35513,6 +35522,8 @@ function innovationCreateTotalLabelPlugin(formatter, opts){
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const padX = cfg.padX, boxH = cfg.boxH, radius = cfg.radius;
+      const topGap = Number(cfg.topGap == null ? 8 : cfg.topGap);
+      const chartTopPad = Number(cfg.chartTopPad == null ? 4 : cfg.chartTopPad);
       const roundRect = (x,y,w,h,r) => {
         const rr = Math.min(r, w/2, h/2);
         ctx.beginPath();
@@ -35544,8 +35555,8 @@ function innovationCreateTotalLabelPlugin(formatter, opts){
         const meta0 = stackMeta.find(m=>m.data?.[i]);
         if(!meta0) continue;
         const centerX = meta0.data[i].getProps(['x'], true).x;
-        const baseRect = {x:centerX - w/2, y:Math.max((chart.chartArea?.top || 0) + 4, topY - boxH - 8), w, h:boxH};
-        const placed = innovationPlaceRect(chart, baseRect, occupied, {pad:6, offsets:[[0,0],[0,-12],[0,-24],[0,8]], margin:{top:4,right:-999,left:-999,bottom:4}});
+        const baseRect = {x:centerX - w/2, y:Math.max((chart.chartArea?.top || 0) + chartTopPad, topY - boxH - topGap), w, h:boxH};
+        const placed = innovationPlaceRect(chart, baseRect, occupied, {pad:6, offsets:[[0,0],[0,-12],[0,-24],[0,8]], margin:{top:chartTopPad,right:-999,left:-999,bottom:4}});
         placed.x = baseRect.x;
         occupied.push(placed);
         ctx.save();
@@ -42843,7 +42854,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     const mtdSales=mtdRows.reduce((a,r)=>a+n(r.sales),0);
     const accumTitle=paniniCutoff.applies ? 'Acumulado D30' : 'Acumulado mes';
     const accumValue=paniniCutoff.applies ? cutoffSales : mtdSales;
-    const accumSub=paniniCutoff.applies ? `Venta hasta ${paniniCutoff.label} (${paniniCutoff.cutoffIso})` : `MTD ${mtdMonth || 'â€”'}`;
+    const accumSub=paniniCutoff.applies ? `Venta hasta ${paniniCutoff.label} (${paniniCutoff.cutoffIso})` : `MTD ${mtdMonth || '-'}`;
 
     const invRows=getInventoryRows().filter(r=>scope.storeSet.has(r.store) && !isAlbumStockExcluded(r));
     const coverageBase=albumCoverageBase(scope, invRows);
@@ -43567,7 +43578,7 @@ function renderOnePager(storeList, currentYm, prevYms){
     try{ s = stripAccents(s); }catch(e){}
     s = s.toUpperCase();
     s = s.replace(/\bAND\b/g, ' Y ').replace(/&/g, ' Y ');
-    s = s.replace(/[\'´`]/g, '');
+    s = s.replace(/[\'Â´`]/g, '');
     s = s.replace(/[^A-Z0-9]+/g, '');
     return s;
   }
@@ -46481,7 +46492,7 @@ function initHallazgosUI(){
     if(Number.isFinite(salesCur) && Number.isFinite(salesLy) && salesLy){
       const delta = salesCur - salesLy;
       const pct = (salesCur / salesLy) - 1;
-      lyBullets.push(`Ventas: ${__kfPeriodLabel(currentPk)} ${__kfMoney(salesCur)} vs LY ${__kfMoney(salesLy)} ⇒ Δ ${__kfDeltaMoney(delta)} (${__kfSignedPct(pct)}).`);
+      lyBullets.push(`Ventas: ${__kfPeriodLabel(currentPk)} ${__kfMoney(salesCur)} vs LY ${__kfMoney(salesLy)} => Δ ${__kfDeltaMoney(delta)} (${__kfSignedPct(pct)}).`);
     } else if(Number.isFinite(salesCur) && salesCur){
       lyBullets.push(`Ventas: ${__kfPeriodLabel(currentPk)} ${__kfMoney(salesCur)}. Falta base LY comparable.`);
     }
@@ -46494,13 +46505,13 @@ function initHallazgosUI(){
       const shareCur = delCur / salesCur;
       const shareLy = delLy / salesLy;
       const pp = (shareCur - shareLy) * 100;
-      lyBullets.push(`Delivery: ${__kfMoney(delCur)} vs LY ${__kfMoney(delLy)}. Share: ${__kfPct(shareCur)} vs ${__kfPct(shareLy)} ⇒ ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
+      lyBullets.push(`Delivery: ${__kfMoney(delCur)} vs LY ${__kfMoney(delLy)}. Share: ${__kfPct(shareCur)} vs ${__kfPct(shareLy)} => ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
     }
     if(lyStoreDrivers.length) lyBullets.push(__kfDriverBullet('Tiendas', lyStoreDrivers));
     if(lyCatDrivers.length) lyBullets.push(__kfDriverBullet('Categorías', lyCatDrivers));
     if(Number.isFinite(gmCurPct) && Number.isFinite(gmLyPct)){
       const pp = (gmCurPct - gmLyPct) * 100;
-      lyBullets.push(`Margen: ${__kfPct(gmCurPct)} vs LY ${__kfPct(gmLyPct)} ⇒ ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
+      lyBullets.push(`Margen: ${__kfPct(gmCurPct)} vs LY ${__kfPct(gmLyPct)} => ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
     }
 
     const avgLabel = __kfPrevLabel();
@@ -46508,7 +46519,7 @@ function initHallazgosUI(){
     if(Number.isFinite(salesCur) && Number.isFinite(salesAvg) && salesAvg){
       const delta = salesCur - salesAvg;
       const pct = (salesCur / salesAvg) - 1;
-      avgBullets.push(`Ventas: ${__kfPeriodLabel(currentPk)} ${__kfMoney(salesCur)} vs ${avgLabel} ${__kfMoney(salesAvg)} ⇒ Δ ${__kfDeltaMoney(delta)} (${__kfSignedPct(pct)}).`);
+      avgBullets.push(`Ventas: ${__kfPeriodLabel(currentPk)} ${__kfMoney(salesCur)} vs ${avgLabel} ${__kfMoney(salesAvg)} => Δ ${__kfDeltaMoney(delta)} (${__kfSignedPct(pct)}).`);
     }
     if(Number.isFinite(txCur) && Number.isFinite(txAvg) && txAvg){
       const txPct = (txCur / txAvg) - 1;
@@ -46519,12 +46530,12 @@ function initHallazgosUI(){
       const shareCur = delCur / salesCur;
       const shareAvg = delAvg / salesAvg;
       const pp = (shareCur - shareAvg) * 100;
-      avgBullets.push(`Delivery: ${__kfMoney(delCur)} vs ${avgLabel} ${__kfMoney(delAvg)}. Share: ${__kfPct(shareCur)} vs ${__kfPct(shareAvg)} ⇒ ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
+      avgBullets.push(`Delivery: ${__kfMoney(delCur)} vs ${avgLabel} ${__kfMoney(delAvg)}. Share: ${__kfPct(shareCur)} vs ${__kfPct(shareAvg)} => ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
     }
     if(avgStoreDrivers.length) avgBullets.push(__kfDriverBullet('Tiendas', avgStoreDrivers));
     if(Number.isFinite(gmCurPct) && Number.isFinite(gmAvgPct)){
       const pp = (gmCurPct - gmAvgPct) * 100;
-      avgBullets.push(`Margen: ${__kfPct(gmCurPct)} vs ${avgLabel} ${__kfPct(gmAvgPct)} ⇒ ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
+      avgBullets.push(`Margen: ${__kfPct(gmCurPct)} vs ${avgLabel} ${__kfPct(gmAvgPct)} => ${pp >= 0 ? '+' : ''}${pp.toFixed(1)} pp.`);
     }
 
     if(typeof _execRenderBullets === 'function'){
@@ -55925,7 +55936,7 @@ function innovationOnePagerCreateBrandedShell(){
   }
 
   function innovationOnePagerClassifyMetricToken(raw){
-    var txt = String(raw == null ? '' : raw).replace(/[−–—]/g, '-').replace(/ /g, ' ').trim();
+    var txt = String(raw == null ? '' : raw).replace(/[−–—]/g, '-').replace(/Â /g, ' ').trim();
     if(!txt || !/\d/.test(txt)) return '';
     if(/[A-Za-zÁÉÍÓÚáéíóúñÑ]/.test(txt.replace(/^[-+\s$]+/, ''))) return '';
     var compact = txt.replace(/\s+/g,'').replace(/,/g,'').replace(/\$/g,'');
@@ -61298,7 +61309,7 @@ function innovationOnePagerCreateBrandedShell(){
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g,'')
         .toUpperCase()
-        .replace(/[’'`´]/g,'')
+        .replace(/[’'`Â´]/g,'')
         .replace(/&/g,' Y ')
         .replace(/\bAND\b/g,' Y ')
         .replace(/[^A-Z0-9]+/g,'')
@@ -62471,7 +62482,7 @@ body:not(.auth-ok) #ampmStoreFloat{display:none!important}
 }
 </style>
 <div id="ampmStoreFloat">
-  <button id="ampmStoreFloatBtn" type="button" title="Filtro rápido de tiendas"><span class="ico">🏪</span><span class="txt" id="ampmStoreFloatLabel">Tiendas</span></button>
+  <button id="ampmStoreFloatBtn" type="button" title="Filtro rápido de tiendas"><span class="ico">ðŸª</span><span class="txt" id="ampmStoreFloatLabel">Tiendas</span></button>
   <div id="ampmStoreFloatPanel" role="dialog" aria-label="Filtro flotante de tiendas">
     <div class="sfHead"><div class="sfTitle">Filtro de tiendas <button id="ampmStoreFloatClose" type="button">×</button></div><div class="sfSub">Seleccioná 1, 2 o todas. Se aplica una sola vez al presionar el botón.</div></div>
     <div class="sfBody"><div class="sfActions"><button class="sfMini" id="ampmStoreFloatAll" type="button">Todas</button><button class="sfMini" id="ampmStoreFloatNone" type="button">Limpiar</button></div><div id="ampmStoreFloatList"></div><div class="sfFoot"><button id="ampmStoreFloatApply" type="button">Aplicar tiendas</button><span id="ampmStoreFloatStatus">Listo</span></div></div>
@@ -62544,7 +62555,7 @@ body:not(.auth-ok) #ampmStoreFloat{display:none!important}
 
 
 <style id="ventas-sdya-sidebar-v25-styles">
-/* v25: Venta Vs SDYA queda estable al abrir/cerrar men� lateral. */
+/* v25: Venta Vs SDYA queda estable al abrir/cerrar menï¿½ lateral. */
 .chartCard:has(#chart_mam){overflow:hidden !important;}
 .chartCard:has(#chart_mam) .monthly-chart-viewport{
   position:relative !important;
@@ -70208,5 +70219,367 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
 })();
 </script>
 
+<style>
+.innovationHotdogSpecialtyGrid{margin-top:0;}
+.innovationHotdogSpecialtyGrid .innovationChartWrap{height:330px;}
+@media (max-width: 900px){.innovationHotdogSpecialtyGrid .innovationChartWrap{height:300px;}}
+</style>
+<script>
+(function(){
+  'use strict';
+  const BIG_DOG_DESC = 'BIG DOG BBQ ESCABECHE';
+  const HOTDOG_CATEGORY = 'HOT DOG';
+  const MONTH_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ const n = Number(String(v == null ? '' : v).replace(/[$,\s]/g,'')); return Number.isFinite(n) ? n : 0; }
+  function norm(v){
+    try{
+      return txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+    }catch(_e){ return txt(v).toUpperCase(); }
+  }
+  function appState(){ try{ if(typeof state !== 'undefined' && state) return state; }catch(_e){} try{ return window.state || null; }catch(_e){ return null; } }
+  function wbRows(sheetName){
+    try{
+      const st = appState();
+      const wb = st && st.__hallWorkbook ? st.__hallWorkbook : null;
+      if(!wb) return [];
+      if(typeof innovationWorkbookSheetRows === 'function'){
+        const rows = innovationWorkbookSheetRows(wb, sheetName);
+        if(Array.isArray(rows) && rows.length) return rows;
+      }
+      if(wb.__rowsBySheet && Array.isArray(wb.__rowsBySheet[sheetName])) return wb.__rowsBySheet[sheetName];
+      if(wb.Sheets && wb.Sheets[sheetName] && window.XLSX && XLSX.utils && XLSX.utils.sheet_to_json){
+        return XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:null, raw:false}) || [];
+      }
+    }catch(_e){}
+    return [];
+  }
+  function sourceRows(){
+    let rows = [];
+    try{ if(typeof innovationFoodServiceDetailRows === 'function') rows = innovationFoodServiceDetailRows() || []; }catch(_e){}
+    if(!rows.length){ try{ if(typeof innovationDataVentaRows === 'function') rows = innovationDataVentaRows() || []; }catch(_e){} }
+    if(!rows.length) rows = wbRows('Data Venta');
+    if(!rows.length) rows = wbRows('Innovation_FS_Detail');
+    if(!rows.length) rows = wbRows('Cubo_Sales_DetailHallazgos');
+    return Array.isArray(rows) ? rows : [];
+  }
+  function currentMode(){
+    try{
+      if(typeof isMonthlyReport === 'function' && isMonthlyReport()) return 'month';
+      if(typeof getUnifiedReportMode === 'function' && txt(getUnifiedReportMode()).toLowerCase() === 'mensual') return 'month';
+    }catch(_e){}
+    return 'week';
+  }
+  function selectedStores(storeList){
+    let arr = Array.isArray(storeList) && storeList.length ? storeList : [];
+    if(!arr.length){ try{ arr = getSelectedStoresOrAll() || []; }catch(_e){} }
+    if(!arr.length){ const st = appState(); arr = st && Array.isArray(st.stores) ? st.stores : []; }
+    return Array.from(new Set((arr || []).map(v => txt(v).toUpperCase()).filter(Boolean)));
+  }
+  function rowStore(r){ return txt(r && (r.Store ?? r.store ?? r['Store Name'] ?? r.StoreName ?? r.Tienda)).toUpperCase(); }
+  function rowDesc(r){ return txt(r && (r.Description ?? r.description ?? r.desc_key ?? r.DescriptionKey)); }
+  function rowCategory(r){ return txt(r && (r.Category ?? r.category)); }
+  function rowSales(r){ return num(r && (r.Sales ?? r.sales ?? r['Total Sales'] ?? r.TotalSales ?? r.Amount ?? r.Venta)); }
+  function rowQty(r){ return num(r && (r['Qty Sold'] ?? r.qty ?? r.Qty ?? r.Quantity)); }
+  function parseDate(raw){
+    if(raw instanceof Date && !Number.isNaN(raw.getTime())) return raw;
+    if(typeof raw === 'number' && Number.isFinite(raw)){
+      const d = new Date(Date.UTC(1899,11,30) + raw * 86400000);
+      return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    }
+    const s = txt(raw);
+    if(!s) return null;
+    let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if(m){
+      let y = Number(m[3]); if(y < 100) y += 2000;
+      const d = new Date(y, Number(m[2]) - 1, Number(m[1]), Number(m[4] || 0), Number(m[5] || 0), 0, 0);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(m){
+      const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    const t = Date.parse(s);
+    return Number.isNaN(t) ? null : new Date(t);
+  }
+  function dateKey(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` : ''; }
+  function monthKey(d){ return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : ''; }
+  function isoWeekKey(d){
+    if(!d) return '';
+    try{
+      const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const iso = (typeof dateToIsoWeekUTC === 'function') ? dateToIsoWeekUTC(utc) : null;
+      if(iso && iso.y && iso.w) return `${iso.y}-W${String(iso.w).padStart(2,'0')}`;
+    }catch(_e){}
+    return '';
+  }
+  function parseIsoLocal(v){
+    try{ if(typeof parseIsoWeekKey === 'function') return parseIsoWeekKey(v); }catch(_e){}
+    const m = txt(v).match(/^(\d{4})-?W(\d{1,2})$/i);
+    return m ? {y:Number(m[1]), w:Number(m[2])} : null;
+  }
+  function mondayFromIso(y,w){
+    const simple = new Date(Date.UTC(y,0,1+(w-1)*7));
+    const dow = simple.getUTCDay() || 7;
+    simple.setUTCDate(simple.getUTCDate() - dow + 1);
+    return simple;
+  }
+  function selectedDayKeys(){
+    let current = '';
+    try{ current = txt(document.getElementById('currentMonth') && document.getElementById('currentMonth').value); }catch(_e){}
+    const p = parseIsoLocal(current);
+    if(!p) return [];
+    const monday = mondayFromIso(p.y, p.w);
+    const out = [];
+    for(let i=0;i<7;i++){
+      const d = new Date(monday.getTime());
+      d.setUTCDate(monday.getUTCDate() + i);
+      out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`);
+    }
+    return out;
+  }
+  function selectedPeriods(rows, mode){
+    try{
+      if(typeof innovationSelectedPeriods === 'function'){
+        const arr = innovationSelectedPeriods();
+        if(Array.isArray(arr) && arr.length) return arr.slice(mode === 'month' ? -8 : -12);
+      }
+    }catch(_e){}
+    const all = Array.from(new Set(rows.map(r => r.periodKey).filter(Boolean)));
+    all.sort(function(a,b){
+      if(mode === 'month') return txt(a).localeCompare(txt(b));
+      const pa = parseIsoLocal(a), pb = parseIsoLocal(b);
+      if(pa && pb) return (pa.y*100+pa.w) - (pb.y*100+pb.w);
+      return txt(a).localeCompare(txt(b));
+    });
+    return all.slice(mode === 'month' ? -8 : -12);
+  }
+  function dowKeyFromDate(d){ if(!d) return ''; const x = d.getDay(); return String(x === 0 ? 7 : x); }
+  function matchesDow(row, date){
+    let wanted = [];
+    try{ wanted = parseDowFilterValues(getGlobalDowFilter()) || []; }catch(_e){ wanted = []; }
+    if(!wanted.length) return true;
+    try{
+      if(typeof rowMatchesGlobalDow === 'function' && rowMatchesGlobalDow(row)) return true;
+    }catch(_e){}
+    const got = dowKeyFromDate(date);
+    return wanted.indexOf(got) >= 0;
+  }
+  function normalizeRows(storeList){
+    const mode = currentMode();
+    const stores = selectedStores(storeList);
+    const storeSet = new Set(stores);
+    return sourceRows().map(r => {
+      const d = parseDate(r && (r['Date Sold'] ?? r.DateSold ?? r.date ?? r.Date ?? r.Fecha));
+      let pk = '';
+      if(mode === 'day') pk = dateKey(d);
+      else if(mode === 'month'){
+        pk = txt(r && (r.CalMonth ?? r.calmonth ?? r.Month ?? r.month ?? r.YearMonth)) || monthKey(d);
+        try{ if(typeof parseMonthKey === 'function') pk = parseMonthKey(pk) || pk; }catch(_e){}
+      }else{
+        pk = txt(r && (r.YearWeek ?? r.week ?? r.ym ?? r.Semana)) || isoWeekKey(d);
+        try{ if(typeof normalizeYm === 'function') pk = normalizeYm(pk) || pk; }catch(_e){}
+      }
+      const store = rowStore(r);
+      return {raw:r, date:d, periodKey:pk, store, categoryNorm:norm(rowCategory(r)), desc:rowDesc(r), descNorm:norm(rowDesc(r)), sales:rowSales(r), qty:rowQty(r)};
+    }).filter(r => {
+      if(!r.periodKey || !r.store) return false;
+      if(storeSet.size && !storeSet.has(r.store)) return false;
+      if(!matchesDow(r.raw, r.date)) return false;
+      if(r.categoryNorm !== HOTDOG_CATEGORY) return false;
+      return r.sales > 0 || r.qty > 0;
+    });
+  }
+  function aggregate(storeList){
+    const mode = currentMode();
+    const rows = normalizeRows(storeList);
+    const periods = selectedPeriods(rows, mode);
+    const pset = new Set(periods);
+    const storeKeys = selectedStores(storeList).length ? selectedStores(storeList) : Array.from(new Set(rows.map(r => r.store).filter(Boolean)));
+    storeKeys.sort(function(a,b){
+      try{
+        if(Array.isArray(INNOVATION_STORE_ORDER)){
+          const ia = INNOVATION_STORE_ORDER.indexOf(a), ib = INNOVATION_STORE_ORDER.indexOf(b);
+          return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || String(a).localeCompare(String(b));
+        }
+      }catch(_e){}
+      return String(a).localeCompare(String(b));
+    });
+    const out = periods.map(p => ({period:p, hotdogSales:0, hotdogQty:0, bigSales:0, bigQty:0, bigSalesByStore:{}, bigQtyByStore:{}}));
+    const by = new Map(out.map(r => [r.period, r]));
+    rows.forEach(r => {
+      const b = by.get(r.periodKey);
+      if(!b || (pset.size && !pset.has(r.periodKey))) return;
+      b.hotdogSales += r.sales;
+      b.hotdogQty += r.qty;
+      if(r.descNorm.indexOf(BIG_DOG_DESC) >= 0){
+        b.bigSales += r.sales;
+        b.bigQty += r.qty;
+        b.bigSalesByStore[r.store] = Number(b.bigSalesByStore[r.store] || 0) + r.sales;
+        b.bigQtyByStore[r.store] = Number(b.bigQtyByStore[r.store] || 0) + r.qty;
+      }
+    });
+    return {mode, stores:selectedStores(storeList), storeKeys, rows:out};
+  }
+  function fmtMoneyLocal(v){
+    const n = Number(v || 0), sign = n < 0 ? '-' : '', a = Math.abs(n);
+    if(a >= 1000000) return `${sign}$${(a/1000000).toFixed(1).replace(/\.0$/,'')}M`;
+    if(a >= 1000) return `${sign}$${(a/1000).toFixed(1).replace(/\.0$/,'')}K`;
+    return `${sign}$${Math.round(a).toLocaleString('en-US')}`;
+  }
+  function fmtInt(v){ return Math.round(Number(v || 0)).toLocaleString('en-US'); }
+  function labelFor(period, mode){
+    try{ if(typeof periodChartLabel === 'function') return periodChartLabel(period); }catch(_e){}
+    if(mode === 'month'){
+      try{ if(typeof monthDisplay === 'function') return monthDisplay(period); }catch(_e){}
+      const m = txt(period).match(/^(\d{4})-(\d{2})$/);
+      return m ? [MONTH_SHORT[Number(m[2])-1] || m[2], m[1]] : txt(period);
+    }
+    if(mode === 'day'){
+      const m = txt(period).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? [`D${Number(m[3])}`, MONTH_SHORT[Number(m[2])-1] || m[2]] : txt(period);
+    }
+    try{ if(typeof fmtWeekLabel === 'function') return fmtWeekLabel(period); }catch(_e){}
+    const w = txt(period).match(/^(\d{4})-W(\d{1,2})$/i);
+    return w ? [`S${Number(w[2])}`, w[1]] : txt(period).replace('-W','-S');
+  }
+  function storeLabel(stores){
+    const arr = stores || [];
+    if(!arr.length || arr.length > 1) return 'Tienda=ALL';
+    return `Tienda=${arr[0]}`;
+  }
+  function dowLabelLocal(){
+    try{ return `Dia de semana: ${getGlobalDowLabel()}`; }catch(_e){ return 'Dia de semana: Todos'; }
+  }
+  function noData(id, msg){
+    try{ if(typeof innovationNoData === 'function'){ innovationNoData(id, msg); return; } }catch(_e){}
+    const canvas = document.getElementById(id);
+    if(canvas && canvas.parentElement) canvas.parentElement.innerHTML = `<div class="muted" style="padding:18px;text-align:center;font-weight:700">${msg}</div>`;
+  }
+  function clearNoData(id){ try{ if(typeof innovationClearNoData === 'function') innovationClearNoData(id); }catch(_e){} }
+  function destroyChart(key, id){
+    const st = appState();
+    try{ if(st && st[key] && st[key].destroy) st[key].destroy(); }catch(_e){}
+    try{ if(window.Chart && Chart.getChart){ const ch = Chart.getChart(id); if(ch && ch.destroy) ch.destroy(); } }catch(_e){}
+    if(st) st[key] = null;
+  }
+  function renderBigDogChart(model){
+    const id = 'chart_innovation_bigdog_bbq';
+    const canvas = document.getElementById(id);
+    if(!canvas || typeof Chart === 'undefined') return;
+    const hasData = model.rows.some(r => r.bigSales > 0 || r.bigQty > 0);
+    destroyChart('chartInnovationBigDogBbq', id);
+    if(!hasData){ noData(id, 'No hay venta de Big Dog BBQ Escabeche con los filtros actuales.'); return; }
+    clearNoData(id);
+    const labels = model.rows.map(r => labelFor(r.period, model.mode));
+    const stores = Array.isArray(model.storeKeys) && model.storeKeys.length ? model.storeKeys : selectedStores();
+    const salesByStore = {};
+    const qtyByStore = {};
+    stores.forEach(store => {
+      salesByStore[store] = model.rows.map(r => Number((r.bigSalesByStore || {})[store] || 0));
+      qtyByStore[store] = model.rows.map(r => Number((r.bigQtyByStore || {})[store] || 0));
+    });
+    const totals = model.rows.map(r => Number(r.bigSales || 0));
+    const ySuggestedMax = (typeof innovationNiceAxisMax === 'function') ? innovationNiceAxisMax(Math.max(0, ...totals), 1.28) : Math.max(20, Math.ceil(Math.max(0, ...totals) * 1.28));
+    const plugins = [];
+    try{
+      if(typeof innovationCreateSegmentLabelPlugin === 'function'){
+        plugins.push(innovationCreateSegmentLabelPlugin(stores, fmtMoneyLocal, {fontSize:9, padX:3, boxH:14, radius:5}));
+      }
+      if(typeof innovationCreateTotalLabelPlugin === 'function'){
+        plugins.push(innovationCreateTotalLabelPlugin(fmtMoneyLocal, {fontSize:10, padX:4, boxH:14, radius:6, topGap:14, chartTopPad:6}));
+      }
+    }catch(_e){}
+    const datasets = stores.map(store => ({
+      type:'bar',
+      label:store,
+      data:salesByStore[store] || [],
+      yAxisID:'y',
+      stack:'bigdog',
+      backgroundColor(ctx){
+        try{ if(typeof innovationStoreGradient === 'function') return innovationStoreGradient(ctx.chart, store); }catch(_e){}
+        const colors = {AMPM01:'#005EA7', AMPM02:'#F58320', AMPM03:'#B8BDC4'};
+        return colors[store] || '#6B7280';
+      },
+      proBarThemeSkip:true,
+      borderColor:'rgba(0,0,0,0)',
+      hoverBorderColor:'rgba(0,0,0,0)',
+      borderWidth:0,
+      hoverBorderWidth:0,
+      borderRadius:0,
+      borderSkipped:false,
+      barPercentage:0.9,
+      categoryPercentage:0.76
+    }));
+    const st = appState();
+    st.chartInnovationBigDogBbq = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{labels, datasets},
+      options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false}, layout:{padding:{top:18,right:12,left:6,bottom:0}}, plugins:{legend:{position:'bottom', labels:{color:'#11284A', boxWidth:12, boxHeight:8, padding:8, font:{weight:'700', size:11}}}, title:{display:true, text:['Venta Big Dog BBQ Escabeche por tienda', storeLabel(model.stores), dowLabelLocal()], color:'#000', font:{weight:'800', size:14}, padding:{top:8,bottom:8}}, tooltip:{mode:'index', intersect:false, callbacks:{label:function(ctx){ const i=ctx.dataIndex; const store = String(ctx.dataset.label || ''); const sales = Number((salesByStore[store] || [])[i] || 0); const qty = Number((qtyByStore[store] || [])[i] || 0); return `${store}: ${fmtMoneyLocal(sales)} | Qty: ${fmtInt(qty)}`; }, footer:function(items){ const i = items && items.length ? items[0].dataIndex : -1; if(i < 0) return ''; const row = model.rows[i] || {}; return [`Total venta: ${fmtMoneyLocal(totals[i] || 0)}`, `Total qty: ${fmtInt(row.bigQty || 0)}`]; }}}}, scales:{x:{stacked:true, offset:true, ticks:{maxRotation:0, autoSkip:false, color:'#11284A', font:{size:11, weight:'700'}}, grid:{display:false}}, y:{stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{color:'#11284A', callback:fmtMoneyLocal, font:{size:11, weight:'700'}}}}},
+      plugins
+    });
+  }
+  function renderHotDogEffectChart(model){
+    const id = 'chart_innovation_hotdog_bigdog_effect';
+    const canvas = document.getElementById(id);
+    if(!canvas || typeof Chart === 'undefined') return;
+    const hasData = model.rows.some(r => r.hotdogSales > 0);
+    destroyChart('chartInnovationHotdogBigdogEffect', id);
+    if(!hasData){ noData(id, 'No hay venta de Hot Dog con los filtros actuales.'); return; }
+    clearNoData(id);
+    const labels = model.rows.map(r => labelFor(r.period, model.mode));
+    const big = model.rows.map(r => r.bigSales);
+    const base = model.rows.map(r => Math.max(0, r.hotdogSales - r.bigSales));
+    const total = model.rows.map(r => r.hotdogSales);
+    const ySuggestedMax = (typeof innovationNiceAxisMax === 'function') ? innovationNiceAxisMax(Math.max(0, ...total), 1.18) : Math.max(100, Math.ceil(Math.max(0, ...total) * 1.18));
+    const plugins = [];
+    try{
+      if(typeof innovationCreateSegmentLabelPlugin === 'function'){
+        plugins.push(innovationCreateSegmentLabelPlugin(['Hot Dog sin Big Dog'], fmtMoneyLocal, {fontSize:10, padX:4, boxH:14, radius:6}));
+      }
+      if(typeof innovationCreateTotalLabelPlugin === 'function'){
+        plugins.push(innovationCreateTotalLabelPlugin(fmtMoneyLocal, {fontSize:10, padX:4, boxH:14, radius:6, topGap:14, chartTopPad:6}));
+      }
+    }catch(_e){}
+    const st = appState();
+    st.chartInnovationHotdogBigdogEffect = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{labels, datasets:[
+        {type:'bar', label:'Hot Dog sin Big Dog', data:base, yAxisID:'y', stack:'hotdog', backgroundColor:'#005EA7', proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76},
+        {type:'bar', label:'Big Dog BBQ Escabeche', data:big, yAxisID:'y', stack:'hotdog', backgroundColor:'#F58320', proBarThemeSkip:true, borderColor:'rgba(0,0,0,0)', hoverBorderColor:'rgba(0,0,0,0)', borderWidth:0, hoverBorderWidth:0, borderRadius:0, borderSkipped:false, barPercentage:0.9, categoryPercentage:0.76}
+      ]},
+      options:{responsive:true, maintainAspectRatio:false, layout:{padding:{top:18,right:12,left:6,bottom:0}}, plugins:{legend:{position:'bottom', labels:{color:'#11284A', boxWidth:12, boxHeight:8, padding:8, font:{weight:'700', size:11}}}, title:{display:true, text:['Hot Dog sin BBQ vs total con Big Dog BBQ Escabeche', storeLabel(model.stores), dowLabelLocal()], color:'#000', font:{weight:'800', size:14}, padding:{top:8,bottom:8}}, tooltip:{callbacks:{label:function(ctx){ const i=ctx.dataIndex; const share = total[i] > 0 ? (big[i] / total[i]) * 100 : 0; if(ctx.dataset.label === 'Big Dog BBQ Escabeche') return `${ctx.dataset.label}: ${fmtMoneyLocal(big[i])} (${share.toFixed(1)}%)`; return `Hot Dog sin Big Dog: ${fmtMoneyLocal(base[i])}`; }, afterBody:function(items){ const i = items && items.length ? items[0].dataIndex : -1; if(i < 0) return ''; return [`Total con Big Dog: ${fmtMoneyLocal(total[i])}`, `Incremental Big Dog: ${fmtMoneyLocal(big[i])}`, `Qty Big Dog: ${fmtInt(model.rows[i].bigQty)}`, `Qty Hot Dog total: ${fmtInt(model.rows[i].hotdogQty)}`]; }}}}, scales:{x:{stacked:true, ticks:{maxRotation:0, autoSkip:false, color:'#11284A', font:{size:11, weight:'700'}}, grid:{display:false}}, y:{stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{color:'#11284A', callback:fmtMoneyLocal, font:{size:11, weight:'700'}}}}},
+      plugins
+    });
+  }
+  function render(storeList){
+    const model = aggregate(storeList);
+    renderBigDogChart(model);
+    renderHotDogEffectChart(model);
+  }
+  function patchRender(){
+    try{
+      if(typeof renderInnovationCharts === 'function' && !renderInnovationCharts.__bigdogHotdogPatched){
+        const base = renderInnovationCharts;
+        renderInnovationCharts = function(storeList){
+          const out = base.apply(this, arguments);
+          try{ render(storeList); }catch(e){ console.warn('Big Dog Hot Dog innovation render failed', e); }
+          return out;
+        };
+        renderInnovationCharts.__bigdogHotdogPatched = true;
+        try{ window.renderInnovationCharts = renderInnovationCharts; }catch(_e){}
+      }
+    }catch(e){ console.warn('Big Dog Hot Dog patch failed', e); }
+  }
+  function schedule(ms){ clearTimeout(window.__innovationBigdogHotdogTimer); window.__innovationBigdogHotdogTimer = setTimeout(function(){ try{ render(); }catch(e){ console.warn('Big Dog Hot Dog scheduled render failed', e); } }, ms == null ? 120 : ms); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ patchRender(); schedule(260); }, {once:true});
+  else { patchRender(); schedule(260); }
+  window.addEventListener('ampm:fileloaded', function(){ schedule(450); }, {passive:true});
+  window.addEventListener('ampm:tabshown', function(ev){ try{ if(txt(ev.detail && ev.detail.tab).toLowerCase() === 'innovacion') schedule(160); }catch(_e){} }, {passive:true});
+  document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')) setTimeout(schedule, 180); }catch(_e){} }, true);
+})();
+</script>
 </body>
 </html>
