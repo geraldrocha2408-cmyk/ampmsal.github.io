@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="es">
 <head>
@@ -5176,7 +5176,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="kpiCard blue" data-kpi="margin"><div class="kpiTitle">Margen Diario</div><div class="kpiValue" id="kpi_margin">Pendiente</div><div class="kpiSub" id="kpi_margin_meta">Meta Margen: 35%</div></div>
 <div class="kpiCard orange" data-kpi="del"><div class="kpiTitle">Vta Delivery</div><div class="kpiValue" id="kpi_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_del_delta_ly">Delta Delivery vs LY: —</span><span class="kpiSub" id="kpi_del_share_pill">% Delivery / Vta: —</span></div></div>
 <div class="kpiCard blue" data-kpi="no_del"><div class="kpiTitle">Vta sin Delivery</div><div class="kpiValue" id="kpi_no_del">—</div><div class="kpiSub" id="kpi_no_del_delta_ly">Delta vs LY: —</div></div>
-<div class="kpiCard orange" data-kpi="drop"><div class="kpiTitle">Drop Diario</div><div class="kpiValue" id="kpi_drop">—</div><div class="kpiSub" id="kpi_drop_delta_ly">Delta Drop vs LY: —</div></div>
+<div class="kpiCard orange" data-kpi="drop"><div class="kpiTitle">Drop Diario</div><div class="kpiValue" id="kpi_drop">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_drop_delta_ly">Delta Drop vs LY: —</span><span class="kpiSub" id="kpi_drop_delivery">Drop Delivery: —</span><span class="kpiSub" id="kpi_drop_delivery_delta_ly">Delta Delivery vs LY: —</span></div></div>
 <div class="kpiCard blue" data-kpi="inv_adj"><div class="kpiTitle">Ajuste de Inventario</div><div class="kpiValue" id="kpi_inv_adj">Pendiente</div><div class="kpiSub" id="kpi_inv_adj_meta">Meta: 0.55%</div></div>
 <div class="kpiCard orange" data-kpi="prd0"><div class="kpiTitle">Prd en cero</div><div class="kpiValue" id="kpi_prd0">Pendiente</div><div class="kpiSub" id="kpi_prd0_meta">Meta: &lt;30</div></div>
 <div class="kpiCard blue" data-kpi="days_inv"><div class="kpiTitle">Días Inventario</div><div class="kpiValue" id="kpi_days_inv">Pendiente</div><div class="kpiSub" id="kpi_days_inv_meta">Meta: —</div></div>
@@ -19910,9 +19910,15 @@ function refreshKpiDashboard(currentYm, prevYms, storeList){
 
   const dropCur = txCur ? (salesCur / txCur) : NaN;
   const dropLY  = (txLY && salesLY) ? (salesLY / txLY) : NaN;
+  const delTxCur = sumTxScoped(currentYm, {delivery:true});
+  const delTxLY  = sumTxScoped(lyYm, {delivery:true});
+  const dropDelCur = delTxCur ? (delCur / delTxCur) : NaN;
+  const dropDelLY  = (delTxLY && delLY) ? (delLY / delTxLY) : NaN;
   const fmtDrop = (v)=> Number.isFinite(v) ? ('$' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2})) : '—';
   setText('kpi_drop', fmtDrop(dropCur));
   setText('kpi_drop_delta_ly', `Delta Drop vs LY: ${(Number.isFinite(dropCur) && Number.isFinite(dropLY) && dropLY) ? (dropCur/dropLY).toFixed(2) : '—'}`);
+  setText('kpi_drop_delivery', `Drop Delivery: ${fmtDrop(dropDelCur)}`);
+  setText('kpi_drop_delivery_delta_ly', `Delta Delivery vs LY: ${(Number.isFinite(dropDelCur) && Number.isFinite(dropDelLY) && dropDelLY) ? (dropDelCur/dropDelLY).toFixed(2) : '—'}`);
 
   const kpiMap = state.kpiExtraMap || {};
   const hasExtras = Object.keys(kpiMap).length > 0;
