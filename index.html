@@ -304,6 +304,38 @@ tr.mermaTotalRow .invLvlBadge{ background: rgba(255,255,255,.55); }
 #t_merma_drill thead tr:nth-child(1) th:not([rowspan]){ padding-top:6px; padding-bottom:6px; vertical-align:middle; }
 #t_merma_drill thead tr:nth-child(2) th{ top: calc(var(--mermaHead1H) - 1px); z-index: 61; }
 
+.mermaBlockWrap{padding:0 16px 22px;}
+.mermaBlockTools{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-bottom:8px; position:sticky; top:0; z-index:35; background:rgba(255,255,255,.96); padding:6px 0;}
+.mermaBlockTools .muted{white-space:normal;}
+#mermaBlockExportBtn,#mermaBlockExportBtn2{width:auto; min-width:150px; flex:0 0 auto; white-space:nowrap;}
+.mermaBlockCard{overflow:auto; border:1px solid rgba(15,23,42,.10); border-radius:14px; background:#fff; box-shadow:0 10px 24px rgba(15,23,42,.06);}
+#t_merma_block{width:100%; min-width:1220px; border-collapse:separate; border-spacing:0; table-layout:fixed;}
+#t_merma_block th{position:sticky; top:0; z-index:20; background:#111827; color:#fff; font-size:11px; padding:8px 7px; border-right:1px solid rgba(255,255,255,.16); white-space:normal; line-height:1.15;}
+#t_merma_block td{font-size:11.5px; padding:7px 8px; border-bottom:1px solid #e2e8f0; border-right:1px solid #edf2f7; vertical-align:middle; line-height:1.22;}
+#t_merma_block tbody tr:hover td{background:#fff7ed !important;}
+#t_merma_block th:nth-child(1), #t_merma_block td:nth-child(1){width:86px; text-align:center;}
+#t_merma_block th:nth-child(2), #t_merma_block td:nth-child(2){width:255px; text-align:left;}
+#t_merma_block th:nth-child(3), #t_merma_block td:nth-child(3){width:220px; text-align:left; white-space:normal !important; word-break:break-word; overflow-wrap:anywhere;}
+#t_merma_block th:nth-child(4), #t_merma_block td:nth-child(4){width:155px; text-align:left; white-space:normal !important; word-break:break-word; overflow-wrap:anywhere;}
+#t_merma_block th:nth-child(5), #t_merma_block td:nth-child(5),
+#t_merma_block th:nth-child(6), #t_merma_block td:nth-child(6),
+#t_merma_block th:nth-child(7), #t_merma_block td:nth-child(7),
+#t_merma_block th:nth-child(8), #t_merma_block td:nth-child(8),
+#t_merma_block th:nth-child(9), #t_merma_block td:nth-child(9),
+#t_merma_block th:nth-child(10), #t_merma_block td:nth-child(10){width:82px; text-align:right; font-variant-numeric:tabular-nums;}
+#t_merma_block th:nth-child(11), #t_merma_block td:nth-child(11){width:105px; text-align:center;}
+#t_merma_block th:nth-child(12), #t_merma_block td:nth-child(12){width:142px; text-align:left;}
+#t_merma_block td:nth-child(2){font-weight:900; color:#11284A;}
+#t_merma_block td:nth-child(5), #t_merma_block td:nth-child(6){background:#eef6ff;}
+#t_merma_block td:nth-child(7), #t_merma_block td:nth-child(8), #t_merma_block td:nth-child(9){background:#fff1f2; color:#b91c1c; font-weight:900;}
+#t_merma_block td:nth-child(10){background:#ecfdf5; color:#065f46; font-weight:900;}
+.mermaBlockBadge{display:inline-flex; align-items:center; justify-content:center; min-width:68px; padding:4px 8px; border-radius:999px; font-size:10px; font-weight:900; border:1px solid transparent;}
+.mermaBlockBadge.block{background:#111827; color:#fff;}
+.mermaBlockBadge.review{background:#fff7ed; color:#9a3412; border-color:#fdba74;}
+.mermaBlockStore{display:inline-flex; padding:3px 8px; border-radius:999px; background:#e0f2fe; border:1px solid #bae6fd; color:#0c4a6e; font-size:10.5px; font-weight:900;}
+.mermaBlockReason{color:#334155; font-weight:800;}
+.mermaBlockEmpty{padding:16px; color:#64748b; font-size:12px; font-weight:800;}
+
 tr.invFocus{ outline:2px solid rgba(237,117,35,.25); outline-offset:-2px; }
 
 .tablewrap.prd0{
@@ -5172,17 +5204,17 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="kpiCard blue" data-kpi="sales_ly"><div class="kpiTitle">Venta LY</div><div class="kpiValue" id="kpi_sales_ly">—</div><div class="kpiSub" id="kpi_sales_delta_ly">Delta vs LY: —</div></div>
 <div class="kpiCard orange" data-kpi="meta"><div class="kpiTitle">Meta Mensual</div><div class="kpiValue" id="kpi_meta">Pendiente</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_alcance">Alcance MTD: —</span><span class="kpiSub" id="kpi_delta_meta">Delta Meta: —</span></div></div>
 <div class="kpiCard blue" data-kpi="proj"><div class="kpiTitle">Proyección cierre mes</div><div class="kpiValue" id="kpi_proj">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_proj_vs_meta">Proy vs Meta: —</span><span class="kpiSub" id="kpi_proj_vs_ly">Proy vs LY: —</span></div></div>
-<div class="kpiCard orange" data-kpi="tx"><div class="kpiTitle">TX Diario</div><div class="kpiValue" id="kpi_tx">—</div><div class="kpiSub" id="kpi_tx_delta_ly">Delta TX vs LY: —</div></div>
+<div class="kpiCard orange" data-kpi="tx"><div class="kpiTitle">TX Diario</div><div class="kpiValue" id="kpi_tx">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_tx_delta_ly">Delta TX vs LY: —</span><span class="kpiSub" id="kpi_tx_delta_prom">Delta vs Prom S8: —</span></div></div>
 <div class="kpiCard blue" data-kpi="margin"><div class="kpiTitle">Margen Diario</div><div class="kpiValue" id="kpi_margin">Pendiente</div><div class="kpiSub" id="kpi_margin_meta">Meta Margen: 35%</div></div>
-<div class="kpiCard orange" data-kpi="del"><div class="kpiTitle">Vta Delivery</div><div class="kpiValue" id="kpi_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_del_delta_ly">Delta Delivery vs LY: —</span><span class="kpiSub" id="kpi_del_share_pill">% Delivery / Vta: —</span></div></div>
-<div class="kpiCard blue" data-kpi="no_del"><div class="kpiTitle">Vta sin Delivery</div><div class="kpiValue" id="kpi_no_del">—</div><div class="kpiSub" id="kpi_no_del_delta_ly">Delta vs LY: —</div></div>
+<div class="kpiCard orange" data-kpi="del"><div class="kpiTitle">Vta Delivery</div><div class="kpiValue" id="kpi_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_del_delta_ly">Delta Delivery vs LY: —</span><span class="kpiSub" id="kpi_del_delta_prom">Delta vs Prom S8: —</span><span class="kpiSub" id="kpi_del_share_pill">% Delivery / Vta: —</span></div></div>
+<div class="kpiCard blue" data-kpi="no_del"><div class="kpiTitle">Vta sin Delivery</div><div class="kpiValue" id="kpi_no_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_no_del_delta_ly">Delta vs LY: —</span><span class="kpiSub" id="kpi_no_del_delta_prom">Delta vs Prom S8: —</span></div></div>
 <div class="kpiCard orange" data-kpi="drop"><div class="kpiTitle">Drop Diario</div><div class="kpiValue" id="kpi_drop">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_drop_delta_ly">Delta Drop vs LY: —</span><span class="kpiSub" id="kpi_drop_delivery">Drop Delivery: —</span><span class="kpiSub" id="kpi_drop_delivery_delta_ly">Delta Delivery vs LY: —</span></div></div>
 <div class="kpiCard blue" data-kpi="inv_adj"><div class="kpiTitle">Ajuste de Inventario</div><div class="kpiValue" id="kpi_inv_adj">Pendiente</div><div class="kpiSub" id="kpi_inv_adj_meta">Meta: 0.55%</div></div>
 <div class="kpiCard orange" data-kpi="prd0"><div class="kpiTitle">Prd en cero</div><div class="kpiValue" id="kpi_prd0">Pendiente</div><div class="kpiSub" id="kpi_prd0_meta">Meta: &lt;30</div></div>
 <div class="kpiCard blue" data-kpi="days_inv"><div class="kpiTitle">Días Inventario</div><div class="kpiValue" id="kpi_days_inv">Pendiente</div><div class="kpiSub" id="kpi_days_inv_meta">Meta: —</div></div>
 <div class="kpiCard orange" data-kpi="cxc"><div class="kpiTitle">CXC Agentes MTD</div><div class="kpiValue" id="kpi_cxc">Pendiente</div><div class="kpiSub" id="kpi_cxc_note">—</div></div>
 <div class="kpiCard blue" data-kpi="mkt_margin"><div class="kpiTitle">Margen Mercadeo</div><div class="kpiValue" id="kpi_mkt_margin">Pendiente</div><div class="kpiSub" id="kpi_mkt_margin_note">—</div></div>
-<div class="kpiCard orange" data-kpi="tx_sbf"><div class="kpiTitle">TX SBF</div><div class="kpiValue" id="kpi_tx_sbf">Pendiente</div><div class="kpiSub" id="kpi_tx_sbf_note">—</div></div>
+<div class="kpiCard orange" data-kpi="tx_sbf"><div class="kpiTitle">TX SBF</div><div class="kpiValue" id="kpi_tx_sbf">Pendiente</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_tx_sbf_note">—</span><span class="kpiSub" id="kpi_tx_sbf_delta_prom">Delta vs Prom S8: —</span></div></div>
 </div>
 </div><div class="section" data-tabpage="resumen" id="autoExecutive"><h2>Insights automáticos</h2></div><div class="autoExecPanel" data-tabpage="resumen" id="autoExecutivePanel">
 <div class="autoExecHead">
@@ -6251,6 +6283,40 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <table id="t_merma_drill">
 <thead id="thead_merma_drill"></thead>
 <tbody id="tbody_merma_drill"></tbody>
+</table>
+</div>
+</div><div class="section mermaTitle2" data-tabpage="merma" style="margin-top:10px;">
+<div class="section-head">
+<h2>Merma — Propuestas de bloqueo</h2>
+<div class="section-actions" style="gap:10px; align-items:center;">
+<span class="muted" id="mermaBlockMeta">—</span>
+<button class="btn mini secondary" id="mermaBlockExportBtn" type="button">Descargar Excel</button>
+</div>
+</div>
+</div><div class="tablewrap mermaBlockWrap" data-tabpage="merma" id="mermaBlockWrap">
+<div class="mermaBlockTools">
+<span class="muted">Ordenado por monto de merma</span>
+<button class="btn mini secondary" id="mermaBlockExportBtn2" type="button">Descargar Excel</button>
+</div>
+<div class="mermaBlockCard">
+<table id="t_merma_block">
+<thead>
+<tr>
+<th>Acción</th>
+<th>Item</th>
+<th>Supplier</th>
+<th>Categoría</th>
+<th>Venta filtro</th>
+<th>Qty vta</th>
+<th>Merma $</th>
+<th>Qty merma</th>
+<th>% merma</th>
+<th>Existencias</th>
+<th>Meses</th>
+<th>Tienda afectada</th>
+</tr>
+</thead>
+<tbody id="tbody_merma_block"></tbody>
 </table>
 </div>
 </div><div class="tablewrap prd0" data-tabpage="prd0">
@@ -17006,6 +17072,259 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
   },0);
 }
 
+    function mermaBlockWeekRank(w){
+      const p = parseIsoWeekKey(w);
+      return p ? (Number(p.y) * 100 + Number(p.w)) : 0;
+    }
+
+    function getMermaBlockPeriodContext(){
+      const curRaw = el('currentMonth') ? el('currentMonth').value : '';
+      const prevRaw = el('prevMonths') ? getSelectedValues(el('prevMonths')) : [];
+      const rawPeriods = prevRaw.concat(curRaw ? [curRaw] : []);
+      const weekSet = new Set();
+      const rawMonthSet = new Set();
+      rawPeriods.forEach(v=>{
+        const wk = normalizeYm(v);
+        if(wk && parseIsoWeekKey(wk)) weekSet.add(wk);
+        const cm = normalizeCalMonth(v);
+        if(cm) rawMonthSet.add(cm);
+      });
+
+      const availableWeeks = Array.from(new Set((state.cuboSalesSkuWeekRows||[]).map(r=>normalizeYm(r && r.ym)).filter(w=>w && parseIsoWeekKey(w))))
+        .sort((a,b)=> mermaBlockWeekRank(a) - mermaBlockWeekRank(b));
+      let weeks = Array.from(weekSet).sort((a,b)=> mermaBlockWeekRank(a) - mermaBlockWeekRank(b));
+      if(!weeks.length && availableWeeks.length) weeks = availableWeeks.slice(-8);
+      if(weeks.length > 8) weeks = weeks.slice(-8);
+
+      const monthSet = new Set(rawMonthSet);
+      weeks.forEach(w=>{
+        const cm = weekToMonthKey(w);
+        if(cm) monthSet.add(cm);
+      });
+      if(!monthSet.size){
+        const base = state.mermaBaseMonth || (state.mermaMonths && state.mermaMonths.length ? state.mermaMonths[state.mermaMonths.length-1] : null);
+        const cm = normalizeCalMonth(base);
+        if(cm) monthSet.add(cm);
+      }
+
+      const weekLabel = weeks.length
+        ? `${weekKeyDisplay(weeks[0])}${weeks.length>1 ? ' a ' + weekKeyDisplay(weeks[weeks.length-1]) : ''}`
+        : 'sin semanas';
+      const monthLabelTxt = Array.from(monthSet).sort().map(monthNumLabel).join(', ');
+      return { weeks, weekSet:new Set(weeks), months:Array.from(monthSet).sort(), monthSet, label:weekLabel, monthLabel:monthLabelTxt };
+    }
+
+    function mermaBlockSkuKey(row){
+      const suppRaw = String(row?.SupplierKey || row?.supplier_key || '').trim() || (row?.Supplier || row?.supplier);
+      const descRaw = String(row?.DescriptionKey || row?.desc_key || '').trim() || (row?.Description || row?.description);
+      const supp = mermaNormKey(suppRaw);
+      const desc = mermaNormKey(descRaw);
+      return `${supp}|${desc}`;
+    }
+
+    function mermaBlockIsExcludedFsi(row){
+      const desc = String(row?.Description || row?.description || '').trim();
+      return /^FSI\b/i.test(desc);
+    }
+
+    function mermaBlockFmtQty(v){
+      const n = Number(v || 0);
+      return Number.isFinite(n) ? n.toLocaleString('en-US', {maximumFractionDigits:1}) : '—';
+    }
+
+    function mermaBlockExportRows(){
+      const rows = Array.isArray(state._mermaBlockProposalRows) ? state._mermaBlockProposalRows : [];
+      if(!rows.length){
+        alert('No hay propuestas de bloqueo para descargar con el filtro actual.');
+        return;
+      }
+      const data = rows.map(r=>({
+        Accion: r.action,
+        Item: r.description,
+        Supplier: r.supplier,
+        Categoria: r.category || '(Sin dato)',
+        Venta_8S: Math.round(Number(r.sales || 0)),
+        Qty_vta: Number(r.qtySales || 0),
+        Merma_USD: Math.round(Number(r.mermaLoss || 0)),
+        Qty_merma: Number(r.mermaQty || 0),
+        Pct_merma: r.sales > 0 ? Number((r.pct * 100).toFixed(1)) : null,
+        Existencias: Number(r.stockQty || 0),
+        Meses_con_merma: r.recurrent,
+        Meses: Array.from(r.mermaMonths || []).sort().join(', '),
+        Tienda_mas_afectada: r.topStore,
+        Merma_tienda_afectada: Math.round(Number(r.topLoss || 0))
+      }));
+      const period = (state._mermaBlockPeriodLabel || 'filtro').replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+      const fileName = `Propuestas_bloqueo_merma_${period || 'filtro'}.xlsx`;
+      try{
+        if(window.XLSX && XLSX.utils && XLSX.writeFile){
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, 'Propuestas bloqueo');
+          XLSX.writeFile(wb, fileName);
+          return;
+        }
+      }catch(e){
+        console.warn('Merma block xlsx export failed', e);
+      }
+      const headers = Object.keys(data[0] || {});
+      const htmlRows = [
+        `<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`
+      ].concat(data.map(r=>`<tr>${headers.map(h=>`<td>${esc(r[h] == null ? '' : r[h])}</td>`).join('')}</tr>`));
+      downloadBlob(fileName.replace(/\.xlsx$/i,'.xls'), 'application/vnd.ms-excel', `<html><head><meta charset="utf-8"></head><body><table>${htmlRows.join('')}</table></body></html>`);
+    }
+
+    function renderMermaBlockProposals(stores, mode){
+      const tbody = el('tbody_merma_block');
+      const meta = el('mermaBlockMeta');
+      if(!tbody) return;
+      const exportBtn = el('mermaBlockExportBtn');
+      if(exportBtn) exportBtn.onclick = mermaBlockExportRows;
+      const exportBtn2 = el('mermaBlockExportBtn2');
+      if(exportBtn2) exportBtn2.onclick = mermaBlockExportRows;
+
+      const ctx = getMermaBlockPeriodContext();
+      const selectedStores = getMermaScopedStores(stores || getSelectedStoresOrAll());
+      const storeSet = new Set((selectedStores||[]).map(s=>String(s||'').trim().toUpperCase()).filter(Boolean));
+      const skuMap = new Map();
+      const invQtyBySku = new Map();
+
+      (state.invItems || []).forEach(it=>{
+        if(!it) return;
+        if(mermaBlockIsExcludedFsi(it)) return;
+        const st = String(it.store || it.Store || '').trim().toUpperCase();
+        if(storeSet.size && !storeSet.has(st)) return;
+        const key = mermaBlockSkuKey(it);
+        if(!key || key === '|') return;
+        const qty = Number(it.qty ?? it.quantity ?? it.Quantity ?? 0);
+        invQtyBySku.set(key, Number(invQtyBySku.get(key) || 0) + (Number.isFinite(qty) ? qty : 0));
+      });
+
+      const ensure = (key, src)=>{
+        if(!key || key === '|') return null;
+        if(!skuMap.has(key)){
+          skuMap.set(key, {
+            supplier: String(src?.Supplier || src?.supplier || '(SIN DATO)').trim() || '(SIN DATO)',
+            category: String(src?.Category || src?.category || '').trim(),
+            brand: String(src?.Brand || src?.brand || '').trim(),
+            description: String(src?.Description || src?.description || '(SIN DATO)').trim() || '(SIN DATO)',
+            sales:0, qtySales:0, salesWeeks:new Set(), mermaLoss:0, mermaQty:0, mermaMonths:new Set(), storeLoss:new Map()
+          });
+        }
+        const rec = skuMap.get(key);
+        if((!rec.supplier || rec.supplier === '(SIN DATO)') && (src?.Supplier || src?.supplier)) rec.supplier = String(src.Supplier || src.supplier).trim();
+        if(!rec.category && (src?.Category || src?.category)) rec.category = String(src.Category || src.category).trim();
+        if(!rec.brand && (src?.Brand || src?.brand)) rec.brand = String(src.Brand || src.brand).trim();
+        if((!rec.description || rec.description === '(SIN DATO)') && (src?.Description || src?.description)) rec.description = String(src.Description || src.description).trim();
+        return rec;
+      };
+
+      (state.cuboSalesSkuWeekRows||[]).forEach(r=>{
+        if(!r) return;
+        if(mermaBlockIsExcludedFsi(r)) return;
+        const st = String(r.store || '').trim().toUpperCase();
+        if(storeSet.size && !storeSet.has(st)) return;
+        const period = normalizeYm(r.ym);
+        const wk = period && parseIsoWeekKey(period) ? period : null;
+        const cm = wk ? weekToMonthKey(wk) : normalizeCalMonth(period);
+        if(ctx.weekSet.size ? !ctx.weekSet.has(wk) : !ctx.monthSet.has(cm)) return;
+        const key = mermaBlockSkuKey(r);
+        const rec = ensure(key, r);
+        if(!rec) return;
+        const sales = Number(r.sales || 0);
+        const qty = Number(r.qty || 0);
+        rec.sales += Number.isFinite(sales) ? sales : 0;
+        rec.qtySales += Number.isFinite(qty) ? qty : 0;
+        if((sales || qty) && (wk || cm)) rec.salesWeeks.add(wk || cm);
+      });
+
+      const negByMonth = new Map();
+      const getNegSet = (cm)=>{
+        if(!negByMonth.has(cm)) negByMonth.set(cm, buildMermaNegSet(selectedStores, cm));
+        return negByMonth.get(cm);
+      };
+
+      (state.mermaDetailRows||[]).forEach(r=>{
+        if(!r) return;
+        if(mermaBlockIsExcludedFsi(r)) return;
+        const cm = normalizeCalMonth(r.CalMonth);
+        if(!ctx.monthSet.has(cm)) return;
+        const st = String(r.Store || '').trim().toUpperCase();
+        if(storeSet.size && !storeSet.has(st)) return;
+        const supplier = String(r.Supplier || '(SIN DATO)').trim() || '(SIN DATO)';
+        if(mode !== 'TOTAL' && !getNegSet(cm).has(`${st}|${cm}|${supplier}`)) return;
+
+        const amt = Number(r.Monto || 0);
+        const loss = Math.max(0, -amt);
+        if(!(loss > 0)) return;
+        const key = mermaBlockSkuKey(r);
+        const rec = ensure(key, r);
+        if(!rec) return;
+        const qtyRaw = Number(r.Quantity || 0);
+        rec.mermaLoss += loss;
+        rec.mermaQty += Math.abs(Number.isFinite(qtyRaw) ? qtyRaw : 0);
+        if(cm) rec.mermaMonths.add(cm);
+        rec.storeLoss.set(st, Number(rec.storeLoss.get(st) || 0) + loss);
+      });
+
+      const rows = Array.from(skuMap.values()).filter(r=>r.mermaLoss > 0).map(r=>{
+        let topStore = '—';
+        let topLoss = 0;
+        r.storeLoss.forEach((v,k)=>{ if(Number(v||0) > topLoss){ topLoss = Number(v||0); topStore = k; } });
+        const weekCount = Math.max(1, ctx.weeks.length || 8);
+        const avgQty = r.qtySales / weekCount;
+        const pct = r.sales > 0 ? (r.mermaLoss / r.sales) : 9.99;
+        const recurrent = r.mermaMonths.size;
+        const lowSalesBoost = avgQty <= 1 ? 3 : (avgQty <= 3 ? 2.2 : (avgQty <= 6 ? 1.55 : 1));
+        const score = (r.mermaLoss * (1 + Math.min(4, pct))) + (r.mermaQty * 3) + (recurrent * 12) + (topLoss * .35);
+        const action = (pct >= .18 || avgQty <= 3 || r.mermaQty >= Math.max(1, r.qtySales * .5)) ? 'Bloquear' : 'Revisar';
+        let reason = 'Alta merma vs venta';
+        if(avgQty <= 3 && recurrent >= 2) reason = 'Poca venta y merma recurrente';
+        else if(avgQty <= 3) reason = 'Poca venta en semanas seleccionadas';
+        else if(topLoss >= r.mermaLoss * .55) reason = 'Merma concentrada en una tienda';
+        else if(recurrent >= 2) reason = 'Merma repetida en varios meses';
+        const stockQty = Number(invQtyBySku.get(mermaBlockSkuKey(r)) || 0);
+        return {...r, topStore, topLoss, avgQty, pct, recurrent, action, reason, stockQty, score: score * lowSalesBoost};
+      }).filter(r=>{
+        return r.avgQty <= 8 || r.pct >= .10 || r.mermaQty >= Math.max(1, r.qtySales * .35) || r.sales <= 25;
+      }).sort((a,b)=> Number(b.mermaLoss) - Number(a.mermaLoss) || Number(b.score) - Number(a.score)).slice(0,30);
+
+      state._mermaBlockProposalRows = rows;
+      state._mermaBlockPeriodLabel = `${ctx.label}_${ctx.monthLabel || ''}`;
+
+      if(meta){
+        const storesLabel = selectedStores.length === (state.stores||[]).length ? 'tiendas seleccionadas' : selectedStores.join(', ');
+        meta.textContent = `${rows.length} propuestas · venta ${ctx.label} · merma ${ctx.monthLabel || 'mes seleccionado'} · ${storesLabel}`;
+      }
+
+      if(!rows.length){
+        tbody.innerHTML = `<tr><td colspan="12"><div class="mermaBlockEmpty">Sin propuestas para el filtro actual. No encontré items con merma negativa y baja venta en las semanas/meses seleccionados.</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r=>{
+        const badgeClass = r.action === 'Bloquear' ? 'block' : 'review';
+        const cat = r.category || '(Sin dato)';
+        const pctTxt = r.sales > 0 ? ((r.pct * 100).toFixed(1) + '%') : 'Sin venta';
+        const monthsTxt = `${r.recurrent} (${Array.from(r.mermaMonths).sort().map(monthNumLabel).join(', ')})`;
+        const topStoreTxt = `${r.topStore} ${money(r.topLoss)}`;
+        return `<tr>
+          <td><span class="mermaBlockBadge ${badgeClass}">${esc(r.action)}</span></td>
+          <td>${esc(r.description)}</td>
+          <td>${esc(r.supplier)}</td>
+          <td>${esc(cat)}</td>
+          <td>${money(r.sales)}</td>
+          <td>${mermaBlockFmtQty(r.qtySales)}</td>
+          <td>${money(r.mermaLoss)}</td>
+          <td>${mermaBlockFmtQty(r.mermaQty)}</td>
+          <td>${esc(pctTxt)}</td>
+          <td>${mermaBlockFmtQty(r.stockQty)}</td>
+          <td>${esc(monthsTxt)}</td>
+          <td><span class="mermaBlockStore">${esc(topStoreTxt)}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
     function refreshMerma(){
       const t = document.getElementById('t_merma_matrix');
       if(!t) return; // si no está el UI, no hacer nada
@@ -17052,6 +17371,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       renderMermaTrendChart(stores, monthsTrend, mode);
       renderMermaBubbleChart(stores, base, mode);
       renderMermaDrill(stores, base, mode);
+      renderMermaBlockProposals(stores, mode);
 
       try{ updateInvAdjKpiFromMerma(stores); }catch(e){ console.warn('updateInvAdjKpiFromMerma failed', e); }
 
@@ -19874,39 +20194,53 @@ function refreshKpiDashboard(currentYm, prevYms, storeList){
   const salesLY  = sumSalesScoped(lyYm);
   const prevTotals = prevSorted.map(ym => sumSalesScoped(ym));
   const prom3lm = prevTotals.length ? (prevTotals.reduce((a,b)=>a+b,0) / prevTotals.length) : NaN;
+  const compareLabel = isMonthlyReport()
+    ? getPrevCompareLabel(prevSorted).replace(/Prom\s+(\d+)M\b/i, 'Prom $1LM')
+    : getPrevCompareLabel(prevSorted);
+  const promRatio = (cur, prom)=> (Number.isFinite(prom) && prom) ? (Number(cur || 0) / prom).toFixed(2) : '—';
 
   setText('kpi_sales_cur', money(salesCur));
   setText('kpi_sales_lm', money(salesLM));
   setText('kpi_sales_ly', money(salesLY));
-  setText('kpi_sales_delta3lm', `Delta vs ${getPrevCompareLabel()}: ${(Number.isFinite(prom3lm) && prom3lm) ? (salesCur/prom3lm).toFixed(2) : '—'}`);
+  setText('kpi_sales_delta3lm', `Delta vs ${compareLabel}: ${promRatio(salesCur, prom3lm)}`);
   setText('kpi_sales_deltalm', `Delta vs ${getLastPeriodShortLabel()}: ${(salesLM) ? (salesCur/salesLM).toFixed(2) : '—'}`);
   setText('kpi_sales_delta_ly', `Delta vs LY: ${(salesLY) ? (salesCur/salesLY).toFixed(2) : '—'}`);
 
   const txCur = sumTxScoped(currentYm);
   const txLY  = sumTxScoped(lyYm);
+  const txPrevTotals = prevSorted.map(ym => sumTxScoped(ym));
+  const txProm = txPrevTotals.length ? (txPrevTotals.reduce((a,b)=>a+b,0) / txPrevTotals.length) : NaN;
   if(txCur){
     setText('kpi_tx', int(txCur));
     setText('kpi_tx_delta_ly', `Delta TX vs LY: ${(txLY) ? (txCur/txLY).toFixed(2) : '—'}`);
+    setText('kpi_tx_delta_prom', `Delta vs ${compareLabel}: ${promRatio(txCur, txProm)}`);
   } else {
     const tx = _kpiTotalsFromTable('t_tx_store', currentYm, prevYms);
     if(tx && tx.cur){
       setText('kpi_tx', tx.cur);
       setText('kpi_tx_delta_ly', `Delta TX vs LY: ${tx.deltaLY || '—'}`);
+      setText('kpi_tx_delta_prom', `Delta vs ${compareLabel}: ${tx.deltaProm || '—'}`);
     }
   }
 
   const delCur = sumSalesScoped(currentYm, {delivery:true});
   const delLY  = sumSalesScoped(lyYm, {delivery:true});
+  const delPrevTotals = prevSorted.map(ym => sumSalesScoped(ym, {delivery:true}));
+  const delProm = delPrevTotals.length ? (delPrevTotals.reduce((a,b)=>a+b,0) / delPrevTotals.length) : NaN;
   setText('kpi_del', money(delCur));
-  setText('kpi_del_delta_ly', `Delta Delivery vs LY: ${(delLY) ? (delCur/delLY).toFixed(2) : '—'}`);
+  setText('kpi_del_delta_ly', `Delta vs LY: ${(delLY) ? (delCur/delLY).toFixed(2) : '—'}`);
+  setText('kpi_del_delta_prom', `Delta vs ${compareLabel}: ${promRatio(delCur, delProm)}`);
 
   const share = salesCur ? (delCur / salesCur) : NaN;
   setText('kpi_del_share_pill', `% Delivery / Vta: ${Number.isFinite(share) ? pct(share) : '—'}`);
 
   const noDelCur = sumSalesScoped(currentYm, {delivery:false});
   const noDelLY  = sumSalesScoped(lyYm, {delivery:false});
+  const noDelPrevTotals = prevSorted.map(ym => sumSalesScoped(ym, {delivery:false}));
+  const noDelProm = noDelPrevTotals.length ? (noDelPrevTotals.reduce((a,b)=>a+b,0) / noDelPrevTotals.length) : NaN;
   setText('kpi_no_del', money(noDelCur));
   setText('kpi_no_del_delta_ly', `Delta vs LY: ${(noDelLY) ? (noDelCur/noDelLY).toFixed(2) : '—'}`);
+  setText('kpi_no_del_delta_prom', `Delta vs ${compareLabel}: ${promRatio(noDelCur, noDelProm)}`);
 
   const dropCur = txCur ? (salesCur / txCur) : NaN;
   const dropLY  = (txLY && salesLY) ? (salesLY / txLY) : NaN;
@@ -20196,14 +20530,18 @@ if(projCal){
 
   const sbfCur = sumTxScoped(currentYm, {sbf:true});
   const sbfLY  = sumTxScoped(lyYm, {sbf:true});
+  const sbfPrevTotals = prevSorted.map(ym => sumTxScoped(ym, {sbf:true}));
+  const sbfProm = sbfPrevTotals.length ? (sbfPrevTotals.reduce((a,b)=>a+b,0) / sbfPrevTotals.length) : NaN;
   if((state.sbfTxByStoreMonth && state.sbfTxByStoreMonth.size) || sbfCur){
     setText('kpi_tx_sbf', fmtInt(sbfCur));
     markPending('kpi_tx_sbf', false);
     setText('kpi_tx_sbf_note', `Delta vs LY: ${(sbfLY) ? (sbfCur/sbfLY).toFixed(2) : '—'}`);
+    setText('kpi_tx_sbf_delta_prom', `Delta vs ${compareLabel}: ${promRatio(sbfCur, sbfProm)}`);
   } else {
     setText('kpi_tx_sbf','Pendiente');
     markPending('kpi_tx_sbf', true);
     setText('kpi_tx_sbf_note', 'Delta vs LY: —');
+    setText('kpi_tx_sbf_delta_prom', `Delta vs ${compareLabel}: —`);
   }
 
   const dcAps = sumExtra('DC APS $', false);
