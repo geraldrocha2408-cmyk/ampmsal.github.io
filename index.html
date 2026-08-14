@@ -68365,6 +68365,12 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     AMPM02:{name:'Tuscania',target:140},
     AMPM03:{name:'Masferrer',target:230}
   };
+  var VAPES_BNS_INCENTIVE={
+    month:'2026-08',
+    mainPrize:15,
+    g10000Target:15,
+    extraPrize:5
+  };
   function vapesGoalMonthKey(v){
     var s=txt(v);
     var d=s.match(/^(20\d{2})-(\d{1,2})-(\d{1,2})/);
@@ -68414,7 +68420,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     return {key:max,day:m?Number(m[3]):0};
   }
   function vapesGoalBuildModel(sheets){
-    var monthKey=vapesGoalMonthFromCurrent(sheets), stores=vapesGoalStores(), storeSet=new Set(stores), rows=(sheets&&sheets.sku)||[], byStore={}, usedMonth=false;
+    var monthKey=VAPES_BNS_INCENTIVE.month || vapesGoalMonthFromCurrent(sheets), stores=vapesGoalStores(), storeSet=new Set(stores), rows=(sheets&&sheets.sku)||[], byStore={}, usedMonth=false;
     stores.forEach(function(st){byStore[st]={store:st,name:VAPES_BNS_GOALS[st].name,target:VAPES_BNS_GOALS[st].target,qty:0,sales:0,gQty:0};});
     rows.forEach(function(r){
       if(!monthKey||rowPeriodType(r)!=='month'||rowPeriodKey(r)!==monthKey||!vapesGoalIsBnsWaka(r))return;
@@ -68432,7 +68438,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     elapsed=Math.max(1,Math.min(elapsed,daysInMonth));
     var data=stores.map(function(st){
       var r=byStore[st], factor=elapsed<daysInMonth?(daysInMonth/elapsed):1;
-      r.projection=r.qty*factor;r.pct=r.target?r.qty/r.target*100:0;r.projPct=r.target?r.projection/r.target*100:0;r.gGap=Math.max(10-r.gQty,0);r.gDone=r.gQty>=10;r.gap=Math.max(r.target-r.qty,0);
+      r.projection=r.qty*factor;r.pct=r.target?r.qty/r.target*100:0;r.projPct=r.target?r.projection/r.target*100:0;r.gGap=Math.max(VAPES_BNS_INCENTIVE.g10000Target-r.gQty,0);r.gDone=r.gQty>=VAPES_BNS_INCENTIVE.g10000Target;r.gap=Math.max(r.target-r.qty,0);
       r.status=r.qty>=r.target?'Meta lograda':(r.projection>=r.target?'A ritmo':'Bajo meta');
       return r;
     });
@@ -68444,15 +68450,15 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     var root=byId('vapesRoot');if(!root)return null;
     var node=byId('vapesBnsGoal');
     if(!node){
-      root.insertAdjacentHTML('beforeend','<div id="vapesBnsGoal" class="vapesCard vapesBnsGoal"><div class="vapesCardHead"><div><h3>Seguimiento incentivo BNS WAKA</h3><div class="sub">Meta de julio por tienda - ventas totales, incluyendo delivery/e-commerce.</div></div><span class="vapesBnsBadge">BNS</span></div><div id="vapesBnsGoalBody"></div></div>');
+      root.insertAdjacentHTML('beforeend','<div id="vapesBnsGoal" class="vapesCard vapesBnsGoal"><div class="vapesCardHead"><div><h3>Seguimiento incentivo BNS WAKA</h3><div class="sub">Meta de agosto por tienda - ventas totales, incluyendo delivery/e-commerce.</div></div><span class="vapesBnsBadge">BNS</span></div><div id="vapesBnsGoalBody"></div></div>');
       node=byId('vapesBnsGoal');
     }
     return node;
   }
   function vapesGoalProgress(v){var w=Math.max(0,Math.min(100,num(v)));return '<div class="vapesBnsProgress"><span style="width:'+w.toFixed(1)+'%"></span></div>';}
   function vapesGoalPrizeText(r){
-    var main=r.qty>=r.target?'$10 logrado':(r.projection>=r.target?'$10 proyectado':'faltan '+fint(r.gap)+' uds');
-    var extra=r.gDone?'$5 G10000 logrado':'G10000 faltan '+fint(r.gGap);
+    var main=r.qty>=r.target?'$'+fint(VAPES_BNS_INCENTIVE.mainPrize)+' logrado':(r.projection>=r.target?'$'+fint(VAPES_BNS_INCENTIVE.mainPrize)+' proyectado':'faltan '+fint(r.gap)+' uds');
+    var extra=r.gDone?'$'+fint(VAPES_BNS_INCENTIVE.extraPrize)+' G10000 logrado':'G10000 faltan '+fint(r.gGap);
     return main+' | '+extra;
   }
   function renderVapesBnsGoal(sheets){
@@ -68465,7 +68471,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
       return '<tr><td><b>'+esc(r.name)+'</b><small>'+esc(r.store)+'</small></td><td class="num">'+fint(r.target)+'</td><td class="num">'+fint(r.qty)+'</td><td>'+pct(r.pct,1)+vapesGoalProgress(r.pct)+'</td><td class="num"><b>'+fint(r.projection)+'</b><small>'+pct(r.projPct,1)+' de meta</small></td><td class="num">'+fint(r.gap)+'</td><td class="num">'+fint(r.gQty)+'</td><td><span class="vapesBnsStatus '+cls+'">'+esc(r.status)+'</span><small>'+esc(vapesGoalPrizeText(r))+'</small></td></tr>';
     }).join('');
     rows+='<tr class="vapesBnsTotalRow"><td><b>Total</b><small>3 tiendas</small></td><td class="num">'+fint(t.target)+'</td><td class="num">'+fint(t.qty)+'</td><td>'+pct(t.pct,1)+vapesGoalProgress(t.pct)+'</td><td class="num"><b>'+fint(t.projection)+'</b><small>'+pct(t.projPct,1)+' de meta</small></td><td class="num">'+fint(t.gap)+'</td><td class="num">'+fint(t.gQty)+'</td><td><span class="vapesBnsStatus '+(t.qty>=t.target?'ok':(t.projection>=t.target?'warn':'bad'))+'">'+(t.qty>=t.target?'Meta lograda':(t.projection>=t.target?'A ritmo':'Bajo meta'))+'</span><small>Total incentivo BNS WAKA</small></td></tr>';
-    body.innerHTML='<div class="vapesBnsIntro"><div><b>'+esc(model.monthLabel)+'</b><span>'+esc(latest)+' - '+fint(model.elapsed)+' de '+fint(model.daysInMonth)+' dias</span></div><div class="vapesBnsPrize"><span>Premio principal</span><b>Vale $10</b><small>por cajero/supervisor al cumplir meta</small><em>+$5 extra por 10 uds G 10000</em></div></div>'
+    body.innerHTML='<div class="vapesBnsIntro"><div><b>'+esc(model.monthLabel)+'</b><span>'+esc(latest)+' - '+fint(model.elapsed)+' de '+fint(model.daysInMonth)+' dias</span></div><div class="vapesBnsPrize"><span>Premio principal</span><b>Vale $'+fint(VAPES_BNS_INCENTIVE.mainPrize)+'</b><small>SuperSelectos por cajero/supervisor al cumplir meta</small><em>+$'+fint(VAPES_BNS_INCENTIVE.extraPrize)+' extra si la tienda vende '+fint(VAPES_BNS_INCENTIVE.g10000Target)+' uds G 10000</em></div></div>'
       +'<div class="vapesBnsMetrics"><div><span>Unidades / meta</span><b>'+fint(t.qty)+' / '+fint(t.target)+'</b></div><div><span>Cumplimiento</span><b>'+pct(t.pct,1)+'</b>'+vapesGoalProgress(t.pct)+'</div><div><span>Proyeccion cierre</span><b>'+fint(t.projection)+' uds</b><small>'+pct(t.projPct,1)+' de meta</small></div><div><span>Gap actual</span><b>'+fint(t.gap)+' uds</b><small>Venta BNS WAKA: '+money(t.sales)+'</small></div></div>'
       +'<div class="vapesTableWrap vapesBnsTableWrap"><table class="vapesTable vapesBnsTable"><thead><tr><th>Tienda</th><th>Meta</th><th>Vendido</th><th>Cumpl.</th><th>Proy.</th><th>Faltan</th><th>G10000</th><th>Premio</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
