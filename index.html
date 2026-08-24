@@ -5693,6 +5693,13 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
 <div class="innovationChartWrap innovationChartWrap--combo-pie"><canvas aria-label="Innovación postres por item padre" id="chart_innovation_postres_parent"></canvas></div>
 </div>
+</div><div class="innovationGrid innovationGridComboRow innovationNewDessertsGrid" data-tabpage="innovacion">
+<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
+<div class="innovationChartWrap innovationChartWrap--new-desserts-wide"><canvas aria-label="Innovacion productos nuevos Canoa y Arroz en Leche por item" id="chart_innovation_new_desserts_qty"></canvas></div>
+</div>
+<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
+<div class="innovationChartWrap innovationChartWrap--new-desserts-pie"><canvas aria-label="Innovacion productos nuevos Canoa y Arroz en Leche por tienda" id="chart_innovation_new_desserts_store_pie"></canvas></div>
+</div>
 </div><div class="innovationFsExecSection" data-tabpage="innovacion" id="innovation_fs_exec_section">
 <div class="innovationFsExecHeader">
 <div class="innovationFsExecHeaderLeft">
@@ -19531,13 +19538,31 @@ return;
           for(const st of storeSet){
             const key = `${st}|${dk}`;
             const m = state.cogsStoreDeptWeek && state.cogsStoreDeptWeek.get(key);
-            if(!m) continue;
-            for(const w of weeks){ s += Number(m.get(w) ?? 0); }
+            const scopedCogs = Number(scopedDetailCogsByStoreDept.get(key) || 0);
+            if(scopedCogs > 0) s += scopedCogs;
+            else if(m) for(const w of weeks){ s += Number(m.get(w) ?? 0); }
           }
           if(s>0) deptSalesCogs.set(dk, s);
         }
 
         const {qtyMap: s4QtyMap} = buildSalesS4Maps(storeSet, weeks);
+        const detailDeptRawCogs = new Map();
+        for(const r of detail){
+          const dk = makeKey(r.deptKey);
+          const cogs = Number(r.cogs4w || 0) || 0;
+          if(dk && cogs) detailDeptRawCogs.set(dk, Number(detailDeptRawCogs.get(dk) || 0) + cogs);
+        }
+        const chartCogsByStore = new Map(rowsStore.map(r => [String(r.store || '').trim().toUpperCase(), Number(r.cogs || 0) || 0]));
+        const chartCogsTotalForDrill = Array.from(storeSet).reduce((acc, st) => acc + Number(chartCogsByStore.get(String(st || '').trim().toUpperCase()) || 0), 0);
+        let deptCogsRawTotal = 0;
+        deptSalesCogs.forEach(v => { deptCogsRawTotal += Number(v || 0) || 0; });
+        const deptCogsScale = (chartCogsTotalForDrill > 0 && deptCogsRawTotal > 0)
+          ? (chartCogsTotalForDrill / deptCogsRawTotal)
+          : 1;
+        const deptCogsAligned = new Map();
+        deptSalesCogs.forEach((v, dk) => {
+          deptCogsAligned.set(dk, (Number(v || 0) || 0) * deptCogsScale);
+        });
 
         const planMap = new Map();
         if(state.invItems && state.invItems.length){
@@ -19573,7 +19598,13 @@ return;
           const targetQty = (Number(r.targetQtyPre ?? 0) || 0) > 0 ? (Number(r.targetQtyPre ?? 0) || 0) : Math.max(ideal, plan);
           const qtyInv = Number(r.quantity || 0) || 0;
           const amtInv = Number(r.amount || 0) || 0;
-          const cogs4w = Number(r.cogs4w || 0) || 0;
+          const rawCogs4w = Number(r.cogs4w || 0) || 0;
+          const deptKey = makeKey(r.deptKey);
+          const deptAlignedCogs = Number(deptCogsAligned.get(deptKey) || 0);
+          const deptRawCogs = Number(detailDeptRawCogs.get(deptKey) || 0);
+          const cogs4w = (deptAlignedCogs > 0 && deptRawCogs > 0)
+            ? (rawCogs4w * (deptAlignedCogs / deptRawCogs))
+            : rawCogs4w;
           const unitCostInv = (Number(r.unitCostInvPre ?? 0) || 0) > 0
             ? (Number(r.unitCostInvPre ?? 0) || 0)
             : ((qtyInv > 0 && amtInv > 0)
@@ -19589,7 +19620,7 @@ return;
           const suppNorm = normalizeHuesoText(r.supplier || r.supplier_key || '');
           const huesoMatched = !!(descNorm && (huesoKeysStrict.has(`${suppNorm}||${descNorm}`) || huesoKeysLoose.has(descNorm)));
           const huesoSkuKey = huesoMatched ? `${normalizeHuesoText(r.deptRaw || r.deptKey || '')}||${suppNorm}||${normalizeHuesoText(r.category || '')}||${normalizeHuesoText(r.brand || '')}||${descNorm}` : '';
-          return {...r, qtyS4: qs4, qtyS4Exact: qs4Exact, qtyS4DescOnly: 0, targetQty, amountIdeal, unitCostInv, daysIdeal, huesoMatched, huesoSkuKey};
+          return {...r, cogs4w, qtyS4: qs4, qtyS4Exact: qs4Exact, qtyS4DescOnly: 0, targetQty, amountIdeal, unitCostInv, daysIdeal, huesoMatched, huesoSkuKey};
         });
 
         const idealByStore = new Map();
@@ -19611,7 +19642,7 @@ return;
         const tree = buildTree(detailPlus);
         for(const n of tree.values()){
           const dk = String(n.key||'').split('||')[0];
-          const sc = Number(deptSalesCogs.get(dk) ?? 0);
+          const sc = Number(deptCogsAligned.get(dk) ?? 0);
           if(sc>0) n.cogs = sc;
         }
 
@@ -70638,13 +70669,22 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
 <style>
 .innovationHotdogSpecialtyGrid{margin-top:0;}
 .innovationHotdogSpecialtyGrid .innovationChartWrap{height:330px;}
+.innovationNewDessertsGrid{margin-top:0;}
+.innovationNewDessertsGrid .innovationChartWrap{height:300px;}
+.innovationChartWrap--new-desserts-wide{height:300px;}
+.innovationChartWrap--new-desserts-pie{height:300px;}
 @media (max-width: 900px){.innovationHotdogSpecialtyGrid .innovationChartWrap{height:300px;}}
+@media (max-width: 900px){.innovationNewDessertsGrid .innovationChartWrap{height:280px;}}
 </style>
 <script>
 (function(){
   'use strict';
   const BIG_DOG_DESC = 'BIG DOG BBQ ESCABECHE';
   const HOTDOG_CATEGORY = 'HOT DOG';
+  const NEW_DESSERT_ITEMS = [
+    {key:'canoa', label:'Canoa', color:'#005EA7', match:function(descNorm){ return descNorm.indexOf('CANOA') >= 0; }},
+    {key:'arroz_leche', label:'Arroz en Leche', color:'#F58320', match:function(descNorm){ return descNorm.indexOf('ARROZ EN LECHE') >= 0 || descNorm.indexOf('ARROZ CON LECHE') >= 0; }}
+  ];
   const MONTH_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
   function txt(v){ return String(v == null ? '' : v).trim(); }
@@ -70970,10 +71010,188 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       plugins
     });
   }
+  function newDessertMeta(descNorm){
+    for(const item of NEW_DESSERT_ITEMS){
+      try{ if(item.match(descNorm)) return item; }catch(_e){}
+    }
+    return null;
+  }
+  function normalizeNewDessertRows(storeList){
+    const mode = currentMode();
+    const stores = selectedStores(storeList);
+    const storeSet = new Set(stores);
+    return sourceRows().map(r => {
+      const d = parseDate(r && (r['Date Sold'] ?? r.DateSold ?? r.date ?? r.Date ?? r.Fecha));
+      let pk = '';
+      if(mode === 'day') pk = dateKey(d);
+      else if(mode === 'month'){
+        pk = txt(r && (r.CalMonth ?? r.calmonth ?? r.Month ?? r.month ?? r.YearMonth)) || monthKey(d);
+        try{ if(typeof parseMonthKey === 'function') pk = parseMonthKey(pk) || pk; }catch(_e){}
+      }else{
+        pk = txt(r && (r.YearWeek ?? r.week ?? r.ym ?? r.Semana)) || isoWeekKey(d);
+        try{ if(typeof normalizeYm === 'function') pk = normalizeYm(pk) || pk; }catch(_e){}
+      }
+      const store = rowStore(r);
+      const desc = rowDesc(r);
+      const descNorm = norm(desc);
+      const meta = newDessertMeta(descNorm);
+      return {raw:r, date:d, periodKey:pk, store, desc, descNorm, meta, qty:rowQty(r)};
+    }).filter(r => {
+      if(!r.periodKey || !r.store || !r.meta) return false;
+      if(storeSet.size && !storeSet.has(r.store)) return false;
+      if(!matchesDow(r.raw, r.date)) return false;
+      return Number(r.qty || 0) > 0;
+    });
+  }
+  function aggregateNewDesserts(storeList){
+    const mode = currentMode();
+    const rows = normalizeNewDessertRows(storeList);
+    const periods = selectedPeriods(rows, mode);
+    const pset = new Set(periods);
+    const selected = selectedStores(storeList);
+    const storeKeys = selected.length ? selected : Array.from(new Set(rows.map(r => r.store).filter(Boolean)));
+    storeKeys.sort(function(a,b){
+      try{
+        if(Array.isArray(INNOVATION_STORE_ORDER)){
+          const ia = INNOVATION_STORE_ORDER.indexOf(a), ib = INNOVATION_STORE_ORDER.indexOf(b);
+          return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || String(a).localeCompare(String(b));
+        }
+      }catch(_e){}
+      return String(a).localeCompare(String(b));
+    });
+    const out = periods.map(p => {
+      const itemQty = {};
+      NEW_DESSERT_ITEMS.forEach(item => { itemQty[item.key] = 0; });
+      return {period:p, itemQty, totalQty:0};
+    });
+    const by = new Map(out.map(r => [r.period, r]));
+    const storeQty = {};
+    storeKeys.forEach(st => { storeQty[st] = 0; });
+    rows.forEach(r => {
+      const b = by.get(r.periodKey);
+      if(!b || (pset.size && !pset.has(r.periodKey))) return;
+      const qty = Number(r.qty || 0) || 0;
+      const key = r.meta.key;
+      b.itemQty[key] = Number(b.itemQty[key] || 0) + qty;
+      b.totalQty += qty;
+      storeQty[r.store] = Number(storeQty[r.store] || 0) + qty;
+    });
+    return {mode, stores:selectedStores(storeList), storeKeys, rows:out, storeQty};
+  }
+  function renderNewDessertsQtyChart(model){
+    const id = 'chart_innovation_new_desserts_qty';
+    const canvas = document.getElementById(id);
+    if(!canvas || typeof Chart === 'undefined') return;
+    const hasData = model.rows.some(r => Number(r.totalQty || 0) > 0);
+    destroyChart('chartInnovationNewDessertsQty', id);
+    if(!hasData){ noData(id, 'No hay venta de Canoa o Arroz en Leche con los filtros actuales.'); return; }
+    clearNoData(id);
+    const labels = model.rows.map(r => labelFor(r.period, model.mode));
+    const series = NEW_DESSERT_ITEMS.map(item => model.rows.map(r => Number((r.itemQty || {})[item.key] || 0)));
+    const totals = model.rows.map(r => Number(r.totalQty || 0));
+    const ySuggestedMax = (typeof innovationNiceAxisMax === 'function') ? innovationNiceAxisMax(Math.max(0, ...totals), 1.24) : Math.max(20, Math.ceil(Math.max(0, ...totals) * 1.24));
+    const plugins = [];
+    try{
+      if(typeof innovationCreateSegmentLabelPlugin === 'function'){
+        plugins.push(innovationCreateSegmentLabelPlugin(NEW_DESSERT_ITEMS.map(x => x.label), fmtInt, {fontSize:9, padX:3, boxH:14, radius:5}));
+      }
+      if(typeof innovationCreateTotalLabelPlugin === 'function'){
+        plugins.push(innovationCreateTotalLabelPlugin(fmtInt, {fontSize:10, padX:4, boxH:14, radius:6, topGap:12, chartTopPad:6}));
+      }
+    }catch(_e){}
+    const datasets = NEW_DESSERT_ITEMS.map((item, idx) => ({
+      type:'bar',
+      label:item.label,
+      data:series[idx] || [],
+      yAxisID:'y',
+      stack:'new_desserts',
+      backgroundColor:item.color,
+      proBarThemeSkip:true,
+      borderColor:'rgba(0,0,0,0)',
+      hoverBorderColor:'rgba(0,0,0,0)',
+      borderWidth:0,
+      hoverBorderWidth:0,
+      borderRadius:0,
+      borderSkipped:false,
+      barPercentage:0.9,
+      categoryPercentage:0.76
+    }));
+    const st = appState();
+    st.chartInnovationNewDessertsQty = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{labels, datasets},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        layout:{padding:{top:18,right:12,left:6,bottom:0}},
+        plugins:{
+          legend:{position:'bottom', labels:{color:'#11284A', boxWidth:12, boxHeight:8, padding:8, font:{weight:'700', size:11}}},
+          title:{display:true, text:['Productos nuevos: Canoa y Arroz en Leche (QTY)', storeLabel(model.stores), dowLabelLocal()], color:'#000', font:{weight:'800', size:14}, padding:{top:8,bottom:8}},
+          tooltip:{mode:'index', intersect:false, callbacks:{
+            label:function(ctx){ return `${ctx.dataset.label}: ${fmtInt(ctx.parsed.y || 0)} unid.`; },
+            footer:function(items){ const i = items && items.length ? items[0].dataIndex : -1; if(i < 0) return ''; return `Total: ${fmtInt(totals[i] || 0)} unid.`; }
+          }}
+        },
+        scales:{
+          x:{stacked:true, offset:true, ticks:{maxRotation:0, autoSkip:false, color:'#11284A', font:{size:11, weight:'700'}}, grid:{display:false}},
+          y:{stacked:true, beginAtZero:true, suggestedMax:ySuggestedMax, ticks:{color:'#11284A', callback:function(v){ return fmtInt(v); }, font:{size:11, weight:'700'}}}
+        }
+      },
+      plugins
+    });
+  }
+  function renderNewDessertsStorePie(model){
+    const id = 'chart_innovation_new_desserts_store_pie';
+    const canvas = document.getElementById(id);
+    if(!canvas || typeof Chart === 'undefined') return;
+    const labels = (model.storeKeys || []).filter(st => Number((model.storeQty || {})[st] || 0) > 0);
+    const values = labels.map(st => Number((model.storeQty || {})[st] || 0));
+    const total = values.reduce((acc,v)=>acc + Number(v || 0), 0);
+    destroyChart('chartInnovationNewDessertsStorePie', id);
+    if(!(total > 0)){ noData(id, 'No hay cantidad vendida de Canoa o Arroz en Leche por tienda.'); return; }
+    clearNoData(id);
+    const storeColor = function(store){
+      const colors = {AMPM01:'#005EA7', AMPM02:'#F58320', AMPM03:'#9AA3AF', A01:'#005EA7', A02:'#F58320', A03:'#9AA3AF'};
+      return colors[store] || '#6B7280';
+    };
+    const centerPlugin = {
+      id:'innovationNewDessertsPieCenter',
+      afterDraw:function(chart){
+        const meta = chart.getDatasetMeta(0);
+        if(!meta || !meta.data || !meta.data.length) return;
+        const cx = meta.data[0].x, cy = meta.data[0].y;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#11284A';
+        ctx.font = '900 18px Arial';
+        ctx.fillText(fmtInt(total), cx, cy - 6);
+        ctx.fillStyle = '#5C6F86';
+        ctx.font = '800 11px Arial';
+        ctx.fillText('unid.', cx, cy + 14);
+        ctx.restore();
+      }
+    };
+    const st = appState();
+    st.chartInnovationNewDessertsStorePie = new Chart(canvas.getContext('2d'), {
+      type:'doughnut',
+      data:{labels, datasets:[{label:'Qty', data:values, backgroundColor:labels.map(storeColor), borderColor:'#ffffff', borderWidth:3, hoverOffset:5}]},
+      options:{responsive:true, maintainAspectRatio:false, cutout:'58%', layout:{padding:{top:10,right:10,bottom:2,left:10}}, plugins:{legend:{position:'bottom', labels:{color:'#11284A', boxWidth:12, boxHeight:8, padding:10, font:{weight:'800', size:11}}}, title:{display:true, text:['Canoa + Arroz en Leche por tienda (QTY)', storeLabel(model.stores), dowLabelLocal()], color:'#000', font:{weight:'800', size:14}, padding:{top:8,bottom:8}}, tooltip:{callbacks:{label:function(ctx){ const v = Number(ctx.parsed || 0); const pct = total > 0 ? (v / total) * 100 : 0; return `${ctx.label}: ${fmtInt(v)} unid. (${pct.toFixed(1)}%)`; }}}}},
+      plugins:[centerPlugin]
+    });
+  }
+  function renderNewDesserts(storeList){
+    const model = aggregateNewDesserts(storeList);
+    renderNewDessertsQtyChart(model);
+    renderNewDessertsStorePie(model);
+  }
   function render(storeList){
     const model = aggregate(storeList);
     renderBigDogChart(model);
     renderHotDogEffectChart(model);
+    renderNewDesserts(storeList);
   }
   function patchRender(){
     try{
