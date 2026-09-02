@@ -7974,19 +7974,41 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
         .map(v => normalizeYm(v))
         .filter(v => parseIsoWeekKey(v));
       const unique = Array.from(new Set(base)).sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
-      const candidates = targetYear ? unique.filter(v => {
+      let candidates = targetYear ? unique.filter(v => {
         const p = parseIsoWeekKey(v);
         return p && p.y === targetYear;
       }) : unique;
       const autoKey = current ? _ampmLyIsoWeekKeyBase(current) : '';
+      const candidatesWithData = new Set(candidates);
+      if(autoKey && !candidates.includes(autoKey)){
+        candidates = candidates.concat([autoKey]).sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
+      }
+      const currentNorm = normalizeYm(current);
+      const domCurrent = String(sel.dataset.lyCurrent || '').trim();
+      const domSelected = (domCurrent && normalizeYm(domCurrent) === currentNorm) ? String(sel.value || '').trim() : '';
+      let storedSelected = '';
+      try{
+        const storedCurrent = String(localStorage.getItem('ampm_ly_week_override_current') || '').trim();
+        if(storedCurrent && normalizeYm(storedCurrent) === currentNorm){
+          storedSelected = String(localStorage.getItem('ampm_ly_week_override') || '').trim();
+        }
+      }catch(e){}
       let selected = forceAuto
-        ? ((autoKey && candidates.includes(autoKey)) ? autoKey : (candidates[0] || ''))
-        : String(sel.value || localStorage.getItem('ampm_ly_week_override') || '').trim();
+        ? (autoKey || (candidates[0] || ''))
+        : (domSelected || storedSelected || autoKey || '');
       if(!selected || !candidates.includes(selected)) selected = (autoKey && candidates.includes(autoKey)) ? autoKey : (candidates[0] || '');
-      const opts = candidates.map(v => ({value:v, label: weekKeyDisplay(v)}));
+      const opts = candidates.map(v => ({
+        value:v,
+        label: `${weekKeyDisplay(v)}${autoKey && v === autoKey && !candidatesWithData.has(v) ? ' (sin data)' : ''}`
+      }));
       setSelectOptions(sel, opts, selected ? [selected] : []);
       if(selected){ sel.value = selected; }
-      try{ localStorage.setItem('ampm_ly_week_override', selected || ''); }catch(e){}
+      sel.dataset.lyCurrent = currentNorm;
+      sel.dataset.lyAutoKey = autoKey || '';
+      try{
+        localStorage.setItem('ampm_ly_week_override_current', currentNorm);
+        localStorage.setItem('ampm_ly_week_override', selected && selected !== autoKey ? selected : '');
+      }catch(e){}
     }
 
     function autoSelectInvWeeks(){
@@ -30273,7 +30295,7 @@ renderShareTable({
       markFiltersDirty(true);
     });
     const reportModeSel = el('reportMode'); if(reportModeSel){ reportModeSel.value = getUnifiedReportMode(); reportModeSel.addEventListener('change', ()=>{ state.reportMode = reportModeSel.value; try{ localStorage.setItem('ampm_report_mode', state.reportMode); }catch(e){} if(!isDailyReport()){ state.dowFilter='__ALL__'; syncDowSelectFromToken('__ALL__'); } rebuildPeriodSelectors(); applyUnifiedModeUI(); rebuildLyWeekOverrideOptions(); markFiltersDirty(true); }); }
-    const lyWeekOverrideSel = el('lyWeekOverride'); if(lyWeekOverrideSel){ lyWeekOverrideSel.addEventListener('change', ()=>{ try{ localStorage.setItem('ampm_ly_week_override', lyWeekOverrideSel.value || ''); }catch(e){} markFiltersDirty(true); }); }
+    const lyWeekOverrideSel = el('lyWeekOverride'); if(lyWeekOverrideSel){ lyWeekOverrideSel.addEventListener('change', ()=>{ try{ const auto = String(lyWeekOverrideSel.dataset.lyAutoKey || '').trim(); const current = normalizeYm(String(el('currentMonth')?.value || '').trim()); const selected = String(lyWeekOverrideSel.value || '').trim(); localStorage.setItem('ampm_ly_week_override_current', current); localStorage.setItem('ampm_ly_week_override', selected && selected !== auto ? selected : ''); }catch(e){} markFiltersDirty(true); }); }
     el('prevMonths').addEventListener('change', ()=>markFiltersDirty(true));
     el('stores').addEventListener('change', ()=>{
       try{ renderStoreQuick(); }catch(e){}
