@@ -4875,10 +4875,13 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 })();
 </script>
 
+<script charset="utf-8" src="nilsen_4w_data.js"></script>
+
 <div id="ampmFloatingActions"><div class="export-dd" id="ampmExportWrap">
 <button class="btn secondary" id="exportBtn" type="button">Descargar reporte ▾</button>
 <div aria-label="Opciones de descarga" class="export-menu" id="exportMenu" role="menu">
 <button data-export="excel" type="button">Excel (.xls)</button>
+<button data-export="nilsen-week-xlsx" type="button">Nilsen Semana (.xlsx)</button>
 <button data-export="word" type="button">Word (.doc)</button>
 <button data-export="sbf-top3-xlsx" type="button">SBF Top 3 (.xlsx)</button>
 <button data-export="onepager-pdf" type="button">One Pager PDF (.pdf)</button>
@@ -32761,6 +32764,689 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
         downloadBlob(`Reporte_Mensual_${ym}.xls`, 'application/vnd.ms-excel', '\ufeff' + html);
       }
 
+      function nilsenExportHeaders(){
+        return [
+          'Store Id',
+          'Item description',
+          'Item barcode',
+          'Item sale units',
+          'Item sales value(incl impuetos)',
+          'Date of sale (DDMMYYYY)',
+          'Flag Type of Sale (1, 2, 3)',
+          'DESCRIPCIÓN DE DEPARTAMENTO',
+          'DESCRIPCIÓN DE CATEGORÍA',
+          'Marca',
+          'Semana',
+          'Año'
+        ];
+      }
+
+      function exportNilsenWeekXlsx(){
+        const xlsx = window.XLSX;
+        if(!xlsx){
+          alert('No está disponible el motor Excel para generar el archivo de Nilsen.');
+          return;
+        }
+        const wb = window.state && window.state.__hallWorkbook ? window.state.__hallWorkbook : null;
+        if(!wb){
+          alert('Primero cargá el cubo compacto.');
+          return;
+        }
+
+        const selected = nilsenSelectedWeek();
+        if(!selected){
+          alert('Seleccioná una semana en los filtros generales para descargar Nilsen.');
+          return;
+        }
+
+        const headers = nilsenExportHeaders();
+
+        let rows = [];
+        try{
+          if(typeof hasSheet === 'function' && hasSheet(wb, 'Nilsen_4W')){
+            rows = (sheetRows(wb, 'Nilsen_4W', {defval:null, raw:true}) || [])
+              .filter(r => nilsenWeekKeyFromRow(r) === selected.key)
+              .map(r => headers.map(h => nilsenField(r, h)));
+          }
+        }catch(e){
+          console.warn('Nilsen_4W no pudo leerse; se intentará fallback.', e);
+          rows = [];
+        }
+
+        if(!rows.length){
+          rows = buildNilsenRowsFromDetailFallback(wb, selected, headers);
+        }
+
+        rows = rows.filter(r => r && String(r[0] ?? '').trim() && String(r[1] ?? '').trim());
+        if(!rows.length){
+          alert('No encontré datos Nilsen para ' + selected.label + '. Revisá que el cubo venga compactado con las últimas 4 semanas.');
+          return;
+        }
+
+        rows.sort((a,b)=>{
+          const ax = [a[0], a[1], nilsenDateSortValue(a[5])].join('|');
+          const bx = [b[0], b[1], nilsenDateSortValue(b[5])].join('|');
+          return ax.localeCompare(bx, 'es');
+        });
+
+        const outWb = xlsx.utils.book_new();
+        const ws = xlsx.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [
+          {wch:12}, {wch:38}, {wch:18}, {wch:15}, {wch:18}, {wch:16},
+          {wch:22}, {wch:28}, {wch:28}, {wch:18}, {wch:10}, {wch:10}
+        ];
+        ws['!autofilter'] = { ref: xlsx.utils.encode_range({s:{r:0,c:0}, e:{r:Math.max(rows.length,1), c:headers.length-1}}) };
+        const range = xlsx.utils.decode_range(ws['!ref']);
+        for(let rr = 1; rr <= range.e.r; rr++){
+          const qtyCell = ws[xlsx.utils.encode_cell({r:rr,c:3})];
+          const salesCell = ws[xlsx.utils.encode_cell({r:rr,c:4})];
+          const dateCell = ws[xlsx.utils.encode_cell({r:rr,c:5})];
+          if(qtyCell) qtyCell.z = '#,##0';
+          if(salesCell) salesCell.z = '#,##0.00';
+          if(dateCell) dateCell.z = 'dd/mm/yyyy';
+        }
+        xlsx.utils.book_append_sheet(outWb, ws, 'Data');
+        outWb.Props = {
+          Title: `Semana ${selected.week} AMPM ESA ${selected.year}`,
+          Subject: 'Nilsen weekly sales',
+          Author: 'AMPM Dashboard'
+        };
+        xlsx.writeFile(outWb, `Semana ${selected.week} AMPM ESA ${selected.year}.xlsx`);
+      }
+
+      function nilsenSelectedWeek(){
+        const raw = String(document.getElementById('currentMonth')?.value || '').trim();
+        const normalized = (typeof normalizeYm === 'function') ? normalizeYm(raw) : null;
+        const candidates = [normalized, raw];
+        for(const cand of candidates){
+          const key = nilsenNormalizeWeekKey(cand);
+          if(key){
+            const p = key.match(/^(\d{4})-W(\d{2})$/);
+            return { key, year:Number(p[1]), week:Number(p[2]), label:`S${Number(p[2])} ${p[1]}` };
+          }
+        }
+        return null;
+      }
+
+      function nilsenNormalizeWeekKey(v){
+        if(v == null) return '';
+        const s = String(v).trim();
+        let m = s.match(/^(\d{4})[-\s]*[WS](\d{1,2})$/i);
+        if(!m) m = s.match(/(\d{4}).*?[WS](\d{1,2})/i);
+        if(!m) m = s.match(/[WS](\d{1,2}).*?(\d{4})/i);
+        if(!m) return '';
+        const y = Number(m[1].length === 4 ? m[1] : m[2]);
+        const w = Number(m[1].length === 4 ? m[2] : m[1]);
+        if(!y || !w || w < 1 || w > 53) return '';
+        return `${y}-W${String(w).padStart(2,'0')}`;
+      }
+
+      function nilsenKeyName(s){
+        return String(s ?? '').normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g,'')
+          .replace(/\u00a0/g,' ')
+          .replace(/[^a-zA-Z0-9]+/g,'')
+          .toLowerCase();
+      }
+
+      function nilsenField(row, wanted){
+        if(!row) return null;
+        if(Object.prototype.hasOwnProperty.call(row, wanted)) return row[wanted];
+        const wk = nilsenKeyName(wanted);
+        const keys = Object.keys(row || {});
+        for(const k of keys){
+          if(nilsenKeyName(k) === wk) return row[k];
+        }
+        return null;
+      }
+
+      function nilsenWeekKeyFromRow(row){
+        const direct = nilsenNormalizeWeekKey(nilsenField(row, 'YearWeek') || nilsenField(row, 'YearMonth'));
+        if(direct) return direct;
+        const y = Number(nilsenField(row, 'Año') || nilsenField(row, 'Ano'));
+        const w = Number(nilsenField(row, 'Semana'));
+        if(y && w) return `${y}-W${String(w).padStart(2,'0')}`;
+        const d = nilsenDateValue(nilsenField(row, 'Date of sale (DDMMYYYY)'));
+        if(d && typeof dateToIsoWeekUTC === 'function'){
+          const iw = dateToIsoWeekUTC(new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())));
+          return `${iw.y}-W${String(iw.w).padStart(2,'0')}`;
+        }
+        return '';
+      }
+
+      function nilsenDateValue(v){
+        if(v instanceof Date && !isNaN(v.getTime())) return v;
+        if(typeof v === 'number' && window.XLSX && XLSX.SSF && XLSX.SSF.parse_date_code){
+          const p = XLSX.SSF.parse_date_code(v);
+          if(p && p.y && p.m && p.d) return new Date(p.y, p.m - 1, p.d);
+        }
+        const s = String(v ?? '').trim();
+        if(!s) return null;
+        let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if(m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if(m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      function nilsenDateSortValue(v){
+        const d = nilsenDateValue(v);
+        return d ? d.toISOString().slice(0,10) : String(v ?? '');
+      }
+
+      function nilsenNum(v){
+        if(v == null || v === '') return 0;
+        if(typeof v === 'number') return Number.isFinite(v) ? v : 0;
+        const n = Number(String(v).replace(/[$,\s]/g,''));
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function nilsenNorm(v){
+        return String(v ?? '').normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g,'')
+          .toUpperCase()
+          .replace(/&/g,' Y ')
+          .replace(/[^A-Z0-9]+/g,'')
+          .trim();
+      }
+
+      function buildNilsenRowsFromDetailFallback(wb, selected, headers){
+        if(typeof hasSheet !== 'function' || !hasSheet(wb, 'Cubo_Sales_DetailHallazgos')) return [];
+        const detail = sheetRows(wb, 'Cubo_Sales_DetailHallazgos', {defval:null, raw:true}) || [];
+        const invRows = (typeof hasSheet === 'function' && hasSheet(wb, 'Inventario_Items'))
+          ? (sheetRows(wb, 'Inventario_Items', {defval:null, raw:true}) || [])
+          : [];
+        const barcodeMaps = buildNilsenBarcodeMaps(invRows);
+        const groups = new Map();
+
+        detail.forEach(r=>{
+          const yw = nilsenNormalizeWeekKey(nilsenField(r, 'YearWeek') || nilsenField(r, 'YearMonth'));
+          if(yw !== selected.key) return;
+          const store = String(nilsenField(r, 'Store') || '').trim().toUpperCase();
+          const desc = String(nilsenField(r, 'Description') || '').trim();
+          if(!store || !desc) return;
+          const dept = String(nilsenField(r, 'Department') || '').trim();
+          const cat = String(nilsenField(r, 'Category') || '').trim();
+          const sup = String(nilsenField(r, 'Supplier') || '').trim();
+          const brand = String(nilsenField(r, 'Brand') || '').trim();
+          const date = nilsenDateValue(nilsenField(r, 'Date Sold')) || null;
+          const flag = String(nilsenField(r, 'Is_Delivery')).toLowerCase() === 'true' || !!String(nilsenField(r, 'Delivery_Channel') || '').trim() ? 2 : 1;
+          const barcode = lookupNilsenBarcode(barcodeMaps, {store, sup, cat, brand, desc});
+          const key = [store, desc, barcode, nilsenDateSortValue(date), flag, dept, cat, brand, selected.week, selected.year].join('\u0001');
+          const cur = groups.get(key) || {store, desc, barcode, date, flag, dept, cat, brand, week:selected.week, year:selected.year, qty:0, sales:0};
+          cur.qty += nilsenNum(nilsenField(r, 'Qty Sold'));
+          cur.sales += nilsenNum(nilsenField(r, 'Sales'));
+          groups.set(key, cur);
+        });
+
+        return Array.from(groups.values()).map(g => [
+          g.store,
+          g.desc,
+          g.barcode,
+          g.qty,
+          Math.round((g.sales * 1.13 + Number.EPSILON) * 100) / 100,
+          g.date || '',
+          g.flag,
+          g.dept,
+          g.cat,
+          g.brand,
+          g.week,
+          g.year
+        ]);
+      }
+
+      function buildNilsenBarcodeMaps(invRows){
+        const maps = {store:new Map(), full:new Map(), supplierDesc:new Map(), desc:new Map(), descDup:new Set()};
+        (invRows || []).forEach(r=>{
+          const code = String(nilsenField(r, 'LookUp Code') || nilsenField(r, 'Lookup Code') || nilsenField(r, 'Barcode') || '').trim();
+          if(!code) return;
+          const store = String(nilsenField(r, 'Store') || '').trim().toUpperCase();
+          const sup = nilsenNorm(nilsenField(r, 'Supplier'));
+          const cat = nilsenNorm(nilsenField(r, 'Category'));
+          const brand = nilsenNorm(nilsenField(r, 'Brand') || nilsenField(r, 'Marca'));
+          const desc = nilsenNorm(nilsenField(r, 'Description'));
+          if(!desc) return;
+          if(store) maps.store.set([store,sup,cat,brand,desc].join('|'), code);
+          maps.full.set([sup,cat,brand,desc].join('|'), code);
+          maps.supplierDesc.set([sup,desc].join('|'), code);
+          if(maps.desc.has(desc) && maps.desc.get(desc) !== code) maps.descDup.add(desc);
+          maps.desc.set(desc, code);
+        });
+        maps.descDup.forEach(k => maps.desc.delete(k));
+        return maps;
+      }
+
+      function lookupNilsenBarcode(maps, item){
+        const store = String(item.store || '').trim().toUpperCase();
+        const sup = nilsenNorm(item.sup);
+        const cat = nilsenNorm(item.cat);
+        const brand = nilsenNorm(item.brand);
+        const desc = nilsenNorm(item.desc);
+        return maps.store.get([store,sup,cat,brand,desc].join('|'))
+          || maps.full.get([sup,cat,brand,desc].join('|'))
+          || maps.supplierDesc.get([sup,desc].join('|'))
+          || maps.desc.get(desc)
+          || '';
+      }
+
+      async function ensureNilsenWeekDataLoaded(forceReload){
+        if(!forceReload && window.AMPM_NILSEN_WEEK_EXPORT && Array.isArray(window.AMPM_NILSEN_WEEK_EXPORT.rows)){
+          return window.AMPM_NILSEN_WEEK_EXPORT;
+        }
+        if(forceReload){
+          try{ delete window.AMPM_NILSEN_WEEK_EXPORT; }catch(_e){ window.AMPM_NILSEN_WEEK_EXPORT = null; }
+        }
+        await new Promise((resolve, reject)=>{
+          const prev = document.querySelector('script[data-nilsen-week-data="1"]');
+          if(prev && prev.parentNode) prev.parentNode.removeChild(prev);
+          const s = document.createElement('script');
+          s.src = 'nilsen_4w_data.js?v=' + Date.now();
+          s.async = true;
+          s.dataset.nilsenWeekData = '1';
+          s.onload = resolve;
+          s.onerror = ()=>reject(new Error('No encontré nilsen_4w_data.js junto al HTML.'));
+          document.head.appendChild(s);
+        });
+        if(window.AMPM_NILSEN_WEEK_EXPORT && Array.isArray(window.AMPM_NILSEN_WEEK_EXPORT.rows)){
+          return window.AMPM_NILSEN_WEEK_EXPORT;
+        }
+        throw new Error('nilsen_4w_data.js no trae datos válidos.');
+      }
+
+      function nilsenAvailableWeeksText(payload){
+        const weeks = Array.isArray(payload?.availableWeeks) ? payload.availableWeeks : [];
+        return weeks.map(k=>{
+          const m = String(k).match(/^(\d{4})-W(\d{2})$/);
+          return m ? `S${Number(m[2])} ${m[1]}` : String(k);
+        }).join(', ');
+      }
+
+      function nilsenRowsFromPayload(payload, selected){
+        const rawRows = Array.isArray(payload?.rows) ? payload.rows : [];
+        return rawRows.filter(r=>{
+          const key = Array.isArray(r) ? r[0] : (r && (r.YearWeek || r.YearMonth));
+          return nilsenNormalizeWeekKey(key) === selected.key;
+        }).map(r=>{
+          if(Array.isArray(r)){
+            return [
+              r[1] ?? '',
+              r[2] ?? '',
+              r[3] ?? '',
+              nilsenNum(r[4]),
+              nilsenNum(r[5]),
+              nilsenDateValue(r[6]) || r[6] || '',
+              Number(r[7] || 0),
+              r[8] ?? '',
+              r[9] ?? '',
+              r[10] ?? '',
+              Number(r[11] || selected.week),
+              Number(r[12] || selected.year)
+            ];
+          }
+          return [
+            nilsenField(r, 'Store Id\u00a0') || nilsenField(r, 'Store Id') || '',
+            nilsenField(r, 'Item description\u00a0') || nilsenField(r, 'Item description') || '',
+            nilsenField(r, 'Item barcode\u00a0') || nilsenField(r, 'Item barcode') || '',
+            nilsenNum(nilsenField(r, 'Item sale units\u00a0\u00a0') || nilsenField(r, 'Item sale units')),
+            nilsenNum(nilsenField(r, 'Item sales value(incl impuetos)')),
+            nilsenDateValue(nilsenField(r, 'Date of sale (DDMMYYYY)')) || nilsenField(r, 'Date of sale (DDMMYYYY)') || '',
+            Number(nilsenField(r, 'Flag Type of Sale (1, 2, 3)') || 0),
+            nilsenField(r, 'DESCRIPCIÓN DE DEPARTAMENTO') || nilsenField(r, 'Descripcion de Departamento') || '',
+            nilsenField(r, 'DESCRIPCIÓN DE CATEGORÍA') || nilsenField(r, 'Descripcion de Categoria') || '',
+            nilsenField(r, 'Marca') || '',
+            Number(nilsenField(r, 'Semana') || selected.week),
+            Number(nilsenField(r, 'Año') || nilsenField(r, 'Ano') || selected.year)
+          ];
+        });
+      }
+
+      function nilsenWorkbookFileName(selected){
+        return `Semana ${selected.week} AMPM ESA ${selected.year}.xlsx`;
+      }
+
+      function nilsenRowsForWorkbook(rows, selected){
+        return (rows || []).map(r => {
+          const dateValue = nilsenDateValue(r[5]);
+          return [
+            String(r[0] ?? '').trim(),
+            String(r[1] ?? '').trim(),
+            String(r[2] ?? '').trim(),
+            nilsenNum(r[3]),
+            nilsenNum(r[4]),
+            dateValue || r[5] || '',
+            Number(r[6] || 0),
+            String(r[7] ?? '').trim(),
+            String(r[8] ?? '').trim(),
+            String(r[9] ?? '').trim(),
+            Number(r[10] || selected.week),
+            Number(r[11] || selected.year)
+          ];
+        });
+      }
+
+      async function tryDownloadNilsenWorkbookExcelJS(headers, rows, selected, fileName){
+        try{
+          if(typeof ensureExcelJS === 'function') await ensureExcelJS();
+          if(!window.ExcelJS || typeof window.ExcelJS.Workbook !== 'function') return false;
+          const workbook = new window.ExcelJS.Workbook();
+          workbook.creator = 'AMPM Dashboard';
+          workbook.created = new Date();
+          workbook.modified = new Date();
+          workbook.properties = {
+            title: `Semana ${selected.week} AMPM ESA ${selected.year}`,
+            subject: 'Nilsen weekly sales'
+          };
+
+          const ws = workbook.addWorksheet('Data');
+          const widths = [9.109375, 32.5546875, 16.109375, 16.44140625, 31.77734375, 26.6640625, 25.44140625, 25.5546875, 25.88671875, 17.88671875, 6.6640625, 5];
+          ws.columns = headers.map((h, idx) => ({ header:h, key:`c${idx + 1}`, width:widths[idx] || 12 }));
+
+          const headerFill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFF00' } };
+          const thinBorder = { style:'thin', color:{ argb:'FFD9E2EA' } };
+          const headerRow = ws.getRow(1);
+          headerRow.eachCell({ includeEmpty:true }, (cell, colNumber) => {
+            cell.fill = headerFill;
+            cell.font = { name:'Arial', size: colNumber <= 7 ? 11 : 8, bold:true, color:{ argb:'FF000000' } };
+            cell.border = { top:thinBorder, left:thinBorder, bottom:thinBorder, right:thinBorder };
+            cell.alignment = { horizontal: colNumber <= 7 ? 'center' : 'left', vertical:'middle', wrapText:false };
+          });
+
+          nilsenRowsForWorkbook(rows, selected).forEach(row => ws.addRow(row));
+          for(let rowNumber = 2; rowNumber <= ws.rowCount; rowNumber++){
+            const row = ws.getRow(rowNumber);
+            row.eachCell({ includeEmpty:true }, cell => {
+              cell.font = { name:'Arial', size:11, color:{ argb:'FF000000' } };
+              cell.border = { top:thinBorder, left:thinBorder, bottom:thinBorder, right:thinBorder };
+            });
+          }
+
+          ws.getColumn(3).numFmt = '@';
+          ws.getColumn(4).numFmt = '#,##0';
+          ws.getColumn(5).numFmt = '#,##0.00';
+          ws.getColumn(6).numFmt = 'dd/mm/yyyy';
+          ws.getColumn(7).numFmt = '0';
+          ws.getColumn(11).numFmt = '0';
+          ws.getColumn(12).numFmt = '0';
+          ws.autoFilter = {
+            from: { row:1, column:1 },
+            to: { row: Math.max(1, ws.rowCount), column: headers.length }
+          };
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          downloadBlob(fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer);
+          return true;
+        }catch(err){
+          console.warn('No se pudo generar Nilsen con formato ExcelJS; usando fallback básico.', err);
+          return false;
+        }
+      }
+
+      async function nilsenEnsureJsZip(){
+        if(window.JSZip && typeof window.JSZip.loadAsync === 'function') return true;
+        if(typeof ensureScriptFromUrls === 'function'){
+          await ensureScriptFromUrls([
+            'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+            'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+          ], ()=> window.JSZip && typeof window.JSZip.loadAsync === 'function',
+             'JSZip no está disponible para generar el Excel Nilsen con formato.');
+        }
+        return !!(window.JSZip && typeof window.JSZip.loadAsync === 'function');
+      }
+
+      function nilsenXmlEscape(v){
+        return String(v ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
+      }
+
+      function nilsenColumnName(n){
+        let out = '';
+        let num = Number(n || 0);
+        while(num > 0){
+          const mod = (num - 1) % 26;
+          out = String.fromCharCode(65 + mod) + out;
+          num = Math.floor((num - mod) / 26);
+        }
+        return out || 'A';
+      }
+
+      function nilsenExcelDateSerial(v){
+        const d = nilsenDateValue(v);
+        if(!d) return null;
+        return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) + 25569;
+      }
+
+      function nilsenXlsxCellXml(value, rowNumber, colNumber, styleId){
+        const ref = `${nilsenColumnName(colNumber)}${rowNumber}`;
+        const styleAttr = Number.isFinite(Number(styleId)) ? ` s="${Number(styleId)}"` : '';
+        if(value instanceof Date && !isNaN(value.getTime())){
+          const serial = nilsenExcelDateSerial(value);
+          if(serial != null) return `<c r="${ref}"${styleAttr}><v>${serial}</v></c>`;
+        }
+        if(typeof value === 'number' && Number.isFinite(value)){
+          return `<c r="${ref}"${styleAttr}><v>${value}</v></c>`;
+        }
+        return `<c r="${ref}" t="inlineStr"${styleAttr}><is><t>${nilsenXmlEscape(value)}</t></is></c>`;
+      }
+
+      async function tryDownloadNilsenWorkbookZip(headers, rows, selected, fileName){
+        try{
+          if(!await nilsenEnsureJsZip()) return false;
+          const ZipLib = window.JSZip;
+          const zip = new ZipLib();
+          const workbookRows = nilsenRowsForWorkbook(rows, selected);
+          const lastRow = Math.max(1, workbookRows.length + 1);
+          const lastCol = headers.length;
+          const sheetRef = `A1:${nilsenColumnName(lastCol)}${lastRow}`;
+          const widths = [9.109375, 32.5546875, 16.109375, 16.44140625, 31.77734375, 26.6640625, 25.44140625, 25.5546875, 25.88671875, 17.88671875, 6.6640625, 5];
+          const colsXml = widths.map((w, idx) => `<col min="${idx + 1}" max="${idx + 1}" width="${w}" customWidth="1"/>`).join('');
+          const headerCells = headers.map((h, idx) => nilsenXlsxCellXml(h, 1, idx + 1, idx < 7 ? 1 : 2)).join('');
+          const dataRowsXml = workbookRows.map((r, ridx) => {
+            const rowNumber = ridx + 2;
+            const cells = r.map((value, idx) => {
+              let styleId = 0;
+              if(idx === 2) styleId = 3;
+              else if(idx === 3) styleId = 4;
+              else if(idx === 4) styleId = 5;
+              else if(idx === 5) styleId = 6;
+              else if(idx === 6 || idx === 10 || idx === 11) styleId = 7;
+              return nilsenXlsxCellXml(value, rowNumber, idx + 1, styleId);
+            }).join('');
+            return `<row r="${rowNumber}" spans="1:${lastCol}">${cells}</row>`;
+          }).join('');
+          const nowIso = new Date().toISOString();
+
+          zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>`);
+          zip.folder('_rels').file('.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`);
+          zip.folder('docProps').file('app.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>Microsoft Excel</Application>
+  <DocSecurity>0</DocSecurity>
+  <ScaleCrop>false</ScaleCrop>
+  <HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>1</vt:i4></vt:variant></vt:vector></HeadingPairs>
+  <TitlesOfParts><vt:vector size="1" baseType="lpstr"><vt:lpstr>Data</vt:lpstr></vt:vector></TitlesOfParts>
+</Properties>`);
+          zip.folder('docProps').file('core.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:creator>AMPM Dashboard</dc:creator>
+  <dc:title>${nilsenXmlEscape(`Semana ${selected.week} AMPM ESA ${selected.year}`)}</dc:title>
+  <dc:subject>Nilsen weekly sales</dc:subject>
+  <dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified>
+</cp:coreProperties>`);
+          const xl = zip.folder('xl');
+          xl.file('workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <workbookPr defaultThemeVersion="124226"/>
+  <bookViews><workbookView xWindow="0" yWindow="0" windowWidth="28800" windowHeight="17640"/></bookViews>
+  <sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets>
+  <calcPr calcId="191029"/>
+</workbook>`);
+          xl.folder('_rels').file('workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`);
+          xl.file('styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="3">
+    <numFmt numFmtId="164" formatCode="#,##0"/>
+    <numFmt numFmtId="165" formatCode="#,##0.00"/>
+    <numFmt numFmtId="166" formatCode="dd/mm/yyyy"/>
+  </numFmts>
+  <fonts count="3">
+    <font><sz val="11"/><name val="Arial"/></font>
+    <font><b/><sz val="11"/><name val="Arial"/></font>
+    <font><b/><sz val="8"/><name val="Arial"/></font>
+  </fonts>
+  <fills count="3">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border><left style="thin"><color rgb="FFD9E2EA"/></left><right style="thin"><color rgb="FFD9E2EA"/></right><top style="thin"><color rgb="FFD9E2EA"/></top><bottom style="thin"><color rgb="FFD9E2EA"/></bottom><diagonal/></border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="8">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="166" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+  <dxfs count="0"/>
+  <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>
+</styleSheet>`);
+          xl.folder('worksheets').file('sheet1.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <dimension ref="${sheetRef}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="15"/>
+  <cols>${colsXml}</cols>
+  <sheetData><row r="1" spans="1:${lastCol}">${headerCells}</row>${dataRowsXml}</sheetData>
+  <autoFilter ref="${sheetRef}"/>
+  <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+</worksheet>`);
+
+          const content = await zip.generateAsync({
+            type:'uint8array',
+            mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          });
+          downloadBlob(fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', content);
+          return true;
+        }catch(err){
+          console.warn('No se pudo generar Nilsen con formato JSZip; probando otra ruta.', err);
+          return false;
+        }
+      }
+
+      function downloadNilsenWorkbookSheetJs(xlsx, headers, rows, selected, fileName){
+        const outWb = xlsx.utils.book_new();
+        const ws = xlsx.utils.aoa_to_sheet([headers, ...nilsenRowsForWorkbook(rows, selected)]);
+        ws['!cols'] = [
+          {wch:9}, {wch:33}, {wch:16}, {wch:16}, {wch:32}, {wch:27},
+          {wch:25}, {wch:26}, {wch:26}, {wch:18}, {wch:7}, {wch:5}
+        ];
+        ws['!autofilter'] = { ref: xlsx.utils.encode_range({s:{r:0,c:0}, e:{r:Math.max(rows.length,1), c:headers.length-1}}) };
+        const range = xlsx.utils.decode_range(ws['!ref']);
+        for(let rr = 1; rr <= range.e.r; rr++){
+          const barcodeCell = ws[xlsx.utils.encode_cell({r:rr,c:2})];
+          const qtyCell = ws[xlsx.utils.encode_cell({r:rr,c:3})];
+          const salesCell = ws[xlsx.utils.encode_cell({r:rr,c:4})];
+          const dateCell = ws[xlsx.utils.encode_cell({r:rr,c:5})];
+          if(barcodeCell) barcodeCell.z = '@';
+          if(qtyCell) qtyCell.z = '#,##0';
+          if(salesCell) salesCell.z = '#,##0.00';
+          if(dateCell) dateCell.z = 'dd/mm/yyyy';
+        }
+        xlsx.utils.book_append_sheet(outWb, ws, 'Data');
+        outWb.Props = {
+          Title: `Semana ${selected.week} AMPM ESA ${selected.year}`,
+          Subject: 'Nilsen weekly sales',
+          Author: 'AMPM Dashboard'
+        };
+        xlsx.writeFile(outWb, fileName);
+      }
+
+      async function downloadNilsenWorkbook(headers, rows, selected){
+        const fileName = nilsenWorkbookFileName(selected);
+        const zipped = await tryDownloadNilsenWorkbookZip(headers, rows, selected, fileName);
+        if(zipped) return;
+        const excelJsStyled = await tryDownloadNilsenWorkbookExcelJS(headers, rows, selected, fileName);
+        if(excelJsStyled) return;
+        const xlsx = window.XLSX;
+        if(!xlsx || !xlsx.utils || typeof xlsx.writeFile !== 'function'){
+          alert('No está disponible el motor Excel para generar el archivo de Nilsen.');
+          return;
+        }
+        downloadNilsenWorkbookSheetJs(xlsx, headers, rows, selected, fileName);
+      }
+
+      exportNilsenWeekXlsx = async function exportNilsenWeekXlsxFromCache(){
+        const xlsx = window.XLSX;
+        if(!xlsx && !(window.ExcelJS || typeof ensureExcelJS === 'function')){
+          alert('No está disponible el motor Excel para generar el archivo de Nilsen.');
+          return;
+        }
+        const selected = nilsenSelectedWeek();
+        if(!selected){
+          alert('Seleccioná una semana en los filtros generales para descargar Nilsen.');
+          return;
+        }
+
+        let payload = null;
+        try{
+          payload = await ensureNilsenWeekDataLoaded(true);
+        }catch(err){
+          console.error(err);
+          alert('No pude cargar los datos Nilsen. Corré generar_nilsen_4w_data.py para actualizar las semanas disponibles.');
+          return;
+        }
+
+        const headers = nilsenExportHeaders();
+
+        const rows = nilsenRowsFromPayload(payload, selected)
+          .filter(r => r && String(r[0] ?? '').trim() && String(r[1] ?? '').trim());
+        if(!rows.length){
+          const available = nilsenAvailableWeeksText(payload);
+          alert('No encontré datos Nilsen para ' + selected.label + (available ? '. Disponibles: ' + available : '.'));
+          return;
+        }
+
+        rows.sort((a,b)=>{
+          const ax = [a[0], a[1], nilsenDateSortValue(a[5])].join('|');
+          const bx = [b[0], b[1], nilsenDateSortValue(b[5])].join('|');
+          return ax.localeCompare(bx, 'es');
+        });
+
+        await downloadNilsenWorkbook(headers, rows, selected);
+      };
+
       async function exportOnePagerAsPdf(){
         const prevTab = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim();
         const onePagerBtn = document.querySelector('.tabBtn[data-tab="onepager"]');
@@ -34750,6 +35436,7 @@ async function exportInnovationAsPptx(){
             try{
               if(kind === 'word') await exportWordAsImage();
               if(kind === 'excel') exportExcel();
+              if(kind === 'nilsen-week-xlsx') await exportNilsenWeekXlsx();
               if(kind === 'sbf-top3-xlsx') { if(typeof window.exportSbfTop3Xlsx === 'function') { window.exportSbfTop3Xlsx(); } else if(typeof exportSbfTop3Xlsx === 'function') { exportSbfTop3Xlsx(); } else { throw new Error('exportSbfTop3Xlsx no está disponible'); } }
               if(kind === 'onepager-pdf') await exportOnePagerAsPdf();
               if(kind === 'innovation-onepager-pptx') await ((typeof window !== 'undefined' && typeof window.exportInnovationOnePagerAsPptx === 'function') ? window.exportInnovationOnePagerAsPptx() : exportInnovationOnePagerAsPptx());
