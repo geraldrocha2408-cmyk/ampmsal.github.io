@@ -10013,6 +10013,7 @@ if (hasSheet(wb, 'Daily_Sales')){
     console.warn('Daily_Sales parse warning', e);
   }
 }
+state._projectionDailySalesRows = Array.isArray(state.dailySalesRows) ? state.dailySalesRows.slice() : [];
 if (hasSheet(wb, 'Daily_Delivery')){
   try{
     const ddRows = sheetRows(wb, 'Daily_Delivery', {defval:null, raw:true});
@@ -12830,16 +12831,27 @@ try{
       if (!anchorWeek) return sorted.slice(-maxItems);
       return trimTrailingContiguousWeekPeriods(sorted, anchorWeek, maxItems);
     }
+    function chartXfSummaryShouldLead(tab){
+      try{
+        const xf = state && state.xf && state.xf[tab] ? state.xf[tab] : {};
+        return Object.keys(xf || {}).some(k => {
+          const v = xf[k];
+          if(Array.isArray(v)) return v.some(x => x != null && String(x).trim() !== '');
+          return v != null && String(v).trim() !== '';
+        });
+      }catch(_e){ return false; }
+    }
     function getChartSalesValue(store, periodKey){
       const st = String(store || '').trim().toUpperCase();
       const mapV = state._xfSummary?.ventas?.totalByStore || null;
-      if (mapV) return strictMapGet(mapV, st, periodKey);
-      if(typeof isPaniniExcluded === 'function' && isPaniniExcluded()) return getTotalSales(store, periodKey);
+      const summaryFirst = chartXfSummaryShouldLead('ventas');
+      if (summaryFirst && mapV && strictMapHas(mapV, st, periodKey)) return strictMapGet(mapV, st, periodKey);
       const type = chartLongPeriodType();
       const bucket = state.chartLong && state.chartLong.sales ? state.chartLong.sales : null;
       const key = `${st}||${chartLongDowKey()}`;
       const map = bucket && bucket[type] instanceof Map ? bucket[type].get(key) : null;
       if(map && map.has(periodKey)) return Number(map.get(periodKey) || 0);
+      if (!summaryFirst && mapV && strictMapHas(mapV, st, periodKey)) return strictMapGet(mapV, st, periodKey);
       return getTotalSales(store, periodKey);
     }
     function getChartDeliveryChannelSales(channel, periodKey, selectedStores){
@@ -12847,21 +12859,21 @@ try{
       const stores = Array.isArray(selectedStores)
         ? Array.from(new Set(selectedStores.map(store => String(store || '').trim().toUpperCase()).filter(Boolean)))
         : [];
+      const summaryFirst = chartXfSummaryShouldLead('delivery');
       const mapStoreCh = state._xfSummary?.delivery?.delByStoreChannel || null;
-      if (mapStoreCh && stores.length){
+      if (summaryFirst && mapStoreCh && stores.length){
         let found = false;
         let sum = 0;
         stores.forEach(store => {
           const scopedKey = `${store}||${ch}`;
+          if (strictMapHas(mapStoreCh, scopedKey, periodKey)) found = true;
           const val = strictMapGet(mapStoreCh, scopedKey, periodKey);
-          if (Number(val || 0) !== 0) found = true;
           sum += Number(val || 0);
         });
         if (found) return sum;
       }
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
-      if (mapCh && !stores.length) return strictMapGet(mapCh, ch, periodKey);
-      if(typeof isPaniniExcluded === 'function' && isPaniniExcluded()) return getDeliveryChannelSales(ch, periodKey, stores);
+      if (summaryFirst && mapCh && !stores.length && strictMapHas(mapCh, ch, periodKey)) return strictMapGet(mapCh, ch, periodKey);
       const type = chartLongPeriodType();
       const bucket = state.chartLong && state.chartLong.delivery ? state.chartLong.delivery : null;
       const dow = chartLongDowKey();
@@ -12876,18 +12888,30 @@ try{
         }
       });
       if (found) return sum;
-      if (mapCh) return strictMapGet(mapCh, ch, periodKey);
+      if (!summaryFirst && mapStoreCh && stores.length){
+        let foundSummary = false;
+        let summarySum = 0;
+        stores.forEach(store => {
+          const scopedKey = `${store}||${ch}`;
+          if (strictMapHas(mapStoreCh, scopedKey, periodKey)) foundSummary = true;
+          summarySum += Number(strictMapGet(mapStoreCh, scopedKey, periodKey) || 0);
+        });
+        if (foundSummary) return summarySum;
+      }
+      if (mapCh && strictMapHas(mapCh, ch, periodKey)) return strictMapGet(mapCh, ch, periodKey);
       return getDeliveryChannelSales(ch, periodKey, stores);
     }
     function getChartSbfValue(store, periodKey){
       const st = String(store || '').trim().toUpperCase();
       const mapS = state._xfSummary?.sbf?.txByStore || null;
-      if (mapS) return strictMapGet(mapS, st, periodKey);
+      const summaryFirst = chartXfSummaryShouldLead('sbf');
+      if (summaryFirst && mapS && strictMapHas(mapS, st, periodKey)) return strictMapGet(mapS, st, periodKey);
       const type = chartLongPeriodType();
       const bucket = state.chartLong && state.chartLong.sbf ? state.chartLong.sbf : null;
       const key = `${st}||${chartLongDowKey()}`;
       const map = bucket && bucket[type] instanceof Map ? bucket[type].get(key) : null;
       if(map && map.has(periodKey)) return Number(map.get(periodKey) || 0);
+      if (!summaryFirst && mapS && strictMapHas(mapS, st, periodKey)) return strictMapGet(mapS, st, periodKey);
       return getSbfTx(store, periodKey);
     }
     function _strictInnerMapGet(innerMap, ym){
@@ -12906,9 +12930,24 @@ try{
       }
       return found ? total : 0;
     }
+    function _strictInnerMapHas(innerMap, ym){
+      if(!(innerMap instanceof Map)) return false;
+      if(innerMap.has(ym)) return true;
+      const targetMonth = parseMonthKey(ym);
+      if(!targetMonth) return false;
+      for(const k of innerMap.keys()){
+        const mk = parseMonthKey(String(k ?? '').trim());
+        if(mk && mk === targetMonth) return true;
+      }
+      return false;
+    }
     function strictMapGet(map, key, ym){
       if(!(map instanceof Map)) return 0;
       return _strictInnerMapGet(map.get(key), ym);
+    }
+    function strictMapHas(map, key, ym){
+      if(!(map instanceof Map)) return false;
+      return _strictInnerMapHas(map.get(key), ym);
     }
     function getChartLongDirectValue(scope, key, periodKey){
       const bucket = state.chartLong && state.chartLong[scope] ? state.chartLong[scope] : null;
@@ -12929,26 +12968,44 @@ try{
         }
       }
       const mapV = state._xfSummary?.ventas?.totalByStore || null;
-      if(mapV) return strictMapGet(mapV, st, ym);
+      const summaryFirst = chartXfSummaryShouldLead('ventas');
+      if(summaryFirst && mapV && strictMapHas(mapV, st, ym)) return strictMapGet(mapV, st, ym);
       const direct = getChartLongDirectValue('sales', `${st}||__ALL__`, ym);
       if(direct != null) return Number(direct || 0);
+      if(!summaryFirst && mapV && strictMapHas(mapV, st, ym)) return strictMapGet(mapV, st, ym);
       const base = state.totalSalesByStoreMonth instanceof Map ? state.totalSalesByStoreMonth.get(st) : null;
       return _strictInnerMapGet(base, ym);
     }
     function getMonthlySbfValueSafe(store, ym){
       const st = String(store || '').trim().toUpperCase();
       const mapS = state._xfSummary?.sbf?.txByStore || null;
-      if(mapS) return strictMapGet(mapS, st, ym);
+      const summaryFirst = chartXfSummaryShouldLead('sbf');
+      if(summaryFirst && mapS && strictMapHas(mapS, st, ym)) return strictMapGet(mapS, st, ym);
       const direct = getChartLongDirectValue('sbf', `${st}||__ALL__`, ym);
       if(direct != null) return Number(direct || 0);
+      if(!summaryFirst && mapS && strictMapHas(mapS, st, ym)) return strictMapGet(mapS, st, ym);
       const base = state.sbfTxByStoreMonth instanceof Map ? state.sbfTxByStoreMonth.get(st) : null;
       return _strictInnerMapGet(base, ym);
     }
     function getMonthlyDeliveryChannelValueSafe(channel, ym, selectedStores){
       const ch = String(channel || '').trim() || '(Sin dato)';
       const stores = Array.isArray(selectedStores) ? selectedStores.map(s => String(s || '').trim().toUpperCase()).filter(Boolean) : [];
+      const summaryFirst = chartXfSummaryShouldLead('delivery');
+      const mapStoreCh = state._xfSummary?.delivery?.delByStoreChannel || null;
+      if(summaryFirst && mapStoreCh && stores.length){
+        let found = false;
+        let sum = 0;
+        stores.forEach(st => {
+          const scopedKey = `${st}||${ch}`;
+          if(strictMapHas(mapStoreCh, scopedKey, ym)){
+            found = true;
+            sum += strictMapGet(mapStoreCh, scopedKey, ym);
+          }
+        });
+        if(found) return sum;
+      }
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
-      if(mapCh) return strictMapGet(mapCh, ch, ym);
+      if(summaryFirst && mapCh && strictMapHas(mapCh, ch, ym)) return strictMapGet(mapCh, ch, ym);
       let helperFound = false;
       let helperSum = 0;
       if(hasChartLongMonth('delivery')){
@@ -12961,6 +13018,17 @@ try{
         });
         if(helperFound) return helperSum;
       }
+      if(!summaryFirst && mapStoreCh && stores.length){
+        let foundSummary = false;
+        let summarySum = 0;
+        stores.forEach(st => {
+          const scopedKey = `${st}||${ch}`;
+          if(strictMapHas(mapStoreCh, scopedKey, ym)) foundSummary = true;
+          summarySum += Number(strictMapGet(mapStoreCh, scopedKey, ym) || 0);
+        });
+        if(foundSummary) return summarySum;
+      }
+      if(!summaryFirst && mapCh && strictMapHas(mapCh, ch, ym)) return strictMapGet(mapCh, ch, ym);
       return getDeliveryChannelSales(ch, ym, stores);
     }
 
@@ -13318,7 +13386,12 @@ function projectionCutToMtd(projCal){
   };
 }
 function calcProjectionCalendarCut(monthKey, storeList){
-  if(!monthKey || !state.dailySalesRows || !state.dailySalesRows.length) return null;
+  const primaryRows = Array.isArray(state.dailySalesRows) ? state.dailySalesRows : [];
+  const fallbackRows = (Array.isArray(state._projectionDailySalesRows) && state._projectionDailySalesRows.length)
+    ? state._projectionDailySalesRows
+    : primaryRows;
+  const currentRows = primaryRows.length ? primaryRows : fallbackRows;
+  if(!monthKey || !currentRows.length) return null;
   const pm = parseMonthKeyParts(monthKey);
   if(!pm) return null;
   const year = pm.y, month = pm.m;
@@ -13326,11 +13399,13 @@ function calcProjectionCalendarCut(monthKey, storeList){
   const monthEnd   = new Date(year, month, 0);
   const anchorDow  = monthEnd.getDay(); // 0=Dom ... 6=Sab
   const storeSet = new Set((storeList && storeList.length ? storeList : state.stores).map(s=>String(s).trim().toUpperCase()));
+  const rowStore = (r)=> String((r && r.store) || '').trim().toUpperCase();
 
   let maxDate = null;
-  for(const r of state.dailySalesRows){
-    if(!storeSet.has(r.store)) continue;
+  for(const r of currentRows){
+    if(!storeSet.has(rowStore(r))) continue;
     const d = r.d;
+    if(!(d instanceof Date) || isNaN(d)) continue;
     if(d.getFullYear()===year && d.getMonth()===(month-1) && d <= monthEnd){
       if(!maxDate || d > maxDate) maxDate = d;
     }
@@ -13355,9 +13430,10 @@ function calcProjectionCalendarCut(monthKey, storeList){
 
   let salesMTD = 0;
   let salesActualMTD = 0;
-  for(const r of state.dailySalesRows){
-    if(!storeSet.has(r.store)) continue;
+  for(const r of currentRows){
+    if(!storeSet.has(rowStore(r))) continue;
     const d = r.d;
+    if(!(d instanceof Date) || isNaN(d)) continue;
     if(d.getFullYear()===year && d.getMonth()===(month-1)){
       const v = Number(r.sales ?? 0) || 0;
       if(d <= cutDate) salesMTD += v;
@@ -13371,16 +13447,37 @@ function calcProjectionCalendarCut(monthKey, storeList){
   const lyCutDay = Math.min(cutDay, lyMonthEnd.getDate());
   const lyCutDate = new Date(lyYear, month-1, lyCutDay);
 
-  let salesLY_MTD = 0;
-  let lyMonthTotal = 0;
-  for(const r of state.dailySalesRows){
-    if(!storeSet.has(r.store)) continue;
-    const d = r.d;
-    if(d.getFullYear()===lyYear && d.getMonth()===(month-1)){
-      const v = Number(r.sales ?? 0) || 0;
-      if(d <= lyMonthEnd) lyMonthTotal += v;
-      if(d <= lyCutDate)  salesLY_MTD += v;
+  const calcLyTotals = (rows)=>{
+    let salesLY_MTD = 0;
+    let lyMonthTotal = 0;
+    (Array.isArray(rows) ? rows : []).forEach(r=>{
+      if(!storeSet.has(rowStore(r))) return;
+      const d = r && r.d;
+      if(!(d instanceof Date) || isNaN(d)) return;
+      if(d.getFullYear()===lyYear && d.getMonth()===(month-1)){
+        const v = Number(r.sales ?? 0) || 0;
+        if(d <= lyMonthEnd) lyMonthTotal += v;
+        if(d <= lyCutDate)  salesLY_MTD += v;
+      }
+    });
+    return {salesLY_MTD, lyMonthTotal};
+  };
+
+  let lyTotals = calcLyTotals(currentRows);
+  if((lyTotals.lyMonthTotal <= 0 || lyTotals.salesLY_MTD <= 0) && fallbackRows.length && fallbackRows !== currentRows){
+    const rawLyTotals = calcLyTotals(fallbackRows);
+    if(rawLyTotals.lyMonthTotal > lyTotals.lyMonthTotal || rawLyTotals.salesLY_MTD > lyTotals.salesLY_MTD){
+      lyTotals = rawLyTotals;
     }
+  }
+  let salesLY_MTD = lyTotals.salesLY_MTD;
+  let lyMonthTotal = lyTotals.lyMonthTotal;
+  if(lyMonthTotal <= 0 && state.salesCalMonthByStore && typeof state.salesCalMonthByStore.forEach === 'function'){
+    const lyMonthKey = `${lyYear}-${String(month).padStart(2,'0')}`;
+    storeSet.forEach(st=>{
+      const m = state.salesCalMonthByStore.get(st);
+      if(m) lyMonthTotal += Number(m.get(lyMonthKey) || 0) || 0;
+    });
   }
 
   const lyPctRaw = (lyMonthTotal>0) ? (salesLY_MTD / lyMonthTotal) : NaN;
@@ -15623,6 +15720,11 @@ function prd0BuildPedYaAuditFromWorkbook(storeList, uploadedRows){
         }
       }catch(e){}
 
+      try{
+        const direct = getChartLongDirectValue('sales', `${st}||__ALL__`, mk);
+        if(direct != null) return Number(direct || 0);
+      }catch(e){}
+
       const r = getMermaStoreMonthRow(st, mk);
       return r ? Number(r.TotalSales||0) : 0;
     }
@@ -17606,10 +17708,34 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
     function sumMapByStoresWeek(mapByStore, storeList, weekKey){
       let s = 0;
       for(const st of (storeList||[])){
-        const m = mapByStore.get(st);
-        if(m) s += Number(m.get(weekKey) ?? 0);
+        if(mapByStore instanceof Map) s += Number(strictMapGet(mapByStore, st, weekKey) || 0);
       }
       return s;
+    }
+
+    function mapHasByStoresPeriod(mapByStore, storeList, periodKey){
+      if(!(mapByStore instanceof Map)) return false;
+      for(const st of (storeList||[])){
+        if(strictMapHas(mapByStore, st, periodKey)) return true;
+      }
+      return false;
+    }
+
+    function getChartTotalSalesForStores(periodKey, storeList){
+      const stores = Array.from(new Set((Array.isArray(storeList) && storeList.length ? storeList : (state.stores || []))
+        .map(s => String(s || '').trim().toUpperCase())
+        .filter(Boolean)));
+      const xfMap = state._xfSummary?.delivery?.totalByStore || state._xfSummary?.ventas?.totalByStore || null;
+      const summaryFirst = chartXfSummaryShouldLead('delivery') || chartXfSummaryShouldLead('ventas');
+      if(summaryFirst && xfMap && mapHasByStoresPeriod(xfMap, stores, periodKey)){
+        return sumMapByStoresWeek(xfMap, stores, periodKey);
+      }
+      if(isMonthlyReport()){
+        return stores.reduce((acc, st) => acc + Number(getMonthlySalesValueSafe(st, periodKey) || 0), 0);
+      }
+      const helperTotal = stores.reduce((acc, st) => acc + Number(getChartSalesValue(st, periodKey) || 0), 0);
+      if(helperTotal > 0 || !xfMap || !mapHasByStoresPeriod(xfMap, stores, periodKey)) return helperTotal;
+      return sumMapByStoresWeek(xfMap, stores, periodKey);
     }
 
     function getLastNWeeks(keys, n){
@@ -25494,11 +25620,19 @@ function getDeliveryBubbleData(storeList, currentYm){
       const chPY = resolveChannelLike('pedido') || 'Pedido, YA';
       const chUE = resolveChannelLike('uber') || 'Uber, Eats';
       const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
+      const summaryFirst = chartXfSummaryShouldLead('delivery');
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
       const totalSalesMap = state._xfSummary?.delivery?.totalByStore || state.totalSalesByStoreMonth || null;
-      const getCh = (ch, ym) => mapCh ? mapGet(mapCh, String(ch || '').trim() || '(Sin dato)', ym) : getDeliveryChannelSales(ch, ym, stores);
+      const getCh = (ch, ym) => {
+        if(summaryFirst && mapCh && strictMapHas(mapCh, String(ch || '').trim() || '(Sin dato)', ym)){
+          return mapGet(mapCh, String(ch || '').trim() || '(Sin dato)', ym);
+        }
+        const val = getChartDeliveryChannelSales(ch, ym, stores);
+        if(Number(val || 0) > 0 || !mapCh || !strictMapHas(mapCh, String(ch || '').trim() || '(Sin dato)', ym)) return val;
+        return mapGet(mapCh, String(ch || '').trim() || '(Sin dato)', ym);
+      };
       const getTotal = (ym) => {
-        if (totalSalesMap){
+        if (summaryFirst && totalSalesMap){
           let sum = 0;
           (stores || []).forEach(store => {
             const st = String(store || '').trim().toUpperCase();
@@ -25508,7 +25642,16 @@ function getDeliveryBubbleData(storeList, currentYm){
           });
           return sum;
         }
-        return stores.reduce((acc, store) => acc + Number(getTotalSales(store, ym) || 0), 0);
+        const helperTotal = stores.reduce((acc, store) => acc + Number(getChartSalesValue(store, ym) || 0), 0);
+        if(helperTotal > 0 || !totalSalesMap) return helperTotal;
+        let sum = 0;
+        (stores || []).forEach(store => {
+          const st = String(store || '').trim().toUpperCase();
+          if(!st) return;
+          if (typeof strictMapGet === 'function') sum += Number(strictMapGet(totalSalesMap, st, ym) || 0);
+          else { const m = totalSalesMap.get(st); sum += Number(m?.get(ym) ?? 0); }
+        });
+        return sum;
       };
 
       const seriesPy = months.map(ym => Number(getCh(chPY, ym) || 0));
@@ -26010,8 +26153,7 @@ function getDeliveryBubbleData(storeList, currentYm){
 
       const labels = months.map(ym => periodChartLabel(ym));
       const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
-      const totalSalesMap = state._xfSummary?.delivery?.totalByStore || state.totalSalesByStoreMonth || null;
-      const totalSales = months.map(ym => totalSalesMap ? sumMapByStoresWeek(totalSalesMap, stores, ym) : 0);
+      const totalSales = months.map(ym => getChartTotalSalesForStores(ym, stores));
       const shareTotal = months.map((ym, i) => {
         const den = Number(totalSales[i] || 0);
         const num = Number(total[i] || 0);
@@ -26374,8 +26516,7 @@ const options = {
       const scopedStores = Array.isArray(storeOverride) && storeOverride.length ? storeOverride : [store];
       const {months, seriesPy, seriesUe, total, deltas, deltaNotes} = getMonthlyDeliveryChannelSeries(scopedStores);
       const labels = months.map(ym => periodChartLabel(ym));
-      const totalSalesMap = state._xfSummary?.delivery?.totalByStore || state.totalSalesByStoreMonth || null;
-      const totalSales = months.map(ym => totalSalesMap ? sumMapByStoresWeek(totalSalesMap, scopedStores, ym) : 0);
+      const totalSales = months.map(ym => getChartTotalSalesForStores(ym, scopedStores));
       const shareTotal = months.map((ym, i) => {
         const den = Number(totalSales[i] || 0);
         const num = Number(total[i] || 0);
@@ -26521,9 +26662,15 @@ const options = {
 
       const hasLong = !!((state.chartLong?.delivery?.[chartLongPeriodType()+'Periods'] || []).length);
       const totalSalesMap = state._xfSummary?.delivery?.totalByStore || null;
-      const totalSales = months.map(ym => totalSalesMap
-        ? Number(strictMapGet(totalSalesMap, storeKey, ym) || 0)
-        : (hasLong ? Number(getChartSalesValue(storeKey, ym) || 0) : sumSales(ym)));
+      const summaryFirst = chartXfSummaryShouldLead('delivery');
+      const totalSales = months.map(ym => {
+        if(summaryFirst && totalSalesMap && strictMapHas(totalSalesMap, storeKey, ym)){
+          return Number(strictMapGet(totalSalesMap, storeKey, ym) || 0);
+        }
+        const helperVal = hasLong ? Number(getChartSalesValue(storeKey, ym) || 0) : sumSales(ym);
+        if(helperVal > 0 || !totalSalesMap || !strictMapHas(totalSalesMap, storeKey, ym)) return helperVal;
+        return Number(strictMapGet(totalSalesMap, storeKey, ym) || 0);
+      });
       const py = months.map(ym => hasLong ? Number(getChartDeliveryChannelSales(chPY, ym, [storeKey]) || 0) : sumSales(ym, r => r.is_delivery === true && isChannel(r.delivery_channel, chPY)));
       const ue = months.map(ym => hasLong ? Number(getChartDeliveryChannelSales(chUE, ym, [storeKey]) || 0) : sumSales(ym, r => r.is_delivery === true && isChannel(r.delivery_channel, chUE)));
       const seriesPy = (mode === 'TOTAL' || mode === 'PYA') ? py : months.map(() => 0);
@@ -26903,8 +27050,7 @@ const options = {
       const labels = months.map(ym => periodChartLabel(ym));
 
       const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
-      const totalSalesMap = state._xfSummary?.delivery?.totalByStore || state.totalSalesByStoreMonth || null;
-      const totalSales = months.map(ym => totalSalesMap ? sumMapByStoresWeek(totalSalesMap, stores, ym) : 0);
+      const totalSales = months.map(ym => getChartTotalSalesForStores(ym, stores));
       const shareTotal = months.map((ym, i) => {
         const den = Number(totalSales[i] || 0);
         const num = Number(total[i] || 0);
@@ -48586,128 +48732,7 @@ function initHallazgosUI(){
 #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
 #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{min-height:300px !important;height:300px !important;}
 #innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery-bottom{height:236px !important;min-height:236px !important;padding:10px 10px 4px !important;}
-#innovation_fs_del_exec_section .innovationFsExecHours{padding:8px 12px 6px !important;display:flex !important;flex-direction:column !important;justify-content:flex-start !important;}
-#innovation_fs_del_exec_section .innovationFsExecHoursChartWrap{height:176px !important;min-height:176px !important;margin-bottom:4px !important;}
-#innovation_fs_del_exec_section .innovationFsExecHoursNotes{margin-top:3px !important;gap:3px !important;}
-#innovation_fs_del_exec_section .innovationFsExecTurnNote{padding:3px 8px !important;font-size:9.5px !important;line-height:1.02 !important;}
-@media (max-width:1100px){
-  #innovation_fs_del_exec_section .innovationFsExecGridTop--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridMid--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridPair--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridAux--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery{grid-template-columns:1fr !important;}
-  #innovation_fs_del_exec_section .innovationFsExecGridTop--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridMid--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridPair--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridAux--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{height:auto !important;min-height:unset !important;}
-}
-</style>
-<style id="innovation-fs-delivery-v62-layout-override">
-#innovation_fs_del_exec_section .innovationFsExecGridTop--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:14px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridStores--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridPair--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridAux--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTop--delivery > .chartCard,
-#innovation_fs_del_exec_section .innovationFsExecGridStores--delivery > .chartCard{
-  min-height:250px !important;
-  height:250px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridPair--delivery > .chartCard,
-#innovation_fs_del_exec_section .innovationFsExecGridAux--delivery > .chartCard{
-  min-height:260px !important;
-  height:260px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTop--delivery .innovationFsExecCanvasWrap--delivery,
-#innovation_fs_del_exec_section .innovationFsExecGridStores--delivery .innovationFsExecCanvasWrap--delivery{
-  height:220px !important;
-  min-height:220px !important;
-  padding:8px 10px 6px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridPair--delivery .innovationFsExecCanvasWrap--delivery,
-#innovation_fs_del_exec_section .innovationFsExecGridAux--delivery .innovationFsExecCanvasWrap--delivery{
-  height:230px !important;
-  min-height:230px !important;
-  padding:8px 10px 6px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery{
-  display:grid !important;
-  grid-template-columns:1.15fr .85fr !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{
-  min-height:300px !important;
-  height:300px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery-bottom{
-  height:250px !important;
-  min-height:250px !important;
-  padding:8px 10px 4px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecHours{padding:8px 12px 8px !important;}
-#innovation_fs_del_exec_section .innovationFsExecHoursChartWrap{
-  height:155px !important;
-  min-height:155px !important;
-  margin-bottom:4px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecHoursNotes{margin-top:6px !important;gap:4px !important;}
-#innovation_fs_del_exec_section .innovationFsExecTurnNote{padding:4px 8px !important;font-size:11px !important;}
-@media (max-width:1180px){
-  #innovation_fs_del_exec_section .innovationFsExecGridTop--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridStores--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridPair--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridAux--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery{
-    grid-template-columns:1fr !important;
-  }
-  #innovation_fs_del_exec_section .innovationFsExecGridTop--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridStores--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridPair--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridAux--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{
-    height:auto !important;
-    min-height:220px !important;
-  }
-}
-</style>
-<style id="innovation-fs-delivery-dow-v63">
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery > .chartCard{
+#innovation_fs_del_exec_section .innovationFsExecHours{padding:8px 12px 6px !important;display:flex !important;flex-direction:column !important;justify-content:flex-start !impord{
   min-height:260px !important;
   height:260px !important;
 }
@@ -48828,1049 +48853,7 @@ function initHallazgosUI(){
   flex:1 1 auto !important;
   height:auto !important;
   min-height:0 !important;
-  padding:8px 10px 8px !important;
-  display:flex !important;
-  flex-direction:column !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery canvas,
-#innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery-bottom canvas{
-  flex:1 1 auto !important;
-  width:100% !important;
-  height:100% !important;
-  max-height:none !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card{
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:flex-start !important;
-  padding:8px 12px 8px !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_host{
-  flex:1 1 auto !important;
-  min-height:0 !important;
-  display:flex !important;
-  flex-direction:column !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursChartWrap{
-  flex:1 1 auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  margin-bottom:6px !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursChartWrap canvas{
-  width:100% !important;
-  height:100% !important;
-  max-height:none !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursNotes{
-  margin-top:0 !important;
-}
-@media (max-width:1180px){
-  #innovation_fs_del_exec_section .innovationFsExecGridStores--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridPair--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{
-    height:auto !important;
-    min-height:240px !important;
-  }
-  #innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecCanvasWrap--delivery-bottom{
-    min-height:220px !important;
-  }
-  #innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursChartWrap{
-    min-height:180px !important;
-  }
-}
-</style>
-<style id="innovation-fs-delivery-v65-order-align">
-#innovation_fs_del_exec_section .chartCard,
-#innovation_fs_del_exec_section .innovationFsExecHours{
-  box-sizing:border-box !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery{
-  display:grid !important;
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery > .chartCard{
-  display:flex !important;
-  flex-direction:column !important;
-  align-self:stretch !important;
-  min-height:288px !important;
-  height:288px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery .innovationFsExecCanvasWrap--delivery{
-  flex:1 1 auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  padding:8px 10px 8px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery{
-  display:grid !important;
-  grid-template-columns:minmax(0,1.15fr) minmax(0,0.85fr) !important;
-  gap:18px !important;
-  align-items:stretch !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours{
-  display:flex !important;
-  flex-direction:column !important;
-  align-self:stretch !important;
-  min-height:332px !important;
-  height:332px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery .innovationFsExecCanvasWrap--delivery-bottom{
-  flex:1 1 auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  padding:8px 10px 6px !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card{
-  height:332px !important;
-  min-height:332px !important;
-  padding:8px 12px 8px !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_host{
-  flex:1 1 auto !important;
-  min-height:0 !important;
-  display:flex !important;
-  flex-direction:column !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursChartWrap{
-  flex:1 1 auto !important;
-  min-height:158px !important;
-  height:auto !important;
-  margin-bottom:6px !important;
-}
-#innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card .innovationFsExecHoursNotes{
-  margin-top:4px !important;
-}
-@media (max-width:1180px){
-  #innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery{
-    grid-template-columns:1fr !important;
-  }
-  #innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .chartCard,
-  #innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery > .innovationFsExecHours,
-  #innovation_fs_del_exec_section #innovation_fs_del_exec_hours_card{
-    height:auto !important;
-    min-height:240px !important;
-  }
-}
-</style>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v65-order-align-script">
-(function(){
-  function moveDowFirst(){
-    const row = document.querySelector('#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery') ||
-                document.getElementById('chart_innovation_fs_del_share_total_fs')?.closest('.innovationFsExecGridPair--delivery');
-    if(!row) return;
-    row.classList.add('innovationFsExecGridTripleDow--delivery');
-    const dowCanvas = document.getElementById('chart_innovation_fs_del_dow');
-    const dowCard = dowCanvas ? dowCanvas.closest('.chartCard') : null;
-    if(dowCard && row.firstElementChild !== dowCard){
-      row.insertBefore(dowCard, row.firstElementChild);
-    }
-  }
-  const prev = (typeof renderInnovationFoodServiceDeliveryExecutive === 'function') ? renderInnovationFoodServiceDeliveryExecutive : null;
-  renderInnovationFoodServiceDeliveryExecutive = function(storeList){
-    const result = typeof prev === 'function' ? prev.apply(this, arguments) : undefined;
-    moveDowFirst();
-    return result;
-  };
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', moveDowFirst, {once:true});
-  }else{
-    moveDowFirst();
-  }
-})();
-</script>
-<style id="innovation-fs-delivery-v67-kpi-align">
-#innovation_fs_del_exec_section .innovationFsExecHeader{
-  grid-template-columns:minmax(0,1.38fr) minmax(420px,0.98fr) !important;
-  gap:18px !important;
-  align-items:start !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecHeaderLeft{
-  min-width:0 !important;
-  padding-top:28px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecTitle{
-  margin:0 !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecSub{
-  margin-top:6px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecKpis{
-  gap:10px !important;
-  margin-top:12px !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecInsights{
-  width:100% !important;
-  max-width:none !important;
-  margin-top:20px !important;
-  align-self:start !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecKpi .d{
-  display:inline-block !important;
-}
-@media (max-width:1280px){
-  #innovation_fs_del_exec_section .innovationFsExecHeader{
-    grid-template-columns:minmax(0,1.2fr) minmax(360px,1fr) !important;
-  }
-}
-@media (max-width:1100px){
-  #innovation_fs_del_exec_section .innovationFsExecHeader{
-    grid-template-columns:1fr !important;
-  }
-  #innovation_fs_del_exec_section .innovationFsExecHeaderLeft{
-    padding-top:0 !important;
-  }
-  #innovation_fs_del_exec_section .innovationFsExecInsights{
-    margin-top:0 !important;
-  }
-}
-</style>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-detail-fallback-v70">
-(function(){
-  const _prev = (typeof innovationFoodServiceDetailRows === 'function') ? innovationFoodServiceDetailRows : null;
-  function _txt(v){ return String(v ?? '').trim(); }
-  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function _bool(v){
-    if (v === true || v === 1) return true;
-    if (v === false || v === 0 || v == null) return false;
-    const s = String(v).trim().toLowerCase();
-    return s === 'true' || s === '1' || s === 'yes' || s === 'y' || s === 'si' || s === 'sí';
-  }
-  function _date(v){
-    try{ if(typeof toDateTime === 'function'){ const d = toDateTime(v); if(d && !isNaN(d.getTime())) return d; } }catch(_e){}
-    try{ const d = (v instanceof Date) ? v : new Date(v); return (!d || isNaN(d.getTime())) ? null : d; }catch(_e){ return null; }
-  }
-  function _dowNum(rawDate, rawDow){
-    const direct = (typeof normalizeDowKey === 'function') ? normalizeDowKey(rawDow) : _txt(rawDow);
-    if(/^[1-7]$/.test(String(direct || '').trim())) return String(direct).trim();
-    const d = _date(rawDate);
-    if(!d) return '';
-    const js = d.getDay();
-    return String(js === 0 ? 7 : js);
-  }
-  function _dowName(n){
-    return ({'1':'Lunes','2':'Martes','3':'Miércoles','4':'Jueves','5':'Viernes','6':'Sábado','7':'Domingo'})[String(n || '').trim()] || '';
-  }
-  function _daypart(rawDaypart, rawHour, rawDate){
-    try{ if(typeof hallDeriveDaypart === 'function'){ return String(hallDeriveDaypart(rawDaypart, rawHour, rawDate) || '').trim(); } }catch(_e){}
-    const d = _date(rawDate);
-    const hour = Number.isFinite(Number(rawHour)) ? Number(rawHour) : (d ? d.getHours() : NaN);
-    if(!Number.isFinite(hour)) return String(rawDaypart || '').trim();
-    if(hour < 6) return '1. Nocturno';
-    if(hour < 12) return '2. Desayuno';
-    if(hour < 18) return '3. Almuerzo';
-    if(hour < 21) return '4. Cena-1';
-    return '4. Cena-2';
-  }
-  function _channel(raw){
-    try{ if(typeof normalizeChannel === 'function'){ return String(normalizeChannel(raw) || '').trim(); } }catch(_e){}
-    const s = _txt(raw).toLowerCase();
-    if(!s) return '';
-    if(s.includes('uber')) return 'Uber, Eats';
-    if(s.includes('pedido') || s.includes('peya') || s.includes('pya')) return 'Pedido, YA';
-    return '';
-  }
-  function _isDelivery(raw, explicit){
-    if(_bool(explicit)) return true;
-    try{ if(typeof isDeliveryCustomer === 'function') return !!isDeliveryCustomer(raw); }catch(_e){}
-    return /uber|pedido|peya|pya/i.test(_txt(raw));
-  }
-  innovationFoodServiceDetailRows = function(){
-    const wb = state?.__hallWorkbook || null;
-    const stamp = state?.__hallWorkbookStamp || 'nostamp';
-    const key = `innovationfsdetail|${stamp}|v70fallback`;
-    if(state._innovationFSDetailRowsKey === key && Array.isArray(state._innovationFSDetailRows)){
-      return state._innovationFSDetailRows;
-    }
-    let rows = [];
-    try{
-      if(wb && typeof innovationWorkbookSheetRows === 'function'){
-        rows = innovationWorkbookSheetRows(wb, 'Innovation_FS_Detail');
-      }
-    }catch(_e){}
-    if(!Array.isArray(rows) || !rows.length){
-      try{
-        const base = (wb && typeof innovationWorkbookSheetRows === 'function')
-          ? (innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos').length
-              ? innovationWorkbookSheetRows(wb, 'Cubo_Sales_DetailHallazgos')
-              : innovationWorkbookSheetRows(wb, 'Data Venta'))
-          : [];
-        const agg = new Map();
-        (Array.isArray(base) ? base : []).forEach(r => {
-          const store = _txt(r?.Store ?? r?.['Store Name']).toUpperCase();
-          const dept = _txt(r?.Department ?? r?.department);
-          const deptNorm = (typeof innovationNormText === 'function') ? innovationNormText(dept) : dept.toUpperCase().replace(/\s+/g,'');
-          if(!store || deptNorm !== 'FOODSERVICE') return;
-          const dateSold = r?.['Date Sold'] ?? r?.DateSold ?? r?.date ?? '';
-          const d = _date(dateSold);
-          const calMonth = (typeof innovationParseMonthFromDate === 'function') ? innovationParseMonthFromDate(dateSold) : '';
-          const yearWeek = (typeof innovationParseWeekFromDate === 'function') ? innovationParseWeekFromDate(dateSold) : '';
-          const customer = r?.Customer ?? r?.customer ?? '';
-          const isDelivery = _isDelivery(customer, r?.Is_Delivery ?? r?.is_delivery ?? r?.Delivery);
-          const deliveryChannel = _channel(r?.Delivery_Channel ?? r?.delivery_channel ?? r?.Channel ?? customer);
-          const dow = _dowNum(dateSold, r?.DOW ?? r?.dow ?? r?.DOW_Name ?? r?.dow_name);
-          const daypart = _daypart(r?.Daypart ?? r?.daypart, d ? d.getHours() : null, dateSold);
-          const category = _txt(r?.Category ?? r?.category);
-          const supplier = _txt(r?.Supplier ?? r?.supplier);
-          const brand = _txt(r?.Marca ?? r?.Brand ?? r?.brand);
-          const description = _txt(r?.Description ?? r?.description ?? r?.Descripcion);
-          const saleDateKey = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` : _txt(dateSold);
-          const k = [saleDateKey, yearWeek, calMonth, store, dept, category, supplier, brand, description, daypart, dow, isDelivery ? '1' : '0', deliveryChannel].join('||');
-          const cur = agg.get(k) || {
-            'Date Sold': saleDateKey,
-            'YearWeek': yearWeek,
-            'CalMonth': calMonth,
-            'Store': store,
-            'Department': dept,
-            'Category': category,
-            'Supplier': supplier,
-            'Brand': brand,
-            'Description': description,
-            'Daypart': daypart,
-            'DOW': dow,
-            'DOW_Name': _dowName(dow),
-            'Is_Delivery': !!isDelivery,
-            'Delivery_Channel': deliveryChannel,
-            'Qty Sold': 0,
-            'Sales': 0,
-            'Total Gross Margin': 0
-          };
-          cur['Qty Sold'] += _num(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty);
-          cur['Sales'] += _num(r?.Sales ?? r?.['Total Sales'] ?? r?.sales ?? r?.Amount ?? r?.Venta);
-          cur['Total Gross Margin'] += _num(r?.['Total Gross Margin'] ?? r?.['Gross Margin'] ?? r?.gross_margin ?? r?.margin ?? r?.GM);
-          agg.set(k, cur);
-        });
-        rows = Array.from(agg.values()).sort((a,b) => {
-          const ak = `${_txt(a?.CalMonth)}|${_txt(a?.Store)}|${_txt(a?.Category)}|${_txt(a?.Description)}`;
-          const bk = `${_txt(b?.CalMonth)}|${_txt(b?.Store)}|${_txt(b?.Category)}|${_txt(b?.Description)}`;
-          return ak.localeCompare(bk);
-        });
-      }catch(e){ console.warn('Innovation FS detail fallback from Data Venta failed', e); }
-    }
-    state._innovationFSDetailRowsKey = key;
-    state._innovationFSDetailRows = Array.isArray(rows) ? rows : [];
-    return state._innovationFSDetailRows;
-  };
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v74-authoritative-fix">
-(function(){
-  const _prevBuild = (typeof innovationFsDelExecBuildModel === 'function') ? innovationFsDelExecBuildModel : null;
-  function _txt(v){ return String(v ?? '').trim(); }
-  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function _bool(v){
-    if(v === true || v === 1) return true;
-    const s = _txt(v).toLowerCase();
-    return s === 'true' || s === '1' || s === 'si' || s === 'sí' || s === 'yes';
-  }
-  function _channelKind(raw){
-    const s = _txt(raw).toUpperCase();
-    if(!s) return '';
-    if(s.includes('UBER')) return 'UBER';
-    if(s.includes('PEDIDO') || s.includes('PEYA') || s.includes('PYA')) return 'PYA';
-    return '';
-  }
-  function _wantedDow(){
-    try{
-      return (typeof parseDowFilterValues === 'function' && typeof getGlobalDowFilter === 'function')
-        ? parseDowFilterValues(getGlobalDowFilter())
-        : [];
-    }catch(_e){ return []; }
-  }
-  function _dowKey(rawNum, rawName){
-    try{
-      if(typeof normalizeDowKey === 'function'){
-        return String(normalizeDowKey(rawNum || rawName || '') || '').trim();
-      }
-    }catch(_e){}
-    return _txt(rawNum || rawName);
-  }
-  function _periodKeyFromRowSafe(row, monthlyMode){
-    try{
-      if(typeof innovationPeriodKeyFromRow === 'function'){
-        const pk = innovationPeriodKeyFromRow(row, !!monthlyMode);
-        if(pk) return _txt(pk);
-      }
-    }catch(_e){}
-    return _txt(row?.YearWeek ?? row?.week ?? row?.CalMonth ?? row?.month);
-  }
-  function _baseRowsAuthoritative(storeList, monthlyMode){
-    const rows = (typeof innovationFoodServiceDetailRows === 'function') ? (innovationFoodServiceDetailRows() || []) : [];
-    const storeSet = new Set((Array.isArray(storeList) ? storeList : []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-    const wantedDow = _wantedDow();
-    return rows.filter(r => {
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (storeSet.size && !storeSet.has(store))) return false;
-      const dept = (typeof innovationNormText === 'function')
-        ? innovationNormText(r?.Department ?? r?.department ?? '')
-        : _txt(r?.Department ?? r?.department).toUpperCase().replace(/\s+/g,'');
-      if(dept !== 'FOODSERVICE') return false;
-      const channelKind = _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? '');
-      const isDelivery = _bool(r?.Is_Delivery ?? r?.is_delivery) || !!channelKind;
-      if(!isDelivery || !channelKind) return false;
-      const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-      if(wantedDow.length && !wantedDow.includes(gotDow)) return false;
-      return true;
-    }).map(r => ({
-      store: _txt(r?.Store ?? r?.store).toUpperCase(),
-      periodKey: _periodKeyFromRowSafe(r, monthlyMode),
-      category: _txt(r?.Category ?? r?.category) || 'Sin categoría',
-      description: _txt(r?.Description ?? r?.description ?? r?.DescriptionKey ?? r?.descriptionkey),
-      daypart: (typeof innovationFsExecCanonicalDaypart === 'function')
-        ? innovationFsExecCanonicalDaypart(r?.Daypart ?? r?.daypart ?? '')
-        : _txt(r?.Daypart ?? r?.daypart),
-      dow: _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name),
-      dowName: _txt(r?.DOW_Name ?? r?.dow_name),
-      channelKind: _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? ''),
-      channelRaw: _txt(r?.Delivery_Channel ?? r?.delivery_channel),
-      qty: _num(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty),
-      sales: _num(r?.Sales ?? r?.sales),
-      margin: _num(r?.['Total Gross Margin'] ?? r?.margin ?? r?.['Gross Margin']),
-      lines: 1
-    })).filter(r => r.periodKey);
-  }
-  function _finalize(row, prevCount){
-    const out = Object.assign({}, row);
-    out.salesProm = _num(row?.salesPrev) / prevCount;
-    out.marginProm = _num(row?.marginPrev) / prevCount;
-    out.qtyProm = _num(row?.qtyPrev) / prevCount;
-    out.linesProm = _num(row?.linesPrev) / prevCount;
-    out.ratioSales = out.salesProm > 0 ? (_num(row?.salesCur) / out.salesProm) : null;
-    out.ratioMargin = out.marginProm > 0 ? (_num(row?.marginCur) / out.marginProm) : null;
-    out.ratioQty = out.qtyProm > 0 ? (_num(row?.qtyCur) / out.qtyProm) : null;
-    out.ratioLines = out.linesProm > 0 ? (_num(row?.linesCur) / out.linesProm) : null;
-    out.deltaSales = _num(row?.salesCur) - out.salesProm;
-    out.deltaMargin = _num(row?.marginCur) - out.marginProm;
-    out.deltaQty = _num(row?.qtyCur) - out.qtyProm;
-    out.deltaLines = _num(row?.linesCur) - out.linesProm;
-    return out;
-  }
-  function _sumByPeriod(rows, periods, getter){
-    const map = new Map((Array.isArray(periods) ? periods : []).map(p => [_txt(p), 0]));
-    (Array.isArray(rows) ? rows : []).forEach(r => {
-      const pk = _txt(r?.periodKey ?? r?.PeriodKey ?? r?.YearWeek ?? r?.CalMonth);
-      if(!pk || !map.has(pk)) return;
-      map.set(pk, _num(map.get(pk)) + _num(getter(r)));
-    });
-    return (Array.isArray(periods) ? periods : []).map(pk => _num(map.get(_txt(pk))));
-  }
-  innovationFsDelExecBuildModel = function(storeList){
-    const seed = _prevBuild ? _prevBuild(storeList) : null;
-    const scenario = seed?.scenario || (typeof innovationFsExecScenario === 'function' ? innovationFsExecScenario(storeList) : null);
-    if(!scenario || !scenario.currentWeek) return seed;
-    const monthly = !!scenario.monthly;
-    const rows = _baseRowsAuthoritative(scenario.stores || storeList || [], monthly);
-    if(!rows.length) return seed;
-
-    const currentWeek = _txt(scenario.currentWeek);
-    const prevWeeks = Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks.map(p => _txt(p)) : [];
-    const prevSet = new Set(prevWeeks);
-    const trendWeeks = Array.isArray(scenario.trendWeeks) ? scenario.trendWeeks.map(p => _txt(p)).filter(Boolean) : [];
-    const lyPeriod = (typeof innovationFsExecHistoryLyPeriod === 'function') ? _txt(innovationFsExecHistoryLyPeriod(scenario)) : '';
-    const prevCount = Math.max(1, prevWeeks.length || (monthly ? 3 : 8));
-
-    const totals = { salesCur:0, salesPrev:0, marginCur:0, marginPrev:0, qtyCur:0, qtyPrev:0, linesCur:0, linesPrev:0 };
-    const catMap = new Map(), storeMap = new Map(), daypartMap = new Map(), dowMap = new Map(), channelMap = new Map(), pyaCatMap = new Map(), uberCatMap = new Map();
-    const historyByStore = new Map((scenario.stores || []).map(st => [_txt(st).toUpperCase(), trendWeeks.map(() => 0)]));
-    const lyByStore = new Map((scenario.stores || []).map(st => [_txt(st).toUpperCase(), 0]));
-
-    const ensure = (map, key, label, extras) => {
-      const k = _txt(key) || '—';
-      if(!map.has(k)) map.set(k, Object.assign({ key:k, label:label || k, salesCur:0, salesPrev:0, marginCur:0, marginPrev:0, qtyCur:0, qtyPrev:0, linesCur:0, linesPrev:0 }, extras || {}));
-      return map.get(k);
-    };
-    const add = (bucket, r, isCur, isPrev) => {
-      if(!bucket) return;
-      if(isCur){ bucket.salesCur += r.sales; bucket.marginCur += r.margin; bucket.qtyCur += r.qty; bucket.linesCur += r.lines; }
-      if(isPrev){ bucket.salesPrev += r.sales; bucket.marginPrev += r.margin; bucket.qtyPrev += r.qty; bucket.linesPrev += r.lines; }
-    };
-
-    rows.forEach(r => {
-      const isCur = r.periodKey === currentWeek;
-      const isPrev = prevSet.has(r.periodKey);
-      const isLy = !!(lyPeriod && r.periodKey === lyPeriod);
-      if(!isCur && !isPrev && !trendWeeks.includes(r.periodKey) && !isLy) return;
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(r.store) : { short:r.store, name:r.store, full:r.store };
-      add(ensure(catMap, r.category, r.category), r, isCur, isPrev);
-      add(ensure(storeMap, r.store, meta.full, { shortLabel:meta.short, name:meta.name, store:r.store }), r, isCur, isPrev);
-      add(ensure(daypartMap, r.daypart || 'Sin horario', r.daypart || 'Sin horario'), r, isCur, isPrev);
-      add(ensure(dowMap, r.dow || '0', _txt(r.dowName || r.dow || 'Sin día')), r, isCur, isPrev);
-      add(ensure(channelMap, r.channelKind, r.channelKind === 'PYA' ? 'Pedidos Ya' : 'Uber Eats', { channelKind:r.channelKind }), r, isCur, isPrev);
-      if(r.channelKind === 'PYA') add(ensure(pyaCatMap, r.category, r.category), r, isCur, isPrev);
-      if(r.channelKind === 'UBER') add(ensure(uberCatMap, r.category, r.category), r, isCur, isPrev);
-
-      if(isCur){ totals.salesCur += r.sales; totals.marginCur += r.margin; totals.qtyCur += r.qty; totals.linesCur += r.lines; }
-      if(isPrev){ totals.salesPrev += r.sales; totals.marginPrev += r.margin; totals.qtyPrev += r.qty; totals.linesPrev += r.lines; }
-
-      const hist = historyByStore.get(r.store);
-      const idx = trendWeeks.indexOf(r.periodKey);
-      if(hist && idx >= 0) hist[idx] += r.sales;
-      if(isLy) lyByStore.set(r.store, _num(lyByStore.get(r.store)) + r.sales);
-    });
-
-    const categories = Array.from(catMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const stores = Array.from(storeMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const channelRows = Array.from(channelMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const pyaCategories = Array.from(pyaCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const uberCategories = Array.from(uberCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const daypartOrder = ['1. Nocturno','2. Desayuno','3. Almuerzo','4. Cena-1','4. Cena-2'];
-    const daypartsRaw = Array.from(daypartMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => daypartOrder.indexOf(a.key) - daypartOrder.indexOf(b.key));
-    const turnRows = (typeof innovationFsExecTurnRowsFromDayparts === 'function' ? innovationFsExecTurnRowsFromDayparts(daypartsRaw) : []).map(r => _finalize(r, prevCount));
-    const dows = Array.from(dowMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => Number(a.key || 0) - Number(b.key || 0));
-    const totalRow = _finalize({ key:'TOTAL', label:'Total', salesCur:totals.salesCur, salesPrev:totals.salesPrev, marginCur:totals.marginCur, marginPrev:totals.marginPrev, qtyCur:totals.qtyCur, qtyPrev:totals.qtyPrev, linesCur:totals.linesCur, linesPrev:totals.linesPrev }, prevCount);
-
-    const historyPeriods = trendWeeks.slice();
-    if(lyPeriod && !historyPeriods.includes(lyPeriod)) historyPeriods.unshift(lyPeriod);
-    const historyStores = (scenario.stores || []).map(st => {
-      const storeKey = _txt(st).toUpperCase();
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(storeKey) : { short:storeKey, name:storeKey, full:storeKey };
-      const series = historyPeriods.map(pk => {
-        if(lyPeriod && pk === lyPeriod && !trendWeeks.includes(pk)) return _num(lyByStore.get(storeKey));
-        const idx = trendWeeks.indexOf(pk);
-        const arr = historyByStore.get(storeKey) || trendWeeks.map(() => 0);
-        return idx >= 0 ? _num(arr[idx]) : 0;
-      });
-      return { store:storeKey, label:meta.short, name:meta.name, full:meta.full, values:series };
-    });
-
-    const model = Object.assign({}, seed || {}, {
-      scenario:Object.assign({}, scenario, { trendWeeks: historyPeriods, lyPeriod }),
-      totalRow, categories, stores, channels:channelRows, pyaCategories, uberCategories, daypartsRaw, turnRows, dows, historyStores
-    });
-
-    try{
-      const periods = trendWeeks.slice();
-      const storeSet = new Set((scenario.stores || []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-      const fsAllRows = ((typeof innovationFoodServiceDetailRows === 'function') ? innovationFoodServiceDetailRows() : []).filter(r => {
-        const store = _txt(r?.Store ?? r?.store).toUpperCase();
-        if(!store || (storeSet.size && !storeSet.has(store))) return false;
-        const dept = (typeof innovationNormText === 'function') ? innovationNormText(r?.Department ?? r?.department ?? '') : _txt(r?.Department ?? r?.department).toUpperCase().replace(/\s+/g,'');
-        if(dept !== 'FOODSERVICE') return false;
-        const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-        const wanted = _wantedDow();
-        if(wanted.length && !wanted.includes(gotDow)) return false;
-        return true;
-      }).map(r => Object.assign({}, r, { periodKey:_periodKeyFromRowSafe(r, monthly) }));
-
-      let deliveryTotalRows = [];
-      try{
-        if(state?.__hallWorkbook && typeof hasSheet === 'function' && hasSheet(state.__hallWorkbook, 'Chart_Delivery_Periods') && typeof innovationWorkbookSheetRows === 'function'){
-          deliveryTotalRows = innovationWorkbookSheetRows(state.__hallWorkbook, 'Chart_Delivery_Periods').filter(r => {
-            const periodType = _txt(r?.PeriodType ?? r?.periodtype).toLowerCase();
-            if(monthly && periodType && periodType !== 'month') return false;
-            if(!monthly && periodType && periodType !== 'week') return false;
-            const store = _txt(r?.Store ?? r?.store).toUpperCase();
-            if(!store || (storeSet.size && !storeSet.has(store))) return false;
-            const dow = _txt(r?.DOW ?? r?.dow);
-            const wanted = _wantedDow();
-            if(wanted.length){
-              const got = (typeof normalizeDowKey === 'function') ? _txt(normalizeDowKey(dow)) : dow;
-              if(!wanted.includes(got)) return false;
-            }else{
-              if(dow !== '__ALL__') return false;
-            }
-            return true;
-          }).map(r => Object.assign({}, r, { periodKey:_txt(r?.PeriodKey ?? r?.periodkey) }));
-        }
-      }catch(_e){}
-      const delFsSeries = _sumByPeriod(rows, periods, r => r.sales);
-      const fsTotalSeries = _sumByPeriod(fsAllRows, periods, r => r?.Sales ?? r?.sales);
-      let deliveryTotalSeries = _sumByPeriod(deliveryTotalRows, periods, r => r?.['Delivery Sales'] ?? r?.sales ?? r?.Sales ?? r?.Amount ?? r?.Venta);
-      if(!deliveryTotalRows.length && Array.isArray(state?.cuboSalesRows)){
-        const salesBase = state.cuboSalesRows.filter(r => {
-          const store = _txt(r?.store ?? r?.Store).toUpperCase();
-          if(!store || (storeSet.size && !storeSet.has(store))) return false;
-          const wanted = _wantedDow();
-          const got = _dowKey(r?.dow ?? r?.DOW, r?.DOW_Name ?? r?.dow_name);
-          if(wanted.length && !wanted.includes(got)) return false;
-          return _bool(r?.is_delivery ?? r?.Is_Delivery) || /uber|pedido|peya|pya/i.test(_txt(r?.delivery_channel ?? r?.Delivery_Channel ?? r?.Channel));
-        }).map(r => Object.assign({}, r, { periodKey:_periodKeyFromRowSafe(r, monthly) }));
-        deliveryTotalSeries = _sumByPeriod(salesBase, periods, r => r?.Sales ?? r?.sales ?? r?.Amount ?? r?.Venta);
-      }
-      model.shareInFsTrend = periods.map((pk, i) => ({ periodKey:pk, value: fsTotalSeries[i] > 0 ? (delFsSeries[i] / fsTotalSeries[i]) * 100 : 0 }));
-      model.shareInDeliveryTrend = periods.map((pk, i) => ({ periodKey:pk, value: deliveryTotalSeries[i] > 0 ? (delFsSeries[i] / deliveryTotalSeries[i]) * 100 : 0 }));
-    }catch(_e){}
-
-    return model;
-  };
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v75-hard-source-fix">
-(function(){
-  function _txt(v){ return String(v ?? '').trim(); }
-  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function _bool(v){
-    if(v === true || v === 1) return true;
-    const s = _txt(v).toLowerCase();
-    return s === 'true' || s === '1' || s === 'si' || s === 'sí' || s === 'yes';
-  }
-  function _normText(v){
-    try{ if(typeof innovationNormText === 'function') return String(innovationNormText(v || '') || '').trim(); }catch(_e){}
-    return _txt(v).toUpperCase().replace(/\s+/g,'');
-  }
-  function _channelKind(raw){
-    const s = _txt(raw).toUpperCase();
-    if(!s) return '';
-    if(s.includes('UBER')) return 'UBER';
-    if(s.includes('PEDIDO') || s.includes('PEYA') || s.includes('PYA')) return 'PYA';
-    return '';
-  }
-  function _wantedDow(){
-    try{
-      return (typeof parseDowFilterValues === 'function' && typeof getGlobalDowFilter === 'function')
-        ? parseDowFilterValues(getGlobalDowFilter())
-        : [];
-    }catch(_e){ return []; }
-  }
-  function _dowKey(rawNum, rawName){
-    try{
-      if(typeof normalizeDowKey === 'function'){
-        return String(normalizeDowKey(rawNum || rawName || '') || '').trim();
-      }
-    }catch(_e){}
-    return _txt(rawNum || rawName);
-  }
-  function _periodKey(row, monthlyMode){
-    try{
-      if(typeof innovationPeriodKeyFromRow === 'function'){
-        return String(innovationPeriodKeyFromRow(row, !!monthlyMode) || '').trim();
-      }
-    }catch(_e){}
-    return _txt(monthlyMode ? (row?.CalMonth ?? row?.calmonth) : (row?.YearWeek ?? row?.week));
-  }
-  function _sheetRows(sheetName){
-    try{
-      if(state?.__hallWorkbook && typeof innovationWorkbookSheetRows === 'function'){
-        const rows = innovationWorkbookSheetRows(state.__hallWorkbook, sheetName) || [];
-        if(Array.isArray(rows) && rows.length) return rows;
-      }
-    }catch(_e){}
-    return [];
-  }
-  function _fsDeliveryRows(scenario){
-    const stores = new Set((Array.isArray(scenario?.stores) ? scenario.stores : []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-    const wantedDow = _wantedDow();
-    const monthly = !!scenario?.monthly;
-    let rows = _sheetRows('Innovation_FS_Detail');
-    if(!rows.length && typeof innovationFoodServiceDetailRows === 'function'){
-      try{ rows = innovationFoodServiceDetailRows() || []; }catch(_e){ rows = []; }
-    }
-    return (Array.isArray(rows) ? rows : []).filter(r => {
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (stores.size && !stores.has(store))) return false;
-      if(_normText(r?.Department ?? r?.department ?? '') !== 'FOODSERVICE') return false;
-      const ch = _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? '');
-      const isDelivery = _bool(r?.Is_Delivery ?? r?.is_delivery) || !!ch;
-      if(!isDelivery || !ch) return false;
-      const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-      if(wantedDow.length && !wantedDow.includes(gotDow)) return false;
-      return true;
-    }).map(r => ({
-      store: _txt(r?.Store ?? r?.store).toUpperCase(),
-      periodKey: _periodKey(r, monthly),
-      category: _txt(r?.Category ?? r?.category) || 'Sin categoría',
-      description: _txt(r?.Description ?? r?.description ?? r?.DescriptionKey ?? r?.descriptionkey),
-      daypart: (typeof innovationFsExecCanonicalDaypart === 'function')
-        ? innovationFsExecCanonicalDaypart(r?.Daypart ?? r?.daypart ?? '')
-        : _txt(r?.Daypart ?? r?.daypart),
-      dow: _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name),
-      dowName: _txt(r?.DOW_Name ?? r?.dow_name),
-      channelKind: _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? ''),
-      qty: _num(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty),
-      sales: _num(r?.Sales ?? r?.sales),
-      margin: _num(r?.['Total Gross Margin'] ?? r?.margin ?? r?.['Gross Margin']),
-      lines: 1
-    })).filter(r => r.periodKey);
-  }
-  function _fsAllRows(scenario){
-    const stores = new Set((Array.isArray(scenario?.stores) ? scenario.stores : []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-    const wantedDow = _wantedDow();
-    const monthly = !!scenario?.monthly;
-    let rows = _sheetRows('Innovation_FS_Detail');
-    if(!rows.length && typeof innovationFoodServiceDetailRows === 'function'){
-      try{ rows = innovationFoodServiceDetailRows() || []; }catch(_e){ rows = []; }
-    }
-    return (Array.isArray(rows) ? rows : []).filter(r => {
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (stores.size && !stores.has(store))) return false;
-      if(_normText(r?.Department ?? r?.department ?? '') !== 'FOODSERVICE') return false;
-      const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-      if(_wantedDow().length && !_wantedDow().includes(gotDow)) return false;
-      return true;
-    }).map(r => ({
-      periodKey: _periodKey(r, monthly),
-      sales: _num(r?.Sales ?? r?.sales)
-    })).filter(r => r.periodKey);
-  }
-  function _deliveryTotalRows(scenario){
-    const stores = new Set((Array.isArray(scenario?.stores) ? scenario.stores : []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-    const wantedDow = _wantedDow();
-    const monthly = !!scenario?.monthly;
-    let rows = _sheetRows('Chart_Delivery_Periods');
-    rows = (Array.isArray(rows) ? rows : []).filter(r => {
-      const periodType = _txt(r?.PeriodType ?? r?.periodtype).toLowerCase();
-      if(monthly && periodType && periodType !== 'month') return false;
-      if(!monthly && periodType && periodType !== 'week') return false;
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (stores.size && !stores.has(store))) return false;
-      const dow = _txt(r?.DOW ?? r?.dow);
-      if(wantedDow.length){
-        const got = (typeof normalizeDowKey === 'function') ? _txt(normalizeDowKey(dow)) : dow;
-        if(!wantedDow.includes(got)) return false;
-      }else if(dow !== '__ALL__'){
-        return false;
-      }
-      return true;
-    }).map(r => ({
-      periodKey: _txt(r?.PeriodKey ?? r?.periodkey),
-      sales: _num(r?.['Delivery Sales'] ?? r?.sales ?? r?.Sales ?? r?.Amount ?? r?.Venta)
-    })).filter(r => r.periodKey);
-    if(rows.length) return rows;
-    rows = _sheetRows('Daily_Delivery');
-    rows = (Array.isArray(rows) ? rows : []).filter(r => {
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (stores.size && !stores.has(store))) return false;
-      const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-      if(wantedDow.length && !wantedDow.includes(gotDow)) return false;
-      return true;
-    }).map(r => ({
-      periodKey: _periodKey(r, monthly),
-      sales: _num(r?.['Delivery Sales'] ?? r?.sales ?? r?.Sales ?? r?.Amount ?? r?.Venta)
-    })).filter(r => r.periodKey);
-    return rows;
-  }
-  function _sumByPeriod(rows, periods, getter){
-    const map = new Map((periods || []).map(p => [_txt(p), 0]));
-    (rows || []).forEach(r => {
-      const pk = _txt(r?.periodKey);
-      if(!pk || !map.has(pk)) return;
-      map.set(pk, _num(map.get(pk)) + _num(getter(r)));
-    });
-    return (periods || []).map(pk => _num(map.get(_txt(pk))));
-  }
-  function _finalize(row, prevCount){
-    const out = Object.assign({}, row);
-    out.salesProm = _num(row?.salesPrev) / prevCount;
-    out.marginProm = _num(row?.marginPrev) / prevCount;
-    out.qtyProm = _num(row?.qtyPrev) / prevCount;
-    out.linesProm = _num(row?.linesPrev) / prevCount;
-    out.ratioSales = out.salesProm > 0 ? (_num(row?.salesCur) / out.salesProm) : null;
-    out.ratioMargin = out.marginProm > 0 ? (_num(row?.marginCur) / out.marginProm) : null;
-    out.ratioQty = out.qtyProm > 0 ? (_num(row?.qtyCur) / out.qtyProm) : null;
-    out.ratioLines = out.linesProm > 0 ? (_num(row?.linesCur) / out.linesProm) : null;
-    out.deltaSales = _num(row?.salesCur) - out.salesProm;
-    out.deltaMargin = _num(row?.marginCur) - out.marginProm;
-    out.deltaQty = _num(row?.qtyCur) - out.qtyProm;
-    out.deltaLines = _num(row?.linesCur) - out.linesProm;
-    return out;
-  }
-  function _buildModel(storeList){
-    const scenario = (typeof innovationFsExecScenario === 'function') ? innovationFsExecScenario(storeList) : null;
-    if(!scenario || !scenario.currentWeek) return null;
-    const rows = _fsDeliveryRows(scenario);
-    if(!rows.length) return null;
-
-    const currentWeek = _txt(scenario.currentWeek);
-    const prevWeeks = (Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks : []).map(p => _txt(p));
-    const prevSet = new Set(prevWeeks);
-    const trendWeeks = (Array.isArray(scenario.trendWeeks) ? scenario.trendWeeks : []).map(p => _txt(p)).filter(Boolean);
-    const lyPeriod = (typeof innovationFsExecHistoryLyPeriod === 'function') ? _txt(innovationFsExecHistoryLyPeriod(scenario)) : '';
-    const prevCount = Math.max(1, prevWeeks.length || (scenario.monthly ? 3 : 8));
-
-    const totals = { salesCur:0, salesPrev:0, marginCur:0, marginPrev:0, qtyCur:0, qtyPrev:0, linesCur:0, linesPrev:0 };
-    const catMap = new Map(), storeMap = new Map(), daypartMap = new Map(), dowMap = new Map(), channelMap = new Map(), pyaCatMap = new Map(), uberCatMap = new Map();
-    const historyByStore = new Map((scenario.stores || []).map(st => [_txt(st).toUpperCase(), trendWeeks.map(() => 0)]));
-    const lyByStore = new Map((scenario.stores || []).map(st => [_txt(st).toUpperCase(), 0]));
-
-    function ensure(map, key, label, extras){
-      const k = _txt(key) || '—';
-      if(!map.has(k)) map.set(k, Object.assign({ key:k, label:label || k, salesCur:0, salesPrev:0, marginCur:0, marginPrev:0, qtyCur:0, qtyPrev:0, linesCur:0, linesPrev:0 }, extras || {}));
-      return map.get(k);
-    }
-    function add(bucket, r, isCur, isPrev){
-      if(!bucket) return;
-      if(isCur){ bucket.salesCur += r.sales; bucket.marginCur += r.margin; bucket.qtyCur += r.qty; bucket.linesCur += r.lines; }
-      if(isPrev){ bucket.salesPrev += r.sales; bucket.marginPrev += r.margin; bucket.qtyPrev += r.qty; bucket.linesPrev += r.lines; }
-    }
-
-    rows.forEach(r => {
-      const isCur = r.periodKey === currentWeek;
-      const isPrev = prevSet.has(r.periodKey);
-      const isLy = !!(lyPeriod && r.periodKey === lyPeriod);
-      if(!isCur && !isPrev && !trendWeeks.includes(r.periodKey) && !isLy) return;
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(r.store) : { short:r.store, name:r.store, full:r.store };
-      add(ensure(catMap, r.category, r.category), r, isCur, isPrev);
-      add(ensure(storeMap, r.store, meta.full, { shortLabel:meta.short, name:meta.name, store:r.store }), r, isCur, isPrev);
-      add(ensure(daypartMap, r.daypart || 'Sin horario', r.daypart || 'Sin horario'), r, isCur, isPrev);
-      add(ensure(dowMap, r.dow || '0', _txt(r.dowName || r.dow || 'Sin día')), r, isCur, isPrev);
-      add(ensure(channelMap, r.channelKind, r.channelKind === 'PYA' ? 'Pedidos Ya' : 'Uber Eats', { channelKind:r.channelKind }), r, isCur, isPrev);
-      if(r.channelKind === 'PYA') add(ensure(pyaCatMap, r.category, r.category), r, isCur, isPrev);
-      if(r.channelKind === 'UBER') add(ensure(uberCatMap, r.category, r.category), r, isCur, isPrev);
-
-      if(isCur){ totals.salesCur += r.sales; totals.marginCur += r.margin; totals.qtyCur += r.qty; totals.linesCur += r.lines; }
-      if(isPrev){ totals.salesPrev += r.sales; totals.marginPrev += r.margin; totals.qtyPrev += r.qty; totals.linesPrev += r.lines; }
-
-      const hist = historyByStore.get(r.store);
-      const idx = trendWeeks.indexOf(r.periodKey);
-      if(hist && idx >= 0) hist[idx] += r.sales;
-      if(isLy) lyByStore.set(r.store, _num(lyByStore.get(r.store)) + r.sales);
-    });
-
-    const categories = Array.from(catMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const stores = Array.from(storeMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const channelRows = Array.from(channelMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const pyaCategories = Array.from(pyaCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const uberCategories = Array.from(uberCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => _num(b.salesCur) - _num(a.salesCur));
-    const daypartOrder = ['1. Nocturno','2. Desayuno','3. Almuerzo','4. Cena-1','4. Cena-2'];
-    const daypartsRaw = Array.from(daypartMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => daypartOrder.indexOf(a.key) - daypartOrder.indexOf(b.key));
-    const turnRows = (typeof innovationFsExecTurnRowsFromDayparts === 'function' ? innovationFsExecTurnRowsFromDayparts(daypartsRaw) : []).map(r => _finalize(r, prevCount));
-    const dows = Array.from(dowMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => Number(a.key || 0) - Number(b.key || 0));
-    const totalRow = _finalize({ key:'TOTAL', label:'Total', salesCur:totals.salesCur, salesPrev:totals.salesPrev, marginCur:totals.marginCur, marginPrev:totals.marginPrev, qtyCur:totals.qtyCur, qtyPrev:totals.qtyPrev, linesCur:totals.linesCur, linesPrev:totals.linesPrev }, prevCount);
-
-    const historyPeriods = trendWeeks.slice();
-    if(lyPeriod && !historyPeriods.includes(lyPeriod)) historyPeriods.unshift(lyPeriod);
-    const historyStores = (scenario.stores || []).map(st => {
-      const storeKey = _txt(st).toUpperCase();
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(storeKey) : { short:storeKey, name:storeKey, full:storeKey };
-      const series = historyPeriods.map(pk => {
-        if(lyPeriod && pk === lyPeriod && !trendWeeks.includes(pk)) return _num(lyByStore.get(storeKey));
-        const idx = trendWeeks.indexOf(pk);
-        const arr = historyByStore.get(storeKey) || trendWeeks.map(() => 0);
-        return idx >= 0 ? _num(arr[idx]) : 0;
-      });
-      return { store:storeKey, label:meta.short, name:meta.name, full:meta.full, values:series };
-    });
-
-    const periods = trendWeeks.slice();
-    const fsAllRows = _fsAllRows(scenario);
-    const deliveryTotalRows = _deliveryTotalRows(scenario);
-    const delFsSeries = _sumByPeriod(rows, periods, r => r.sales);
-    const fsTotalSeries = _sumByPeriod(fsAllRows, periods, r => r.sales);
-    const deliveryTotalSeries = _sumByPeriod(deliveryTotalRows, periods, r => r.sales);
-    const shareInFsTrend = periods.map((pk, i) => ({ periodKey:pk, value: fsTotalSeries[i] > 0 ? (delFsSeries[i] / fsTotalSeries[i]) * 100 : 0 }));
-    const shareInDeliveryTrend = periods.map((pk, i) => ({ periodKey:pk, value: deliveryTotalSeries[i] > 0 ? (delFsSeries[i] / deliveryTotalSeries[i]) * 100 : 0 }));
-
-    return { scenario:Object.assign({}, scenario, { trendWeeks:historyPeriods, lyPeriod }), totalRow, categories, stores, channels:channelRows, pyaCategories, uberCategories, daypartsRaw, turnRows, dows, historyStores, shareInFsTrend, shareInDeliveryTrend };
-  }
-
-  function _renderFixed(storeList){
-    const model = _buildModel(storeList);
-    if(!model || !model.totalRow || !(Number(model.totalRow.salesCur || 0) > 0 || Number(model.totalRow.salesProm || 0) > 0)){
-      return;
-    }
-    const section = document.getElementById('innovation_fs_del_exec_section');
-    if(!section) return;
-    if(typeof innovationFsDelExecRenderSectionMessage === 'function') innovationFsDelExecRenderSectionMessage('');
-    const title = document.getElementById('innovation_fs_del_exec_title');
-    const sub = document.getElementById('innovation_fs_del_exec_sub');
-    if(title) title.textContent = `Innovation AMPM DELIVERY ESA | ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek}`;
-    if(sub){
-      const storesLabel = (model.scenario.stores || []).length === 1 && typeof innovationFsExecStoreMeta === 'function'
-        ? innovationFsExecStoreMeta(model.scenario.stores[0]).full
-        : `${(model.scenario.stores || []).length} tiendas`;
-      sub.textContent = `Food Service Delivery vs ${(typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model.scenario.promCount) : 'Prom'} · ${storesLabel} · Día: ${typeof getGlobalDowLabel === 'function' ? getGlobalDowLabel() : 'Todos'}`;
-    }
-    if(typeof innovationFsDelExecRenderKpis === 'function') innovationFsDelExecRenderKpis(model);
-    if(typeof innovationFsDelExecRenderInsights === 'function') innovationFsDelExecRenderInsights(model);
-    const promLabel = (typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model.scenario.promCount) : 'Prom';
-    if(typeof innovationFsExecRenderSingleBarChart === 'function'){
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_lines_store', { stateKey:'chartInnovationFsDelExecLinesStore', rows:model.stores.slice(), valueField:'linesCur', promField:'linesProm', deltaField:'ratioLines', money:false, title:`FS Línea Delivery ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'FS Línea', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_store', { stateKey:'chartInnovationFsDelExecSalesStore', rows:model.stores.slice(), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Store`, datasetLabel:'Sales Store', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_margin_store', { stateKey:'chartInnovationFsDelExecMarginStore', rows:model.stores.slice(), valueField:'marginCur', promField:'marginProm', deltaField:'ratioMargin', money:true, title:`Food Service Delivery Margin ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Store`, datasetLabel:'Margin Store', baseColor:'#0C4D8F', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_cat', { stateKey:'chartInnovationFsDelExecSalesCat', rows:model.categories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Sales Delivery', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_margin_cat', { stateKey:'chartInnovationFsDelExecMarginCat', rows:model.categories.slice(0,8), valueField:'marginCur', promField:'marginProm', deltaField:'ratioMargin', money:true, title:`Food Service Delivery Margin ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Margin Delivery', baseColor:'#0C4D8F', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_pya_cat', { stateKey:'chartInnovationFsDelExecPyaCat', rows:model.pyaCategories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service PYA Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'PYA Sales', baseColor:'#C62828', valueBg:'#F9D9D9', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_uber_cat', { stateKey:'chartInnovationFsDelExecUberCat', rows:model.uberCategories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Uber Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Uber Sales', baseColor:'#2E7D32', valueBg:'#DDF2DE', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_dow', { stateKey:'chartInnovationFsDelExecDow', rows:model.dows.slice(), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Día`, datasetLabel:'Sales DOW', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [String(r?.label || r?.key || '').trim()] });
-    }
-    if(typeof innovationFsDelExecRenderHistoryChart === 'function') innovationFsDelExecRenderHistoryChart(model);
-    if(typeof innovationFsDelExecRenderShareTrendChart === 'function'){
-      innovationFsDelExecRenderShareTrendChart('chart_innovation_fs_del_share_total_fs', { stateKey:'chartInnovationFsDelExecShareFs', rows:model.shareInFsTrend, title:'Peso venta Delivery FS en Venta Total FS', datasetLabel:'Peso FS' });
-      innovationFsDelExecRenderShareTrendChart('chart_innovation_fs_del_share_delivery_total', { stateKey:'chartInnovationFsDelExecShareDelivery', rows:model.shareInDeliveryTrend, title:'Peso venta Delivery FS en Delivery Total', datasetLabel:'Peso Delivery' });
-    }
-    if(typeof innovationFsDelExecRenderHours === 'function') innovationFsDelExecRenderHours(model);
-  }
-
-  innovationFsDelExecBuildModel = _buildModel;
-  const _prevRenderInnovationCharts = (typeof renderInnovationCharts === 'function') ? renderInnovationCharts : null;
-  if(_prevRenderInnovationCharts){
-    renderInnovationCharts = function(storeList){
-      const result = _prevRenderInnovationCharts.apply(this, arguments);
-      try{ _renderFixed(storeList); }catch(e){ console.warn('v75 hard source fix render failed', e); }
-      return result;
-    };
-  }
-  renderInnovationFoodServiceDeliveryExecutive = function(storeList){
-    try{ _renderFixed(storeList); }catch(e){ console.warn('v75 hard source fix direct render failed', e); }
-  };
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v76-force-rerender">
-(function(){
-  function _stores(){
-    try{
-      if(typeof getSelectedStoresOrAll === 'function') return getSelectedStoresOrAll();
-    }catch(_e){}
-    try{
-      if(state && Array.isArray(state.stores)) return state.stores.slice();
-    }catch(_e){}
-    return [];
-  }
-  function _run(){
-    try{
-      if(!state || !state.__hallWorkbook) return false;
-      const active = String(document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim().toLowerCase();
-      if(active && active !== 'innovacion') return false;
-      if(typeof renderInnovationFoodServiceDeliveryExecutive === 'function'){
-        renderInnovationFoodServiceDeliveryExecutive(_stores());
-        return true;
-      }
-    }catch(e){
-      console.warn('v76 force rerender failed', e);
-    }
-    return false;
-  }
-  const _prevRefresh = (typeof refreshVisibleTabCharts === 'function') ? refreshVisibleTabCharts : null;
-  if(_prevRefresh){
-    refreshVisibleTabCharts = function(tab, forceRebuild){
-      const out = _prevRefresh.apply(this, arguments);
-      try{
-        const active = String(tab || document.querySelector('.tabBtn.active')?.dataset?.tab || '').trim().toLowerCase();
-        if(active === 'innovacion'){
-          setTimeout(_run, 0);
-          setTimeout(_run, 120);
-          setTimeout(_run, 400);
-        }
-      }catch(_e){}
-      return out;
-    };
-  }
-  const _prevApply = (typeof applyFilters === 'function') ? applyFilters : null;
-  if(_prevApply){
-    applyFilters = function(){
-      const out = _prevApply.apply(this, arguments);
-      setTimeout(_run, 0);
-      setTimeout(_run, 120);
-      setTimeout(_run, 400);
-      return out;
-    };
-  }
-  function _bootstrap(tries){
-    if(_run()) return;
-    if((tries || 0) >= 24) return;
-    setTimeout(function(){ _bootstrap((tries || 0) + 1); }, 350);
-  }
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){
-    setTimeout(function(){ _bootstrap(0); }, 50);
-  }else{
-    window.addEventListener('load', function(){ setTimeout(function(){ _bootstrap(0); }, 50); }, { once:true });
-  }
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v77-final-authoritative-fix">
-(function(){
-  function _txt(v){ return String(v ?? '').trim(); }
-  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function _normText(v){
-    try{ if(typeof innovationNormText === 'function') return String(innovationNormText(v || '') || '').trim(); }catch(_e){}
-    return _txt(v).toUpperCase().replace(/\s+/g,'');
-  }
-  function _bool(v){
-    if(v === true || v === 1) return true;
-    const s = _txt(v).toLowerCase();
-    return s === 'true' || s === '1' || s === 'si' || s === 'sí' || s === 'yes' || s === 'y';
-  }
-  function _channelKind(raw){
-    const s = _txt(raw).toUpperCase();
-    if(!s) return '';
-    if(s.includes('UBER')) return 'UBER';
-    if(s.includes('PEDIDO') || s.includes('PEYA') || s.includes('PYA')) return 'PYA';
-    return '';
-  }
-  function _dowKey(rawNum, rawName){
-    try{
-      if(typeof normalizeDowKey === 'function'){
-        return _txt(normalizeDowKey(rawNum || rawName || ''));
-      }
-    }catch(_e){}
-    return _txt(rawNum || rawName);
-  }
-  function _wantedDow(){
-    try{
-      if(typeof parseDowFilterValues === 'function' && typeof getGlobalDowFilter === 'function'){
-        return parseDowFilterValues(getGlobalDowFilter()) || [];
-      }
-    }catch(_e){}
-    return [];
-  }
-  function _periodKey(row, monthlyMode){
-    try{
-      if(typeof innovationPeriodKeyFromRow === 'function'){
-        return _txt(innovationPeriodKeyFromRow(row, !!monthlyMode));
-      }
-    }catch(_e){}
-    return _txt(monthlyMode ? (row?.CalMonth ?? row?.calmonth ?? row?.month) : (row?.YearWeek ?? row?.week));
-  }
-  function _sheetRows(name){
-    try{
-      if(state?.__hallWorkbook && typeof innovationWorkbookSheetRows === 'function'){
-        const rows = innovationWorkbookSheetRows(state.__hallWorkbook, name) || [];
-        if(Array.isArray(rows) && rows.length) return rows;
-      }
-    }catch(_e){}
-    return [];
-  }
-  function _ensureDowCard(){
-    const sec = document.getElementById('innovation_fs_del_exec_section');
-    if(!sec) return;
-    let row = sec.querySelector('.innovationFsExecGridTripleDow--delivery') ||
-              document.getElementById('chart_innovation_fs_del_share_total_fs')?.closest('.innovationFsExecGridPair--delivery') ||
-              sec.querySelector('.innovationFsExecGridPair--delivery');
-    if(!row) return;
-    row.classList.add('innovationFsExecGridTripleDow--delivery');
-    if(document.getElementById('chart_innovation_fs_del_dow')) return;
-    const card = document.createElement('div');
-    card.className = 'chartCard';
-    card.innerHTML = '<div class="innovationFsExecCanvasWrap innovationFsExecCanvasWrap--delivery"><canvas id="chart_innovation_fs_del_dow" aria-label="Food Service Delivery ventas por día"></canvas></div>';
-    row.insertBefore(card, row.firstElementChild || null);
-  }
-  function _detailDeliveryRows(scenario){
-    const monthly = !!scenario?.monthly;
-    const stores = new Set((scenario?.stores || []).map(s => _txt(s).toUpperCase()).filter(Boolean));
-    const wantedDow = _wantedDow();
-    let rows = _sheetRows('Innovation_FS_Detail');
-    if(!rows.length && typeof innovationFoodServiceDetailRows === 'function'){
-      try{ rows = innovationFoodServiceDetailRows() || []; }catch(_e){ rows = []; }
-    }
-    return (Array.isArray(rows) ? rows : []).filter(r => {
-      const store = _txt(r?.Store ?? r?.store).toUpperCase();
-      if(!store || (stores.size && !stores.has(store))) return false;
-      if(_normText(r?.Department ?? r?.department ?? '') !== 'FOODSERVICE') return false;
-      const ch = _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? r?.Channel ?? '');
-      const isDelivery = _bool(r?.Is_Delivery ?? r?.is_delivery) || !!ch;
-      if(!isDelivery || !ch) return false;
-      const gotDow = _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name);
-      if(wantedDow.length && !wantedDow.includes(gotDow)) return false;
-      return true;
-    }).map(r => ({
-      store: _txt(r?.Store ?? r?.store).toUpperCase(),
-      periodKey: _periodKey(r, monthly),
-      category: _txt(r?.Category ?? r?.category) || 'Sin categoría',
-      description: _txt(r?.Description ?? r?.description ?? r?.DescriptionKey ?? r?.descriptionkey),
-      daypart: (typeof innovationFsExecCanonicalDaypart === 'function')
-        ? innovationFsExecCanonicalDaypart(r?.Daypart ?? r?.daypart ?? '')
-        : _txt(r?.Daypart ?? r?.daypart),
-      dow: _dowKey(r?.DOW ?? r?.dow, r?.DOW_Name ?? r?.dow_name),
-      dowName: _txt(r?.DOW_Name ?? r?.dow_name),
-      channelKind: _channelKind(r?.Delivery_Channel ?? r?.delivery_channel ?? r?.Channel ?? ''),
+  padding:8px 10px 8px !importanvel ?? r?.delivery_channel ?? r?.Channel ?? ''),
       qty: _num(r?.['Qty Sold'] ?? r?.qty ?? r?.Qty),
       sales: _num(r?.Sales ?? r?.sales),
       margin: _num(r?.['Total Gross Margin'] ?? r?.margin ?? r?.['Gross Margin']),
@@ -49985,409 +48968,7 @@ function initHallazgosUI(){
       const k = _txt(key) || '—';
       if(!map.has(k)){
         map.set(k, Object.assign({ key:k, label:label || k, salesCur:0, salesPrev:0, marginCur:0, marginPrev:0, qtyCur:0, qtyPrev:0, linesCur:0, linesPrev:0 }, extras || {}));
-      }
-      return map.get(k);
-    }
-    function add(bucket, r, isCur, isPrev){
-      if(!bucket) return;
-      if(isCur){
-        bucket.salesCur += r.sales; bucket.marginCur += r.margin; bucket.qtyCur += r.qty; bucket.linesCur += r.lines;
-      }
-      if(isPrev){
-        bucket.salesPrev += r.sales; bucket.marginPrev += r.margin; bucket.qtyPrev += r.qty; bucket.linesPrev += r.lines;
-      }
-    }
-
-    rows.forEach(r => {
-      const isCur = r.periodKey === currentWeek;
-      const isPrev = prevSet.has(r.periodKey);
-      const isHist = historyPeriods.includes(r.periodKey);
-      if(!isCur && !isPrev && !isHist) return;
-
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(r.store) : { short:r.store, name:r.store, full:r.store, code:r.store };
-      add(ensure(catMap, r.category, r.category), r, isCur, isPrev);
-      add(ensure(storeMap, r.store, meta.full, { shortLabel:meta.short, name:meta.name, code:meta.code, store:r.store }), r, isCur, isPrev);
-      add(ensure(daypartMap, r.daypart || 'Sin horario', r.daypart || 'Sin horario'), r, isCur, isPrev);
-      add(ensure(dowMap, r.dow || '0', _txt(r.dowName || (typeof dowLabel === 'function' ? dowLabel(r.dow) : r.dow) || 'Sin día')), r, isCur, isPrev);
-      add(ensure(channelMap, r.channelKind, r.channelKind === 'PYA' ? 'Pedidos Ya' : 'Uber Eats', { channelKind:r.channelKind }), r, isCur, isPrev);
-      if(r.channelKind === 'PYA') add(ensure(pyaCatMap, r.category, r.category), r, isCur, isPrev);
-      if(r.channelKind === 'UBER') add(ensure(uberCatMap, r.category, r.category), r, isCur, isPrev);
-
-      if(isCur){
-        totals.salesCur += r.sales; totals.marginCur += r.margin; totals.qtyCur += r.qty; totals.linesCur += r.lines;
-      }
-      if(isPrev){
-        totals.salesPrev += r.sales; totals.marginPrev += r.margin; totals.qtyPrev += r.qty; totals.linesPrev += r.lines;
-      }
-      if(isHist){
-        const hist = historyByStore.get(r.store);
-        if(hist) hist.set(r.periodKey, _num(hist.get(r.periodKey)) + r.sales);
-      }
-    });
-
-    const sortDescSales = (a,b) => _num(b.salesCur) - _num(a.salesCur);
-    const daypartOrder = ['1. Nocturno','2. Desayuno','3. Almuerzo','4. Cena-1','4. Cena-2'];
-    const categories = Array.from(catMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort(sortDescSales);
-    const stores = Array.from(storeMap.values()).map(r => _finalize(r, prevCount)).sort(sortDescSales);
-    const channels = Array.from(channelMap.values()).map(r => _finalize(r, prevCount)).sort(sortDescSales);
-    const pyaCategories = Array.from(pyaCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort(sortDescSales);
-    const uberCategories = Array.from(uberCatMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort(sortDescSales);
-    const daypartsRaw = Array.from(daypartMap.values()).map(r => _finalize(r, prevCount)).sort((a,b) => daypartOrder.indexOf(a.key) - daypartOrder.indexOf(b.key));
-    const turnRows = (typeof innovationFsExecTurnRowsFromDayparts === 'function' ? innovationFsExecTurnRowsFromDayparts(daypartsRaw) : []).map(r => _finalize(r, prevCount));
-    const dows = Array.from(dowMap.values()).map(r => _finalize(r, prevCount)).filter(r => r.salesCur > 0 || r.salesProm > 0).sort((a,b) => Number(a.key || 0) - Number(b.key || 0));
-    const totalRow = _finalize({ key:'TOTAL', label:'Total', salesCur:totals.salesCur, salesPrev:totals.salesPrev, marginCur:totals.marginCur, marginPrev:totals.marginPrev, qtyCur:totals.qtyCur, qtyPrev:totals.qtyPrev, linesCur:totals.linesCur, linesPrev:totals.linesPrev }, prevCount);
-
-    const historyStores = (scenario.stores || []).map(st => {
-      const storeKey = _txt(st).toUpperCase();
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(storeKey) : { short:storeKey, name:storeKey, full:storeKey };
-      const hist = historyByStore.get(storeKey) || new Map();
-      return {
-        store: storeKey,
-        label: meta.short,
-        name: meta.name,
-        full: meta.full,
-        values: historyPeriods.map(pk => _num(hist.get(pk)))
-      };
-    });
-
-    const fsAllRows = _detailFsAllRows(scenario);
-    const deliveryTotalRows = _deliveryTotalsRows(scenario);
-    const sharePeriods = trendWeeksBase.slice();
-    const delFsSeries = _sumByPeriod(rows, sharePeriods, r => r.sales);
-    const fsTotalSeries = _sumByPeriod(fsAllRows, sharePeriods, r => r.sales);
-    const deliveryTotalSeries = _sumByPeriod(deliveryTotalRows, sharePeriods, r => r.sales);
-
-    const shareInFsTrend = sharePeriods.map((pk, i) => ({
-      periodKey: pk,
-      value: fsTotalSeries[i] > 0 ? (delFsSeries[i] / fsTotalSeries[i]) * 100 : 0
-    }));
-    const shareInDeliveryTrend = sharePeriods.map((pk, i) => ({
-      periodKey: pk,
-      value: deliveryTotalSeries[i] > 0 ? (delFsSeries[i] / deliveryTotalSeries[i]) * 100 : 0
-    }));
-
-    return {
-      scenario: Object.assign({}, scenario, { trendWeeks: historyPeriods, lyPeriod }),
-      totalRow, categories, stores, channels, pyaCategories, uberCategories, daypartsRaw, turnRows, dows, historyStores, shareInFsTrend, shareInDeliveryTrend
-    };
-  }
-
-  function _render(storeList){
-    const section = document.getElementById('innovation_fs_del_exec_section');
-    if(!section) return;
-    _ensureDowCard();
-
-    const destroyKeys = ['chartInnovationFsDelExecPyaCat','chartInnovationFsDelExecUberCat','chartInnovationFsDelExecSalesCat','chartInnovationFsDelExecSalesStore','chartInnovationFsDelExecHistory','chartInnovationFsDelExecMarginStore','chartInnovationFsDelExecMarginCat','chartInnovationFsDelExecHours','chartInnovationFsDelExecLinesStore','chartInnovationFsDelExecShareFs','chartInnovationFsDelExecShareDelivery','chartInnovationFsDelExecDow'];
-    destroyKeys.forEach(k => { try{ state[k]?.destroy?.(); }catch(_e){} });
-
-    const model = _buildAuthoritativeModel(storeList);
-    if(!model || !model.totalRow || (!(_num(model.totalRow.salesCur) > 0) && !(_num(model.totalRow.salesProm) > 0))){
-      if(typeof innovationFsDelExecRenderSectionMessage === 'function'){
-        innovationFsDelExecRenderSectionMessage('No hay datos suficientes de Food Service Delivery para construir el bloque ejecutivo con los filtros actuales.');
-      }
-      return;
-    }
-    if(typeof innovationFsDelExecRenderSectionMessage === 'function'){
-      innovationFsDelExecRenderSectionMessage('');
-    }
-
-    const title = document.getElementById('innovation_fs_del_exec_title');
-    const sub = document.getElementById('innovation_fs_del_exec_sub');
-    if(title) title.textContent = `Innovation AMPM DELIVERY ESA | ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek}`;
-    if(sub){
-      const storesLabel = (model.scenario.stores || []).length === 1
-        ? (((typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(model.scenario.stores[0]) : { full:model.scenario.stores[0] }).full)
-        : `${(model.scenario.stores || []).length} tiendas`;
-      sub.textContent = `Food Service Delivery vs ${(typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model.scenario.promCount) : 'Prom'} · ${storesLabel} · Día: ${(typeof getGlobalDowLabel === 'function') ? getGlobalDowLabel() : 'Todos'}`;
-    }
-
-    if(typeof innovationFsDelExecRenderKpis === 'function') innovationFsDelExecRenderKpis(model);
-    if(typeof innovationFsDelExecRenderInsights === 'function') innovationFsDelExecRenderInsights(model);
-
-    const promLabel = (typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model.scenario.promCount) : 'Prom';
-
-    if(typeof innovationFsDelExecRenderHistoryChart === 'function') innovationFsDelExecRenderHistoryChart(model);
-    if(typeof innovationFsDelExecRenderShareTrendChart === 'function'){
-      innovationFsDelExecRenderShareTrendChart('chart_innovation_fs_del_share_total_fs', { stateKey:'chartInnovationFsDelExecShareFs', rows:model.shareInFsTrend, title:'Peso venta Delivery FS en Venta Total FS', datasetLabel:'Peso FS' });
-      innovationFsDelExecRenderShareTrendChart('chart_innovation_fs_del_share_delivery_total', { stateKey:'chartInnovationFsDelExecShareDelivery', rows:model.shareInDeliveryTrend, title:'Peso venta Delivery FS en Delivery Total', datasetLabel:'Peso Delivery' });
-    }
-    if(typeof innovationFsExecRenderSingleBarChart === 'function'){
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_pya_cat', { stateKey:'chartInnovationFsDelExecPyaCat', rows:model.pyaCategories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service PYA Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'PYA Sales', baseColor:'#C62828', valueBg:'#F9D9D9', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_uber_cat', { stateKey:'chartInnovationFsDelExecUberCat', rows:model.uberCategories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Uber Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Uber Sales', baseColor:'#2E7D32', valueBg:'#DDF2DE', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_store', { stateKey:'chartInnovationFsDelExecSalesStore', rows:model.stores.slice(), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Store`, datasetLabel:'Sales Store', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_margin_store', { stateKey:'chartInnovationFsDelExecMarginStore', rows:model.stores.slice(), valueField:'marginCur', promField:'marginProm', deltaField:'ratioMargin', money:true, title:`Food Service Delivery Margin ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Store`, datasetLabel:'Margin Store', baseColor:'#0C4D8F', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_lines_store', { stateKey:'chartInnovationFsDelExecLinesStore', rows:model.stores.slice(), valueField:'linesCur', promField:'linesProm', deltaField:'ratioLines', money:false, title:`FS Línea Delivery ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'FS Línea', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [r.shortLabel || '', r.name || ''] });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_cat', { stateKey:'chartInnovationFsDelExecSalesCat', rows:model.categories.slice(0,8), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Sales Delivery', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_margin_cat', { stateKey:'chartInnovationFsDelExecMarginCat', rows:model.categories.slice(0,8), valueField:'marginCur', promField:'marginProm', deltaField:'ratioMargin', money:true, title:`Food Service Delivery Margin ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} vs ${promLabel}`, datasetLabel:'Margin Delivery', baseColor:'#0C4D8F', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [r.label]) });
-      innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_dow', { stateKey:'chartInnovationFsDelExecDow', rows:model.dows.slice(), valueField:'salesCur', promField:'salesProm', deltaField:'ratioSales', money:true, title:`Food Service Delivery Sales ${(typeof innovationFsExecShortWeek === 'function') ? innovationFsExecShortWeek(model.scenario.currentWeek) : model.scenario.currentWeek} x Día`, datasetLabel:'Sales DOW', baseColor:'#005EA7', valueBg:'#DCE9F7', promLabel, labelFormatter:(r)=> [_txt(r.label || r.key)] });
-    }
-    if(typeof innovationFsDelExecRenderHours === 'function') innovationFsDelExecRenderHours(model);
-    return model;
-  }
-
-  innovationFsDelExecBuildModel = _buildAuthoritativeModel;
-  renderInnovationFoodServiceDeliveryExecutive = _render;
-
-  const _prevRenderInnovationCharts = (typeof renderInnovationCharts === 'function') ? renderInnovationCharts : null;
-  if(_prevRenderInnovationCharts){
-    renderInnovationCharts = function(storeList){
-      const out = _prevRenderInnovationCharts.apply(this, arguments);
-      try{ _render(storeList); }catch(e){ console.warn('v77 renderInnovationCharts patch failed', e); }
-      return out;
-    };
-  }
-
-  function _stores(){
-    try{ if(typeof getSelectedStoresOrAll === 'function') return getSelectedStoresOrAll(); }catch(_e){}
-    return [];
-  }
-  function _kick(){
-    try{
-      const active = _txt(document.querySelector('.tabBtn.active')?.dataset?.tab).toLowerCase();
-      if(active && active !== 'innovacion') return;
-      _render(_stores());
-    }catch(e){ console.warn('v77 kick failed', e); }
-  }
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){
-    setTimeout(_kick, 50);
-    setTimeout(_kick, 300);
-  }else{
-    window.addEventListener('load', function(){ setTimeout(_kick, 50); setTimeout(_kick, 300); }, { once:true });
-  }
-})();
-</script>
-<style id="innovation-fs-delivery-v78-empty-state-fix">
-#innovation_fs_del_exec_section .innovationFsExecGridStores--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridPair--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridTripleDow--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridBottom--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridTop--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridMid--delivery.is-empty,
-#innovation_fs_del_exec_section .innovationFsExecGridAux--delivery.is-empty{
-  display:none !important;
-}
-#innovation_fs_del_exec_section .chartCard.innovationFsExecCardBlankGuard{
-  display:none !important;
-}
-#innovation_fs_del_exec_section .innovationFsExecHours.innovationFsExecHoursBlankGuard{
-  display:none !important;
-}
-</style>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v78-empty-state-fix-script">
-(function(){
-  function _section(){ return document.getElementById('innovation_fs_del_exec_section'); }
-  function _show(el){ if(!el) return; el.style.display=''; }
-  function _hide(el){ if(!el) return; el.style.display='none'; }
-  function _cardsIn(container){ return Array.from((container || document).querySelectorAll('.chartCard')); }
-  function _isWrapHidden(card){
-    const wrap = card?.querySelector('.innovationFsExecCanvasWrap');
-    if(!wrap) return false;
-    return wrap.style.display === 'none';
-  }
-  function _hasNoDataHost(card){
-    const host = card?.querySelector('.innovNoDataHost');
-    return !!(host && String(host.textContent || '').trim());
-  }
-  function _canvasLooksBlank(card){
-    const canvas = card?.querySelector('canvas');
-    if(!canvas) return true;
-    const width = Number(canvas.width || 0);
-    const height = Number(canvas.height || 0);
-    return width <= 0 || height <= 0;
-  }
-  function _normalizeCards(){
-    const section = _section();
-    if(!section) return;
-    const grids = Array.from(section.querySelectorAll([
-      '.innovationFsExecGridStores--delivery',
-      '.innovationFsExecGridPair--delivery',
-      '.innovationFsExecGridTripleDow--delivery',
-      '.innovationFsExecGridBottom--delivery',
-      '.innovationFsExecGridTop--delivery',
-      '.innovationFsExecGridMid--delivery',
-      '.innovationFsExecGridAux--delivery'
-    ].join(',')));
-
-    grids.forEach(grid => {
-      let visibleCount = 0;
-      _cardsIn(grid).forEach(card => {
-        const hasNoData = _hasNoDataHost(card);
-        const wrapHidden = _isWrapHidden(card);
-        const canvasBlank = _canvasLooksBlank(card);
-        const shouldHide = wrapHidden && !hasNoData && canvasBlank;
-        card.classList.toggle('innovationFsExecCardBlankGuard', shouldHide);
-        if(!shouldHide) visibleCount += 1;
-      });
-
-      const hours = grid.querySelector('.innovationFsExecHours');
-      if(hours){
-        const host = hours.querySelector('#innovation_fs_del_exec_hours_host');
-        const hasHoursContent = !!(host && host.children.length);
-        const hasHoursText = !!(host && String(host.textContent || '').trim());
-        const shouldHideHours = !hasHoursContent && !hasHoursText && hours.style.display === 'none';
-        hours.classList.toggle('innovationFsExecHoursBlankGuard', shouldHideHours);
-        if(!shouldHideHours) visibleCount += 1;
-      }
-
-      grid.classList.toggle('is-empty', visibleCount === 0);
-    });
-  }
-
-  const _prevSectionMessage = (typeof innovationFsDelExecRenderSectionMessage === 'function') ? innovationFsDelExecRenderSectionMessage : null;
-  innovationFsDelExecRenderSectionMessage = function(msg){
-    const section = _section();
-    if(!section){
-      if(_prevSectionMessage) return _prevSectionMessage.apply(this, arguments);
-      return;
-    }
-
-    const bodyHosts = Array.from(section.querySelectorAll([
-      '.innovationFsExecHeader',
-      '.innovationFsExecGridStores--delivery',
-      '.innovationFsExecGridPair--delivery',
-      '.innovationFsExecGridTripleDow--delivery',
-      '.innovationFsExecGridBottom--delivery',
-      '.innovationFsExecGridTop--delivery',
-      '.innovationFsExecGridMid--delivery',
-      '.innovationFsExecGridAux--delivery'
-    ].join(',')));
-
-    section.querySelectorAll('.innovationFsExecEmpty').forEach(n => n.remove());
-
-    if(msg){
-      bodyHosts.forEach(_hide);
-      const empty = document.createElement('div');
-      empty.className = 'innovationFsExecEmpty';
-      empty.textContent = msg;
-      section.appendChild(empty);
-      _normalizeCards();
-      return;
-    }
-
-    bodyHosts.forEach(_show);
-    _normalizeCards();
-  };
-
-  const _prevNoData = (typeof innovationNoData === 'function') ? innovationNoData : null;
-  const _prevClearNoData = (typeof innovationClearNoData === 'function') ? innovationClearNoData : null;
-
-  if(_prevNoData){
-    innovationNoData = function(canvasId, msg){
-      const out = _prevNoData.apply(this, arguments);
-      if(/^chart_innovation_fs_del_/i.test(String(canvasId || ''))){
-        _normalizeCards();
-      }
-      return out;
-    };
-  }
-  if(_prevClearNoData){
-    innovationClearNoData = function(canvasId){
-      const out = _prevClearNoData.apply(this, arguments);
-      if(/^chart_innovation_fs_del_/i.test(String(canvasId || ''))){
-        _normalizeCards();
-      }
-      return out;
-    };
-  }
-
-  const _prevRender = (typeof renderInnovationFoodServiceDeliveryExecutive === 'function') ? renderInnovationFoodServiceDeliveryExecutive : null;
-  if(_prevRender){
-    renderInnovationFoodServiceDeliveryExecutive = function(){
-      const out = _prevRender.apply(this, arguments);
-      _normalizeCards();
-      return out;
-    };
-  }
-
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){
-    setTimeout(_normalizeCards, 80);
-    setTimeout(_normalizeCards, 320);
-  }else{
-    window.addEventListener('load', function(){
-      setTimeout(_normalizeCards, 80);
-      setTimeout(_normalizeCards, 320);
-    }, { once:true });
-  }
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-delivery-v78-share-render-fix">
-(function(){
-  function _num(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
-  function _renderShare(canvasId, cfg){
-    const canvas = document.getElementById(canvasId);
-    if(!canvas || typeof Chart === 'undefined') return;
-    try{ state[cfg.stateKey]?.destroy?.(); }catch(_e){}
-    try{ if(typeof innovationClearNoData === 'function') innovationClearNoData(canvasId); }catch(_e){}
-    const rows = Array.isArray(cfg?.rows) ? cfg.rows : [];
-    if(!rows.length){
-      try{ if(typeof innovationNoData === 'function') innovationNoData(canvasId, 'No hay datos suficientes para los filtros actuales.'); }catch(_e){}
-      return;
-    }
-    const labels = rows.map(r => (typeof periodChartLabel === 'function' ? periodChartLabel(r?.periodKey) : String(r?.periodKey || '')));
-    const data = rows.map(r => _num(r?.value));
-    const maxVal = Math.max.apply(null, data.concat([0]));
-    const chart = new Chart(canvas.getContext('2d'), {
-      type:'bar',
-      data:{
-        labels,
-        datasets:[{
-          label:cfg.datasetLabel || 'Share',
-          data,
-          backgroundColor:(ctx)=> (typeof __proGradientFromColor === 'function' ? __proGradientFromColor(ctx.chart, '#005EA7', `${canvasId}_base`) : '#005EA7'),
-          proBarThemeSkip:true,
-          borderColor:'rgba(0,0,0,0)',
-          borderWidth:0,
-          borderRadius:0,
-          borderSkipped:false,
-          barPercentage:0.9,
-          categoryPercentage:0.72
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        interaction:{mode:'index', intersect:false},
-        layout:{padding:{top:8,right:8,bottom:0,left:8}},
-        plugins:{
-          legend:{ display:false },
-          title:{ display:true, text:cfg.title || '', color:'#0C4D8F', font:{weight:'900', size:12}, padding:{top:4,bottom:6} },
-          tooltip:{ callbacks:{ label(ctx){ return `${cfg.datasetLabel || 'Share'}: ${Number(ctx.raw || 0).toFixed(1)}%`; } } }
-        },
-        scales:{
-          x:{ ticks:{ color:'#11284A', maxRotation:0, autoSkip:false, font:{size:10, weight:'700'} }, grid:{ display:false } },
-          y:{
-            beginAtZero:true,
-            suggestedMin:0,
-            suggestedMax: Math.max(6, Math.ceil(maxVal + 1)),
-            ticks:{ color:'#11284A', font:{size:10, weight:'700'}, callback:v => `${Number(v).toFixed(0)}%` }
-          }
-        }
-      },
-      plugins:[(typeof innovationCreateDatasetShareLabelPlugin === 'function' ? innovationCreateDatasetShareLabelPlugin({
-        id:`${canvasId}_pct`,
-        datasetLabel:cfg.datasetLabel || 'Share',
-        shareData:data,
-        bgColor:'#F58320',
-        textColor:'#fff',
-        topOffset:2,
-        collisionPad:4,
-        offsets:[[0,0],[0,-8],[0,-16],[0,8]],
-        margin:{top:2,right:8,left:8,bottom:4},
-        fontSize:10,
-        padX:4,
-        boxH:17,
-        formatter:(v)=> Number.isFinite(Number(v)) ? `${Math.round(Number(v))}%` : ''
-      }) : undefined)].filter(Boolean)
-    });
-    state[cfg.stateKey] = chart;
-  }
-
-  window.innovationFsDelExecRenderShareTrendChart = _renderShare;
-
-  const _prevRender = (typeof renderInnovationFoodServiceDeliveryExecutive === 'function') ? renderInnovationFoodServiceDeliveryExecutive : null;
-  if(_prevRender){
-    renderInnovationFoodServiceDeliveryExecutive = function(storeList){
-      const out = _prevRender.apply(this, arguments);
+    const out = _prevRender.apply(this, arguments);
       try{
         const model = (typeof innovationFsDelExecBuildModel === 'function') ? innovationFsDelExecBuildModel(storeList) : null;
         if(model){
@@ -50492,341 +49073,7 @@ function initHallazgosUI(){
         const out = __origRenderInnovationFoodServiceDeliveryExecutive.apply(this, arguments);
         try{
           const model = innovationFsDelExecBuildModel(storeList);
-          if(model && Array.isArray(model.categories) && model.categories.length && typeof innovationFsExecRenderSingleBarChart === 'function'){
-            const promLabel = (typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model && model.scenario && model.scenario.promCount || 8) : 'Prom';
-            innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_cat', {
-              stateKey:'chartInnovationFsDelExecSalesCat',
-              rows:model.categories.slice(0,10),
-              valueField:'salesCur',
-              promField:'salesProm',
-              deltaField:'ratioSales',
-              money:true,
-              title:`Food Service Delivery Sales ${typeof innovationFsExecShortWeek === 'function' ? innovationFsExecShortWeek(model && model.scenario && model.scenario.currentWeek || '') : (model && model.scenario && model.scenario.currentWeek || '')} vs ${promLabel}`,
-              datasetLabel:'Sales Delivery',
-              baseColor:'#005EA7',
-              valueBg:'#DCE9F7',
-              promLabel,
-              labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [String(r && r.label || '')]),
-              includeReason:true
-            });
-          }
-        }catch(e){ console.warn('delivery tooltip reason patch failed', e); }
-        return out;
-      };
-    }
-  }catch(e){ console.warn('delivery tooltip reason patch init failed', e); }
-})();
-
-</script>
-<script type="text/plain" data-ampm-deferred="1">
-(function(){
-  try{
-    function __innovationDeliveryTooltipReasonMap(storeList){
-      try{
-        if(typeof innovationFsDelExecBaseRows !== 'function' || typeof innovationFsExecScenario !== 'function') return new Map();
-        const scenario = innovationFsExecScenario(storeList);
-        if(!scenario || !scenario.currentWeek) return new Map();
-        const rows = innovationFsDelExecBaseRows(scenario.stores || storeList || []);
-        if(!Array.isArray(rows) || !rows.length) return new Map();
-        const currentWeek = String(scenario.currentWeek || '').trim();
-        const prevWeeks = Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks.map(v => String(v || '').trim()).filter(Boolean) : [];
-        const prevSet = new Set(prevWeeks);
-        const prevCount = Math.max(1, Number(scenario.promCount || prevWeeks.length || (scenario.monthly ? 3 : 8) || 1));
-        const descMap = new Map();
-        const ensure = (key, extra) => {
-          const k = String(key || '').trim();
-          if(!descMap.has(k)) descMap.set(k, Object.assign({ category:'', description:'', salesCur:0, salesPrev:0 }, extra || {}));
-          return descMap.get(k);
-        };
-        rows.forEach(r => {
-          const wk = String(r && r.periodKey || '').trim();
-          const isCur = wk === currentWeek;
-          const isPrev = prevSet.has(wk);
-          if(!isCur && !isPrev) return;
-          const cat = String(r && r.category || 'Sin categoría').trim() || 'Sin categoría';
-          const desc = String(r && r.description || '').replace(/\s+/g,' ').trim() || '(Sin detalle)';
-          const bucket = ensure(cat + '|||' + desc, { category:cat, description:desc });
-          const sales = Number(r && r.sales || 0) || 0;
-          if(isCur) bucket.salesCur += sales;
-          if(isPrev) bucket.salesPrev += sales;
-        });
-        const byCategory = new Map();
-        Array.from(descMap.values()).forEach(item => {
-          const salesCur = Number(item.salesCur || 0);
-          const salesProm = Number(item.salesPrev || 0) / prevCount;
-          const ratioSales = salesProm > 0 ? (salesCur / salesProm) : null;
-          const deltaSales = salesCur - salesProm;
-          const row = Object.assign({}, item, { salesCur, salesProm, ratioSales, deltaSales });
-          const catKey = String(item.category || '').trim() || 'Sin categoría';
-          if(!byCategory.has(catKey)) byCategory.set(catKey, []);
-          byCategory.get(catKey).push(row);
-        });
-        const compact = (v) => {
-          const s = String(v || '').replace(/\s+/g,' ').trim();
-          return s.length > 42 ? (s.slice(0,39).trim() + '…') : s;
-        };
-        const pickDriver = (rowsForCat, direction) => {
-          const arr = (Array.isArray(rowsForCat) ? rowsForCat : []).filter(r => Number.isFinite(Number(r && r.deltaSales)));
-          if(!arr.length) return null;
-          arr.sort((a,b) => direction === 'down'
-            ? (Number(a && a.deltaSales || 0) - Number(b && b.deltaSales || 0))
-            : (Number(b && b.deltaSales || 0) - Number(a && a.deltaSales || 0)));
-          return arr[0] || null;
-        };
-        const categoryTotals = new Map();
-        rows.forEach(r => {
-          const wk = String(r && r.periodKey || '').trim();
-          const isCur = wk === currentWeek;
-          const isPrev = prevSet.has(wk);
-          if(!isCur && !isPrev) return;
-          const cat = String(r && r.category || 'Sin categoría').trim() || 'Sin categoría';
-          if(!categoryTotals.has(cat)) categoryTotals.set(cat, { salesCur:0, salesPrev:0 });
-          const bucket = categoryTotals.get(cat);
-          const sales = Number(r && r.sales || 0) || 0;
-          if(isCur) bucket.salesCur += sales;
-          if(isPrev) bucket.salesPrev += sales;
-        });
-        const out = new Map();
-        categoryTotals.forEach((totals, catKey) => {
-          const salesProm = Number(totals.salesPrev || 0) / prevCount;
-          const ratioSales = salesProm > 0 ? (Number(totals.salesCur || 0) / salesProm) : null;
-          const direction = Number(ratioSales || 1) < 1 ? 'down' : 'up';
-          const driver = pickDriver(byCategory.get(catKey), direction);
-          if(!driver) return;
-          const verb = direction === 'down' ? 'Cae por' : 'Impulsa';
-          const deltaTxt = (typeof innovationFsExecDeltaText === 'function') ? innovationFsExecDeltaText(driver.ratioSales) : '';
-          const diffTxt = (typeof innovationFsExecSignedMoney === 'function') ? innovationFsExecSignedMoney(Number(driver.deltaSales || 0)) : String(Number(driver.deltaSales || 0));
-          out.set(catKey, `${verb}: ${compact(driver.description || driver.label)} · Δ ${deltaTxt} · Dif ${diffTxt}`);
-        });
-        return out;
-      }catch(_e){
-        return new Map();
-      }
-    }
-
-    const __origRenderInnovationFoodServiceDeliveryExecutive_v6 = (typeof renderInnovationFoodServiceDeliveryExecutive === 'function')
-      ? renderInnovationFoodServiceDeliveryExecutive
-      : null;
-
-    if(__origRenderInnovationFoodServiceDeliveryExecutive_v6){
-      renderInnovationFoodServiceDeliveryExecutive = function(storeList){
-        const out = __origRenderInnovationFoodServiceDeliveryExecutive_v6.apply(this, arguments);
-        try{
-          const model = (typeof innovationFsDelExecBuildModel === 'function') ? innovationFsDelExecBuildModel(storeList) : null;
-          const reasonMap = __innovationDeliveryTooltipReasonMap(storeList);
-          const chart = state && state.chartInnovationFsDelExecSalesCat;
-          if(chart && chart.options && chart.options.plugins && chart.options.plugins.tooltip){
-            const rows = (model && Array.isArray(model.categories)) ? model.categories.slice(0,10) : [];
-            const promLabel = (typeof innovationFsExecPromLabel === 'function')
-              ? innovationFsExecPromLabel(model && model.scenario && model.scenario.promCount || 8)
-              : 'Prom';
-            chart.options.plugins.tooltip.callbacks = chart.options.plugins.tooltip.callbacks || {};
-            chart.options.plugins.tooltip.callbacks.label = function(ctx){
-              const row = rows[ctx.dataIndex] || {};
-              const raw = Number(ctx && ctx.raw || 0);
-              const valueText = (typeof fmtMoney === 'function') ? fmtMoney(raw) : String(raw);
-              const promValue = Number(row && row.salesProm || 0);
-              const promText = (typeof fmtMoney === 'function') ? fmtMoney(promValue) : String(promValue);
-              const deltaText = (typeof innovationFsExecDeltaText === 'function')
-                ? innovationFsExecDeltaText(row && row.ratioSales)
-                : String(Number(row && row.ratioSales || 0));
-              const reason = String((row && row.reasonText) || reasonMap.get(String(row && (row.key || row.label) || '').trim()) || '').trim();
-              const lines = [`Actual: ${valueText}`, `${promLabel}: ${promText}`, `Delta: ${deltaText}`];
-              if(reason) lines.push(reason);
-              return lines;
-            };
-            chart.update();
-          }
-        }catch(e){
-          console.warn('delivery tooltip reason v6 patch failed', e);
-        }
-        return out;
-      };
-    }
-  }catch(e){
-    console.warn('delivery tooltip reason v6 init failed', e);
-  }
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1">
-(function(){
-  try{
-    function __innovationDeliveryReasonMapV7(storeList){
-      try{
-        if(typeof innovationFsDelExecBaseRows !== 'function' || typeof innovationFsExecScenario !== 'function') return new Map();
-        const scenario = innovationFsExecScenario(storeList);
-        if(!scenario || !scenario.currentWeek) return new Map();
-        const rows = innovationFsDelExecBaseRows(scenario.stores || storeList || []);
-        if(!Array.isArray(rows) || !rows.length) return new Map();
-        const currentWeek = String(scenario.currentWeek || '').trim();
-        const prevWeeks = Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks.map(v => String(v || '').trim()).filter(Boolean) : [];
-        const prevSet = new Set(prevWeeks);
-        const prevCount = Math.max(1, Number(scenario.promCount || prevWeeks.length || (scenario.monthly ? 3 : 8) || 1));
-        const compact = (v) => {
-          const s = String(v || '').replace(/\s+/g,' ').trim();
-          return s.length > 42 ? (s.slice(0,39).trim() + '…') : s;
-        };
-        const detailMap = new Map();
-        const ensure = (key, extra) => {
-          const k = String(key || '').trim();
-          if(!detailMap.has(k)) detailMap.set(k, Object.assign({ category:'', description:'', salesCur:0, salesPrev:0 }, extra || {}));
-          return detailMap.get(k);
-        };
-        rows.forEach(r => {
-          const wk = String((r && r.periodKey) || '').trim();
-          const isCur = wk === currentWeek;
-          const isPrev = prevSet.has(wk);
-          if(!isCur && !isPrev) return;
-          const cat = String((r && r.category) || 'Sin categoría').trim() || 'Sin categoría';
-          const desc = String((r && r.description) || '').replace(/\s+/g,' ').trim() || '(Sin detalle)';
-          const bucket = ensure(cat + '|||' + desc, { category:cat, description:desc });
-          const sales = Number((r && r.sales) || 0) || 0;
-          if(isCur) bucket.salesCur += sales;
-          if(isPrev) bucket.salesPrev += sales;
-        });
-        const byCategory = new Map();
-        Array.from(detailMap.values()).forEach(item => {
-          const salesCur = Number(item.salesCur || 0);
-          const salesProm = Number(item.salesPrev || 0) / prevCount;
-          const ratioSales = salesProm > 0 ? (salesCur / salesProm) : null;
-          const deltaSales = salesCur - salesProm;
-          const row = Object.assign({}, item, { salesCur, salesProm, ratioSales, deltaSales });
-          const catKey = String(item.category || '').trim() || 'Sin categoría';
-          if(!byCategory.has(catKey)) byCategory.set(catKey, []);
-          byCategory.get(catKey).push(row);
-        });
-        const categoryTotals = new Map();
-        rows.forEach(r => {
-          const wk = String((r && r.periodKey) || '').trim();
-          const isCur = wk === currentWeek;
-          const isPrev = prevSet.has(wk);
-          if(!isCur && !isPrev) return;
-          const cat = String((r && r.category) || 'Sin categoría').trim() || 'Sin categoría';
-          if(!categoryTotals.has(cat)) categoryTotals.set(cat, { salesCur:0, salesPrev:0 });
-          const bucket = categoryTotals.get(cat);
-          const sales = Number((r && r.sales) || 0) || 0;
-          if(isCur) bucket.salesCur += sales;
-          if(isPrev) bucket.salesPrev += sales;
-        });
-        const pickDriver = (rowsForCat, direction) => {
-          const arr = (Array.isArray(rowsForCat) ? rowsForCat : []).filter(r => Number.isFinite(Number(r && r.deltaSales)));
-          if(!arr.length) return null;
-          arr.sort((a,b) => direction === 'down'
-            ? (Number((a && a.deltaSales) || 0) - Number((b && b.deltaSales) || 0))
-            : (Number((b && b.deltaSales) || 0) - Number((a && a.deltaSales) || 0)));
-          return arr[0] || null;
-        };
-        const out = new Map();
-        categoryTotals.forEach((totals, catKey) => {
-          const salesProm = Number(totals.salesPrev || 0) / prevCount;
-          const ratioSales = salesProm > 0 ? (Number(totals.salesCur || 0) / salesProm) : null;
-          const direction = Number(ratioSales || 1) < 1 ? 'down' : 'up';
-          const driver = pickDriver(byCategory.get(catKey), direction);
-          if(!driver) return;
-          const verb = direction === 'down' ? 'Cae por' : 'Impulsa';
-          const deltaTxt = (typeof innovationFsExecDeltaText === 'function') ? innovationFsExecDeltaText(driver.ratioSales) : '';
-          const diffTxt = (typeof innovationFsExecSignedMoney === 'function') ? innovationFsExecSignedMoney(Number(driver.deltaSales || 0)) : String(Number(driver.deltaSales || 0));
-          out.set(catKey, `${verb}: ${compact(driver.description || driver.label)} · Δ ${deltaTxt} · Dif ${diffTxt}`);
-        });
-        return out;
-      }catch(_e){
-        return new Map();
-      }
-    }
-
-    function __rerenderInnovationDeliverySalesCatWithReasonV7(storeList){
-      try{
-        if(typeof innovationFsDelExecBuildModel !== 'function' || typeof innovationFsExecRenderSingleBarChart !== 'function') return;
-        const model = innovationFsDelExecBuildModel(storeList);
-        if(!model || !Array.isArray(model.categories) || !model.categories.length) return;
-        const reasonMap = __innovationDeliveryReasonMapV7(storeList);
-        model.categories.forEach(r => {
-          const key = String((r && (r.key || r.label)) || '').trim();
-          if(!String((r && r.reasonText) || '').trim() && reasonMap.has(key)){
-            r.reasonText = reasonMap.get(key);
-          }
-        });
-        const promLabel = (typeof innovationFsExecPromLabel === 'function')
-          ? innovationFsExecPromLabel(model && model.scenario && model.scenario.promCount || 8)
-          : 'Prom';
-        innovationFsExecRenderSingleBarChart('chart_innovation_fs_del_sales_cat', {
-          stateKey:'chartInnovationFsDelExecSalesCat',
-          rows:model.categories.slice(0,8),
-          valueField:'salesCur',
-          promField:'salesProm',
-          deltaField:'ratioSales',
-          money:true,
-          title:`Food Service Delivery Sales ${typeof innovationFsExecShortWeek === 'function' ? innovationFsExecShortWeek(model && model.scenario && model.scenario.currentWeek || '') : (model && model.scenario && model.scenario.currentWeek || '')} vs ${promLabel}`,
-          datasetLabel:'Sales Delivery',
-          baseColor:'#005EA7',
-          valueBg:'#DCE9F7',
-          promLabel,
-          labelFormatter:(r)=> (typeof innovationFsExecWrapLabel === 'function' ? innovationFsExecWrapLabel(r.label) : [String((r && r.label) || '')]),
-          includeReason:true
-        });
-      }catch(e){
-        console.warn('delivery tooltip reason v7 rerender failed', e);
-      }
-    }
-
-    const __origRenderInnovationFoodServiceDeliveryExecutive_v7 = (typeof renderInnovationFoodServiceDeliveryExecutive === 'function')
-      ? renderInnovationFoodServiceDeliveryExecutive
-      : null;
-
-    if(__origRenderInnovationFoodServiceDeliveryExecutive_v7){
-      renderInnovationFoodServiceDeliveryExecutive = function(storeList){
-        const out = __origRenderInnovationFoodServiceDeliveryExecutive_v7.apply(this, arguments);
-        try{ __rerenderInnovationDeliverySalesCatWithReasonV7(storeList); }catch(_e){}
-        return out;
-      };
-    }
-
-    const __runDeliveryReasonPatchV7 = () => {
-      try{
-        const stores = (typeof getSelectedStoresOrAll === 'function')
-          ? getSelectedStoresOrAll()
-          : (((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores : []));
-        __rerenderInnovationDeliverySalesCatWithReasonV7(stores);
-      }catch(_e){}
-    };
-
-    if(document.readyState === 'complete' || document.readyState === 'interactive'){
-      setTimeout(__runDeliveryReasonPatchV7, 250);
-      setTimeout(__runDeliveryReasonPatchV7, 1200);
-    }else{
-      window.addEventListener('DOMContentLoaded', function(){
-        setTimeout(__runDeliveryReasonPatchV7, 250);
-        setTimeout(__runDeliveryReasonPatchV7, 1200);
-      }, { once:true });
-    }
-
-    window.addEventListener('load', function(){
-      setTimeout(__runDeliveryReasonPatchV7, 250);
-      setTimeout(__runDeliveryReasonPatchV7, 1200);
-    });
-
-    /* AMPM stable v2: no refrescar gráficas al volver a la ventana del navegador.
-       Este módulo ya se ejecuta en carga y en cambios reales de filtro/data. */
-  }catch(e){
-    console.warn('delivery tooltip reason v7 init failed', e);
-  }
-})();
-</script>
-<script type="text/plain" data-ampm-deferred="1">
-(function(){
-  try{
-    function __deliveryTooltipReasonMapFinal(){
-      try{
-        if(typeof innovationFsDelExecBaseRows !== 'function' || typeof innovationFsExecScenario !== 'function') return new Map();
-        const stores = (typeof getSelectedStoresOrAll === 'function')
-          ? getSelectedStoresOrAll()
-          : (((typeof state !== 'undefined' && state && Array.isArray(state.stores)) ? state.stores : []));
-        const scenario = innovationFsExecScenario(stores || []);
-        if(!scenario || !scenario.currentWeek) return new Map();
-        const rows = innovationFsDelExecBaseRows(scenario.stores || stores || []);
-        if(!Array.isArray(rows) || !rows.length) return new Map();
-        const currentWeek = String(scenario.currentWeek || '').trim();
-        const prevWeeks = Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks.map(v => String(v || '').trim()).filter(Boolean) : [];
+          if(model && Array.isArray(model.categories) && model.categories.length && typeof innovationFsExecRenderSingleBarChart === &ray(scenario.prevWeeks) ? scenario.prevWeeks.map(v => String(v || '').trim()).filter(Boolean) : [];
         const prevSet = new Set(prevWeeks);
         const prevCount = Math.max(1, Number(scenario.promCount || prevWeeks.length || (scenario.monthly ? 3 : 8) || 1));
         const compact = (v) => {
@@ -50932,485 +49179,7 @@ function initHallazgosUI(){
 #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard,
 #innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours{min-height:380px !important;height:100% !important;}
 #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard{padding-bottom:4px !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom .innovationFsExecCanvasWrap.is-tall{height:340px !important;min-height:340px !important;padding:8px 12px 2px !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom .innovationFsExecCanvasWrap.is-tall canvas{height:100% !important;max-height:100% !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours{padding:8px 12px 8px !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursTitle{margin-bottom:2px !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursMeta{margin-bottom:0 !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursChartWrap{flex:0 0 240px;height:240px !important;min-height:240px !important;}
-#innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursNotes{margin-top:2px !important;gap:4px !important;}
-@media (max-width: 1200px){
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard,
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours{min-height:350px !important;}
-  #innovation_fs_exec_section .innovationFsExecGridBottom .innovationFsExecCanvasWrap.is-tall{height:310px !important;min-height:310px !important;}
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursChartWrap{height:220px !important;min-height:220px !important;}
-}
-@media (max-width: 900px){
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard,
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours{min-height:unset !important;}
-  #innovation_fs_exec_section .innovationFsExecGridBottom .innovationFsExecCanvasWrap.is-tall{height:260px !important;min-height:260px !important;}
-  #innovation_fs_exec_section .innovationFsExecGridBottom > .innovationFsExecHours .innovationFsExecHoursChartWrap{height:200px !important;min-height:200px !important;}
-}
-</style>
-<style id="innovation-fs-category-pagers-v1">
-#innovation_fs_category_pagers_section{margin-top:18px;padding:16px;border-radius:22px;background:linear-gradient(180deg, rgba(12,77,143,.04) 0%, rgba(245,131,32,.03) 100%);border:1px solid rgba(12,77,143,.14);box-shadow:0 10px 30px rgba(15,23,42,.06)}
-.innovationCatPagerToolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.innovationCatPagerTitle{margin:0;color:#0C4D8F;font-size:30px;line-height:1.05;font-weight:900}
-.innovationCatPagerSub{margin-top:4px;color:#526581;font-size:13px;font-weight:700}
-.innovationCatPagerControls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
-.innovationCatPagerControls label{display:flex;flex-direction:column;gap:4px;color:#11284A;font-size:11px;font-weight:800}
-.innovationCatPagerControls select{min-width:180px;border:1px solid rgba(12,77,143,.18);border-radius:10px;background:#fff;padding:8px 10px;color:#11284A;font-weight:700}
-#innovation_fs_category_pagers_host{display:flex;flex-direction:column;gap:16px}
-.innovationCatPager{background:#fff;border:1px solid rgba(12,77,143,.10);border-radius:18px;box-shadow:0 8px 20px rgba(15,23,42,.04);padding:14px 14px 12px}
-.innovationCatPagerHeader{display:block;margin-bottom:10px}
-.innovationCatPagerHeaderTitle{margin:0;color:#0C4D8F;font-size:18px;font-weight:900;line-height:1.02}
-.innovationCatPagerHeaderCategory{margin-top:4px;color:#11284A;font-size:28px;font-weight:900;line-height:1.02}
-.innovationCatPagerHeaderSub{color:#526581;font-size:12px;font-weight:700;margin-top:4px}
-.innovationCatPagerSummaryRow{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,1.16fr) minmax(0,.86fr);gap:12px;align-items:stretch;margin:0 0 12px}
-.innovationCatPagerKpiCard,.innovationCatPagerInsights,.innovationCatPagerActions{background:#fff;border:1px solid rgba(12,77,143,.10);border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.04);padding:10px 12px}
-.innovationCatPagerKpis{display:grid;grid-template-columns:1fr;gap:7px;margin:0;align-items:stretch}
-.innovationCatPagerKpi{padding:7px 10px;border-radius:12px;background:#F7F9FC;border:1px solid rgba(12,77,143,.10);min-width:0}
-.innovationCatPagerKpi .k{font-size:9.5px;font-weight:900;letter-spacing:.03em;color:#526581;text-transform:uppercase}
-.innovationCatPagerKpi .v{font-size:20px;line-height:1;color:#11284A;font-weight:900;margin-top:3px}
-.innovationCatPagerKpi .s{font-size:10.5px;color:#526581;font-weight:800;margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.innovationCatPagerKpi .s .label{color:#526581}
-.innovationCatPagerKpiDelta{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.02em;border:1px solid transparent}
-.innovationCatPagerKpiDelta--up{background:rgba(16,185,129,.14);color:#047857;border-color:rgba(16,185,129,.28)}
-.innovationCatPagerKpiDelta--down{background:rgba(239,68,68,.12);color:#B91C1C;border-color:rgba(239,68,68,.22)}
-.innovationCatPagerKpiDelta--flat{background:rgba(82,101,129,.10);color:#526581;border-color:rgba(82,101,129,.18)}
-.innovationCatPagerChartsRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,.9fr);gap:12px;align-items:stretch}
-.innovationCatPager .chartCard{background:#fff;border:1px solid rgba(12,77,143,.10);border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.04);overflow:hidden;display:flex;flex-direction:column;height:100%}
-.innovationCatPagerChartWrap{height:390px;min-height:390px;padding:12px 14px 8px}
-.innovationCatPagerChartsRow .chartCard--store .innovationCatPagerChartWrap{height:430px;min-height:430px}
-.innovationCatPagerChartsRow .chartCard--desc .innovationCatPagerChartWrap{height:390px;min-height:390px}
-.innovationCatPagerChartsRow .chartCard--daypart .innovationCatPagerChartWrap{height:300px;min-height:300px;padding-bottom:4px}
-.innovationCatPagerDaypartNotes{padding:0 14px 12px;display:grid;gap:6px}
-.innovationCatPagerDaypartNote{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid rgba(12,77,143,.12);border-radius:999px;background:#F7F9FC;padding:4px 10px;font-size:11px;font-weight:800;color:#526581}
-.innovationCatPagerDaypartNote .label{color:#11284A;font-weight:900}
-.innovationCatPagerDaypartNote .vals{text-align:right}
-.innovationCatPagerDaypartNote--total{background:#F3D34A;border-color:#E2BA1B;color:#11284A}
-.innovationCatPagerDaypartNote--total .label,.innovationCatPagerDaypartNote--total .vals{color:#11284A}
-.innovationCatPagerSideTitle{margin:0 0 6px;color:#11284A;font-size:15px;font-weight:900}
-.innovationCatPagerInsights ul{margin:0;padding-left:18px;color:#11284A}
-.innovationCatPagerInsights li{margin:0 0 6px;line-height:1.32;font-size:11.5px;font-weight:700}
-.innovationCatPagerActions textarea{width:100%;min-height:128px;border:1px dashed rgba(12,77,143,.22);border-radius:12px;padding:9px 11px;resize:vertical;color:#11284A;font-size:12px;font-weight:700;background:#FBFCFE}
-@media (max-width: 1400px){
-  .innovationCatPagerSummaryRow{grid-template-columns:minmax(210px,.7fr) minmax(0,1.08fr) minmax(0,.86fr)}
-  .innovationCatPagerChartsRow .chartCard--desc .innovationCatPagerChartWrap{height:410px;min-height:410px}
-  .innovationCatPagerChartsRow .chartCard--daypart .innovationCatPagerChartWrap{height:390px;min-height:390px}
-}
-@media (max-width: 1100px){
-  .innovationCatPagerSummaryRow,.innovationCatPagerChartsRow{grid-template-columns:1fr}
-  .innovationCatPagerChartsRow .chartCard--store .innovationCatPagerChartWrap{height:360px;min-height:360px}
-  .innovationCatPagerChartsRow .chartCard--desc .innovationCatPagerChartWrap{height:430px;min-height:430px}
-}
-.innovationCatPagerTables{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-.innovationCatPagerTableCard{background:#fff;border:1px solid rgba(12,77,143,.10);border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.04);padding:10px 10px 8px;overflow:hidden}
-.innovationCatPagerTableTitle{margin:0 0 8px;color:#0C4D8F;font-size:15px;font-weight:900}
-.innovationCatPagerTableWrap{overflow:visible}
-.innovationCatPagerTable{width:100%;border-collapse:collapse;min-width:0;table-layout:fixed}
-.innovationCatPagerTable th,.innovationCatPagerTable td{border-bottom:1px solid rgba(12,77,143,.08);padding:4px 5px;font-size:9.5px;line-height:1.12;white-space:normal;word-break:break-word;overflow-wrap:anywhere;vertical-align:top}
-.innovationCatPagerTable th{position:static;background:#0C4D8F;color:#fff;font-weight:900;white-space:nowrap;word-break:normal;overflow-wrap:normal;line-height:1;padding:4px 3px;font-size:8.6px}
-.innovationCatPagerTable th.accentHead{background:#EEF3F8 !important;color:#23456B !important;border-bottom:2px solid rgba(12,77,143,.12)}
-.innovationCatPagerTable td:first-child,.innovationCatPagerTable th:first-child{position:static;background:#fff;font-weight:800;width:18%;min-width:18%}
-.innovationCatPagerTable th:first-child{background:#0C4D8F}
-.innovationCatPagerTable td.accentCol{background:transparent !important;font-weight:800}
-.innovationCatPagerTable tr.total td,.innovationCatPagerTable tr.total td:first-child{background:#FFD84D !important;color:#11284A !important;font-weight:900}
-.innovationCatPagerTable .num{text-align:right;font-variant-numeric:tabular-nums}
-
-.innovationCatPagerExerciseCard{background:#fff;border:1px solid rgba(12,77,143,.10);border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.04);padding:10px 10px 12px;overflow:hidden;margin-top:12px}
-.innovationCatPagerExerciseTitle{margin:0 0 8px;color:#0C4D8F;font-size:15px;font-weight:900}
-.innovationCatPagerExerciseMeta{margin:-2px 0 8px;color:#526581;font-size:11px;font-weight:800}
-.innovationCatPagerExerciseTableWrap{overflow:auto}
-.innovationCatPagerExerciseTable{width:100%;border-collapse:collapse;min-width:940px;table-layout:fixed}
-.innovationCatPagerExerciseTable th,.innovationCatPagerExerciseTable td{border:1px solid rgba(12,77,143,.10);padding:4px 5px;font-size:9.5px;line-height:1.15;text-align:right;color:#11284A;font-weight:800;white-space:nowrap}
-.innovationCatPagerExerciseTable th:first-child,.innovationCatPagerExerciseTable td:first-child{text-align:left;white-space:normal;min-width:148px}
-.innovationCatPagerExerciseTable thead th{background:#0C4D8F;color:#fff;font-weight:900}
-.innovationCatPagerExerciseTable thead .beforeYear{background:#4B6FAE}
-.innovationCatPagerExerciseTable thead .afterYear{background:#0C4D8F}
-.innovationCatPagerExerciseTable thead .beforeHead{background:#E8EEF8;color:#23456B}
-.innovationCatPagerExerciseTable thead .afterHead{background:#DDEBFF;color:#103A67}
-.innovationCatPagerExerciseTable thead .summaryHead{background:#173B6B;color:#fff}
-.innovationCatPagerExerciseTable tbody td.metricLabel{background:#FFF59D;color:#11284A;font-weight:900}
-.innovationCatPagerExerciseTable tbody td.metricLabel.pct{background:#FFF8C7}
-.innovationCatPagerExerciseTable tbody td.beforeCell{background:#F7F9FC}
-.innovationCatPagerExerciseTable tbody td.afterCell{background:#EEF5FF}
-.innovationCatPagerExerciseTable tbody td.summaryCell{background:#F8FBFF}
-.innovationCatPagerExerciseTable tbody td.summaryCell.diffPos{color:#047857}
-.innovationCatPagerExerciseTable tbody td.summaryCell.diffNeg{color:#B42318}
-.innovationCatPagerExerciseChartWrap{height:340px;min-height:340px;padding:10px 8px 0}
-.innovationCatPagerExerciseLegendSplit{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:6px 10px 0}
-.innovationCatPagerExerciseLegendGroup{flex:1 1 0;display:flex;flex-direction:column;gap:6px}
-.innovationCatPagerExerciseLegendGroup.after{align-items:flex-end;text-align:right}
-.innovationCatPagerExerciseLegendTitle{font-size:11px;font-weight:900;color:#0C4D8F;line-height:1}
-.innovationCatPagerExerciseLegendItems{display:flex;flex-wrap:wrap;gap:8px 12px}
-.innovationCatPagerExerciseLegendGroup.after .innovationCatPagerExerciseLegendItems{justify-content:flex-end}
-.innovationCatPagerExerciseLegendItem{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:#11284A;line-height:1.1}
-.innovationCatPagerExerciseLegendSwatch{display:inline-block;position:relative;flex:0 0 auto}
-.innovationCatPagerExerciseLegendSwatch.bar{width:14px;height:10px;border-radius:2px}
-.innovationCatPagerExerciseLegendSwatch.line{width:18px;height:10px}
-.innovationCatPagerExerciseLegendSwatch.line::before{content:'';position:absolute;left:0;right:0;top:4px;height:2px;background:currentColor;border-radius:999px}
-.innovationCatPagerExerciseLegendSwatch.line::after{content:'';position:absolute;left:7px;top:1px;width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 2px #fff inset}
-
-
-/* Resultado Ejercicio | Innovación */
-.innovationFsExerciseSection{margin-top:14px}
-.innovationFsExerciseSection:empty{display:none}
-.innovationFsExerciseSection .innovationCatPagerExerciseCard{margin-top:0}
-.innovationFsExerciseSection #innovation_fs_exercise_host{display:grid;grid-template-columns:1fr;gap:14px}
-
-@media (max-width:1100px){
-  .innovationCatPagerExerciseTable{min-width:820px}
-  .innovationCatPagerExerciseChartWrap{height:320px;min-height:320px}
-  .innovationCatPagerExerciseLegendSplit{flex-direction:column;align-items:flex-start;gap:10px}
-  .innovationCatPagerExerciseLegendGroup.after{align-items:flex-start;text-align:left}
-  .innovationCatPagerExerciseLegendGroup.after .innovationCatPagerExerciseLegendItems{justify-content:flex-start}
-}
-
-.innovationCatPagerToggleBtn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:6px;border:1px solid rgba(12,77,143,.22);border-radius:999px;background:#fff;color:#0C4D8F;font-size:11px;font-weight:900;line-height:1;cursor:pointer;vertical-align:middle}
-.innovationCatPagerToggleBtn:hover{background:#F4F8FF}
-.innovationCatPagerLabelWrap{display:flex;align-items:center;gap:0;min-width:0}
-.innovationCatPagerFamilyRow td:first-child{font-weight:900 !important}
-.innovationCatPagerFamilyRow td{font-weight:800}
-.innovationCatPagerChildRow{display:none}
-.innovationCatPagerChildRow.is-open{display:table-row}
-.innovationCatPagerChildRow td{background:#EEF5FF !important}
-.innovationCatPagerChildRow td:first-child{padding-left:22px !important;font-weight:700 !important;color:#526581}
-.innovationCatPagerChildRow td:first-child::before{content:'↳ ';color:#7A8BA6}
-.innovationCatPagerEmpty{padding:18px;border:1px dashed rgba(12,77,143,.18);border-radius:16px;background:#fff;color:#526581;font-weight:800}
-@media (max-width: 1280px){
-  .innovationCatPagerTop{grid-template-columns:1fr}
-  .innovationCatPagerTop > .chartCard:nth-child(1),
-  .innovationCatPagerTop > .chartCard:nth-child(2),
-  .innovationCatPagerSide{grid-column:auto;grid-row:auto}
-  .innovationCatPagerTop > .chartCard:nth-child(2) .innovationCatPagerChartWrap{height:400px;min-height:400px}
-  .innovationCatPagerTables{grid-template-columns:1fr}
-}
-@media (max-width: 900px){
-  .innovationCatPagerControls select{min-width:150px}
-  .innovationCatPagerHeaderTitle{font-size:18px}
-  .innovationCatPagerTitle{font-size:24px}
-  .innovationCatPagerChartWrap{height:250px;min-height:250px}
-}
-</style>
-<script type="text/plain" data-ampm-deferred="1" id="innovation-fs-category-pagers-script">
-(function(){
-  function _catPagerNorm(v){
-    try{ return typeof innovationNormText === 'function' ? innovationNormText(v) : String(v || '').trim().toUpperCase(); }catch(_e){ return String(v || '').trim().toUpperCase(); }
-  }
-  function _catPagerSort(a,b){
-    return Number((b && b.salesCur) || 0) - Number((a && a.salesCur) || 0);
-  }
-  function _catPagerRowHasAnyActivity(row){
-    if(!row) return false;
-    const maps = [row.salesPeriod || {}, row.qtyPeriod || {}, row.marginPeriod || {}];
-    for(const mp of maps){
-      for(const v of Object.values(mp || {})){
-        if(Math.abs(Number(v || 0)) > 0.0001) return true;
-      }
-    }
-    return ['salesCur','salesPrev','salesProm','qtyCur','qtyPrev','qtyProm','marginCur','marginPrev','marginProm'].some(k => Math.abs(Number(row[k] || 0)) > 0.0001);
-  }
-  function _catPagerRowHasMeaningfulImpact(row, metric){
-    const m = metric || 'sales';
-    const cur = Number(row?.[m + 'Cur'] || 0);
-    const prom = Number(row?.[m + 'Prom'] || 0);
-    const delta = Number(row?.['delta' + m.charAt(0).toUpperCase() + m.slice(1)] || 0);
-    const ratio = Number(row?.['ratio' + m.charAt(0).toUpperCase() + m.slice(1)]);
-    if(Math.abs(delta) > 0.5) return true;
-    if((cur > 0 || prom > 0) && Number.isFinite(ratio) && Math.abs(ratio - 1) >= 0.03) return true;
-    return (cur > 0 || prom > 0) && Math.abs(delta) > 0.05;
-  }
-  function _catPagerTitleCase(txt){
-    return String(txt || '')
-      .toLowerCase()
-      .replace(/\b([a-záéíóúñü])/g, m => m.toUpperCase())
-      .replace(/\bDlV\b/g, 'DLV')
-      .replace(/\bFs\b/g, 'FS')
-      .replace(/\bAmpm\b/g, 'AMPM');
-  }
-  function _catPagerCanonicalDescFamily(raw){
-    const fam = _catPagerCompactDescription(raw);
-    const upper = String(raw || fam || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[_]+/g,' ').replace(/[^A-Z0-9\s]+/g,' ').replace(/\s+/g,' ').trim();
-    const squashed = upper.replace(/\s+/g,'');
-    const isDlv = /\b(DLV|DELIVERY)\b/.test(upper);
-    const suffix = isDlv ? ' DLV' : '';
-
-    if(/CAP.*ORIG|ORIG.*CAP|CAPPUCCINO|CAPUCCINO|CAPUCHINO|CAPUCINO|CAPPUCINO|CAPPUCC|CAPUCC|CAPUCHI|CAPPUCHI|CAPUCHI/.test(squashed)){
-      return 'Cappuccino' + suffix;
-    }
-
-    /* Si es postre con café, debe quedarse en la familia real del postre */
-    if(/TRESLECHES/.test(squashed) && /CAFE/.test(squashed)){
-      return 'Tres Leches' + suffix;
-    }
-    if(/BUDIN/.test(squashed) && /CAFE/.test(squashed)){
-      return 'Budin' + suffix;
-    }
-    if(/CHEESECAKE/.test(squashed) && /CAFE/.test(squashed)){
-      if(/OREO/.test(squashed)) return 'Cheesecake Oreo' + suffix;
-      if(/FRESA/.test(squashed)) return 'Cheesecake Fresa' + suffix;
-      return 'Cheesecake' + suffix;
-    }
-    if(/FLAN/.test(squashed) && /CAFE/.test(squashed)){
-      return 'Flan' + suffix;
-    }
-
-    if(/CAFEAMPM|CAFECONLECHE|CAFEAMERICANO|AMERICANOCAFE/.test(squashed)){
-      return 'Cafe' + suffix;
-    }
-    if(/CHOCOVAINILLA/.test(squashed)){
-      return 'Chocolate Caliente' + suffix;
-    }
-    if(/ICED|MOKACCINO|MOCCACCINO|MOCKACCINO|ICEDCAPU|ICEDCAPPU|ICEDCAPUCCINO|ICEDCAPPUCCINO/.test(squashed)){
-      return 'Iced Cappuccino' + suffix;
-    }
-    if(/FRAPPE|SMOOTHIE|GRANIZADO/.test(squashed)){
-      return 'Granizado' + suffix;
-    }
-    return fam;
-  }
-  function _catPagerOriginalDescription(raw){
-    const t = String(raw || '').trim();
-    if(!t) return 'Sin detalle';
-    const cleaned = t
-      .replace(/[_]+/g,' ')
-      .replace(/\s+/g,' ')
-      .trim();
-    return _catPagerTitleCase(cleaned);
-  }
-  function _catPagerCompactDescription(raw){
-    let t = String(raw || '').trim();
-    if(!t) return 'Sin detalle';
-    const upper = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[_]+/g,' ').replace(/[^A-Z0-9\s]+/g,' ').replace(/\s+/g,' ').trim();
-    const compactUpper = upper.replace(/\s+/g,'');
-    const isDlv = /\b(DLV|DELIVERY)\b/.test(upper);
-    const finish = (label) => {
-      const baseLabel = String(label || '').trim() || 'Sin detalle';
-      return isDlv ? (baseLabel.endsWith(' DLV') ? baseLabel : (baseLabel + ' DLV')) : baseLabel;
-    };
-    const hasRaw = (re) => re.test(upper) || re.test(compactUpper);
-
-    if(hasRaw(/PAN.*FRIJOLES|FRIJOLES.*PAN/)) return finish('Pan con Frijoles');
-    if(hasRaw(/\bSHIM\b|^SHIM|SHIM[A-Z0-9]*/)) return finish('Shim');
-    if(hasRaw(/\bMARUCHAN\b|^MARUCHAN|MARUCHAN[A-Z0-9]*/)) return finish('Maruchan');
-    if(hasRaw(/NACHOS?/)) return finish('Nachos');
-    if(hasRaw(/CAJETA|CAJETAS/)) return finish('Cajetas');
-    if(hasRaw(/TOSTADA|TOSTADAS/)) return finish('Tostadas');
-    if(hasRaw(/PUPUSA|PUPUSAS/)) return finish('Pupusas');
-    if(hasRaw(/SEMILLA|SEMILLAS|MARANON|MIXSEMILLAS/)) return finish('Semillas');
-    if(hasRaw(/COCORAYADO|COCO\s*RAYADO|TAMARINDO/)) return finish('Cajetas');
-
-    if(hasRaw(/PIZZA/)) return finish('Pizza');
-    if(hasRaw(/QUESOBURGUESA|HAMBURGUESA/)) return finish('Hamburguesa');
-    if(hasRaw(/HOT\s*DOG|HOTDOG|BIGDOG/)) return finish('Hot Dog');
-
-    if(hasRaw(/BURRITO/)) return finish('Burrito');
-    if(hasRaw(/PANINI/)) return finish('Panini');
-    if(hasRaw(/CLUB.*SANDWICH|SANDWICH.*POLLO|SANDWICH/)) return finish('Sandwich');
-    if(hasRaw(/CROISSANT|CROI\w*/)) return finish('Croissant');
-
-    if(hasRaw(/TRES\s*LECHES/)) return finish('Tres Leches');
-    if(hasRaw(/CHEESECAKE.*OREO|OREO.*CHEESECAKE/)) return finish('Cheesecake Oreo');
-    if(hasRaw(/CHEESECAKE.*FRESA|FRESA.*CHEESECAKE/)) return finish('Cheesecake Fresa');
-    if(hasRaw(/CHEESECAKE/)) return finish('Cheesecake');
-    if(hasRaw(/BUDIN/)) return finish('Budin');
-    if(hasRaw(/FLAN/)) return finish('Flan');
-
-    if(hasRaw(/CHOCOVAINILLA|CHOCO\s*VAINILLA|CHOCOLATE\s*CALIENTE|CHOCOLATECALIENTE/)) return finish('Chocolate Caliente');
-    if(hasRaw(/ICED|MOKACCINO|MOCCACCINO|MOCKACCINO|ICEDCAPU|ICEDCAPPU|ICEDCAPUCCINO|ICEDCAPPUCCINO/)) return finish('Iced Cappuccino');
-    if(hasRaw(/FRAPPE|SMOOTHIE|GRANIZADO/)) return finish('Granizado');
-    if(hasRaw(/CAPP?U?CC?I?N?O.*ORIG|ORIG.*CAPP?U?CC?I?N?O|CAPP?U?CC?I?N?O|CAPPUCCINO|CAPUCCINO|CAPUCHINO|CAPUCINO/)) return finish('Cappuccino');
-    if(hasRaw(/LATTE/)) return finish('Latte');
-
-    /* Postres/combos con café deben quedarse en su familia real, no en Cafe */
-    if(hasRaw(/TRESLECHES.*CAFE|CAFE.*TRESLECHES/)) return finish('Tres Leches');
-    if(hasRaw(/BUDIN.*CAFE|CAFE.*BUDIN/)) return finish('Budin');
-    if(hasRaw(/CHEESECAKE.*CAFE|CAFE.*CHEESECAKE/)) {
-      if(hasRaw(/OREO/)) return finish('Cheesecake Oreo');
-      if(hasRaw(/FRESA/)) return finish('Cheesecake Fresa');
-      return finish('Cheesecake');
-    }
-
-    if(hasRaw(/CAFEAMPM|CAFECONLECHE|CAFE.*AMERICANO|AMERICANO.*CAFE|\bCAFE\b/)) return finish('Cafe');
-
-    const base = upper
-      .replace(/\b(DLV|DELIVERY)\b/g,' ')
-      .replace(/\b(AMPM|GRATIS|PROMO|PROMOCION|REGALO|FREE|OBSEQUIO)\b/g,' ')
-      .replace(/\b(COMBO|COMBOS)\b/g,' ')
-      .replace(/\b(2X1|3X2|PACK|2PACK|4PACK|6PACK|2\s*PACK|4\s*PACK|6\s*PACK)\b/g,' ')
-      .replace(/\b(Y|MAS|CON)\b\s+(COCA\s*COLA|COCA|JUGO|YZIBAS?|YIBAS?|CAFE|BEBIDA|BEBIDAS|SODA|COLA|CHOCOLATA?)\b.*$/g,' ')
-      .replace(/\b(COCA\s*COLA|COCA|JUGO|YZIBAS?|YIBAS?|CAFE|BEBIDA|BEBIDAS|SODA|COLA|CHOCOLATA?)\b.*$/g,' ')
-      .replace(/\b(8\s*ONZ?|10\s*ONZ?|12\s*ONZ?|14\s*ONZ?|16\s*ONZ?|8\s*OZ|10\s*OZ|12\s*OZ|14\s*OZ|16\s*OZ|100\s*GRS?|100\s*GR|250\s*ML|355\s*ML|500\s*ML)\b/g,' ')
-      .replace(/\b(PORCION|PORCIONES|GRANO|DOBLE\s*CARNE|DOBLE|NORMAL)\b/g,' ')
-      .replace(/\bORIG\b/g,'ORIGINAL')
-      .replace(/\bCAPU\b/g,'CAPPUCCINO')
-      .replace(/\s+/g,' ')
-      .trim();
-
-    let simplified = base
-      .replace(/\b(DE|DEL|LA|EL|LOS|LAS|Y|CON|MAS)\b/g,' ')
-      .replace(/\s+/g,' ')
-      .trim();
-
-    const tokens = simplified.split(' ').filter(Boolean);
-    if(tokens.length > 2) simplified = tokens.slice(0,2).join(' ');
-    return finish(_catPagerTitleCase(simplified || base || t));
-  }
-  function _catPagerStoreCode(store){
-    const raw = String(store || '').trim().toUpperCase();
-    if(/^AMPM\d{2}$/i.test(raw)) return raw;
-    try{
-      const meta = (typeof innovationFsExecStoreMeta === 'function') ? innovationFsExecStoreMeta(store) : null;
-      const code = String((meta && (meta.short || meta.code)) || raw || '').trim().toUpperCase();
-      if(/^A\d{2}$/i.test(code)) return 'AMPM' + code.slice(1);
-      return code || 'STORE';
-    }catch(_e){
-      return raw || 'STORE';
-    }
-  }
-  function _catPagerLyWeek(){
-    try{
-      const override = String(document.getElementById('lyWeekOverride')?.value || '').trim();
-      if(override) return override;
-      const current = String(document.getElementById('currentMonth')?.value || '').trim();
-      if(!current) return '';
-      return String((typeof getLyPeriodKey === 'function') ? (getLyPeriodKey(current) || '') : '').trim();
-    }catch(_e){ return ''; }
-  }
-  function _catPagerLwWeek(scenario){
-    try{
-      const prev = Array.isArray(scenario && scenario.prevWeeks) ? scenario.prevWeeks.slice().filter(Boolean) : [];
-      if(!prev.length) return '';
-      prev.sort(typeof innovationPeriodSorter === 'function' ? innovationPeriodSorter : undefined);
-      return String(prev[prev.length - 1] || '').trim();
-    }catch(_e){ return ''; }
-  }
-  function _catPagerDowLabel(v){
-    const s = String(v || '').trim();
-    const m = {'1':'Lunes','2':'Martes','3':'Miércoles','4':'Jueves','5':'Viernes','6':'Sábado','7':'Domingo'};
-    return m[s] || s || 'Sin día';
-  }
-  function _catPagerPeriodLabel(periodKey, compact){
-    const s = String(periodKey || '').trim();
-    if(!s) return '—';
-    try{
-      if(typeof innovationFsExecIsMonthly === 'function' && innovationFsExecIsMonthly()){
-        if(typeof monthDisplay === 'function') return monthDisplay(s);
-        return s;
-      }
-    }catch(_e){}
-    try{
-      const p = (typeof parseIsoWeekKey === 'function') ? parseIsoWeekKey(s) : null;
-      if(p){
-        return compact ? (`S${String(p.w).padStart(2,'0')} ${p.y}`) : innovationFsExecShortWeek(s);
-      }
-    }catch(_e){}
-    return s;
-  }
-  function _catPagerGetSelectIds(){
-    return ['innovation_fs_category_select_1','innovation_fs_category_select_2','innovation_fs_category_select_3'];
-  }
-  function _catPagerAvailableCategories(storeList){
-    try{
-      const model = (typeof innovationFsExecBuildModel === 'function') ? innovationFsExecBuildModel(storeList) : null;
-      const rows = Array.isArray(model && model.categories) ? model.categories.slice().sort(_catPagerSort) : [];
-      return rows.map(r => String((r && (r.label || r.key)) || '').trim()).filter(Boolean);
-    }catch(_e){ return []; }
-  }
-  function _catPagerEnsureActionStore(){
-    if(!state._innovationFsCategoryPagerActions || typeof state._innovationFsCategoryPagerActions !== 'object'){
-      state._innovationFsCategoryPagerActions = {};
-    }
-    return state._innovationFsCategoryPagerActions;
-  }
-
-  function _catPagerEnsureModeStore(){
-    if(!state._innovationFsCategoryPagerModes || typeof state._innovationFsCategoryPagerModes !== 'object'){
-      state._innovationFsCategoryPagerModes = {};
-    }
-    return state._innovationFsCategoryPagerModes;
-  }
-  function _catPagerModeToken(slot, category){
-    return String(slot || 0) + '|||' + String(category || '').trim();
-  }
-  function _catPagerGetMode(slot, category){
-    const bag = _catPagerEnsureModeStore();
-    const raw = String(bag[_catPagerModeToken(slot, category)] || 'prom').trim().toLowerCase();
-    return raw === 'ly' ? 'ly' : 'prom';
-  }
-  function _catPagerSetMode(slot, category, mode){
-    const bag = _catPagerEnsureModeStore();
-    bag[_catPagerModeToken(slot, category)] = String(mode || '').trim().toLowerCase() === 'ly' ? 'ly' : 'prom';
-  }
-  function _catPagerModeMeta(model, slot){
-    const mode = _catPagerGetMode(slot, model && model.category);
-    const monthly = !!(typeof innovationFsExecIsMonthly === 'function' && innovationFsExecIsMonthly());
-    const promLabel = (typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(model && model.prevCount) : 'Prom';
-    const lyBase = String((model && (model.lyWeek || model?.scenario?.lyWeek)) || '').trim();
-    const lyDetail = lyBase ? _catPagerPeriodLabel(lyBase, true) : 'LY';
-    return {
-      mode,
-      label: mode === 'ly' ? 'LY' : promLabel,
-      detail: mode === 'ly' ? lyDetail : promLabel,
-      buttonProm: 'Prom',
-      buttonLy: 'LY',
-      monthly
-    };
-  }
-  function _catPagerMetricSuffix(metric){
-    return metric === 'qty' ? 'Qty' : (metric === 'margin' ? 'Margin' : 'Sales');
-  }
-  function _catPagerRefValue(row, metric, model, slot){
-    const mode = _catPagerGetMode(slot, model && model.category);
-    if(mode === 'ly'){
-      const lyKey = String((model && (model.lyWeek || model?.scenario?.lyWeek)) || '').trim();
-      const perMap = row && row[metric + 'Period'] ? row[metric + 'Period'] : {};
-      return Number(lyKey ? (perMap[lyKey] || 0) : 0);
-    }
-    return Number(row && row[metric + 'Prom'] || 0);
-  }
-  function _catPagerRatioValue(row, metric, model, slot){
-    const suffix = _catPagerMetricSuffix(metric);
-    const mode = _catPagerGetMode(slot, model && model.category);
-    return row ? row['ratio' + suffix + (mode === 'ly' ? 'Ly' : '')] : null;
-  }
-  function _catPagerDeltaValue(row, metric, model, slot){
-    const suffix = _catPagerMetricSuffix(metric);
-    const mode = _catPagerGetMode(slot, model && model.category);
-    return Number(row && row['delta' + suffix + (mode === 'ly' ? 'Ly' : '')] || 0);
-  }
-  function _catPagerCaptureActions(){
-    const bag = _catPagerEnsureActionStore();
-    document.querySelectorAll('.innovationCatPagerActions textarea[data-category]').forEach(tx => {
-      bag[String(tx.getAttribute('data-category') || '').trim()] = String(tx.value || '');
-    });
-  }
-  function _catPagerNormalizeSelections(desired, options){
-    const opts = Array.isArray(options) ? options.filter(Boolean) : [];
-    const picked = [];
-    const used = new Set();
-    (Array.isArray(desired) ? desired : []).forEach(v => {
-      const s = String(v || '').trim();
-      if(s && opts.includes(s) && !used.has(s) && picked.length < 3){
-        picked.push(s); used.add(s);
-      }
-    });
-    opts.forEach(v => {
-      if(picked.length >= 3) return;
-      if(!used.has(v)){ picked.push(v); used.add(v); }
-    });
-    while(picked.length < 3) picked.push('');
-    return picked.slice(0,3);
-  }
-  function _catPagerPopulateControls(storeList){
-    const ids = _catPagerGetSelectIds();
-    const options = _catPagerAvailableCategories(storeList);
-    const current = ids.map(id => {
-      const node = document.getElementById(id);
-      return node ? String(node.value || '').trim() : '';
-    });
-    const normalized = _catPagerNormalizeSelections(current, options);
+#innovation_fs_exec_section .innot options);
     ids.forEach((id, idx) => {
       const node = document.getElementById(id);
       if(!node) return;
@@ -51526,273 +49295,7 @@ function initHallazgosUI(){
     if(!cat) return null;
     const scenario = _catPagerScenario(storeList);
     if(!scenario || !scenario.currentWeek) return null;
-    const allRows = (typeof innovationFsExecBaseRows === 'function') ? innovationFsExecBaseRows(scenario.stores) : [];
-    const catNorm = _catPagerNorm(cat);
-    const lyWeek = _catPagerLyWeek();
-    const lwWeek = _catPagerLwWeek(scenario);
-    scenario.lyWeek = lyWeek;
-    scenario.lwWeek = lwWeek;
-    const periods = [lyWeek].concat(Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks : [], [scenario.currentWeek]).filter(Boolean)
-      .filter((v, i, arr) => arr.indexOf(v) === i);
-    const prevSet = new Set((Array.isArray(scenario.prevWeeks) ? scenario.prevWeeks : []).filter(Boolean));
-    const rows = (Array.isArray(allRows) ? allRows : []).filter(r => {
-      const sameCat = _catPagerNorm(r && r.category) === catNorm;
-      const inPeriod = periods.includes(String((r && r.periodKey) || '').trim());
-      if(!(sameCat && inPeriod)) return false;
-      const rawDesc = String(r && r.description || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
-      const isHotDogCat = /HOT\s*DOG|HOTDOG/.test(String(catNorm || '').replace(/\s+/g,''));
-      if(isHotDogCat && /TOPPINGS?\s*SOPAS?/.test(rawDesc)) return false;
-      return true;
-    });
-    if(!rows.length) return null;
-    const storeMap = new Map(), descMap = new Map(), descOrigMap = new Map(), daypartMap = new Map(), dowMap = new Map();
-    const daypartOrder = ['1. Nocturno','2. Desayuno','3. Almuerzo','4. Cena-1','4. Cena-2'];
-    const ensure = (map, key) => {
-      const k = String(key || '').trim() || 'Sin detalle';
-      if(!map.has(k)) map.set(k, _catPagerBuildEntry(k, periods));
-      return map.get(k);
-    };
-    rows.forEach(r => {
-      const wk = String((r && r.periodKey) || '').trim();
-      const isCur = wk === scenario.currentWeek;
-      const isPrev = prevSet.has(wk);
-      const sales = Number((r && r.sales) || 0);
-      const qty = Number((r && r.qty) || 0);
-      const margin = Number((r && r.margin) || 0);
-      const store = ensure(storeMap, _catPagerStoreCode(r.store));
-      let compactDesc = _catPagerCanonicalDescFamily(r.description || 'Sin detalle');
-      const originalDesc = _catPagerOriginalDescription(r.description || 'Sin detalle');
-      const compactNorm = String(compactDesc || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
-      const catNormNoSpace = String(catNorm || '').replace(/\s+/g,'');
-      if(/BEBIDASHELADASFS/.test(catNormNoSpace) && /^(CAPPUCCINO|ICED CAPPUCCINO|ICEDCAPPUCCINO)$/.test(compactNorm)){
-        compactDesc = 'Iced Cappuccino';
-      }
-      const desc = ensure(descMap, compactDesc);
-      const descOriginal = ensure(descOrigMap, originalDesc);
-      if(/BEBIDASHELADASFS/.test(String(catNorm || '').replace(/\s+/g,''))){
-        const origNorm = String(originalDesc || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
-        if(/CAP.*ORIG|ORIG.*CAP|CAPPUCCINO|CAPUCCINO|CAPUCHINO|CAPUCINO|ICED\s*CAP/.test(origNorm)){
-          compactDesc = 'Iced Cappuccino';
-        }
-      }
-      descOriginal.groupLabel = compactDesc;
-      const daypart = ensure(daypartMap, r.daypart || 'Sin horario');
-      const dowNorm = (typeof normalizeDowKey === 'function') ? normalizeDowKey(r.dow || '') : String(r.dow || '').trim();
-      const dow = ensure(dowMap, dowNorm || '0');
-      dow.label = _catPagerDowLabel(dowNorm || '0');
-      dow.order = Number(dowNorm || 99) || 99;
-      [store, desc, descOriginal, daypart, dow].forEach(entry => {
-        entry.salesPeriod[wk] = Number(entry.salesPeriod[wk] || 0) + sales;
-        entry.qtyPeriod[wk] = Number(entry.qtyPeriod[wk] || 0) + qty;
-        entry.marginPeriod[wk] = Number(entry.marginPeriod[wk] || 0) + margin;
-        if(isCur){
-          entry.salesCur += sales; entry.qtyCur += qty; entry.marginCur += margin;
-        }
-        if(isPrev){
-          entry.salesPrev += sales; entry.qtyPrev += qty; entry.marginPrev += margin;
-        }
-      });
-    });
-    const prevCount = Math.max(1, Number(scenario.promCount || (scenario.prevWeeks || []).length || 8));
-    const stores = Array.from(storeMap.values()).map(r => _catPagerFinalizeEntry(r, prevCount, scenario)).sort(_catPagerSort).map(r => {
-      const code = _catPagerStoreCode(r.label);
-      return Object.assign({}, r, { shortLabel: code, name: '' });
-    });
-    const originalDescriptions = Array.from(descOrigMap.values()).map(r => _catPagerFinalizeEntry(r, prevCount, scenario)).filter(_catPagerRowHasAnyActivity).sort(_catPagerSort).filter(r => {
-      const lbl = String(r?.label || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
-      const hotDogCat = /HOT\s*DOG|HOTDOG/.test(String(catNorm || '').replace(/\s+/g,''));
-      if(hotDogCat && /TOPPINGS?\s*SOPAS?/.test(lbl)) return false;
-      return true;
-    });
-    const originalsByGroup = new Map();
-    originalDescriptions.forEach(r => {
-      const group = String(r.groupLabel || _catPagerCanonicalDescFamily(r.label) || '').trim() || 'Sin detalle';
-      if(!originalsByGroup.has(group)) originalsByGroup.set(group, []);
-      originalsByGroup.get(group).push(r);
-    });
-    const descriptions = Array.from(descMap.values()).map(r => _catPagerFinalizeEntry(r, prevCount, scenario)).filter(_catPagerRowHasAnyActivity).sort(_catPagerSort).map(r => {
-      const children = (originalsByGroup.get(String(r.label || '').trim()) || []).filter(_catPagerRowHasAnyActivity).slice().sort(_catPagerSort);
-      return Object.assign({}, r, { children });
-    }).filter(r => {
-      const lbl = String(r?.label || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
-      const hotDogCat = /HOT\s*DOG|HOTDOG/.test(String(catNorm || '').replace(/\s+/g,''));
-      if(hotDogCat && /TOPPINGS?\s*SOPAS?/.test(lbl)) return false;
-      return true;
-    });
-    const dayparts = Array.from(daypartMap.values()).map(r => _catPagerFinalizeEntry(r, prevCount, scenario)).sort((a,b) => daypartOrder.indexOf(a.label) - daypartOrder.indexOf(b.label));
-    const dows = Array.from(dowMap.values()).map(r => _catPagerFinalizeEntry(r, prevCount, scenario)).filter(r => String(r.label || '').trim() && String(r.label || '').trim() !== '0').sort((a,b) => Number(a.order || 99) - Number(b.order || 99));
-    const total = _catPagerFinalizeEntry(rows.reduce((acc, r) => {
-      const wk = String((r && r.periodKey) || '').trim();
-      const sales = Number((r && r.sales) || 0);
-      const qty = Number((r && r.qty) || 0);
-      const margin = Number((r && r.margin) || 0);
-      acc.salesPeriod[wk] = Number(acc.salesPeriod[wk] || 0) + sales;
-      acc.qtyPeriod[wk] = Number(acc.qtyPeriod[wk] || 0) + qty;
-      acc.marginPeriod[wk] = Number(acc.marginPeriod[wk] || 0) + margin;
-      if(wk === scenario.currentWeek){
-        acc.salesCur += sales; acc.qtyCur += qty; acc.marginCur += margin;
-      }
-      if(prevSet.has(wk)){
-        acc.salesPrev += sales; acc.qtyPrev += qty; acc.marginPrev += margin;
-      }
-      return acc;
-    }, _catPagerBuildEntry('Total general', periods)), prevCount, scenario);
-    return { category:cat, scenario, periods, prevCount, total, stores, descriptions, originalDescriptions, dayparts, dows, lyWeek };
-  }
-  function _catPagerSelectDriver(rows, field, direction){
-    const arr = (Array.isArray(rows) ? rows : []).filter(r => Number.isFinite(Number((r && r[field]) || NaN)));
-    if(!arr.length) return null;
-    const sorted = arr.slice().sort((a,b) => direction === 'down'
-      ? Number((a && a[field]) || 0) - Number((b && b[field]) || 0)
-      : Number((b && b[field]) || 0) - Number((a && a[field]) || 0));
-    return sorted[0] || null;
-  }
-  
-  function _catPagerInsights(model, slot){
-    const total = model && model.total;
-    const meta = _catPagerModeMeta(model, slot);
-    const mode = meta.mode;
-    const compareLabel = meta.label;
-    const ratioSalesField = mode === 'ly' ? 'ratioSalesLy' : 'ratioSales';
-    const deltaSalesField = mode === 'ly' ? 'deltaSalesLy' : 'deltaSales';
-    const ratioMarginField = mode === 'ly' ? 'ratioMarginLy' : 'ratioMargin';
-    const deltaMarginField = mode === 'ly' ? 'deltaMarginLy' : 'deltaMargin';
-    const dir = Number((total && total[ratioSalesField]) || 1) < 1 ? 'down' : (Number((total && total[ratioSalesField]) || 1) > 1 ? 'up' : 'flat');
-    const items = [];
-    if(total){
-      if(dir === 'down'){
-        items.push(`${model.category} cierra por debajo de ${compareLabel} con delta de ${innovationFsExecDeltaText(total[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(total[deltaSalesField])}.`);
-      }else if(dir === 'up'){
-        items.push(`${model.category} supera ${compareLabel} con delta de ${innovationFsExecDeltaText(total[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(total[deltaSalesField])}.`);
-      }else{
-        items.push(`${model.category} se mantiene estable vs ${compareLabel} con delta de ${innovationFsExecDeltaText(total[ratioSalesField])} y variación de venta de ${innovationFsExecSignedMoney(total[deltaSalesField])}.`);
-      }
-    }
-    const storeDriver = _catPagerSelectDriver(model && model.stores, deltaSalesField, dir === 'down' ? 'down' : 'up');
-    if(storeDriver){
-      items.push(`${storeDriver.shortLabel || _catPagerStoreCode(storeDriver.label)} es la tienda con mayor impacto con delta de ${innovationFsExecDeltaText(storeDriver[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(storeDriver[deltaSalesField])} vs ${compareLabel}.`);
-    }
-
-    const descRank = (Array.isArray(model && model.originalDescriptions) ? model.originalDescriptions : (Array.isArray(model && model.descriptions) ? model.descriptions : []))
-      .filter(r => Number.isFinite(Number(r && r[deltaSalesField])) && _catPagerRowHasMeaningfulImpact(r, 'sales'))
-      .slice()
-      .sort((a,b) => (dir === 'down' ? Number(a?.[deltaSalesField] || 0) - Number(b?.[deltaSalesField] || 0) : Number(b?.[deltaSalesField] || 0) - Number(a?.[deltaSalesField] || 0)));
-    const descDriver = descRank[0] || null;
-    const descDriver2 = descRank.find((r, idx) => idx > 0 && String(r?.label || '').trim() !== String(descDriver?.label || '').trim()) || null;
-    if(descDriver){
-      items.push(`En descripciones, ${descDriver.label} ${dir === 'down' ? 'es el principal detractor' : 'es el principal driver'} con delta de ${innovationFsExecDeltaText(descDriver[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(descDriver[deltaSalesField])} vs ${compareLabel}.`);
-    }
-    if(descDriver2){
-      items.push(`Como ${dir === 'down' ? 'segundo detractor' : 'segundo driver'}, ${descDriver2.label} ${dir === 'down' ? 'resta' : 'aporta'} un delta de ${innovationFsExecDeltaText(descDriver2[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(descDriver2[deltaSalesField])} vs ${compareLabel}.`);
-    }
-
-    const weeklyView = !(typeof innovationFsExecIsMonthly === 'function' && innovationFsExecIsMonthly());
-    if(weeklyView){
-      const dowDriver = _catPagerSelectDriver(model && model.dows, deltaSalesField, dir === 'down' ? 'down' : 'up');
-      if(dowDriver){
-        items.push(`Por día de semana, ${dowDriver.label} ${dir === 'down' ? 'presiona más el resultado' : 'marca el mayor efecto'} con delta de ${innovationFsExecDeltaText(dowDriver[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(dowDriver[deltaSalesField])} vs ${compareLabel}.`);
-      }
-    }
-
-    const dayDriver = _catPagerSelectDriver(model && model.dayparts, deltaSalesField, dir === 'down' ? 'down' : 'up');
-    if(dayDriver){
-      items.push(`Por horario Food Service, ${dayDriver.label} ${dir === 'down' ? 'presiona más el resultado' : 'marca el mayor efecto'} con delta de ${innovationFsExecDeltaText(dayDriver[ratioSalesField])} y venta de ${innovationFsExecSignedMoney(dayDriver[deltaSalesField])} vs ${compareLabel}.`);
-    }
-    const marginDriver = _catPagerSelectDriver((Array.isArray(model && model.originalDescriptions) ? model.originalDescriptions.filter(r => _catPagerRowHasMeaningfulImpact(r, 'margin')) : (Array.isArray(model && model.descriptions) ? model.descriptions.filter(r => _catPagerRowHasMeaningfulImpact(r, 'margin')) : [])), deltaMarginField, dir === 'down' ? 'down' : 'up');
-    if(marginDriver){
-      items.push(`En margen, ${marginDriver.label} ${dir === 'down' ? 'es el principal detractor' : 'habilita'} un delta de ${innovationFsExecDeltaText(marginDriver[ratioMarginField])} y margen de ${innovationFsExecSignedMoney(marginDriver[deltaMarginField])} vs ${compareLabel}.`);
-    }
-    return items.slice(0,7);
-  }
-
-  function _catPagerMetricValueText(v, money){
-    return money ? fmtMoney(Number(v || 0)) : fmtInt(Number(v || 0));
-  }
-  function _catPagerTableHtml(title, rows, periods, metricKey, currentKey, promKey, ratioKey, deltaKey, money, promCount, scenario, model, slot){
-    const safeRows = Array.isArray(rows) ? rows.slice() : [];
-    const cols = (Array.isArray(periods) ? periods.filter(Boolean) : []);
-    const curKey = String(currentKey || (scenario && scenario.currentWeek) || '').trim();
-    const lyKey = String((scenario && scenario.lyWeek) || '').trim();
-    const lwKey = String((scenario && scenario.lwWeek) || '').trim();
-    const metricSuffix = metricKey === 'qty' ? 'Qty' : (metricKey === 'margin' ? 'Margin' : 'Sales');
-    const ratioLwKey = 'ratio' + metricSuffix + 'Lw';
-    const ratioLyKey = 'ratio' + metricSuffix + 'Ly';
-    const deltaLyKey = 'delta' + metricSuffix + 'Ly';
-    const modeMeta = (model && typeof _catPagerModeMeta === 'function') ? _catPagerModeMeta(model, slot) : { mode:'prom' };
-    const mode = String(modeMeta && modeMeta.mode || 'prom').trim().toLowerCase() === 'ly' ? 'ly' : 'prom';
-    const promHead = (typeof innovationFsExecPromLabel === 'function') ? innovationFsExecPromLabel(Number(promCount || 8) || 8) : 'Prom';
-    const deltaPromHead = 'Δ vs ' + promHead;
-    const diffPromHead = money ? ('Dif vs ' + promHead + ' $') : ('Dif vs ' + promHead);
-    const diffLwHead = money ? 'Dif vs LW $' : 'Dif vs LW';
-    const deltaLyHead = 'Δ vs LY';
-    const diffLyHead = money ? 'Dif vs LY $' : 'Dif vs LY';
-    const esc = (v) => String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const periodHeadLabel = (p) => {
-      const key = String(p || '').trim();
-      if(mode === 'ly' && lyKey && key === lyKey) return 'LY';
-      return _catPagerPeriodLabel(key, true);
-    };
-
-    function rowCells(r, isChild){
-      const perMap = r[metricKey + 'Period'] || {};
-      const curVal = Number(curKey ? (perMap[curKey] || 0) : r[metricKey + 'Cur'] || 0);
-      const lwVal = Number(lwKey ? (perMap[lwKey] || 0) : 0);
-      const lyVal = Number(lyKey ? (perMap[lyKey] || 0) : 0);
-      const prom = Number(r[promKey] || 0);
-      const ratioProm = r[ratioKey];
-      const diffProm = Number(r[deltaKey] || 0);
-      const ratioLw = r[ratioLwKey];
-      const diffLw = curVal - lwVal;
-      const ratioLy = r[ratioLyKey];
-      const diffLy = Number(r[deltaLyKey] || (curVal - lyVal) || 0);
-      const cells = [];
-      cols.forEach(p => {
-        const val = Number(perMap[p] || 0);
-        cells.push('<td class="num">' + (money ? fmtMoney(val) : fmtInt(val)) + '</td>');
-      });
-      cells.push('<td class="num accentCol">' + (money ? fmtMoney(prom) : fmtInt(prom)) + '</td>');
-      cells.push('<td class="num accentCol">' + innovationFsExecDeltaText(ratioProm) + '</td>');
-      cells.push('<td class="num accentCol">' + (money ? innovationFsExecSignedMoney(diffProm) : innovationFsExecSignedInt(diffProm)) + '</td>');
-      cells.push('<td class="num accentCol">' + innovationFsExecDeltaText(ratioLw) + '</td>');
-      cells.push('<td class="num accentCol">' + (money ? innovationFsExecSignedMoney(diffLw) : innovationFsExecSignedInt(diffLw)) + '</td>');
-      cells.push('<td class="num accentCol">' + innovationFsExecDeltaText(ratioLy) + '</td>');
-      cells.push('<td class="num accentCol">' + (money ? innovationFsExecSignedMoney(diffLy) : innovationFsExecSignedInt(diffLy)) + '</td>');
-      return cells.join('');
-    }
-
-    const head = ['<tr><th>' + title + '</th>'];
-    cols.forEach(p => head.push('<th class="num">' + periodHeadLabel(p) + '</th>'));
-    head.push('<th class="num accentHead">' + promHead + '</th>');
-    head.push('<th class="num accentHead">' + deltaPromHead + '</th>');
-    head.push('<th class="num accentHead">' + diffPromHead + '</th>');
-    head.push('<th class="num accentHead">Δ vs LW</th>');
-    head.push('<th class="num accentHead">' + diffLwHead + '</th>');
-    head.push('<th class="num accentHead">' + deltaLyHead + '</th>');
-    head.push('<th class="num accentHead">' + diffLyHead + '</th></tr>');
-
-    let groupSeq = 0;
-    const body = safeRows.map(r => {
-      const label = String(r.label || '').trim();
-      const isTotal = /^(TOTAL GENERAL|TURNO AM|TURNO PM)$/i.test(label);
-      const children = Array.isArray(r.children) ? r.children.filter(ch => String(ch.label || '').trim() !== label) : [];
-      const canToggle = !isTotal && children.length > 1;
-      const groupId = canToggle ? ('cp_' + (++groupSeq) + '_' + metricKey) : '';
-      const parentClass = isTotal ? ' class="total"' : (canToggle ? ' class="innovationCatPagerFamilyRow"' : '');
-      const toggleBtn = canToggle ? '<button type="button" class="innovationCatPagerToggleBtn" data-toggle-group="' + groupId + '" aria-expanded="false" title="Expandir originales">+</button>' : '';
-      let html = '<tr' + parentClass + '><td><span class="innovationCatPagerLabelWrap">' + toggleBtn + '<span>' + esc(label) + '</span></span></td>' + rowCells(r, false) + '</tr>';
-      if(canToggle){
-        children.forEach(ch => {
-          html += '<tr class="innovationCatPagerChildRow" data-group-child="' + groupId + '" style="display:none"><td>' + esc(ch.label) + '</td>' + rowCells(ch, true) + '</tr>';
-        });
-      }
-      return html;
-    });
-
-    return '<div class="innovationCatPagerTableCard"><h5 class="innovationCatPagerTableTitle">' + title + '</h5><div class="innovationCatPagerTableWrap"><table class="innovationCatPagerTable"><thead>' + head.join('') + '</thead><tbody>' + body.join('') + '</tbody></table></div></div>';
-  }
-
-  
-  function _catPagerDaypartNotesHtml(model, slot){
+    const allRows = (typeof innovationFsExecBaseRows === 'function') ? innovationFsExecBapel, slot){
     const rows = _catPagerBuildDaypartTableRows(model);
     const meta = _catPagerModeMeta(model, slot);
     const compareLabel = meta.label;
@@ -65986,6 +63489,11 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   function fallbackTotalSales(months, stores){
     var st = stateObj();
     var out = arr(months).map(function(){ return 0; });
+    try{
+      if(typeof getChartTotalSalesForStores === 'function'){
+        return months.map(function(ym){ return n(getChartTotalSalesForStores(ym, stores)); });
+      }
+    }catch(_e){}
     try{
       var map = st && st._xfSummary && st._xfSummary.delivery && st._xfSummary.delivery.totalByStore ? st._xfSummary.delivery.totalByStore : (st && st.totalSalesByStoreMonth ? st.totalSalesByStoreMonth : null);
       if(map && typeof sumMapByStoresWeek === 'function') return months.map(function(ym){ return n(sumMapByStoresWeek(map, stores, ym)); });
