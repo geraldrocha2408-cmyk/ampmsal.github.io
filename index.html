@@ -8498,11 +8498,13 @@ function applyUnifiedModeUI(){
       const currentSel = el('currentMonth');
       const prevSel = el('prevMonths');
       const invSel = el('invWeeks');
+      const forceLatest = !!state._forceLatestPeriodOnLoad;
       if(currentSel){
         const opts = periods.map(m => ({value:m, label: isMonthlyReport() ? monthDisplay(m) : `${monthLabel(m)} • ${weekKeyDisplay(m)}`}));
         const prevCurrent = String(currentSel.value || '').trim();
         setSelectOptions(currentSel, opts);
-        if(prevCurrent && periods.includes(prevCurrent)) currentSel.value = prevCurrent;
+        if(forceLatest && periods.length) currentSel.value = periods[periods.length - 1];
+        else if(prevCurrent && periods.includes(prevCurrent)) currentSel.value = prevCurrent;
         else if(periods.length) currentSel.value = periods[periods.length - 1];
       }
       rebuildLyWeekOverrideOptions();
@@ -8518,6 +8520,7 @@ function applyUnifiedModeUI(){
         state.invWeeksManual = false;
         autoSelectInvWeeks();
       }
+      state._forceLatestPeriodOnLoad = false;
     }
 
     function updateFilterApplyState(){
@@ -8548,6 +8551,7 @@ function applyUnifiedModeUI(){
       mode: '—',
       reportMode: (localStorage.getItem('ampm_report_mode') || 'diario'),
       _basePeriods: [],
+      _forceLatestPeriodOnLoad: false,
       prd0BySupplierStore: new Map(),
       prd0ByStore: new Map(),
       prd0LostBySupplierStore: new Map(),
@@ -30439,6 +30443,7 @@ renderShareTable({
       syncUnifiedModePayload();
       try{ applyPaniniSalesScope(); }catch(e){ console.warn('PANINI filter apply failed', e); }
       state._basePeriods = (state.months || []).slice().sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
+      state._forceLatestPeriodOnLoad = true;
       rebuildPeriodSelectors();
 
       setSelectOptions(el('stores'), state.stores.map(s => ({value:s, label:s})));
