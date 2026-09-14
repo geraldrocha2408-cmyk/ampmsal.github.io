@@ -7651,6 +7651,44 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       });
       return Array.from(out.values()).sort((a,b)=> a.d - b.d || String(a.store).localeCompare(String(b.store)));
     }
+    function rebuildMtdHistoricalDailySalesRowsFromWorkbook(wb){
+      if(!wb) return [];
+      const candidates = ['Cubo_Sales_DetailHallazgos','Sales_Cal_Detail','Cubo_Sales_Fact','Cubo_Sales'];
+      for(const sheetName of candidates){
+        try{
+          if(!hasSheet(wb, sheetName)) continue;
+          const rs = sheetRows(wb, sheetName, {defval:null, raw:true});
+          if(!rs || !rs.length) continue;
+          const cols = Object.keys(rs[0] || {});
+          const cStore = pickCol(cols, ['Store','Store Name','store','Tienda']);
+          const cDate = pickCol(cols, ['Date Sold','Fecha Venta','Fecha','Date','Sale Date','Day Sold','Dia Venta']);
+          const cSales = pickCol(cols, ['Sales','Total Sales','TotalSales','sales','Venta','Ventas','Monto','Amount']);
+          const cBrand = pickCol(cols, ['Brand','Marca','brand']);
+          if(!cStore || !cDate || !cSales) continue;
+          const out = new Map();
+          for(const r of rs){
+            const store = String(r[cStore] ?? '').trim().toUpperCase();
+            if(!store) continue;
+            if(typeof isPaniniExcluded === 'function' && isPaniniExcluded() && cBrand && isPaniniBrand(r[cBrand])) continue;
+            let dt = null;
+            try{ dt = toDateTime(r[cDate]); }catch(_e){ dt = null; }
+            if(!dt || isNaN(dt.getTime())) continue;
+            const d = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+            const key = `${store}||${d.getTime()}`;
+            if(!out.has(key)) out.set(key, {d, store, sales:0});
+            out.get(key).sales += Number(r[cSales] || 0) || 0;
+          }
+          const built = Array.from(out.values()).sort((a,b)=> a.d - b.d || String(a.store).localeCompare(String(b.store)));
+          if(built.length){
+            try{ state._mtdHistoricalDailySource = sheetName; }catch(_e){}
+            return built;
+          }
+        }catch(e){
+          console.warn('MTD historical daily workbook parse warning', sheetName, e);
+        }
+      }
+      return [];
+    }
     function updatePaniniFilterUi(){
       const sel = el('paniniFilter');
       const mode = getPaniniFilterMode();
@@ -7684,6 +7722,15 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       state.cuboSalesDowRows = (mode === 'exclude') ? dowRowsRaw.filter(rowPassesPaniniFilter) : dowRowsRaw.slice();
       state.cuboTxRows = txRows;
       rebuildSalesMetricMapsFromRows(salesRows, txRows);
+      try{
+        const wbForMtd = state && state.__hallWorkbook ? state.__hallWorkbook : null;
+        const directDaily = rebuildMtdHistoricalDailySalesRowsFromWorkbook(wbForMtd);
+        const scopedDaily = rebuildDailySalesRowsFromFilteredDetail(salesRows, false);
+        state._mtdHistoricalDailySalesRows = directDaily.length ? directDaily : scopedDaily;
+      }catch(_e){
+        const scopedDaily = rebuildDailySalesRowsFromFilteredDetail(salesRows, false);
+        state._mtdHistoricalDailySalesRows = scopedDaily;
+      }
 
       const xfSalesRaw = Array.isArray(state._paniniRawMonthlyXfSalesRows) ? state._paniniRawMonthlyXfSalesRows : (Array.isArray(state.monthlyXfSalesRows) ? state.monthlyXfSalesRows : []);
       if(xfSalesRaw.length || Array.isArray(state.monthlyXfSalesRows)){
@@ -10178,7 +10225,7 @@ parseMetricDateRangesSheet(wb);
 
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                const date_sold = cDate ? String(r[cDate] ?? '').trim() : '';
+                const date_sold = cDate ? r[cDate] : '';
                 return (store && ym) ? {store, ym, date_sold, department, category, brand, daypart, dow, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
 
@@ -10223,7 +10270,7 @@ parseMetricDateRangesSheet(wb);
                 const delivery_channel = cDelCh ? String(r[cDelCh] ?? '').trim() : '';
                 const sales = Number(r[cSales] ?? 0) || 0;
                 const gross_margin = cGM ? (Number(r[cGM] ?? 0) || 0) : null;
-                const date_sold = cDate ? String(r[cDate] ?? '').trim() : '';
+                const date_sold = cDate ? r[cDate] : '';
                 return (store && ym) ? {store, ym, date_sold, department, category, brand, daypart, is_delivery, delivery_channel, sales, gross_margin} : null;
               }).filter(Boolean);
               if (cGM){
@@ -10234,6 +10281,19 @@ parseMetricDateRangesSheet(wb);
             }
           }
         } catch(e){ /* silent */ }
+      }
+
+      /* AMPM FIX — MTD LY por fecha calendario exacta.
+         Daily_Sales puede traer solo el año/corte actual. Conservamos además una serie diaria
+         histórica construida desde Cubo_Sales_DetailHallazgos para comparar, por ejemplo,
+         01-09-2026..10-09-2026 contra 01-09-2025..10-09-2025. */
+      try{
+        const directDaily = rebuildMtdHistoricalDailySalesRowsFromWorkbook(wb);
+        const modelDaily = rebuildDailySalesRowsFromFilteredDetail(state.cuboSalesRows || [], false);
+        state._mtdHistoricalDailySalesRows = directDaily.length ? directDaily : modelDaily;
+      }catch(e){
+        console.warn('MTD historical daily sales build warning', e);
+        state._mtdHistoricalDailySalesRows = rebuildDailySalesRowsFromFilteredDetail(state.cuboSalesRows || [], false);
       }
 
       if (hasTxFact){
@@ -11374,6 +11434,17 @@ try{
       }
       const s = String(v).trim();
       if(!s) return null;
+      /* Excel serials can arrive as strings from the robust XML loader (e.g. "45910" = 10/09/2025).
+         Parse them before falling through to Date(string), which does not understand Excel serial dates. */
+      if(/^\d{5}(?:\.\d+)?$/.test(s)){
+        const serial = Number(s);
+        if(serial >= 20000 && serial <= 80000 && typeof XLSX !== 'undefined' && XLSX.SSF && XLSX.SSF.parse_date_code){
+          try{
+            const d = XLSX.SSF.parse_date_code(serial);
+            if(d) return new Date(d.y, d.m-1, d.d, d.H||0, d.M||0, Math.floor(d.S||0));
+          }catch(_e){}
+        }
+      }
       let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
       if(m){
         const dd = Number(m[1]), mm = Number(m[2]), yy = Number(m[3]);
@@ -13583,9 +13654,15 @@ function projectionCutToMtd(projCal){
 }
 function calcProjectionCalendarCut(monthKey, storeList){
   const primaryRows = Array.isArray(state.dailySalesRows) ? state.dailySalesRows : [];
-  const fallbackRows = (Array.isArray(state._projectionDailySalesRows) && state._projectionDailySalesRows.length)
+  const historicalRows = (Array.isArray(state._mtdHistoricalDailySalesRows) && state._mtdHistoricalDailySalesRows.length)
+    ? state._mtdHistoricalDailySalesRows
+    : ((Array.isArray(state.cuboSalesRows) && state.cuboSalesRows.length)
+        ? rebuildDailySalesRowsFromFilteredDetail(state.cuboSalesRows, false)
+        : []);
+  const legacyFallbackRows = (Array.isArray(state._projectionDailySalesRows) && state._projectionDailySalesRows.length)
     ? state._projectionDailySalesRows
     : primaryRows;
+  const fallbackRows = historicalRows.length ? historicalRows : legacyFallbackRows;
   const currentRows = primaryRows.length ? primaryRows : fallbackRows;
   if(!monthKey || !currentRows.length) return null;
   const pm = parseMonthKeyParts(monthKey);
@@ -13685,18 +13762,27 @@ function calcProjectionCalendarCut(monthKey, storeList){
   return { salesMTD, salesActualMTD, salesLY_MTD, lyMonthTotal, lyPctToDate, projectionMonth, projVsLY, cutDate, cutDay, anchorDow, maxDate };
 }
 function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
-  const rows = Array.isArray(dailyRows) ? dailyRows : [];
-  if(!monthKey || !rows.length) return null;
+  const primaryRows = Array.isArray(dailyRows) ? dailyRows : [];
+  const historicalRows = (Array.isArray(state._mtdHistoricalDailySalesRows) && state._mtdHistoricalDailySalesRows.length)
+    ? state._mtdHistoricalDailySalesRows
+    : ((Array.isArray(state.cuboSalesRows) && state.cuboSalesRows.length)
+        ? rebuildDailySalesRowsFromFilteredDetail(state.cuboSalesRows, false)
+        : []);
+  const rowsForCurrent = primaryRows.length ? primaryRows : historicalRows;
+  if(!monthKey || !rowsForCurrent.length) return null;
   const pm = parseMonthKeyParts(monthKey);
   if(!pm) return null;
   const year = pm.y, month = pm.m;
   const monthEnd = new Date(year, month, 0);
   const lyMonthEnd = new Date(year - 1, month, 0);
   const storeSet = new Set((storeList && storeList.length ? storeList : state.stores).map(s=>String(s).trim().toUpperCase()));
+  const rowStore = (r)=>String((r && r.store) || '').trim().toUpperCase();
 
+  /* El corte MTD lo define la última fecha realmente cargada del mes actual.
+     Ej.: si la data llega al 10/09/2026, cutDate = 10/09/2026. */
   let maxDate = null;
-  for(const r of rows){
-    if(!r || !storeSet.has(String(r.store||'').trim().toUpperCase())) continue;
+  for(const r of rowsForCurrent){
+    if(!r || !storeSet.has(rowStore(r))) continue;
     const d = r.d;
     if(!(d instanceof Date) || isNaN(d)) continue;
     if(d.getFullYear()===year && d.getMonth()===(month-1) && d <= monthEnd){
@@ -13709,16 +13795,64 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
   const cutDate = new Date(year, month-1, cutDay);
   const lyCutDate = new Date(year-1, month-1, Math.min(cutDay, lyMonthEnd.getDate()));
 
-  let cur = 0, ly = 0;
-  for(const r of rows){
-    if(!r || !storeSet.has(String(r.store||'').trim().toUpperCase())) continue;
-    const d = r.d;
-    if(!(d instanceof Date) || isNaN(d)) continue;
-    const v = Number(r.sales || 0) || 0;
-    if(d.getFullYear()===year && d.getMonth()===(month-1) && d <= cutDate) cur += v;
-    if(d.getFullYear()===(year-1) && d.getMonth()===(month-1) && d <= lyCutDate) ly += v;
+  const sumWindow = (rows, targetYear, targetEndDate)=>{
+    let total = 0;
+    let matched = 0;
+    for(const r of (Array.isArray(rows) ? rows : [])){
+      if(!r || !storeSet.has(rowStore(r))) continue;
+      const d = r.d;
+      if(!(d instanceof Date) || isNaN(d)) continue;
+      if(d.getFullYear()===targetYear && d.getMonth()===(month-1) && d <= targetEndDate){
+        total += Number(r.sales || 0) || 0;
+        matched++;
+      }
+    }
+    return {total, matched};
+  };
+
+  const curRes = sumWindow(rowsForCurrent, year, cutDate);
+
+  /* Primero intentamos LY en Daily_Sales. Si no existe detalle LY allí, usamos el
+     histórico diario del Cubo_Sales_DetailHallazgos, manteniendo EXACTAMENTE el mismo
+     día de corte calendario: 01/mes/LY hasta dd/mes/LY. */
+  let lyRes = sumWindow(primaryRows, year - 1, lyCutDate);
+  let lySource = lyRes.matched > 0 ? 'Daily_Sales' : '';
+  if(lyRes.matched === 0 && historicalRows.length){
+    lyRes = sumWindow(historicalRows, year - 1, lyCutDate);
+    if(lyRes.matched > 0) lySource = String(state._mtdHistoricalDailySource || 'Histórico diario');
   }
-  return { cutDate, cutDay, cur, ly, delta: safeDiv(cur, ly) };
+  /* Último salvavidas: reconstruir directamente desde el workbook en el momento del cálculo.
+     Esto evita que un scope/modelo resumido sin Date Sold deje el LY en cero. */
+  if(lyRes.matched === 0){
+    try{
+      const wbNow = state && state.__hallWorkbook ? state.__hallWorkbook : null;
+      const directRows = rebuildMtdHistoricalDailySalesRowsFromWorkbook(wbNow);
+      if(directRows.length){
+        const retry = sumWindow(directRows, year - 1, lyCutDate);
+        if(retry.matched > 0){
+          lyRes = retry;
+          lySource = String(state._mtdHistoricalDailySource || 'Cubo_Sales_DetailHallazgos');
+          state._mtdHistoricalDailySalesRows = directRows;
+        }
+      }
+    }catch(e){ console.warn('MTD LY direct retry warning', e); }
+  }
+
+  const cur = Number(curRes.total || 0);
+  const ly = Number(lyRes.total || 0);
+  try{
+    console.info('MTD vs LY exact-date', {monthKey, cutDate, lyCutDate, stores:Array.from(storeSet), current:cur, ly, lySource, lyMatchedRows:lyRes.matched, historicalRows:historicalRows.length});
+  }catch(_e){}
+  return {
+    cutDate,
+    cutDay,
+    lyCutDate,
+    cur,
+    ly,
+    delta: safeDiv(cur, ly),
+    lySource,
+    lyMatchedDays: lyRes.matched
+  };
 }
 
     function refreshAll(){
@@ -28514,7 +28648,12 @@ const options = {
         const lyYm = lyIsoWeekKey(ym);
         const ly = stores.reduce((acc, st) => acc + Number(getS(st, lyYm) || 0), 0);
         const cur = Number(totals[i] || 0);
+        if (!(cur > 0)) return {ratio:null, note:'Sin TX actuales'};
         if (!(ly > 0)) return {ratio:null, note:'Sin base LY'};
+        if (isMonthlyReport()) {
+          if(isBlockedSbfLyMonth(ym, lyYm, 'sbf')) return {ratio:null, note:'Oculto: SBF sin base LY válida'};
+          return {ratio:(cur / ly), note:''};
+        }
         const guard = resolveMonthlyDeltaGuard({stores, monthKey: ym, lyKey: lyYm, lyVal: ly, getter: getS, metric:'sbf'});
         return guard.valid ? {ratio:(cur / ly), note:''} : {ratio:null, note:guard.note};
       });
@@ -28775,6 +28914,7 @@ const options = {
 
 
     const SBF_PROVIDER_ORDER = ['PEYA','PuntoXpress','Banpro','RECARGAS','RapiBac','N1CO','Western Union','Promerica','Loto','Aki Pago','Smart Ticket'];
+    const SBF_PUNTOXPRESS_CORE_PROVIDERS = new Set(['Promerica','N1CO','RapiBac','PuntoXpress','PEYA','Aki Pago']);
     const SBF_PROVIDER_THEME = {
       'PEYA': { bar:'#ED1C24', accent:'#d61f26' },
       'PuntoXpress': { bar:'#6D28D9', accent:'#7C3AED' },
@@ -29012,12 +29152,15 @@ const options = {
         return scopedRows.some(r => canonicalSbfProvider(r.provider) === provider);
       });
 
-      if(!visibleProviders.length){
+      const puntoXpressCoreRows = scopedRows.filter(r => SBF_PUNTOXPRESS_CORE_PROVIDERS.has(canonicalSbfProvider(r.provider)));
+      const hasPuntoXpressSummary = puntoXpressCoreRows.length > 0;
+
+      if(!visibleProviders.length && !hasPuntoXpressSummary){
         host.innerHTML = '<div class="muted" style="padding:10px 4px; font-weight:700">No hay datos suficientes para construir la tendencia SBF con los filtros actuales.</div>';
         return;
       }
 
-      host.innerHTML = visibleProviders.map(provider => {
+      const providerCardsHtml = visibleProviders.map(provider => {
         const theme = SBF_PROVIDER_THEME[provider] || { bar:'#11284A', accent:'#11284A' };
         const safeId = provider.replace(/[^A-Za-z0-9_-]+/g, '_');
         const subtitle = isMonthlyReport()
@@ -29035,6 +29178,20 @@ const options = {
             <div class="chartBottomRank" id="rank_sbf_provider_${safeId}"></div>
           </div>`;
       }).join('');
+
+      const dowValsSummary = parseDowFilterValues(getGlobalDowFilter());
+      const summaryTitle = (!isMonthlyReport() && dowValsSummary.length)
+        ? `PuntoXpress consolidado - ${getGlobalDowLabel()} SaS`
+        : 'PuntoXpress consolidado';
+      const summarySubtitle = 'Barras: TX consolidadas = Promerica + N1CO + RapiBac + PuntoXpress + PEYA + Aki Pago • Línea: Δ vs LY. Recargas conserva su gráfico independiente.';
+      const summaryCardHtml = hasPuntoXpressSummary ? `
+        <div class="chartCard sbf-provider-card sbf-puntoxpress-summary-card" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-top:4px solid #6D28D9; border-radius:18px; padding:14px; max-width:100%">
+          <div style="font-size:19px; font-weight:1000; color:#11284A; margin-bottom:4px; text-align:center">${summaryTitle}</div>
+          <div class="muted" style="margin-bottom:10px; text-align:center; white-space:normal">${summarySubtitle}</div>
+          <div style="position:relative; width:100%; height:350px"><canvas aria-label="PuntoXpress consolidado tendencia SBF" id="chart_sbf_puntoxpress_total"></canvas></div>
+        </div>` : '';
+
+      host.innerHTML = providerCardsHtml + summaryCardHtml;
 
       state.chartSbfProviderCards = {};
 
@@ -29056,7 +29213,11 @@ const options = {
           const lyKey = lyIsoWeekKey(pk);
           const ly = Number(lyVals[idx] || 0);
           const cur = Number(totals[idx] || 0);
-          if(!(ly > 0)) return null;
+          if(!(cur > 0) || !(ly > 0)) return null;
+          if(isMonthlyReport()) {
+            if(isBlockedSbfLyMonth(pk, lyKey, 'sbf')) return null;
+            return cur / ly;
+          }
           const guard = resolveMonthlyDeltaGuard({stores, monthKey: pk, lyKey, lyVal: ly, getter: null, metric:'sbf'});
           if(!guard.valid) return null;
           return cur / ly;
@@ -29195,6 +29356,185 @@ const options = {
           }catch(e){}
         });
       });
+
+      if(hasPuntoXpressSummary){
+        const summaryCanvas = document.getElementById('chart_sbf_puntoxpress_total');
+        if(summaryCanvas){
+          const puntoXpressTotals = periods.map(pk => puntoXpressCoreRows.reduce((acc, r) => acc + (String(r.ym || '').trim() === String(pk) ? Number(r.transactions || 0) : 0), 0));
+          const puntoXpressLyVals = periods.map(pk => {
+            const lyKey = lyIsoWeekKey(pk);
+            return puntoXpressCoreRows.reduce((acc, r) => acc + (String(r.ym || '').trim() === String(lyKey) ? Number(r.transactions || 0) : 0), 0);
+          });
+          const puntoXpressDeltas = periods.map((pk, idx) => {
+            if(!isMonthlyReport() && /-W01$/.test(String(pk || '').trim())) return null;
+            const lyKey = lyIsoWeekKey(pk);
+            const cur = Number(puntoXpressTotals[idx] || 0);
+            const ly = Number(puntoXpressLyVals[idx] || 0);
+            if(!(cur > 0) || !(ly > 0)) return null;
+            if(isMonthlyReport()) {
+              if(isBlockedSbfLyMonth(pk, lyKey, 'sbf')) return null;
+              return cur / ly;
+            }
+            const guard = resolveMonthlyDeltaGuard({stores, monthKey: pk, lyKey, lyVal: ly, getter: null, metric:'sbf'});
+            return guard.valid ? (cur / ly) : null;
+          });
+
+          const labels = periods.map(p => periodChartLabel(p));
+          const finiteAll = puntoXpressTotals.filter(v => Number.isFinite(Number(v))).map(Number);
+          const maxVal = finiteAll.length ? Math.max(...finiteAll) : 0;
+          const ySuggestedMax = maxVal > 0 ? Math.ceil(maxVal * 1.15) : 10;
+          const finiteDelta = puntoXpressDeltas.filter(v => v != null && Number.isFinite(Number(v))).map(Number);
+          const deltaMin = finiteDelta.length ? Math.min(...finiteDelta) : 0;
+          const deltaMax = finiteDelta.length ? Math.max(...finiteDelta) : 1;
+          const deltaPad = Math.max(0.15, (deltaMax - deltaMin) * 0.12);
+          let y1Min = deltaMin < 0 ? Math.floor((deltaMin - deltaPad) * 100) / 100 : 0;
+          let y1Max = Math.ceil((deltaMax + deltaPad) * 100) / 100;
+          if(y1Max <= y1Min) y1Max = y1Min + 1;
+
+          const summaryValueLabels = {
+            id:'sbfPuntoXpressSummaryValueLabels',
+            afterDatasetsDraw(chart){
+              const dsIndex = chart.data.datasets.findIndex(d => d.label === 'TX consolidado');
+              if(dsIndex < 0) return;
+              const meta = chart.getDatasetMeta(dsIndex);
+              if(meta.hidden || !meta?.data?.length) return;
+              const ds = chart.data.datasets[dsIndex];
+              const ctx = chart.ctx;
+              ctx.save();
+              ctx.font = '900 10px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              meta.data.forEach((bar, i) => {
+                const raw = Number(ds.data?.[i] || 0);
+                if(!(raw > 0)) return;
+                const p = bar.getProps(['x','y'], true);
+                ctx.fillStyle = '#11284A';
+                ctx.fillText(fmtInt(raw), p.x, Math.max((chart.chartArea?.top || 0) + 10, p.y - 5));
+              });
+              ctx.restore();
+            }
+          };
+
+          const summaryDeltaLabels = {
+            id:'sbfPuntoXpressSummaryDeltaLabels',
+            afterDatasetsDraw(chart){
+              const dsIndex = chart.data.datasets.findIndex(d => d.label === 'Δ vs LY');
+              if(dsIndex < 0) return;
+              const meta = chart.getDatasetMeta(dsIndex);
+              if(meta.hidden || !meta?.data?.length) return;
+              const ctx = chart.ctx;
+              ctx.save();
+              ctx.font = '800 10px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              meta.data.forEach((pt, i) => {
+                const raw = chart.data.datasets[dsIndex].data?.[i];
+                if(raw == null || !Number.isFinite(Number(raw))) return;
+                const txt = Number(raw).toFixed(2);
+                const p = pt.getProps(['x','y'], true);
+                const w = Math.max(32, ctx.measureText(txt).width + 12);
+                const h = 18;
+                const y = Math.max((chart.chartArea?.top || 0) + 2, p.y - 27);
+                const x = p.x - w / 2;
+                ctx.fillStyle = '#F58320';
+                ctx.beginPath();
+                if(typeof ctx.roundRect === 'function') ctx.roundRect(x, y, w, h, 6);
+                else ctx.rect(x, y, w, h);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(txt, p.x, y + h / 2 + 0.5);
+              });
+              ctx.restore();
+            }
+          };
+
+          const summaryChart = new Chart(summaryCanvas.getContext('2d'), {
+            type:'bar',
+            data:{
+              labels,
+              datasets:[
+                {
+                  type:'line',
+                  label:'Δ vs LY',
+                  data:puntoXpressDeltas,
+                  lyVals:puntoXpressLyVals,
+                  yAxisID:'y1',
+                  borderColor:'#F58320',
+                  backgroundColor:'#F58320',
+                  pointBackgroundColor:'#ffffff',
+                  pointBorderColor:'#F58320',
+                  pointBorderWidth:2,
+                  pointRadius:3,
+                  pointHoverRadius:4,
+                  spanGaps:false,
+                  tension:0.25,
+                  order:0
+                },
+                {
+                  type:'bar',
+                  label:'TX consolidado',
+                  data:puntoXpressTotals,
+                  backgroundColor:'#6D28D9',
+                  borderColor:'#6D28D9',
+                  borderWidth:0,
+                  borderRadius:8,
+                  barPercentage:0.78,
+                  categoryPercentage:0.78,
+                  order:1
+                }
+              ]
+            },
+            options:{
+              responsive:true,
+              maintainAspectRatio:false,
+              interaction:{mode:'index', intersect:false},
+              layout:{padding:{top:24, right:isMonthlyReport() ? 34 : 44}},
+              plugins:{
+                legend:{
+                  position:'bottom',
+                  labels:{color:'#11284A', boxWidth:18, boxHeight:12, padding:18, font:{weight:'800', size:11}}
+                },
+                tooltip:{
+                  mode:'index',
+                  intersect:false,
+                  callbacks:{
+                    title(items){
+                      const raw = items?.[0]?.label;
+                      return Array.isArray(raw) ? raw.join(' ') : String(raw || '');
+                    },
+                    label(ctx){
+                      const idx = ctx.dataIndex;
+                      if(ctx.dataset.label === 'TX consolidado') return `TX consolidado: ${fmtInt(Number(ctx.raw || 0))} TX`;
+                      const ratio = ctx.raw;
+                      const ly = Number(ctx.dataset.lyVals?.[idx] || 0);
+                      return `Δ vs LY: ${ratio == null ? '—' : Number(ratio).toFixed(2)} | LY: ${fmtInt(ly)}`;
+                    }
+                  }
+                }
+              },
+              scales:{
+                x:{ticks:{maxRotation:0, autoSkip:false, color:'#11284A', font:{size:10.5, weight:'700'}}, grid:{display:false}},
+                y:{
+                  beginAtZero:true,
+                  suggestedMax:ySuggestedMax,
+                  ticks:{color:'#11284A', font:{size:10.5, weight:'700'}, callback(v){ return Number(v).toLocaleString('en-US'); }},
+                  title:{display:true, text:'TX', color:'#11284A', font:{size:INNOVATION_UI.axisTitle, weight:'800'}}
+                },
+                y1:{
+                  position:'right',
+                  suggestedMin:y1Min,
+                  suggestedMax:y1Max,
+                  grid:{drawOnChartArea:false},
+                  ticks:{color:'#11284A', font:{size:10.5, weight:'700'}, callback(v){ return Number(v).toFixed(2); }},
+                  title:{display:true, text:'Δ vs LY', color:'#11284A', font:{size:INNOVATION_UI.axisTitle, weight:'800'}}
+                }
+              }
+            },
+            plugins:[summaryValueLabels, summaryDeltaLabels]
+          });
+          state.chartSbfProviderCards.__PuntoXpressConsolidado = summaryChart;
+        }
+      }
     }
 
 
@@ -43379,7 +43719,10 @@ function renderOnePager(storeList, currentYm, prevYms){
   }else{
     const mtdCutTxt = (salesMtd && salesMtd.cutDay) ? ` · Corte ${salesMtd.cutDay}` : '';
     opSetText('opCardDeliveryTitle', `Venta total MTD · ${scopeLabel}`);
-    opSetText('opCardDeliveryMeta', `Actual ${money(salesMtdCur)} · LY ${money(salesMtdLy)} · Delta ${Number.isFinite(salesMtdDelta) ? salesMtdDelta.toFixed(2) : '—'}${mtdCutTxt}${Number.isFinite(Number(metaMensual)) ? ` · Meta mensual ${money(metaMensual)}` : ''}`);
+    const lyCutTxt = (salesMtd && salesMtd.lyCutDate instanceof Date)
+      ? ` · LY al ${String(salesMtd.lyCutDate.getDate()).padStart(2,'0')}/${String(salesMtd.lyCutDate.getMonth()+1).padStart(2,'0')}/${salesMtd.lyCutDate.getFullYear()}`
+      : '';
+    opSetText('opCardDeliveryMeta', `Actual ${money(salesMtdCur)} · LY ${money(salesMtdLy)} · Delta ${Number.isFinite(salesMtdDelta) ? salesMtdDelta.toFixed(2) : '—'}${mtdCutTxt}${lyCutTxt}${Number.isFinite(Number(metaMensual)) ? ` · Meta mensual ${money(metaMensual)}` : ''}`);
     opMiniCompareChart('chartOpDeliveryTotal', 'chart_op_delivery_total', ['Total general'], salesMtdLy, salesMtdCur, salesMtdDelta, 'money', {compareLabel:'LY', lineLabel:'Delta MTD vs LY', metaValue: metaMensual});
   }
 
