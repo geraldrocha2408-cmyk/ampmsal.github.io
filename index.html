@@ -13720,29 +13720,38 @@ function calcProjectionCalendarCut(monthKey, storeList){
   const lyCutDay = Math.min(cutDay, lyMonthEnd.getDate());
   const lyCutDate = new Date(lyYear, month-1, lyCutDay);
 
-  const calcLyTotals = (rows)=>{
+  const calcLyTotals = (rows, store)=>{
     let salesLY_MTD = 0;
     let lyMonthTotal = 0;
+    let matched = 0;
     (Array.isArray(rows) ? rows : []).forEach(r=>{
-      if(!storeSet.has(rowStore(r))) return;
+      if(rowStore(r) !== store) return;
       const d = r && r.d;
       if(!(d instanceof Date) || isNaN(d)) return;
       if(d.getFullYear()===lyYear && d.getMonth()===(month-1)){
+        matched++;
         const v = Number(r.sales ?? 0) || 0;
         if(d <= lyMonthEnd) lyMonthTotal += v;
         if(d <= lyCutDate)  salesLY_MTD += v;
       }
     });
-    return {salesLY_MTD, lyMonthTotal};
+    return {salesLY_MTD, lyMonthTotal, matched};
   };
 
-  let lyTotals = calcLyTotals(currentRows);
-  if((lyTotals.lyMonthTotal <= 0 || lyTotals.salesLY_MTD <= 0) && fallbackRows.length && fallbackRows !== currentRows){
-    const rawLyTotals = calcLyTotals(fallbackRows);
-    if(rawLyTotals.lyMonthTotal > lyTotals.lyMonthTotal || rawLyTotals.salesLY_MTD > lyTotals.salesLY_MTD){
-      lyTotals = rawLyTotals;
+  // El detalle compacto puede tener fechas solo del año actual. No ocultar
+  // Daily_Sales histórico solo porque el detalle tiene filas de otro período.
+  // Resolver por tienda y usar una sola fuente por tienda evita duplicar el total.
+  const lyTotals = {salesLY_MTD:0, lyMonthTotal:0};
+  const lySources = Array.from(new Set([currentRows, historicalRows, legacyFallbackRows]));
+  storeSet.forEach(store=>{
+    for(const rows of lySources){
+      const totals = calcLyTotals(rows, store);
+      if(!totals.matched) continue;
+      lyTotals.salesLY_MTD += totals.salesLY_MTD;
+      lyTotals.lyMonthTotal += totals.lyMonthTotal;
+      break;
     }
-  }
+  });
   let salesLY_MTD = lyTotals.salesLY_MTD;
   let lyMonthTotal = lyTotals.lyMonthTotal;
   if(lyMonthTotal <= 0 && state.salesCalMonthByStore && typeof state.salesCalMonthByStore.forEach === 'function'){
