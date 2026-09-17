@@ -8365,8 +8365,11 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
             end = new Date(p.y, p.m, 0);
           }
         }else if(parseIsoWeekKey(key)){
-          start = isoWeekKeyDowToDate(key, 1);
-          end = isoWeekKeyDowToDate(key, 7);
+          // Una vista por día no necesita esperar al cierre del domingo.
+          // Para varios días, exigir cobertura hasta el último seleccionado.
+          const selectedDays = parseDowFilterValues(getGlobalDowFilter()).map(Number);
+          start = isoWeekKeyDowToDate(key, selectedDays.length ? Math.min(...selectedDays) : 1);
+          end = isoWeekKeyDowToDate(key, selectedDays.length ? Math.max(...selectedDays) : 7);
         }
         if(start && end){
           list.forEach(store => {
