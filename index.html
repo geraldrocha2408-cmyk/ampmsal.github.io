@@ -1895,6 +1895,17 @@ body.report-mode-mensual #sbf_provider_trend_cards{
   .innovationComboPieLegend{order:2; max-height:none; overflow:visible; padding-left:0;}
 }
 
+/* La leyenda de postres crece al incorporar sabores: no recortar a 392px. */
+.innovationGridComboRow:has(#chart_innovation_postres_parent){align-items:stretch;}
+.innovationGridComboRow:has(#chart_innovation_postres_parent) > .chartCard{height:auto; min-height:440px; align-self:stretch;}
+#innovationPostresPieBody{flex:0 0 auto; min-height:340px; grid-template-columns:minmax(0,1fr) minmax(0,1.08fr); align-items:center; overflow:visible;}
+#innovationPostresPieBody > .innovationChartWrap--combo-pie{height:340px; min-height:340px; align-self:center;}
+#innovationPostresPieLegend{align-self:center;}
+@media (max-width:1200px){
+  #innovationPostresPieBody{grid-template-columns:minmax(0,1fr);}
+  #innovationPostresPieLegend{padding-left:0;}
+}
+
 .deliveryStrategyGrid{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:16px; align-items:stretch;}
 .deliveryStrategyGrid > .chartCard{min-width:0; width:100%;}
 .deliveryInsightList{display:grid; grid-template-columns:1fr; gap:10px;}
@@ -13104,6 +13115,24 @@ try{
         });
       }catch(_e){ return false; }
     }
+    function getChartSelectedDaysValue(scope, type, prefix, periodKey){
+      const bucket = state.chartLong && state.chartLong[scope];
+      const maps = bucket && bucket[type];
+      if(!(maps instanceof Map)) return null;
+      // El histórico guarda cada día por separado, nunca claves como "1|2|3".
+      const selected = parseDowFilterValues(getGlobalDowFilter());
+      const days = selected.length ? selected : ['__ALL__'];
+      let found = false;
+      let total = 0;
+      days.forEach(dow=>{
+        const map = maps.get(`${prefix}||${dow}`);
+        if(map && map.has(periodKey)){
+          found = true;
+          total += Number(map.get(periodKey) || 0);
+        }
+      });
+      return found ? total : null;
+    }
     function getChartSalesValue(store, periodKey){
       const st = String(store || '').trim().toUpperCase();
       if(typeof isMonthlyReport === 'function' && isMonthlyReport() && typeof ventasMonthlyCalendarAuthorityAllowed === 'function' && ventasMonthlyCalendarAuthorityAllowed()){
@@ -13117,10 +13146,8 @@ try{
       const summaryFirst = chartXfSummaryShouldLead('ventas');
       if (summaryFirst && mapV && strictMapHas(mapV, st, periodKey)) return strictMapGet(mapV, st, periodKey);
       const type = chartLongPeriodType();
-      const bucket = state.chartLong && state.chartLong.sales ? state.chartLong.sales : null;
-      const key = `${st}||${chartLongDowKey()}`;
-      const map = bucket && bucket[type] instanceof Map ? bucket[type].get(key) : null;
-      if(map && map.has(periodKey)) return Number(map.get(periodKey) || 0);
+      const historical = getChartSelectedDaysValue('sales', type, st, periodKey);
+      if(historical != null) return historical;
       if (!summaryFirst && mapV && strictMapHas(mapV, st, periodKey)) return strictMapGet(mapV, st, periodKey);
       return getTotalSales(store, periodKey);
     }
@@ -13145,16 +13172,14 @@ try{
       const mapCh = state._xfSummary?.delivery?.delByChannel || null;
       if (summaryFirst && mapCh && !stores.length && strictMapHas(mapCh, ch, periodKey)) return strictMapGet(mapCh, ch, periodKey);
       const type = chartLongPeriodType();
-      const bucket = state.chartLong && state.chartLong.delivery ? state.chartLong.delivery : null;
-      const dow = chartLongDowKey();
       let found = false;
       let sum = 0;
       stores.forEach(store => {
-        const key = `${String(store || '').trim().toUpperCase()}||${ch}||${dow}`;
-        const map = bucket && bucket[type] instanceof Map ? bucket[type].get(key) : null;
-        if(map && map.has(periodKey)){
+        const prefix = `${String(store || '').trim().toUpperCase()}||${ch}`;
+        const historical = getChartSelectedDaysValue('delivery', type, prefix, periodKey);
+        if(historical != null){
           found = true;
-          sum += Number(map.get(periodKey) || 0);
+          sum += historical;
         }
       });
       if (found) return sum;
@@ -13177,10 +13202,8 @@ try{
       const summaryFirst = chartXfSummaryShouldLead('sbf');
       if (summaryFirst && mapS && strictMapHas(mapS, st, periodKey)) return strictMapGet(mapS, st, periodKey);
       const type = chartLongPeriodType();
-      const bucket = state.chartLong && state.chartLong.sbf ? state.chartLong.sbf : null;
-      const key = `${st}||${chartLongDowKey()}`;
-      const map = bucket && bucket[type] instanceof Map ? bucket[type].get(key) : null;
-      if(map && map.has(periodKey)) return Number(map.get(periodKey) || 0);
+      const historical = getChartSelectedDaysValue('sbf', type, st, periodKey);
+      if(historical != null) return historical;
       if (!summaryFirst && mapS && strictMapHas(mapS, st, periodKey)) return strictMapGet(mapS, st, periodKey);
       return getSbfTx(store, periodKey);
     }
@@ -61591,6 +61614,21 @@ function innovationOnePagerCreateBrandedShell(){
 
   const OTHER = { key:'otros_postres', label:'Otros postres', shortLabel:'Otros postres', color:'#7A8899' };
   const ITEMS = [
+    {
+      key:'vasito_tres_leches_melocoton', label:'Vasito Tres Leches Melocotón', shortLabel:'Tres Leches Melocotón', color:'#F29B62',
+      base:['Vasito Tres Leches Melocoton','FSI Vasito Tres Leches Melocot','FSI Vasito Tres Leches Melocoton'],
+      combo:[]
+    },
+    {
+      key:'vasito_tres_leches_fresa', label:'Vasito Tres Leches Fresa', shortLabel:'Tres Leches Fresa', color:'#D94F70',
+      base:['Vasito Tres Leches Fresa','FSI Vasito Tres Leches Fresa'],
+      combo:[]
+    },
+    {
+      key:'vasito_tres_leches_cafe', label:'Vasito Tres Leches Café', shortLabel:'Tres Leches Café', color:'#825C45',
+      base:['Vasito Tres Leches Café','FSI Vasito Tres Leches Café'],
+      combo:[]
+    },
     {
       key:'budin', label:'Budín', shortLabel:'Budín', color:'#005EA7',
       base:[
