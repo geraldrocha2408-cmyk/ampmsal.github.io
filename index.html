@@ -13856,6 +13856,28 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
     lyRes = sumWindow(historicalRows, year - 1, lyCutDate);
     if(lyRes.matched > 0) lySource = String(state._mtdHistoricalDailySource || 'Histórico diario');
   }
+  /* Al excluir PANINI se reconstruye la serie diaria desde el detalle compacto.
+     Ese detalle conserva fecha exacta para el período reciente, pero el histórico LY
+     puede quedar resumido sin fecha. Recuperar entonces LY desde Daily_Sales base evita
+     mostrar $0 y mantiene el mismo corte calendario definido por cutDate. */
+  if(lyRes.matched === 0){
+    const seenLySources = new Set([primaryRows, historicalRows]);
+    const lyFallbackSources = [
+      {rows: state._paniniRawDailySalesRows, label: 'Daily_Sales base'},
+      {rows: state._projectionDailySalesRows, label: 'Daily_Sales proyección'}
+    ];
+    for(const source of lyFallbackSources){
+      const rows = source && Array.isArray(source.rows) ? source.rows : [];
+      if(!rows.length || seenLySources.has(rows)) continue;
+      seenLySources.add(rows);
+      const retry = sumWindow(rows, year - 1, lyCutDate);
+      if(retry.matched > 0){
+        lyRes = retry;
+        lySource = source.label;
+        break;
+      }
+    }
+  }
   /* Último salvavidas: reconstruir directamente desde el workbook en el momento del cálculo.
      Esto evita que un scope/modelo resumido sin Date Sold deje el LY en cero. */
   if(lyRes.matched === 0){
