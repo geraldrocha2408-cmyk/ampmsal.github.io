@@ -13381,26 +13381,25 @@ function loadMonthlyQualityFromWorkbook(wb){
   state.monthCoverageSalesByStore = new Map();
   try{
     if(!wb) return;
-    const detailSheet = hasSheet(wb, 'Cubo_Sales_DetailHallazgos')
-      ? 'Cubo_Sales_DetailHallazgos'
-      : (hasSheet(wb, 'Sales_Cal_Detail') ? 'Sales_Cal_Detail' : '');
-    if(!detailSheet) return;
-    const rs = sheetRows(wb, detailSheet, {defval:null});
-    if(!rs || !rs.length) return;
-    const cols = Object.keys(rs[0] || {});
-    const cStore = pickCol(cols, ['Store','Store Name','store','Tienda']);
-    const cMonth = pickCol(cols, ['CalMonth','CalendarMonth','Month','Mes','Year Month']);
-    const cDate = pickCol(cols, ['Date Sold','Fecha','Date','Sale Date','Fecha Venta']);
-    if(!cStore || !cDate) return;
+    // Daily_Sales retains full historical coverage even when product detail is trimmed.
+    const coverageSheets = ['Daily_Sales', 'Cubo_Sales_DetailHallazgos', 'Sales_Cal_Detail'].filter(name => hasSheet(wb, name));
     const tmp = new Map();
-    rs.forEach(r=>{
-      const store = String(r[cStore] ?? '').trim().toUpperCase();
-      const monthKey = cMonth ? normalizeCalMonth(r[cMonth]) : normalizeCalMonth(r[cDate]);
-      const dateKey = normalizeDateOnly(r[cDate]);
-      if(!store || !monthKey || !dateKey) return;
-      const key = `${store}|${monthKey}`;
-      if(!tmp.has(key)) tmp.set(key, new Set());
-      tmp.get(key).add(dateKey);
+    coverageSheets.forEach(name => {
+      const rs = sheetRows(wb, name, {defval:null});
+      if(!rs || !rs.length) return;
+      const cols = Object.keys(rs[0] || {});
+      const cStore = pickCol(cols, ['Store','Store Name','store','Tienda']);
+      const cDate = pickCol(cols, ['Date Sold','Fecha','Date','Sale Date','Fecha Venta']);
+      if(!cStore || !cDate) return;
+      rs.forEach(r=>{
+        const store = String(r[cStore] ?? '').trim().toUpperCase();
+        const dateKey = normalizeDateOnly(r[cDate]);
+        const monthKey = dateKey.slice(0,7);
+        if(!store || !monthKey || !dateKey) return;
+        const key = `${store}|${monthKey}`;
+        if(!tmp.has(key)) tmp.set(key, new Set());
+        tmp.get(key).add(dateKey);
+      });
     });
     tmp.forEach((daysSet, key)=>{
       const sep = key.indexOf('|');
