@@ -5719,13 +5719,6 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
 <div class="innovationChartWrap innovationChartWrap--combo-pie"><canvas aria-label="Innovación postres por item padre" id="chart_innovation_postres_parent"></canvas></div>
 </div>
-</div><div class="innovationGrid innovationGridComboRow innovationNewDessertsGrid" data-tabpage="innovacion">
-<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
-<div class="innovationChartWrap innovationChartWrap--new-desserts-wide"><canvas aria-label="Innovacion productos nuevos Canoa y Arroz en Leche por item" id="chart_innovation_new_desserts_qty"></canvas></div>
-</div>
-<div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
-<div class="innovationChartWrap innovationChartWrap--new-desserts-pie"><canvas aria-label="Innovacion productos nuevos Canoa y Arroz en Leche por tienda" id="chart_innovation_new_desserts_store_pie"></canvas></div>
-</div>
 </div><div class="innovationFsExecSection" data-tabpage="innovacion" id="innovation_fs_exec_section">
 <div class="innovationFsExecHeader">
 <div class="innovationFsExecHeaderLeft">
@@ -36551,16 +36544,19 @@ function innovationWorkbookSheetRows(wb, sheetName){
     if(!wb.__rowsBySheet || typeof wb.__rowsBySheet !== 'object') wb.__rowsBySheet = {};
     const hydratedRows = Array.isArray(wb.__rowsBySheet[sheetName]) ? wb.__rowsBySheet[sheetName] : null;
     if(hydratedRows && hydratedRows.length) return hydratedRows.slice();
+    if(wb.Sheets && wb.Sheets[sheetName] && window.XLSX && XLSX.utils && typeof XLSX.utils.sheet_to_json === 'function'){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval:null, raw:false });
+      if(Array.isArray(rows) && rows.length){
+        wb.__rowsBySheet[sheetName] = rows;
+        return rows.slice();
+      }
+    }
     const synth = innovationSyntheticWorkbookRows(wb, sheetName);
     if(Array.isArray(synth) && synth.length){
       wb.__rowsBySheet[sheetName] = synth;
       return synth.slice();
     }
-    if(!wb.Sheets || !wb.Sheets[sheetName] || !window.XLSX || !XLSX.utils || typeof XLSX.utils.sheet_to_json !== 'function') return [];
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval:null, raw:false });
-    const out = Array.isArray(rows) ? rows : [];
-    if(out.length) wb.__rowsBySheet[sheetName] = out;
-    return out;
+    return [];
   }catch(e){ console.warn('Innovation workbook sheet read failed', sheetName, e); return []; }
 }
 function innovationFoodServiceDetailRows(){
@@ -71133,7 +71129,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     const model = aggregate(storeList);
     renderBigDogChart(model);
     renderHotDogEffectChart(model);
-    renderNewDesserts(storeList);
+    // Canoa y Arroz en Leche retirados de Innovacion.
   }
   function patchRender(){
     try{
