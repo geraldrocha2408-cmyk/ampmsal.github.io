@@ -53602,7 +53602,12 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
   };
   const INPUT_PREFIX = 'innovationWasteSimV8';
   const DATA = Array.isArray(window.__innovationWasteSimRows) ? window.__innovationWasteSimRows : [];
-  const ITEMS = Array.isArray(window.__innovationWasteSimItems) ? window.__innovationWasteSimItems : [];
+  const VASITOS = [
+    {label:'Vasito Tres Leches Café', sale:'AMPMAS00127', inventory:'AMPMFSI0137', aliases:['Vasito Tres Leches Café']},
+    {label:'Vasito Tres Leches Fresa', sale:'AMPMAS00125', inventory:'AMPMFSI0135', aliases:['Vasito Tres Leches Fresa']},
+    {label:'Vasito Tres Leches Melocoton', sale:'AMPMAS00126', inventory:'AMPMFSI0136', aliases:['Vasito Tres Leches Melocoton','Vasito Tres Leches Melocot']}
+  ];
+  const ITEMS = Array.from(new Set([...(Array.isArray(window.__innovationWasteSimItems) ? window.__innovationWasteSimItems : []), ...VASITOS.map(x=>x.label)]));
   const MONTHLY_SOURCE = (window.__innovationWasteMonthlySource && typeof window.__innovationWasteMonthlySource === 'object') ? window.__innovationWasteMonthlySource : {};
   const WEEK_INDEX = new Map();
   const MONTH_INDEX = new Map();
@@ -53900,6 +53905,16 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
     return out;
   }
 
+  function _wasteItemHit(r, conv, role){
+    const code = _txt(r?.['LookUp Code'] || r?.['Item Lookup Code'] || r?.['Lookup Code'] || r?.lookupCode || '').toUpperCase();
+    const raw = _itemNorm(r?.Description || r?.description || r?.Descripcion || r?.Producto || r?.Item);
+    const item = VASITOS.find(x => code === x.sale || code === x.inventory || x.aliases.some(d => raw === _itemNorm(d) || raw === _itemNorm('FSI '+d)));
+    if(!item) return conv.get(raw);
+    const fsi = code === item.inventory || raw.startsWith('FSI ');
+    if((role === 'sales' && fsi) || (role !== 'sales' && !fsi)) return {canon:'__SKIP_VASITO__',qty:1};
+    return {canon:item.label,qty:1};
+  }
+
   function _firstNumber(r, names){
     if(!r || !Array.isArray(names)) return 0;
     for(const name of names){
@@ -53929,6 +53944,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
     // La merma del simulador debe cuadrar contra el pivote operativo:
     // se usa el movimiento neto firmado del cubo, no el absoluto de solo pérdidas.
     // Esto permite que anulaciones/correcciones positivas compensen la merma real.
+    if(Math.abs(rawQty) > 1e-9 && Math.abs(rawAmount) > 1e-9) target.movementUnitCost = Math.abs(rawAmount / rawQty);
     if(Math.abs(rawQty) > 1e-9) target.qtyVencido += rawQty;
     if(Math.abs(rawAmount) > 1e-9) target.montoMerma += rawAmount;
     return (Math.abs(rawQty) > 1e-9 || Math.abs(rawAmount) > 1e-9);
@@ -53973,6 +53989,8 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
     })();
 
     const invRows = (() => {
+      const source = _sheetRows('Inventario_Items');
+      if(source.length) return source;
       try{
         if(Array.isArray(state?.invItems) && state.invItems.length) return state.invItems;
       }catch(_e){}
@@ -53993,7 +54011,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       if(week !== weekKey) return;
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'sales');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qtyMult = _safeNum(hit?.qty || 1) || 1;
@@ -54009,7 +54027,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       if(week !== weekKey) return;
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'merma');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qtyMult = _safeNum(hit?.qty || 1) || 1;
@@ -54025,11 +54043,16 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       else if(weekKey !== selectedWeek) return;
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion || r?.Producto || r?.Item);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'inventory');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qty = _safeNum(r?.qty ?? r?.quantity ?? r?.Quantity ?? r?.Qty ?? r?.Existencia ?? r?.['On Hand'] ?? r?.OnHand);
       stores[store][canon].existencia = (stores[store][canon].existencia == null ? 0 : stores[store][canon].existencia) + qty;
+      if(VASITOS.some(x=>x.label === canon)){
+        const rec = stores[store][canon];
+        rec.inventoryAmount = (rec.inventoryAmount || 0) + _firstNumber(r, ['Amount','amount']);
+        rec.avgCost = rec.existencia > 0 ? rec.inventoryAmount / rec.existencia : 0;
+      }
       sawPeriodData = true;
     });
 
@@ -54076,6 +54099,8 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
     })();
 
     const invRows = (() => {
+      const source = _sheetRows('Inventario_Items');
+      if(source.length) return source;
       try{
         if(Array.isArray(state?.invItems) && state.invItems.length) return state.invItems;
       }catch(_e){}
@@ -54099,7 +54124,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       if(month !== monthKey) return;
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'sales');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qtyMult = _safeNum(hit?.qty || 1) || 1;
@@ -54119,7 +54144,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       }
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'merma');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qtyMult = _safeNum(hit?.qty || 1) || 1;
@@ -54131,11 +54156,16 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
       if(!stores[store]) return;
       const rawDesc = _txt(r?.Description || r?.description || r?.Descripcion || r?.Producto || r?.Item);
       if(!rawDesc) return;
-      const hit = conv.get(_itemNorm(rawDesc));
+      const hit = _wasteItemHit(r, conv, 'inventory');
       const canon = _txt(hit?.canon || rawDesc);
       if(!itemSet.has(_itemNorm(canon))) return;
       const qty = _safeNum(r?.qty ?? r?.quantity ?? r?.Quantity ?? r?.Qty ?? r?.Existencia ?? r?.['On Hand'] ?? r?.OnHand);
       stores[store][canon].existencia = (stores[store][canon].existencia == null ? 0 : stores[store][canon].existencia) + qty;
+      if(VASITOS.some(x=>x.label === canon)){
+        const rec = stores[store][canon];
+        rec.inventoryAmount = (rec.inventoryAmount || 0) + _firstNumber(r, ['Amount','amount']);
+        rec.avgCost = rec.existencia > 0 ? rec.inventoryAmount / rec.existencia : 0;
+      }
     });
 
     if(!sawPeriodData){ DAILY_MONTH_CACHE.set(cacheKey, null); return null; }
@@ -54157,7 +54187,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
             qtyVencido: _safeNum(dailyRec.qtyVencido),
             montoMerma: _safeNum(dailyRec.montoMerma),
             avgSalePrice: Math.abs(_safeNum(dailyRec.qtySold)) > 1e-9 ? (_safeNum(dailyRec.sales) / _safeNum(dailyRec.qtySold)) : _safeNum(embedded.avgSalePrice),
-            avgCost: Math.abs(_safeNum(dailyRec.qtyVencido)) > 1e-9 ? (_safeNum(dailyRec.montoMerma) / _safeNum(dailyRec.qtyVencido)) : _safeNum(embedded.avgCost)
+            avgCost: Math.abs(_safeNum(dailyRec.qtyVencido)) > 1e-9 ? (_safeNum(dailyRec.montoMerma) / _safeNum(dailyRec.qtyVencido)) : (_safeNum(dailyRec.avgCost) || (VASITOS.some(x=>x.label === desc) ? _safeNum(dailyRec.movementUnitCost) : 0) || _safeNum(embedded.avgCost))
           };
         }
         const acc = { description:desc, existencia:0, sales:0, qtySold:0, qtyVencido:0, montoMerma:0, avgSalePrice:0, avgCost:0 };
@@ -54185,7 +54215,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
           qtyVencido: _safeNum(embedded.qtyVencido),
           montoMerma: _safeNum(embedded.montoMerma),
           avgSalePrice: Math.abs(_safeNum(sourceRec.qtySold)) > 1e-9 ? (_safeNum(sourceRec.sales) / _safeNum(sourceRec.qtySold)) : _safeNum(embedded.avgSalePrice),
-          avgCost: _safeNum(embedded.avgCost)
+          avgCost: (_safeNum(dailyRec.avgCost) || (VASITOS.some(x=>x.label === desc) ? _safeNum(dailyRec.movementUnitCost) : 0) || _safeNum(embedded.avgCost))
         };
       }
       return embedded;
@@ -54203,7 +54233,7 @@ window.__innovationWasteMonthlySource = {"2025-01": {"AMPM01": {"Budín Porción
           qtyVencido: _safeNum(dailyRec.qtyVencido),
           montoMerma: _safeNum(dailyRec.montoMerma),
           avgSalePrice: Math.abs(_safeNum(dailyRec.qtySold)) > 1e-9 ? (_safeNum(dailyRec.sales) / _safeNum(dailyRec.qtySold)) : _safeNum(embedded.avgSalePrice),
-          avgCost: Math.abs(_safeNum(dailyRec.qtyVencido)) > 1e-9 ? (_safeNum(dailyRec.montoMerma) / _safeNum(dailyRec.qtyVencido)) : _safeNum(embedded.avgCost)
+          avgCost: Math.abs(_safeNum(dailyRec.qtyVencido)) > 1e-9 ? (_safeNum(dailyRec.montoMerma) / _safeNum(dailyRec.qtyVencido)) : (_safeNum(dailyRec.avgCost) || (VASITOS.some(x=>x.label === desc) ? _safeNum(dailyRec.movementUnitCost) : 0) || _safeNum(embedded.avgCost))
         };
       }
       const acc = { description:desc, existencia:0, sales:0, qtySold:0, qtyVencido:0, montoMerma:0, avgSalePrice:0, avgCost:0 };
