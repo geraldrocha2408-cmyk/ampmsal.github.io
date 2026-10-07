@@ -5032,7 +5032,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <label id="labelPaniniFilter">6) Marca PANINI</label>
 <select id="paniniFilter">
 <option value="include">Incluir PANINI</option>
-<option value="exclude">Excluir PANINI</option>
+<option value="exclude" selected>Excluir PANINI</option>
 </select>
 <div class="fieldHint">Controla venta, delivery, One Pager y resumen para aislar el impacto de figuritas Mundial.</div>
 </div>
@@ -7544,7 +7544,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     }
     function getPaniniFilterMode(){
       const sel = el('paniniFilter');
-      const raw = String((sel && sel.value) || (state && state.paniniMode) || localStorage.getItem('ampm_panini_mode') || 'include').trim().toLowerCase();
+      const raw = String((sel && sel.value) || (state && state.paniniMode) || 'exclude').trim().toLowerCase();
       return raw === 'exclude' ? 'exclude' : 'include';
     }
     function isPaniniExcluded(){
@@ -8082,11 +8082,27 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       }catch(e){}
     }
 
+    function defaultCompletedInvPeriods(options, now = new Date()){
+      const ordered = Array.from(new Set(options.filter(Boolean))).sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const stores = Array.from(new Set((state.dailySalesRows || []).map(r=>String(r.store || '').trim().toUpperCase()).filter(Boolean)));
+      const coverage = stores.map(store=>_inventoryWeekCoverage(new Set([store])));
+      const complete = ordered.filter(key=>{
+        if(/^\d{4}-\d{2}$/.test(key)) return true;
+        const sunday = isoWeekKeyDowToDate(key, 7);
+        if(!sunday || sunday >= today) return false;
+        // When daily history covers this week, require all seven days per store.
+        if(coverage.some(map=>map.has(key))) return coverage.every(map=>(map.get(key)?.size || 0) >= 7);
+        return true;
+      });
+      return complete.slice(-DEFAULT_INV_PERIODS);
+    }
+
     function autoSelectInvWeeks(){
       const sel = el('invWeeks'); if(!sel) return;
       if (state.invWeeksManual){ normalizeInvWeeks(); return; }
       const opts = Array.from(sel.options).map(o=>o.value).filter(Boolean).sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
-      const periods = opts.slice(-Math.min(DEFAULT_INV_PERIODS, opts.length));
+      const periods = defaultCompletedInvPeriods(opts);
       const want = new Set(periods);
       Array.from(sel.options).forEach(opt => opt.selected = want.has(opt.value));
       state.invWeeksSelected = periods.slice();
@@ -8109,7 +8125,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       let chosen = getSelectedValues(sel).filter(v=>valid.has(v));
       chosen.sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
       if (!chosen.length){
-        chosen = ordered.slice(-Math.min(DEFAULT_INV_PERIODS, ordered.length));
+        chosen = defaultCompletedInvPeriods(ordered);
       }
       if (chosen.length > MAX_INV_PERIODS) chosen = chosen.slice(-MAX_INV_PERIODS);
       const want = new Set(chosen);
@@ -8121,7 +8137,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
       const sel = el('invWeeks'); if(!sel) return [];
       let weeks = getSelectedValues(sel);
       if(!weeks.length){
-        weeks = Array.from(sel.options).map(o=>o.value).filter(Boolean).sort((a,b)=>isoWeekNum(a)-isoWeekNum(b)).slice(-Math.min(DEFAULT_INV_PERIODS, Array.from(sel.options).length));
+        weeks = defaultCompletedInvPeriods(Array.from(sel.options).map(o=>o.value));
       }
       weeks.sort((a,b)=>isoWeekNum(a)-isoWeekNum(b));
       if(weeks.length > MAX_INV_PERIODS) weeks = weeks.slice(-MAX_INV_PERIODS);
@@ -8621,7 +8637,7 @@ function applyUnifiedModeUI(){
       months: [],
       channels: [],
       dowFilter: '__ALL__',
-      paniniMode: (localStorage.getItem('ampm_panini_mode') || 'include'),
+      paniniMode: 'exclude',
       _dowScoped: null,
       huesoRows: [],
       huesoCurrentRows: [],
