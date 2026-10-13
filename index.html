@@ -4756,7 +4756,8 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
     mercadeo: { password: 'AMPM2026*-*', label: 'Mercadeo' },
     AMPM01: { password: 'AMPM2026*-*', label: 'Gerente AMPM01' },
     AMPM02: { password: 'AMPM2026*-*', label: 'Gerente AMPM02' },
-    AMPM03: { password: 'AMPM2026*-*', label: 'Gerente AMPM03' }
+    AMPM03: { password: 'AMPM2026*-*', label: 'Gerente AMPM03' },
+    AMPM04: { password: 'AMPM2026*-*', label: 'Gerente AMPM04' }
   };
   var started = false;
 
@@ -5719,6 +5720,10 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="chartCard" style="background:var(--card); border:1px solid rgba(15,23,42,.10); border-radius:14px;">
 <div class="innovationChartWrap innovationChartWrap--combo-pie"><canvas aria-label="Innovación postres por item padre" id="chart_innovation_postres_parent"></canvas></div>
 </div>
+</div><div class="section" data-tabpage="innovacion"><h2>Lanzamiento Bebidas Calientes</h2></div>
+<div class="innovationGrid" data-tabpage="innovacion" id="innovationHotDrinksGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:16px">
+<div class="chartCard" style="background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:8px;min-width:0"><div style="position:relative;height:390px"><canvas id="chart_innovation_hot_drinks_qty" aria-label="Bebidas nuevas 8 oz en promociones 2x1"></canvas></div></div>
+<div class="chartCard" style="background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:8px;min-width:0"><div style="position:relative;height:390px"><canvas id="chart_innovation_hot_drinks_sales" aria-label="Aporte de nuevas bebidas a ventas de Bebidas Calientes"></canvas></div></div>
 </div><div class="innovationFsExecSection" data-tabpage="innovacion" id="innovation_fs_exec_section">
 <div class="innovationFsExecHeader">
 <div class="innovationFsExecHeaderLeft">
@@ -5969,7 +5974,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="xfChips" id="xfchips_delivery"></div>
 </div>
 <button class="btn mini secondary" id="xfclear_delivery" type="button">Limpiar filtros</button>
-</div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales Delivery</h2><div class="delSwitchHost" id="delSwitch_sales_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_del"><thead><tr id="thead_del"></tr></thead><tbody id="tbody_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Share Delivery (Delivery / Total)</h2><div class="delSwitchHost" id="delSwitch_share_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_delshare"><thead><tr id="thead_delshare"></tr></thead><tbody id="tbody_delshare"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales x Delivery</h2><div class="delSwitchHost" id="delSwitch_x_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_delx"><thead><tr id="thead_delx"></tr></thead><tbody id="tbody_delx"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales Sin Delivery</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_nodel"><thead><tr id="thead_nodel"></tr></thead><tbody id="tbody_nodel"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales FS x Categoría</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_fs_cat"><thead><tr id="thead_fs_cat"></tr></thead><tbody id="tbody_fs_cat"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>TX</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_tx_store"><thead><tr id="thead_tx_store"></tr></thead><tbody id="tbody_tx_store"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales HFS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales_daypart"><thead><tr id="thead_sales_daypart"></tr></thead><tbody id="tbody_sales_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales — por Día (1-7)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales_dow"><thead><tr id="thead_sales_dow"></tr></thead><tbody id="tbody_sales_dow"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales FS Delivery</h2><div class="delSwitchHost" id="delSwitch_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_sales_daypart_del"><thead><tr id="thead_sales_daypart_del"></tr></thead><tbody id="tbody_sales_daypart_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales FS Delivery — por Categoría</h2><div class="delSwitchHost" id="delSwitch_fs_cat_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_fs_cat_del"><thead><tr id="thead_fs_cat_del"></tr></thead><tbody id="tbody_fs_cat_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales Delivery — por Día (1-7)</h2><div class="delSwitchHost" id="delSwitch_sales_dow_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_sales_dow_del"><thead><tr id="thead_sales_dow_del"></tr></thead><tbody id="tbody_sales_dow_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>TX FS Delivery</h2><div class="delSwitchHost" id="delSwitch_tx_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_tx_daypart_del"><thead><tr id="thead_tx_daypart_del"></tr></thead><tbody id="tbody_tx_daypart_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Drop FS Delivery</h2><div class="delSwitchHost" id="delSwitch_drop_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_drop_daypart_del"><thead><tr id="thead_drop_daypart_del"></tr></thead><tbody id="tbody_drop_daypart_del"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>TX FS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_tx_daypart"><thead><tr id="thead_tx_daypart"></tr></thead><tbody id="tbody_tx_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Drop FS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_drop_daypart"><thead><tr id="thead_drop_daypart"></tr></thead><tbody id="tbody_drop_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento Sales</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_sales"><thead><tr id="thead_dept_sales"></tr></thead><tbody id="tbody_dept_sales"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento Margen ($)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_margin"><thead><tr id="thead_dept_margin"></tr></thead><tbody id="tbody_dept_margin"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento % Margen (GM / Sales)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_margin_pct"><thead><tr id="thead_dept_margin_pct"></tr></thead><tbody id="tbody_dept_margin_pct"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Departamento Sales Delivery</h2><div class="delSwitchHost" id="delSwitch_dept_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_dept_sales_del"><thead><tr id="thead_dept_sales_del"></tr></thead><tbody id="tbody_dept_sales_del"></tbody></table></div></div><div class="section" data-tabpage="ventas">
+</div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales Delivery</h2><div class="delSwitchHost" id="delSwitch_sales_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_del"><thead><tr id="thead_del"></tr></thead><tbody id="tbody_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Share Delivery (Delivery / Total)</h2><div class="delSwitchHost" id="delSwitch_share_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_delshare"><thead><tr id="thead_delshare"></tr></thead><tbody id="tbody_delshare"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales x Delivery</h2><div class="delSwitchHost" id="delSwitch_x_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_delx"><thead><tr id="thead_delx"></tr></thead><tbody id="tbody_delx"></tbody></table></div></div><div class="section" data-tabpage="delivery"><h2>Share de Delivery sobre venta total (%)</h2></div><div class="tablewrap" data-tabpage="delivery"><p class="muted" style="padding:8px 12px;margin:0">Venta de cada canal / venta total de las tiendas seleccionadas. Total: peso de ambos canales sobre toda la venta.</p><div style="overflow:auto"><table id="t_delx_share"><thead><tr id="thead_delx_share"></tr></thead><tbody id="tbody_delx_share"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales Sin Delivery</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_nodel"><thead><tr id="thead_nodel"></tr></thead><tbody id="tbody_nodel"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales FS x Categoría</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_fs_cat"><thead><tr id="thead_fs_cat"></tr></thead><tbody id="tbody_fs_cat"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>TX</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_tx_store"><thead><tr id="thead_tx_store"></tr></thead><tbody id="tbody_tx_store"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales HFS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales_daypart"><thead><tr id="thead_sales_daypart"></tr></thead><tbody id="tbody_sales_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Sales — por Día (1-7)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_sales_dow"><thead><tr id="thead_sales_dow"></tr></thead><tbody id="tbody_sales_dow"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales FS Delivery</h2><div class="delSwitchHost" id="delSwitch_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_sales_daypart_del"><thead><tr id="thead_sales_daypart_del"></tr></thead><tbody id="tbody_sales_daypart_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales FS Delivery — por Categoría</h2><div class="delSwitchHost" id="delSwitch_fs_cat_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_fs_cat_del"><thead><tr id="thead_fs_cat_del"></tr></thead><tbody id="tbody_fs_cat_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Sales Delivery — por Día (1-7)</h2><div class="delSwitchHost" id="delSwitch_sales_dow_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_sales_dow_del"><thead><tr id="thead_sales_dow_del"></tr></thead><tbody id="tbody_sales_dow_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>TX FS Delivery</h2><div class="delSwitchHost" id="delSwitch_tx_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_tx_daypart_del"><thead><tr id="thead_tx_daypart_del"></tr></thead><tbody id="tbody_tx_daypart_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Drop FS Delivery</h2><div class="delSwitchHost" id="delSwitch_drop_fs_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_drop_daypart_del"><thead><tr id="thead_drop_daypart_del"></tr></thead><tbody id="tbody_drop_daypart_del"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>TX FS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_tx_daypart"><thead><tr id="thead_tx_daypart"></tr></thead><tbody id="tbody_tx_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Drop FS</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_drop_daypart"><thead><tr id="thead_drop_daypart"></tr></thead><tbody id="tbody_drop_daypart"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento Sales</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_sales"><thead><tr id="thead_dept_sales"></tr></thead><tbody id="tbody_dept_sales"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento Margen ($)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_margin"><thead><tr id="thead_dept_margin"></tr></thead><tbody id="tbody_dept_margin"></tbody></table></div></div><div class="section" data-tabpage="ventas"><h2>Departamento % Margen (GM / Sales)</h2></div><div class="tablewrap" data-tabpage="ventas"><div style="overflow:auto"><table id="t_dept_margin_pct"><thead><tr id="thead_dept_margin_pct"></tr></thead><tbody id="tbody_dept_margin_pct"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Departamento Sales Delivery</h2><div class="delSwitchHost" id="delSwitch_dept_del"></div></div><div class="tablewrap" data-tabpage="delivery"><div style="overflow:auto"><table id="t_dept_sales_del"><thead><tr id="thead_dept_sales_del"></tr></thead><tbody id="tbody_dept_sales_del"></tbody></table></div></div><div class="section sectionHead" data-tabpage="delivery"><h2>Share Delivery por departamento (%)</h2><div class="delSwitchHost" id="delSwitch_dept_share_del"></div></div><div class="tablewrap" data-tabpage="delivery"><p class="muted" style="padding:8px 12px;margin:0">Venta delivery / venta total del mismo departamento. Aplica el canal seleccionado (Total, Uber Eats o Pedidos Ya). Diferencias en puntos porcentuales.</p><div style="overflow:auto"><table id="t_dept_share_del"><thead><tr id="thead_dept_share_del"></tr></thead><tbody id="tbody_dept_share_del"></tbody></table></div></div><div class="section" data-tabpage="ventas">
 <div class="section-head">
 <h2>Categoría Sales</h2>
 <div class="section-actions">
@@ -12446,7 +12451,19 @@ try{
       return td;
     }
 
-    function renderShareTable({theadId, tbodyId, currentYm, prevYms, rowNames, getNumByRowYm, getDenByRowYm, totalLabel='Total'}){
+    function renderDeliveryDepartmentShare({currentYm, prevYms, rowNames, delivery, allSales}){
+      // Include departments without delivery so the total denominator remains complete.
+      const departments = Array.from(new Set([...rowNames, ...allSales.keys()]));
+      renderShareTable({
+        theadId:'thead_dept_share_del', tbodyId:'tbody_dept_share_del',
+        currentYm, prevYms, rowNames:departments,
+        getNumByRowYm:(department,period)=>mapGet(delivery,department,period),
+        getDenByRowYm:(department,period)=>mapGet(allSales,department,period),
+        totalLabel:'Total'
+      });
+    }
+
+    function renderShareTable({theadId, tbodyId, currentYm, prevYms, rowNames, getNumByRowYm, getDenByRowYm, totalLabel='Total', totalDenByYm=null}){
       if (!currentYm) return;
       const prevSorted = resolvePrevPeriods(currentYm, prevYms);
       const {lmYm, lyYm, showPrevCompare} = buildHeaders(theadId, currentYm, prevSorted);
@@ -12507,7 +12524,7 @@ try{
 
       if (rows.length){
         const sumNumAt = (ym) => rows.reduce((s,r)=>s + Number(getNumByRowYm(r.name, ym) ?? 0), 0);
-        const sumDenAt = (ym) => rows.reduce((s,r)=>s + Number(getDenByRowYm(r.name, ym) ?? 0), 0);
+        const sumDenAt = (ym) => typeof totalDenByYm === 'function' ? Number(totalDenByYm(ym)) : rows.reduce((s,r)=>s + Number(getDenByRowYm(r.name, ym) ?? 0), 0);
 
         const lyNumT = sumNumAt(lyYm), lyDenT = sumDenAt(lyYm);
         const prevNumT = prevSorted.map(ym => sumNumAt(ym));
@@ -13989,6 +14006,11 @@ function calcMtdVsLyFromDaily(monthKey, storeList, dailyRows){
         renderMetricTable({ theadId:'thead_del',  tbodyId:'tbody_del',  currentYm, prevYms, rowNames: storeList, getValueByRowYm:(s,ym)=>getDDel(s,ym) });
         renderShareTable({ theadId:'thead_delshare', tbodyId:'tbody_delshare', currentYm, prevYms, rowNames: storeList, getNumByRowYm:(s,ym)=>getDDel(s,ym), getDenByRowYm:(s,ym)=>getDTotal(s,ym) });
         renderMetricTable({ theadId:'thead_delx', tbodyId:'tbody_delx', currentYm, prevYms, rowNames: delChannels,  getValueByRowYm:(ch,ym)=>getDCh(ch,ym) });
+        const shareChannels = Array.from(new Set([chPY, chUE]));
+        const channelShareTotal = ym=>storeList.reduce((sum,store)=>sum+Number(getDTotal(store,ym)||0),0);
+        renderShareTable({theadId:'thead_delx_share',tbodyId:'tbody_delx_share',currentYm,prevYms,
+          rowNames:shareChannels,getNumByRowYm:getDCh,getDenByRowYm:(_,ym)=>channelShareTotal(ym),
+          totalDenByYm:channelShareTotal});
       }
 
       if(activeTab === 'ventas' || activeTab === 'delivery' || activeTab === 'innovacion' || activeTab === 'sbf'){
@@ -29881,7 +29903,7 @@ function refreshExtraTables(currentYm, prevYms, storeList, scope){
       const renderSbfTab = (tabScope === 'all' || tabScope === 'sbf');
 
       if (!state.cuboSalesRows?.length && !state.cuboTxRows?.length && !state.cuboSalesDowRows?.length && !state.cuboSbfProvRows?.length && !state.cuboSbfDaypartRows?.length && !state.cuboSbfDowRows?.length && !state.cuboSbfHourRows?.length){
-        ['tbody_fs_cat','tbody_fs_cat_del','tbody_tx_store','tbody_sales_daypart','tbody_sales_dow','tbody_sales_dow_del','tbody_sales_daypart_del','tbody_tx_daypart','tbody_drop_daypart','tbody_tx_daypart_del','tbody_drop_daypart_del','tbody_dept_sales','tbody_dept_margin','tbody_dept_margin_pct','tbody_dept_sales_del','tbody_cat_sales','tbody_brand_sales','tbody_cat_sales_del','tbody_brand_sales_del','tbody_sbf_store','tbody_sbf_prov','tbody_sbf_daypart','tbody_sbf_dow','tbody_sbf_hour']
+        ['tbody_fs_cat','tbody_fs_cat_del','tbody_tx_store','tbody_sales_daypart','tbody_sales_dow','tbody_sales_dow_del','tbody_sales_daypart_del','tbody_tx_daypart','tbody_drop_daypart','tbody_tx_daypart_del','tbody_drop_daypart_del','tbody_dept_sales','tbody_dept_margin','tbody_dept_margin_pct','tbody_dept_sales_del','tbody_dept_share_del','tbody_cat_sales','tbody_brand_sales','tbody_cat_sales_del','tbody_brand_sales_del','tbody_sbf_store','tbody_sbf_prov','tbody_sbf_daypart','tbody_sbf_dow','tbody_sbf_hour']
           .forEach(id => { const t = el(id); if (t) t.innerHTML=''; });
         return;
       }
@@ -29970,6 +29992,8 @@ function refreshExtraTables(currentYm, prevYms, storeList, scope){
       const txByDayDel = buildMap(txRowsDelivery, r=>r.daypart, r=>r.transactions, storeSet, deliveryRowOk);
       const deptSales = buildMap(salesRowsVentas, r=>r.department, r=>r.sales, storeSet);
       const deptSalesDel = buildMap(salesRowsDelivery, r=>r.department, r=>r.sales, storeSet, deliveryRowOk);
+      // Same Delivery filters for the denominator, including all sales channels.
+      const deptSalesDeliveryBase = buildMap(salesRowsDelivery, r=>r.department, r=>r.sales, storeSet);
       const catSales = buildMap(salesRowsVentasNoCat, r=>r.category, r=>r.sales, storeSet);
       const brandSales = buildMap(salesRowsVentasNoBrand, r=>r.brand, r=>r.sales, storeSet);
       const catSalesDel = buildMap(salesRowsDeliveryNoCat, r=>r.category, r=>r.sales, storeSet, deliveryRowOk);
@@ -30384,6 +30408,8 @@ renderShareTable({
           getValueByYm:(ym)=> sumMembers(officeMembers, ym)
         });
       }
+
+      renderDeliveryDepartmentShare({currentYm, prevYms, rowNames:baseDeptsDel, delivery:deptSalesDel, allSales:deptSalesDeliveryBase});
 
       const allCats = Array.from(catSales.keys()).filter(k => k && k !== '(Sin dato)');
       allCats.sort((a,b)=> mapGet(catSales,b,currentYm) - mapGet(catSales,a,currentYm));
@@ -33286,10 +33312,10 @@ async function ensureJsPDF(){
 
 <style id="innovation-fs-margin-card-fill-v72-overrides">
 /* v72: hace que la card de Food Service Margin use toda su altura útil, sin aire muerto inferior */
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom{
+body #innovation_fs_exec_section .innovationFsExecGridBottom{
   align-items:start !important;
 }
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
+body #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child{
   align-self:start !important;
   display:flex !important;
   flex-direction:column !important;
@@ -33297,20 +33323,20 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   min-height:0 !important;
   max-height:none !important;
 }
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+body #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
   flex:0 0 360px !important;
   height:360px !important;
   min-height:360px !important;
   max-height:none !important;
   padding:8px 10px 6px !important;
 }
-body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
+body #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall canvas{
   width:100% !important;
   height:100% !important;
   max-height:none !important;
 }
 @media (max-width:1100px){
-  body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
+  body #innovation_fs_exec_section .innovationFsExecGridBottom > .chartCard:first-child .innovationFsExecCanvasWrap.is-tall{
     flex-basis:300px !important;
     height:300px !important;
     min-height:300px !important;
@@ -37065,7 +37091,10 @@ function innovationBuildSyntheticMonthlyCategoryRows(storeSet, periodKeys){
   })).filter(r => r.periodKey && (r.sales > 0));
 }
 function innovationResolveDetailRows(storeList){
-  const rowsBase = innovationSourceRows();
+  // Food Service history covers the full chart window; general detail is trimmed.
+  // Choose one source rather than concatenating overlapping sales.
+  const fsHistory = innovationFoodServiceDetailRows();
+  const rowsBase = Array.isArray(fsHistory) && fsHistory.length ? fsHistory : innovationSourceRows();
   const stores = Array.isArray(storeList) && storeList.length ? storeList.slice() : (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : (state.stores || []));
   const storeSet = new Set(Array.from(new Set(stores.map(s => String(s || '').trim().toUpperCase()).filter(Boolean))));
   const monthly = isMonthlyReport();
@@ -38016,6 +38045,75 @@ function innovationCreateLineValueLabelPlugin(){
     }
   };
 }
+function innovationHotDrinkIndex(description){
+  const key = innovationNormText(description);
+  const names = ['Cappuccino Sin Azucar 8 onz','Chocolate Caliente Kit Kat 8on','Cappuccino Sin Azucar 14 onz','Chocolate Caliente Kit Kat 14'];
+  return names.findIndex(name => innovationNormText(name) === key);
+}
+function innovationHotDrinksAggregate(rows, periods, stores, monthly){
+  const allowed = new Set(stores), positions = new Map(periods.map((p,i)=>[p,i]));
+  const qty = Array.from({length:2},()=>periods.map(()=>0));
+  const sales = Array.from({length:5},()=>periods.map(()=>0));
+  const qtyByStore = new Map(stores.map(store=>[store,Array.from({length:2},()=>periods.map(()=>0))]));
+  for(const r of rows){
+    const store = String(r.Store || r.store || '').trim().toUpperCase();
+    if(allowed.size && !allowed.has(store)) continue;
+    if(typeof rowMatchesGlobalDow === 'function' && !rowMatchesGlobalDow(r)) continue;
+    const i = positions.get(innovationPeriodKeyFromRow(r,monthly));
+    if(i === undefined) continue;
+    const product = innovationHotDrinkIndex(r.Description || r.description);
+    const category = innovationNormText(r.Category || r.category);
+    if(product < 0 && !category.startsWith('BEBIDASCALIENTES')) continue;
+    const amount = Number(r.Sales ?? r.sales ?? 0) || 0;
+    sales[product < 0 ? 0 : product+1][i] += amount;
+    if(product === 0 || product === 1){
+      const promos = (Number(r['Qty Sold'] ?? r.qty ?? 0) || 0)/2;
+      qty[product][i] += promos;
+      if(!qtyByStore.has(store)) qtyByStore.set(store,Array.from({length:2},()=>periods.map(()=>0)));
+      qtyByStore.get(store)[product][i] += promos;
+    }
+  }
+  return {qty,sales,qtyByStore};
+}
+function renderInnovationHotDrinks(storeList, periods){
+  if(typeof Chart === 'undefined') return;
+  const stores = storeList && storeList.length ? storeList : getSelectedStoresOrAll();
+  const agg = innovationHotDrinksAggregate(innovationFoodServiceDetailRows(), periods, stores, isMonthlyReport());
+  const names = ['Cappuccino sin azúcar 8 oz','Kit Kat 8 oz','Cappuccino sin azúcar 14 oz','Kit Kat 14 oz'];
+  const colors = ['#005EA7','#F58320','#0B8F49','#8B5CF6'];
+  const number = v=>Number(v).toLocaleString('en-US',{maximumFractionDigits:1});
+  for(const moneyMode of [false,true]){
+    const id = 'chart_innovation_hot_drinks_'+(moneyMode?'sales':'qty');
+    const canvas = document.getElementById(id); if(!canvas) continue;
+    const stateKey = moneyMode?'chartInnovationHotSales':'chartInnovationHotQty';
+    try{ state[stateKey]?.destroy?.(); }catch(_e){}
+    const labels = moneyMode?['Resto Bebidas Calientes','Cappuccino sin azúcar (8 + 14 oz)','Chocolate Kit Kat (8 + 14 oz)']:names.slice(0,2);
+    const palette = moneyMode?['#005EA7','#F58320','#A8A8A8']:colors;
+    const values = moneyMode?[agg.sales[0],periods.map((_,i)=>agg.sales[1][i]+agg.sales[3][i]),periods.map((_,i)=>agg.sales[2][i]+agg.sales[4][i])]:agg.qty;
+    const format = moneyMode?fmtMoney:number;
+    state[stateKey] = new Chart(canvas.getContext('2d'),{
+      type:'bar',data:{labels:periods.map(periodChartLabel),datasets:labels.map((label,i)=>({label,data:values[i],backgroundColor:palette[i],proBarThemeSkip:true,stack:'total'}))},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},layout:{padding:{top:4}},
+        plugins:{title:{display:true,text:innovationTitleLines(moneyMode?'Venta Bebidas Calientes — aporte del lanzamiento':'Nuevas bebidas 8 oz — equivalentes 2x1'),color:'#000',font:{size:14,weight:'bold'}},
+          legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': '+format(c.raw)+(moneyMode?'':' promos'),footer:items=>{
+            const i=items[0]?.dataIndex;if(i===undefined)return '';
+            const total=values.reduce((n,a)=>n+a[i],0);
+            const storePromos = ['Promociones 2x1 de 8 oz por tienda:'];
+            for(const [store, quantities] of Array.from(agg.qtyByStore.entries()).sort((a,b)=>a[0].localeCompare(b[0]))){
+              const cap = quantities[0][i], kit = quantities[1][i];
+              storePromos.push(store+': '+number(cap+kit)+' promos (Cappuccino: '+number(cap)+' · Kit Kat: '+number(kit)+')');
+            }
+            if(!moneyMode)return ['Total equivalentes: '+number(total),'Unidades registradas: '+number(total*2),...storePromos];
+            const launch=agg.sales.slice(1).reduce((n,a)=>n+a[i],0);
+            return ['Total categoría: '+fmtMoney(total),'Nuevas presentaciones: '+fmtMoney(launch),'Peso lanzamiento: '+(total?(launch/total*100).toFixed(1)+'%':'—'),...storePromos];
+          }}}},
+        scales:{x:{stacked:true,grid:{display:false},ticks:{maxRotation:0,autoSkip:false,color:'#11284A',font:{weight:'700',size:11}}},y:{stacked:true,beginAtZero:true,grid:{display:true,color:'rgba(15,23,42,.12)'},ticks:{callback:format,color:'#11284A',font:{weight:'700',size:11}}}}},
+      plugins:[innovationCreateTotalLabelPlugin(format,{fontSize:11,padX:4,boxH:14,radius:6})]
+    });
+  }
+}
+
 function renderInnovationDoubleChart(rows, periods, stores){
   const canvas = document.getElementById('chart_innovation_double');
   if(!canvas || typeof Chart === 'undefined') return;
@@ -41570,6 +41668,7 @@ function renderInnovationCharts(storeList){
   };
   runComboRender();
   renderInnovationPostresCharts(storeList, periods);
+  renderInnovationHotDrinks(storeList, periods);
   renderInnovationFoodServiceExecutive(storeList);
   renderInnovationFoodServiceDeliveryExecutive(storeList);
   renderInnovationFsCategoryOnePagers(storeList);
@@ -64828,6 +64927,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
   function hideTooltip(adapter){ try{ var tip=getTooltip(parts()); if(tip) tip.style.opacity='0'; if(adapter) adapter.$hoverIndex=-1; }catch(_e){} }
   function showTooltip(adapter, idx, clientX, clientY){
+    // The shared Delivery tooltip owns hover when its module is loaded.
+    if(window.__AMPM_DELIVERY_CUSTOM_TOOLTIP_LABELS_V4__){ hideTooltip(adapter); return; }
     try{
       var p = parts(); var tip = getTooltip(p); if(!tip || !adapter || idx < 0) return;
       var lbl = labelLines(adapter.data.labels[idx]).join(' ');
@@ -65363,6 +65464,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
   function hideTooltip(adapter){ try{ var tip=getTooltip(parts()); if(tip) tip.style.opacity='0'; if(adapter) adapter.$hoverIndex=-1; }catch(_e){} }
   function showTooltip(adapter, idx, clientX, clientY){
+    // The shared Delivery tooltip owns hover when its module is loaded.
+    if(window.__AMPM_DELIVERY_CUSTOM_TOOLTIP_LABELS_V4__){ hideTooltip(adapter); return; }
     try{
       var p = parts(); var tip = getTooltip(p); if(!tip || !adapter || idx < 0) return;
       var lbl = labelLines(adapter.data.labels[idx]).join(' ');
@@ -65941,6 +66044,8 @@ body.report-mode-mensual #innovation_fs_exec_section .innovationFsExecGridBottom
   }
   function hideTooltip(adapter){ try{ if(adapter && adapter.$tooltip) adapter.$tooltip.style.opacity='0'; }catch(_e){} }
   function showTooltip(adapter,i,clientX,clientY){
+    // The shared Delivery tooltip owns hover when its module is loaded.
+    if(window.__AMPM_DELIVERY_CUSTOM_TOOLTIP_LABELS_V4__){ hideTooltip(adapter); return; }
     try{
       if(!adapter.$tooltip){ var t=document.createElement('div'); t.className='ampmShareStoreTooltipV2'; document.body.appendChild(t); adapter.$tooltip=t; }
       var lbl=labelLines(adapter.data.labels[i]).join(' '), py=n(adapter.$seriesPy[i]), ue=n(adapter.$seriesUe[i]), total=py+ue, den=n(adapter.$totalSales[i]), sh=Number(adapter.$shareTotal[i]);
