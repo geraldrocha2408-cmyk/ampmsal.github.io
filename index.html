@@ -68679,7 +68679,96 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     // Se respeta el filtro de proveedor, pero no se recorta la matriz por tienda seleccionada.
     renderVapesTransferMatrix(byId('vapesTransferTable'), (al.invAll||invRows), (al.transAll||al.trans));
   }
-  async function render(){installTab();installPage();var dsel=byId('vapesDeliveryFilter');if(dsel)dsel.value=selectedDeliveryMode();var mode=byId('vapesModeBadge'),source=byId('vapesSourceBadge'),range=byId('vapesRangeBadge'),no=byId('vapesNoData');if(mode)mode.textContent=ptype().toUpperCase()+' · '+deliveryModeLabel(selectedDeliveryMode());var sheets=await loadSheets();if(source)source.textContent=sheets?(sheets.source||'Vapes_*'):'Sin hojas';if(!sheets||!(sheets.periods||[]).length){if(no){no.style.display='';no.innerHTML='Sin data para Vapes en el cubo cargado.<br>Ejecutá el <b>compactar_excel.py</b> nuevo para generar hojas <b>Vapes_Periods</b>, <b>Vapes_Supplier</b>, <b>Vapes_SKU</b>, <b>Vapes_Inventory</b>.';}destroyCharts();return;}if(no)no.style.display='none';updateSuppliers(sheets);var a=aggregate(sheets),al=alerts(sheets);if(range)range.textContent=a.periods.length?a.periods[0]+' → '+a.periods[a.periods.length-1]:'—';if(!a.periods.length){if(no){no.style.display='';no.textContent='Hay data Vapes, pero no coincide con el período o filtros activos.';}destroyCharts();return;}renderStatic(a,al);renderVapesBnsGoal(sheets);renderCharts(a);}
+
+  function vapesHistoryAnchor(t, raw){
+    var value=txt(raw),week=/^(\d{4})-[WS](\d{1,2})$/i.exec(value);
+    if(week){
+      if(t==='week')return week[1]+'-W'+String(Number(week[2])).padStart(2,'0');
+      var jan4=new Date(Date.UTC(Number(week[1]),0,4));
+      jan4.setUTCDate(jan4.getUTCDate()-((jan4.getUTCDay()+6)%7)+(Number(week[2])-1)*7+6);
+      var day=jan4.toISOString().slice(0,10);
+      return t==='day'?day:day.slice(0,7);
+    }
+    if(t==='day' && /^\d{4}-\d{2}$/.test(value)){
+      var parts=value.split('-');return new Date(Date.UTC(Number(parts[0]),Number(parts[1]),0)).toISOString().slice(0,10);
+    }
+    return value;
+  }
+  function vapesHistoryModel(sheets){
+    var t=ptype()==='month'?'month':'week', sf=selectedSuppliers(), stores=selectedStores(), set=new Set(stores), mode=selectedDeliveryMode();
+    var rows;
+    if(mode==='ALL'){
+      rows=(sheets.supplier||[]).filter(function(r){return rowPeriodType(r)===t && rowStore(r)!=='TOTALEMPRESA' && txt(val(r,['Store']))!=='Total empresa' && (!set.size||set.has(rowStore(r))) && (!sf.size||sf.has(supKey(r)));});
+    }else{
+      rows=wbRows('Cubo_Sales_DetailHallazgos').filter(function(r){return isVape(r)&&(!set.size||set.has(rowStore(r)))&&(!sf.size||sf.has(supKey(r)))&&vapesDeliveryPass(r,mode);});
+    }
+    var periodOf=function(r){return mode==='ALL'?rowPeriodKey(r):rowPeriodByType(r,t);};
+    var cur=vapesHistoryAnchor(t,currentPeriod()), periods=Array.from(new Set(rows.map(periodOf).filter(function(p){return p&&(!cur||pRank(p)<=pRank(cur));}))).sort(function(a,b){return pRank(a)-pRank(b);}).slice(-(t==='month'?15:52));
+    var groups={}, wanted=new Set(periods);
+    rows.forEach(function(r){var p=periodOf(r);if(!wanted.has(p))return;var k=supKey(r);if(!groups[k])groups[k]={name:txt(val(r,['Supplier','supplier','Proveedor']))||'Sin proveedor',sales:{},gm:{},qty:{}};var g=groups[k];g.sales[p]=(g.sales[p]||0)+rowSales(r);g.gm[p]=(g.gm[p]||0)+rowMargin(r);g.qty[p]=(g.qty[p]||0)+rowQty(r);});
+    var providers=Object.values(groups), order=function(name){name=norm(name);return /DISMO/.test(name)?0:/MYDAS/.test(name)?1:/GSL/.test(name)?2:/BNS/.test(name)?3:4;};
+    providers.sort(function(a,b){return order(a.name)-order(b.name)||a.name.localeCompare(b.name);});
+    return {periods:periods,providers:providers,type:t,scope:'Tiendas: '+(stores.join(', ')||'Todas')+' | Canal: '+deliveryModeLabel(mode)};
+  }
+  function vapesHistorySummary(model){
+    var period=vapesHistoryAnchor(model.type,currentPeriod());
+    var heading=(model.type==='month'?'Mes ':'Semana ')+period.replace('-W','-S');
+    var ranked=model.providers.map(function(g){return {name:g.name,sales:num(g.sales[period])};}).sort(function(a,b){return b.sales-a.sales;});
+    var total=ranked.reduce(function(sum,g){return sum+g.sales;},0),leader=ranked[0];
+    if(!leader || total<=0)return ['Buenos días',heading+': no hay ventas de Vapes registradas para los filtros seleccionados.'];
+    var stores=new Set(selectedStores()),sf=selectedSuppliers(),mode=selectedDeliveryMode();
+    var rawTotal=0,rawDelivery=0,leadTotal=0,leadDelivery=0;
+    wbRows('Cubo_Sales_DetailHallazgos').forEach(function(r){
+      if(!isVape(r)||rowPeriodByType(r,model.type)!==period)return;
+      if(stores.size&&!stores.has(rowStore(r)))return;
+      if(sf.size&&!sf.has(supKey(r)))return;
+      if(!vapesDeliveryPass(r,mode))return;
+      var sale=rowSales(r),delivery=rowIsDelivery(r);rawTotal+=sale;if(delivery)rawDelivery+=sale;
+      if(key(val(r,['Supplier','supplier','Proveedor']))===key(leader.name)){leadTotal+=sale;if(delivery)leadDelivery+=sale;}
+    });
+    var percent=function(n,d){return (100*n/d).toFixed(1)+'%';};
+    var lines=['Buenos días',heading+'. '+leader.name+' tiene la mayor venta, con un '+percent(leader.sales,total)+' de participación en la venta de Vapes.'];
+    if(leadTotal>0 && Math.abs(leadTotal-leader.sales)<=Math.max(.05,leader.sales*.001))lines[1]+=' El '+percent(leadDelivery,leadTotal)+' de la venta de este proveedor fue en delivery.';
+    else lines.push('Delivery del proveedor: no disponible; el detalle cargado no cubre toda la venta del período.');
+    if(rawTotal>0 && Math.abs(rawTotal-total)<=Math.max(.05,total*.001))lines.push('El '+percent(rawDelivery,rawTotal)+' de la venta total de Vapes fue en delivery.');
+    else lines.push('Share delivery total: no disponible; el detalle cargado no cubre toda la venta del período.');
+    return lines;
+  }
+  async function downloadVapesHistoryWord(){
+    var button=byId('vapesHistoryWord');button.disabled=true;
+    try{
+      captureVapesFilterSnapshot();
+      await render();
+      button.disabled=true;
+      if(!window.JSZip)await ensureScriptFromUrls(['https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'],function(){return !!window.JSZip;},'No se pudo cargar el generador Word.');
+      var z=new window.JSZip(),xml=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+      var body='',rels='',model=local.historyModel;
+      var summary=vapesHistorySummary(model).map(function(line){return '<w:p><w:r><w:t>'+xml(line)+'</w:t></w:r></w:p>';}).join('');
+      ['sales','gm','qty'].forEach(function(metric,i){
+        var canvas=byId('vapesHistory_'+metric),copy=document.createElement('canvas');copy.width=canvas.width;copy.height=canvas.height;var c=copy.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,copy.width,copy.height);c.drawImage(canvas,0,0);
+        z.file('word/media/chart'+i+'.png',copy.toDataURL('image/png').split(',')[1],{base64:true});
+        rels+='<Relationship Id="rId'+i+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart'+i+'.png"/>';
+        var title=['Ventas por proveedor','Margen en dólares por proveedor','Unidades por proveedor'][i],cx=9144000,cy=Math.round(cx*copy.height/copy.width);
+        body+='<w:p><w:pPr><w:spacing w:before="240" w:after="160"/><w:keepNext/>'+(i?'<w:pageBreakBefore/>':'')+'</w:pPr><w:r><w:rPr><w:b/><w:sz w:val="30"/></w:rPr><w:t>Vapes AMPM SAL '+xml(title)+'</w:t></w:r></w:p><w:p><w:r><w:t>'+xml(model.scope+' | '+model.periods[0]+' a '+model.periods[model.periods.length-1])+'</w:t></w:r></w:p>'+(i===0?summary:'')+'<w:p><w:pPr><w:spacing w:before="360" w:after="480"/><w:keepLines/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+(i+1)+'" name="Grafica '+(i+1)+'"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+(i+1)+'" name="chart.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId'+i+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+      });
+      z.file('[Content_Types].xml','<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+      z.file('_rels/.rels','<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="doc" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+      z.file('word/_rels/document.xml.rels','<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>');
+      z.file('word/document.xml','<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+body+'<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720"/></w:sectPr></w:body></w:document>');
+      var blob=await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Vapes_AMPM_'+currentPeriod()+'.docx';link.click();setTimeout(function(){URL.revokeObjectURL(url);},10000);
+    }catch(e){alert('No se pudo descargar Word: '+e.message);}finally{button.disabled=false;}
+  }
+  function renderVapesHistory(sheets){
+    var root=document.querySelector('.vapesRoot');if(!root)return;
+    var section=byId('vapesHistorySection');if(!section){section=document.createElement('section');section.id='vapesHistorySection';section.innerHTML='<div class="vapesCardHead"><h3>Histórico Vapes por proveedor</h3><button type="button" class="btn" style="width:auto;flex:0 0 auto" id="vapesHistoryWord">Descargar Word</button></div><p id="vapesHistoryScope"></p>'+['sales','gm','qty'].map(function(k){return '<div style="background:#fff;border-radius:14px;padding:14px;margin:14px 0"><div style="height:430px;position:relative"><canvas id="vapesHistory_'+k+'"></canvas></div></div>';}).join('');root.appendChild(section);byId('vapesHistoryWord').onclick=downloadVapesHistoryWord;}
+    var model=vapesHistoryModel(sheets);local.historyModel=model;byId('vapesHistoryScope').textContent=model.scope+' · Hasta 52 períodos disponibles (15 en mensual)';byId('vapesHistoryWord').disabled=!model.periods.length;
+    ['sales','gm','qty'].forEach(function(metric,j){var id='vapesHistory_'+metric;try{charts[id].destroy();}catch(e){}var palette=[C.blue,C.orange,'#A5A5A5','#FFC000','#7C3AED'];var color=function(name,i){var n=norm(name);return /BNS/.test(n)?C.blue:/MYDAS/.test(n)?C.orange:/GSL/.test(n)?'#A5A5A5':/DISMO/.test(n)?'#FFC000':palette[i%palette.length];};
+      var totals=model.periods.map(function(p){return model.providers.reduce(function(sum,g){return sum+(g[metric][p]||0);},0);});
+      charts[id]=new Chart(byId(id).getContext('2d'),{type:'bar',data:{labels:model.periods.map(function(p){var m=p.match(/(\d{4})-W(\d+)/);return m?['S'+m[2],m[1]]:p;}),datasets:model.providers.map(function(g,i){return {label:g.name,data:model.periods.map(function(p){return g[metric][p]||0;}),backgroundColor:color(g.name,i),proBarThemeSkip:true};})},options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{title:{display:true,text:['Vapes Sales $','Vapes Margen $','Vapes QTY'][j],color:'#000',font:{weight:'bold',size:18}},legend:{position:'bottom',labels:{color:'#000',font:{weight:'bold',size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(metric==='qty'?fint(c.raw):money(c.raw));},footer:function(items){return items.length?'Total: '+(metric==='qty'?fint(totals[items[0].dataIndex]):money(totals[items[0].dataIndex])):'';}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#000',font:{weight:'bold',size:10},maxRotation:0,autoSkip:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#000',font:{weight:'bold',size:11},callback:function(v){return metric==='qty'?fint(v):money(v);}}}}},plugins:[{id:'historyTotals',afterDatasetsDraw:function(chart){var ctx=chart.ctx;ctx.save();ctx.fillStyle='#000';ctx.font='bold 10px Arial';ctx.textAlign='center';totals.forEach(function(v,i){if(!v)return;ctx.fillText(fint(v),chart.scales.x.getPixelForValue(i),chart.scales.y.getPixelForValue(v)-7);});ctx.restore();}}]});
+    });
+  }
+
+  async function render(){installTab();installPage();var dsel=byId('vapesDeliveryFilter');if(dsel)dsel.value=selectedDeliveryMode();var mode=byId('vapesModeBadge'),source=byId('vapesSourceBadge'),range=byId('vapesRangeBadge'),no=byId('vapesNoData');if(mode)mode.textContent=ptype().toUpperCase()+' · '+deliveryModeLabel(selectedDeliveryMode());var sheets=await loadSheets();if(source)source.textContent=sheets?(sheets.source||'Vapes_*'):'Sin hojas';if(!sheets||!(sheets.periods||[]).length){if(no){no.style.display='';no.innerHTML='Sin data para Vapes en el cubo cargado.<br>Ejecutá el <b>compactar_excel.py</b> nuevo para generar hojas <b>Vapes_Periods</b>, <b>Vapes_Supplier</b>, <b>Vapes_SKU</b>, <b>Vapes_Inventory</b>.';}destroyCharts();return;}if(no)no.style.display='none';updateSuppliers(sheets);var a=aggregate(sheets),al=alerts(sheets);if(range)range.textContent=a.periods.length?a.periods[0]+' → '+a.periods[a.periods.length-1]:'—';if(!a.periods.length){if(no){no.style.display='';no.textContent='Hay data Vapes, pero no coincide con el período o filtros activos.';}destroyCharts();return;}renderStatic(a,al);renderVapesBnsGoal(sheets);renderCharts(a);renderVapesHistory(sheets);}
   function reset(){local.sheets=null;local.stamp=null;}
   function schedule(ms){clearTimeout(local.timer);local.timer=setTimeout(function(){render().catch(function(e){console.warn('Vapes render error',e);});},ms==null?120:ms);}
   function bind(){window.addEventListener('ampm:fileloaded',function(){captureVapesFilterSnapshot();reset();local.fallback=null;local.fallbackStamp=null;schedule(160);});window.addEventListener('ampm:tabshown',function(e){if(txt(e.detail&&e.detail.tab)==='vapes')schedule(80);});['reportMode','currentMonth','prevMonths','stores','dowFilter'].forEach(function(id){var n=byId(id);if(n)n.addEventListener('change',function(){local.pendingGlobalFilter=true;},true);});document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')){setTimeout(function(){local.pendingGlobalFilter=false;local.pendingSupplierFilter=false;captureVapesFilterSnapshot();reset();schedule(20);},90);}},true);setTimeout(function(){schedule(0);},1000);}
