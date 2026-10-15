@@ -68764,7 +68764,28 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     var model=vapesHistoryModel(sheets);local.historyModel=model;byId('vapesHistoryScope').textContent=model.scope+' · Hasta 52 períodos disponibles (15 en mensual)';byId('vapesHistoryWord').disabled=!model.periods.length;
     ['sales','gm','qty'].forEach(function(metric,j){var id='vapesHistory_'+metric;try{charts[id].destroy();}catch(e){}var palette=[C.blue,C.orange,'#A5A5A5','#FFC000','#7C3AED'];var color=function(name,i){var n=norm(name);return /BNS/.test(n)?C.blue:/MYDAS/.test(n)?C.orange:/GSL/.test(n)?'#A5A5A5':/DISMO/.test(n)?'#FFC000':palette[i%palette.length];};
       var totals=model.periods.map(function(p){return model.providers.reduce(function(sum,g){return sum+(g[metric][p]||0);},0);});
-      charts[id]=new Chart(byId(id).getContext('2d'),{type:'bar',data:{labels:model.periods.map(function(p){var m=p.match(/(\d{4})-W(\d+)/);return m?['S'+m[2],m[1]]:p;}),datasets:model.providers.map(function(g,i){return {label:g.name,data:model.periods.map(function(p){return g[metric][p]||0;}),backgroundColor:color(g.name,i),proBarThemeSkip:true};})},options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{title:{display:true,text:['Vapes Sales $','Vapes Margen $','Vapes QTY'][j],color:'#000',font:{weight:'bold',size:18}},legend:{position:'bottom',labels:{color:'#000',font:{weight:'bold',size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(metric==='qty'?fint(c.raw):money(c.raw));},footer:function(items){return items.length?'Total: '+(metric==='qty'?fint(totals[items[0].dataIndex]):money(totals[items[0].dataIndex])):'';}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#000',font:{weight:'bold',size:10},maxRotation:0,autoSkip:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#000',font:{weight:'bold',size:11},callback:function(v){return metric==='qty'?fint(v):money(v);}}}}},plugins:[{id:'historyTotals',afterDatasetsDraw:function(chart){var ctx=chart.ctx;ctx.save();ctx.fillStyle='#000';ctx.font='bold 10px Arial';ctx.textAlign='center';totals.forEach(function(v,i){if(!v)return;ctx.fillText(fint(v),chart.scales.x.getPixelForValue(i),chart.scales.y.getPixelForValue(v)-7);});ctx.restore();}}]});
+      charts[id]=new Chart(byId(id).getContext('2d'),{type:'bar',data:{labels:model.periods.map(function(p){var m=p.match(/(\d{4})-W(\d+)/);return m?['S'+m[2],m[1]]:p;}),datasets:model.providers.map(function(g,i){return {label:g.name,data:model.periods.map(function(p){return g[metric][p]||0;}),backgroundColor:color(g.name,i),proBarThemeSkip:true};})},options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{title:{display:true,text:['Vapes Sales $','Vapes Margen $','Vapes QTY'][j],color:'#000',font:{weight:'bold',size:18}},legend:{position:'bottom',labels:{color:'#000',font:{weight:'bold',size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(metric==='qty'?fint(c.raw):money(c.raw))+' · '+(totals[c.dataIndex]?(num(c.raw)/totals[c.dataIndex]*100).toFixed(1)+'%':'—');},footer:function(items){return items.length?'Total: '+(metric==='qty'?fint(totals[items[0].dataIndex]):money(totals[items[0].dataIndex])):'';}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#000',font:{weight:'bold',size:10},maxRotation:0,autoSkip:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#000',font:{weight:'bold',size:11},callback:function(v){return metric==='qty'?fint(v):money(v);}}}}},plugins:[{id:'historyTotals',afterDatasetsDraw:function(chart){
+        var ctx=chart.ctx;ctx.save();ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+        function badge(lines,x,y,bg,fg){
+          var width=Math.max.apply(null,lines.map(function(t){return ctx.measureText(t).width;}))+8,height=lines.length*11+4;
+          ctx.fillStyle=bg;ctx.fillRect(x-width/2,y-height/2,width,height);ctx.fillStyle=fg;
+          lines.forEach(function(t,k){ctx.fillText(t,x,y+(k-(lines.length-1)/2)*11);});
+        }
+        totals.forEach(function(v,i){if(!v)return;badge([fint(v)],chart.scales.x.getPixelForValue(i),chart.scales.y.getPixelForValue(v)-12,'#6B7280','#FFFFFF');});
+        chart.data.datasets.forEach(function(ds,di){
+          if(chart.isDatasetVisible&&!chart.isDatasetVisible(di))return;
+          var meta=chart.getDatasetMeta(di);
+          (meta.data||[]).forEach(function(bar,i){
+            var value=num(ds.data[i]),total=num(totals[i]);if(!value||!total)return;
+            var amount=metric==='qty'?fint(value):money(value),share=(value/total*100).toFixed(0)+'%';
+            var height=Math.abs(bar.base-bar.y),width=bar.width||0;
+            // Keep small segments legible; full values and share remain in the tooltip.
+            if(height<28||width<Math.max(ctx.measureText(amount).width,ctx.measureText(share).width)+8)return;
+            badge([amount,share],bar.x,(bar.base+bar.y)/2,'rgba(255,255,255,.88)','#11284A');
+          });
+        });
+        ctx.restore();
+      }}]});
     });
   }
 
