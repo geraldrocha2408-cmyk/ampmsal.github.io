@@ -71473,5 +71473,148 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
   document.addEventListener('click', function(ev){ try{ if(ev.target && ev.target.closest && ev.target.closest('#refresh,.applyBtn,#ampmStoreFloatApply')) setTimeout(schedule, 180); }catch(_e){} }, true);
 })();
 </script>
+<script type="text/plain" data-ampm-deferred="1" id="regia-lot-inventory-control">
+(function(){
+  'use strict';
+  const stores=['AMPM01','AMPM02','AMPM03'];
+  const lots=[
+    {name:'Caja 2 × 12 latas',expiry:'2026-11-17',boxes:[210,90,210]},
+    {name:'Caja 24 latas',expiry:'2026-11-10',boxes:[60,0,0]},
+    {name:'Caja 24 latas',expiry:'2026-11-17',boxes:[40,15,52]},
+    {name:'Caja 24 latas',expiry:'2026-11-18',boxes:[20,15,20]}
+  ];
+  function today(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Managua',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  function daysLeft(expiry,date){return Math.round((Date.parse(expiry+'T00:00:00Z')-Date.parse(date+'T00:00:00Z'))/86400000);}
+  function status(n){return n<0?'Vencido':n===0?'Vence hoy':n<=7?'Vence en 7 días o menos':n<=14?'Vence en 14 días o menos':'Vigente';}
+  function inventory(rows){
+    const out=Object.fromEntries(stores.map(s=>[s,null]));
+    rows.forEach(r=>{if(String(r['LookUp Code']??'').trim()!=='7411000701645')return;const st=String(r.Store||'').trim().toUpperCase();if(!stores.includes(st))return;const q=Number(r.Quantity);if(Number.isFinite(q))out[st]=(out[st]??0)+q;});return out;
+  }
+  const fmt=n=>n==null?'Sin dato':Number(n).toLocaleString('es-NI',{maximumFractionDigits:2});
+  let chart=null,timer=null,lastWb=null,lastRows=[];
+
+  const historyKey='ampm_regia_stock_cuts_v1';
+  let historyChart=null;
+  function cuts(){try{const data=JSON.parse(localStorage.getItem(historyKey)||'[]');return Array.isArray(data)?data.filter(r=>/^2026-\d{2}-\d{2}$/.test(r.date)&&r.stock&&stores.every(st=>r.stock[st]===null||Number.isFinite(r.stock[st]))).sort((a,b)=>a.date.localeCompare(b.date)):[];}catch(e){return [];}}
+  function period(date,mode){
+    if(mode==='all')return 'Todo el período';
+    if(mode==='month')return date.slice(0,7);
+    if(mode==='day')return date;
+    const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+    const year=d.getUTCFullYear(),n=Math.ceil((((d-new Date(Date.UTC(year,0,1)))/86400000)+1)/7);
+    return year+'-S'+String(n).padStart(2,'0');
+  }
+  function groupedCuts(rows,mode){
+    const grouped=new Map();rows.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+      if(r.date<'2026-10-14'||r.date>'2026-11-18')return;
+      const k=period(r.date,mode);if(!grouped.has(k))grouped.set(k,{label:k,first:r,last:r,count:0});
+      const g=grouped.get(k);g.last=r;g.count++;
+    });return Array.from(grouped.values());
+  }
+  function historyUI(root){
+    if(document.getElementById('regiaHistoryControls'))return;
+    const box=document.createElement('div');box.id='regiaHistoryControls';box.style.cssText='margin-top:24px;border-top:1px solid #CBD5E1;padding-top:18px';
+    box.innerHTML='<h3>Historial de existencias por tienda</h3><p>Guarda el inventario del archivo con su fecha de corte real. En cada vista se muestra el último saldo observado; las existencias no se suman entre días.</p><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label>Fecha real del inventario <input id="regiaCutDate" type="date" min="2026-10-14" max="2026-11-18"></label><button type="button" class="btn" style="width:auto" id="regiaSaveCut">Guardar corte del archivo</button><label>Vista <select id="regiaHistoryMode"><option value="day">Diaria</option><option value="week">Semanal</option><option value="month">Mensual — saldo al cierre observado</option><option value="all">Todo el período — último saldo</option></select></label><button type="button" class="btn secondary" style="width:auto" id="regiaExportCuts">Descargar respaldo</button></div><p id="regiaHistoryMessage" role="status"></p><div style="height:310px;position:relative"><canvas id="regiaHistoryCanvas"></canvas></div><div style="overflow:auto" id="regiaHistoryTable"></div><p style="font-size:12px">Los cortes se guardan en este navegador. Descarga el respaldo para conservarlos. Una variación de existencias puede incluir entradas, traslados, ajustes o bajas; no se interpreta como venta. No hay historial anterior al primer corte guardado.</p>';
+    root.appendChild(box);document.getElementById('regiaCutDate').value=today()<='2026-11-18'?today():'2026-11-18';
+    document.getElementById('regiaHistoryMode').onchange=renderHistory;
+    document.getElementById('regiaSaveCut').onclick=()=>{
+      const msg=document.getElementById('regiaHistoryMessage'),date=document.getElementById('regiaCutDate').value,stock=inventory(lastRows);
+      if(!date||date<'2026-10-14'||date>'2026-11-18'||date>today()){msg.textContent='Selecciona una fecha de corte válida, no futura, entre el 14/10 y el 18/11.';return;}
+      if(stores.every(st=>stock[st]===null)){msg.textContent='No hay existencias del código en el archivo cargado. No se guardó un corte.';return;}
+      const old=cuts();if(old.some(r=>r.date===date)&&!confirm('Ya existe un corte para esta fecha. ¿Reemplazarlo por las existencias del archivo cargado?'))return;
+      try{localStorage.setItem(historyKey,JSON.stringify(old.filter(r=>r.date!==date).concat({date,stock,savedAt:new Date().toISOString()})));msg.textContent='Corte guardado para '+date+'.';renderHistory();}catch(e){msg.textContent='No se pudo guardar el corte en este navegador.';}
+    };
+    document.getElementById('regiaExportCuts').onclick=()=>{const blob=new Blob([JSON.stringify({code:'7411000701645',unit:'paquete de 6',cuts:cuts()},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Regia_existencias_'+today()+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+  }
+  function renderHistory(){
+    const data=groupedCuts(cuts(),document.getElementById('regiaHistoryMode').value),table=document.getElementById('regiaHistoryTable');
+    if(historyChart){historyChart.destroy();historyChart=null;}
+    const canvas=document.getElementById('regiaHistoryCanvas');canvas.parentElement.style.display=data.length?'':'none';
+    if(!data.length){table.innerHTML='<p><b>Aún no hay cortes guardados.</b> Carga el Excel, confirma la fecha real de su inventario y pulsa Guardar corte del archivo.</p>';return;}
+    table.innerHTML='<table><thead><tr><th>Período</th><th>Fecha del último corte</th>'+stores.map(st=>'<th>'+st+' saldo</th><th>Variación entre cortes</th>').join('')+'<th>Cortes</th></tr></thead><tbody>'+data.map((g,i)=>{
+      const prior=i?data[i-1].last:g.first;
+      return '<tr><td>'+g.label+'</td><td>'+g.last.date+'</td>'+stores.map(st=>{const n=g.last.stock[st],v=prior.stock[st];return '<td>'+fmt(n)+'</td><td>'+((i===0&&g.count===1)||n===null||v===null?'Sin comparación':fmt(n-v))+'</td>';}).join('')+'<td>'+g.count+'</td></tr>';
+    }).join('')+'</tbody></table>';
+    if(typeof Chart!=='undefined')historyChart=new Chart(canvas.getContext('2d'),{type:'bar',data:{labels:data.map(g=>g.label),datasets:stores.map((st,i)=>({label:st,data:data.map(g=>g.last.stock[st]),backgroundColor:['#005EA7','#F58320','#A8A8A8'][i],proBarThemeSkip:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'Existencias observadas — paquetes de 6',color:'#000',font:{weight:'bold'}},legend:{position:'bottom'}},scales:{x:{grid:{display:false},ticks:{color:'#000',font:{weight:'bold'}}},y:{beginAtZero:true,ticks:{color:'#000',font:{weight:'bold'}}}}}});
+  }
+
+
+  const regiaOriginalSnapshot=[{"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "3. Almuerzo", "Qty Sold": 2.0, "Sales": 14.6, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 6.64, "Delivery_Channel": "Tienda"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 6.64, "Delivery_Channel": "Tienda"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 6.64, "Delivery_Channel": "Tienda"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": -1.0, "Sales": -7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": -1.0, "Sales": -7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "3. Almuerzo", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Uber, Eats"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 7.3, "Delivery_Channel": "Pedido, YA"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "4. Cena", "Qty Sold": 1.0, "Sales": 6.64, "Delivery_Channel": "Tienda"}, {"Date Sold": "2026-10-14", "Store": "AMPM03", "DescriptionKey": "REGIALATA6PACK473", "Daypart": "3. Almuerzo", "Qty Sold": 1.0, "Sales": 6.64, "Delivery_Channel": "Tienda"}, {"Date Sold": "2026-10-14", "Store": "AMPM01", "DescriptionKey": "__COVERAGE__"}];
+  let salesChart=null,salesWb=null,salesRows=[];
+  function salesModel(rows,mode){
+    const start='2026-10-14',end='2026-11-18',buy=[1320,480,1128],daily=new Map();const channels={store:[0,0,0],peya:[0,0,0],uber:[0,0,0],unknown:[0,0,0]};const channelQty={store:[0,0,0],peya:[0,0,0],uber:[0,0,0],unknown:[0,0,0]};let cutoff='',unknown=0;
+    rows.forEach(r=>{
+      const date=String(r['Date Sold']||'').slice(0,10),st=String(r.Store||'').trim().toUpperCase();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!stores.includes(st))return;
+      if(date>cutoff)cutoff=date;
+      const name=String(r.DescriptionKey||r.Description||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if(name!=='REGIALATA6PACK473'||date<start||date>end)return;
+      if(date===start){const part=String(r.Daypart||'');if(/^[12]\./.test(part))return;if(!/^[34]\./.test(part)){unknown++;return;}}
+      const q=Number(r['Qty Sold']),v=Number(r.Sales);if(!Number.isFinite(q)||!Number.isFinite(v)){unknown++;return;}
+      if(!daily.has(date))daily.set(date,{qty:[0,0,0],money:[0,0,0]});const d=daily.get(date),i=stores.indexOf(st);d.qty[i]+=q;d.money[i]+=v;
+      const ch=String(r.Delivery_Channel||'').toLowerCase();const key=ch==='tienda'?'store':ch.includes('uber')?'uber':/pedido|peya/.test(ch)?'peya':'unknown';channels[key][i]+=v;channelQty[key][i]+=q;
+    });
+    cutoff=cutoff>end?end:cutoff;
+    const groups=new Map();
+    if(cutoff>=start)for(let d=new Date(start+'T00:00:00Z');d.toISOString().slice(0,10)<=cutoff;d.setUTCDate(d.getUTCDate()+1)){
+      const date=d.toISOString().slice(0,10),key=period(date,mode),day=daily.get(date)||{qty:[0,0,0],money:[0,0,0]};
+      if(!groups.has(key))groups.set(key,{label:key,qty:[0,0,0],money:[0,0,0]});const g=groups.get(key);stores.forEach((_,i)=>{g.qty[i]+=day.qty[i];g.money[i]+=day.money[i];});
+    }
+    const total=[0,0,0],money=[0,0,0];const buckets=Array.from(groups.values());buckets.forEach(g=>{stores.forEach((_,i)=>{total[i]+=g.qty[i];money[i]+=g.money[i];});g.cumulative=total.slice();g.pending=buy.map((n,i)=>n-total[i]);});
+    return {buy,buckets,total,money,channels,channelQty,pending:buy.map((n,i)=>n-total[i]),cutoff,unknown};
+  }
+  function renderSales(root,wb){
+    let panel=document.getElementById('regiaSalesControl');
+    if(!panel){panel=document.createElement('div');panel.id='regiaSalesControl';panel.style.cssText='margin:20px 0;padding:18px 0;border-bottom:1px solid #CBD5E1';
+      panel.innerHTML='<h3>Venta registrada y saldo frente a la compra — paquetes de 6</h3><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><label>Vista <select id="regiaSalesMode"><option value="day">Diaria</option><option value="week">Semanal</option><option value="month">Mensual</option><option value="all">Todo el período</option></select></label><label>Medida <select id="regiaSalesMetric"><option value="qty">Paquetes vendidos</option><option value="money">Venta en dinero</option></select></label></div><p id="regiaSalesStatus"></p><div id="regiaSalesSummary" style="overflow:auto"></div><div style="height:340px;position:relative;margin:18px 0"><canvas id="regiaSalesCanvas"></canvas></div><p style="font-size:12px">Desde el 14/10/2026 a las 12:00 hasta el 18/11/2026. Solo ventas netas del paquete original de 6; excluye latas sueltas. Pendiente = compra inicial menos venta acumulada; no incluye ajustes de inventario. Peso por canal = venta neta en dinero del canal / venta neta total de paquetes de la tienda. Delivery total = Pedidos Ya + Uber Eats. Porcentajes acumulados del seguimiento; sin venta, se muestra —.</p>';
+      root.appendChild(panel);
+      document.getElementById('regiaSalesMode').onchange=()=>renderSales(root,salesWb);
+      document.getElementById('regiaSalesMetric').onchange=()=>renderSales(root,salesWb);
+    }
+    if(wb!==salesWb){salesWb=wb;salesRows=wb&&typeof innovationWorkbookSheetRows==='function'?innovationWorkbookSheetRows(wb,'Regia_Pack_Sales'):[];if(wb&&!salesRows.length)salesRows=regiaOriginalSnapshot;}
+    const m=salesModel(salesRows,document.getElementById('regiaSalesMode').value),metric=document.getElementById('regiaSalesMetric').value;
+    document.getElementById('regiaSalesStatus').textContent=m.cutoff>='2026-10-14'?'Ventas originales de paquetes verificadas hasta '+m.cutoff+'.'+(m.unknown?' Hay '+m.unknown+' registros sin franja o valores válidos excluidos; el saldo requiere revisión.':''):'El archivo todavía no contiene fechas del período de seguimiento.';
+    const sum=a=>a.reduce((x,y)=>x+y,0),cash=n=>'$'+fmt(n);
+    document.getElementById('regiaSalesSummary').innerHTML='<table><thead><tr><th>Tienda</th><th>Compra<br>(paq. ×6)</th><th>Vendido<br>(paq.)</th><th>Pendiente<br>(paq.)</th><th>Venta $</th><th>Tienda</th><th>Pedidos Ya</th><th>Uber Eats</th><th>Delivery total</th></tr></thead><tbody>'+stores.concat('Total').map((st,i)=>{const val=a=>i===3?sum(a):a[i];const channelCell=(n,q)=>'<td>'+(!m.buckets.length?'Sin datos':'<b>'+fmt(q)+' paq.</b><br>'+cash(n)+'<br><b>'+(val(m.money)>0&&Math.abs(val(m.channels.unknown))<0.000001?fmt(n/val(m.money)*100)+'%':'—')+'</b>')+'</td>';return '<tr'+(i===3?' class="total"':'')+'><td>'+st+'</td><td>'+fmt(val(m.buy))+'</td><td>'+ (m.buckets.length?fmt(val(m.total)):'Sin datos')+'</td><td>'+(m.buckets.length?fmt(val(m.pending)):'Sin datos')+'</td><td>'+(m.buckets.length?cash(val(m.money)):'Sin datos')+'</td>'+['store','peya','uber'].map(k=>channelCell(val(m.channels[k]),val(m.channelQty[k]))).join('')+channelCell(val(m.channels.peya)+val(m.channels.uber),val(m.channelQty.peya)+val(m.channelQty.uber))+'</tr>';}).join('')+'</tbody></table>';
+
+    if(salesChart){salesChart.destroy();salesChart=null;}
+    const canvas=document.getElementById('regiaSalesCanvas');canvas.parentElement.style.display=m.buckets.length?'':'none';
+    if(typeof Chart!=='undefined'&&m.buckets.length)salesChart=new Chart(canvas.getContext('2d'),{
+      type:'bar',data:{labels:m.buckets.map(g=>g.label),datasets:stores.map((st,i)=>({label:st,data:m.buckets.map(g=>g[metric][i]),backgroundColor:['#005EA7','#F58320','#A8A8A8'][i],proBarThemeSkip:true}))},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{title:{display:true,text:metric==='qty'?'Paquetes vendidos por período y tienda':'Venta por período y tienda ($)',color:'#000',font:{weight:'bold'}},legend:{position:'bottom',labels:{color:'#000',font:{weight:'bold'}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(metric==='money'?cash(c.raw):fmt(c.raw)+' paquetes')}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#000',font:{weight:'bold'}}},y:{stacked:true,beginAtZero:true,ticks:{color:'#000',font:{weight:'bold'}}}}}
+    });
+  }
+  function render(){
+    let root=document.getElementById('regiaInventoryControl');
+    if(!root){
+      const sections=Array.from(document.querySelectorAll('[data-tabpage="resumen"]')).filter(n=>!n.parentElement.closest('[data-tabpage="resumen"]'));
+      if(!sections.length)return;
+      root=document.createElement('section');root.id='regiaInventoryControl';root.dataset.tabpage='resumen';
+      root.style.cssText='background:#fff;border-radius:16px;padding:20px;margin:18px 0;color:#11284A';
+      root.innerHTML='<h2>Regia 473 ml — seguimiento de ventas</h2><p>Código 7411000701645 · Unidad de control: paquete de 6 latas.</p>';
+      sections[sections.length-1].after(root);
+    }
+    const active=typeof getActiveAmpmTab==='function'?getActiveAmpmTab():document.body.getAttribute('data-active-tab');root.style.display=active==='resumen'?'':'none';
+    let wb=null;try{wb=state.__hallWorkbook;}catch(e){}
+    renderSales(root,wb);
+  }
+  function schedule(){clearTimeout(timer);timer=setTimeout(render,150);}
+  window.__regiaInventoryControl={lots,inventory,daysLeft,status,render,period,groupedCuts,salesModel};
+  window.addEventListener('ampm:fileloaded',()=>{lastWb=null;schedule();});
+  window.addEventListener('ampm:tabshown',schedule);
+  document.addEventListener('click',e=>{if(e.target.closest('.tabBtn,#refresh,.applyBtn,#ampmStoreFloatApply'))schedule();});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+})();
+</script>
+
+<style id="regia-summary-compact">
+body #regiaSalesSummary{width:100%;max-width:1180px;margin:0 auto;}
+body #regiaSalesSummary table{width:100%;min-width:720px;table-layout:fixed;font-size:12px!important;line-height:1.2!important;}
+body #regiaSalesSummary th{padding:8px 6px!important;font-size:12px!important;line-height:1.2!important;white-space:normal!important;text-align:center;}
+body #regiaSalesSummary td{padding:7px 6px!important;font-size:12px!important;line-height:1.25!important;vertical-align:middle;}
+body #regiaSalesSummary td b,body #regiaSalesSummary tr.total td{font-size:12px!important;line-height:1.25!important;}
+body #regiaSalesSummary th:first-child,body #regiaSalesSummary td:first-child{text-align:left;width:9%;}
+body #regiaSalesStatus{font-size:13px;margin:12px 0;}
+</style>
 </body>
 </html>
