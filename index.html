@@ -4907,6 +4907,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <button data-export="excel" type="button">Excel (.xls)</button>
 <button data-export="nilsen-week-xlsx" type="button">Nilsen Semana (.xlsx)</button>
 <button data-export="word" type="button">Word (.doc)</button>
+<button data-export="weekly-email-word" type="button">Correo semanal (.docx)</button>
 <button data-export="sbf-top3-xlsx" type="button">SBF Top 3 (.xlsx)</button>
 <button data-export="onepager-pdf" type="button">One Pager PDF (.pdf)</button>
 <button data-export="innovation-onepager-pptx" type="button">One Pager Innovación (.pptx)</button>
@@ -32542,6 +32543,128 @@ async function ensureJsPDF(){
   ], ()=> !!window.jspdf && !!window.jspdf.jsPDF, 'jsPDF no está disponible (bloqueo de CDN o sin internet).');
 }
 
+// Weekly email export: live dashboard data, with editable manual sections.
+async function buildWeeklyEmailDocx(parts, title){
+  const zip = new JSZip();
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const p = (text, style='Normal', page=false) => `<w:p><w:pPr><w:pStyle w:val="${style}"/>${page?'<w:pageBreakBefore/>':''}</w:pPr><w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`;
+  let body=p(title,'Title'), rels='', imageIndex=0;
+  for(const part of parts){
+    if(part.kind==='text') body+=p(part.text);
+    if(part.kind==='manual'){
+      body+=p(part.title,'Heading1',true);
+      // Real empty paragraphs remain editable in Word. Each manual section gets a page.
+      for(let i=0;i<14;i++) body+='<w:p><w:pPr><w:spacing w:after="180"/></w:pPr><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>';
+    }
+    if(part.kind==='table'){
+      body+=p(part.title,'Heading1',!!part.page);
+      body+='<w:tbl><w:tblPr><w:tblW w:w="14400" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="100" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr>';
+      body+='<w:tblGrid>'+part.rows[0].map(()=>'<w:gridCol w:w="'+Math.floor(14400/part.rows[0].length)+'"/>').join('')+'</w:tblGrid>';
+      part.rows.forEach((row,i)=>{body+='<w:tr><w:trPr><w:cantSplit/>'+(i===0?'<w:tblHeader/>':'')+'</w:trPr>'+row.map(cell=>'<w:tc><w:tcPr><w:shd w:fill="'+(i===0?'0B6E9E':i%2?'F2F6FA':'FFFFFF')+'"/></w:tcPr><w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="20"/><w:color w:val="'+(i===0?'FFFFFF':'11284A')+'"/>'+(i===0?'<w:b/>':'')+'</w:rPr><w:t>'+esc(cell)+'</w:t></w:r></w:p></w:tc>').join('')+'</w:tr>';});
+      body+='</w:tbl>'+p('');
+    }
+    if(part.kind==='image'){
+      body+=p(part.title,'Heading1',true);
+      if(part.note) body+=p(part.note);
+      const i=++imageIndex, ratio=part.height/part.width;
+      // Fit a complete chart/table on a landscape Letter page, without stretching.
+      const cx=Math.round(Math.min(9144000,4800000/ratio)), cy=Math.round(cx*ratio);
+      zip.file(`word/media/chart${i}.png`,part.src.split(',')[1],{base64:true});
+      rels+=`<Relationship Id="rId${i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart${i}.png"/>`;
+      body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:after="360"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i}" name="${esc(part.title)}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${i}" name="chart${i}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    }
+  }
+  const ns='http://schemas.openxmlformats.org/';
+  zip.file('[Content_Types].xml',`<Types xmlns="${ns}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`);
+  zip.file('_rels/.rels',`<Relationships xmlns="${ns}package/2006/relationships"><Relationship Id="doc" Type="${ns}officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file('word/_rels/document.xml.rels',`<Relationships xmlns="${ns}package/2006/relationships">${rels}<Relationship Id="styles" Type="${ns}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  zip.file('word/styles.xml',`<w:styles xmlns:w="${ns}wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:after="160"/></w:pPr><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="22"/><w:color w:val="000000"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:after="240"/></w:pPr><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="000000"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="120" w:after="160"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/><w:color w:val="000000"/></w:rPr></w:style></w:styles>`);
+  zip.file('word/document.xml',`<w:document xmlns:w="${ns}wordprocessingml/2006/main" xmlns:r="${ns}officeDocument/2006/relationships" xmlns:wp="${ns}drawingml/2006/wordprocessingDrawing" xmlns:a="${ns}drawingml/2006/main" xmlns:pic="${ns}drawingml/2006/picture"><w:body>${body}<w:sectPr><w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720"/></w:sectPr></w:body></w:document>`);
+  return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+
+async function exportWeeklyEmailWord(){
+  if(window.__weeklyEmailExportBusy) return;
+  if(!hasReportData()) throw new Error('Primero carga el Excel del reporte.');
+  const week=document.getElementById('currentMonth').value;
+  if(!/^\d{4}-W\d{2}$/.test(week)) throw new Error('Selecciona la vista semanal y la semana del correo antes de descargarlo.');
+  const ids=['stores','dowFilter','reportMode','currentMonth','prevMonths'];
+  const saved=ids.map(id=>({id,values:Array.from(document.getElementById(id).selectedOptions).map(o=>o.value)}));
+  const original={tab:getActiveTabKeyForExport(),reportMode:state.reportMode,dowFilter:state.dowFilter,deliveryMode:state.deliveryMode,xf:state.xf};
+  const savedStorage=['ampm_tab','ampm_report_mode'].map(k=>[k,localStorage.getItem(k)]);
+  const scratch=document.createElement('div');scratch.style.cssText='position:fixed;left:-100000px;top:0;width:1500px;background:white;z-index:-1';
+  const status=document.createElement('div');status.setAttribute('role','status');status.style.cssText='position:fixed;inset:0;background:rgba(255,255,255,.94);z-index:2147483647;display:grid;place-items:center;font:bold 20px Arial;color:#11284A';
+  document.body.append(scratch,status);window.__weeklyEmailExportBusy=true;
+  const parts=[],stores=Array.from(document.getElementById('stores').options).map(o=>o.value).filter(s=>/^AMPM0[123]$/.test(s));
+  async function tab(name){
+    if(typeof window.ampmShowTab === 'function') window.ampmShowTab(name,{forceRefresh:true});
+    else { document.querySelector(`.tabBtn[data-tab="${name}"]`).click();refreshAll(); }
+    await prepareActiveTabVisualsForExport(name);await _sleep(900);
+  }
+  async function capture(selector,title){
+    status.textContent='Preparando Word: '+title;
+    const source=document.querySelector(selector);
+    if(!source) throw new Error('No se encontró la sección '+title);
+    const block=createExportBlockShell(),clone=source.cloneNode(true);
+    block.style.width='1500px';clone.style.width='100%';clone.style.maxWidth='none';
+    convertCanvasesToImages(clone);block.appendChild(clone);block.__exportCanvasReady=clone.__exportCanvasReady;
+    const canvas=await renderBlockToSingleCanvas(block,scratch);
+    if(!canvas?.width||!canvas?.height) throw new Error('La sección '+title+' está vacía.');
+    parts.push({kind:'image',title,src:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height});
+  }
+  async function chart(id,title){const cv=document.getElementById(id);if(!cv)throw new Error('Falta '+title);const card=cv.closest('.chartCard')||cv.parentElement;card.setAttribute('data-weekly-capture',id);await capture(`[data-weekly-capture="${id}"]`,title);card.removeAttribute('data-weekly-capture');}
+  try{
+    status.textContent='Preparando el informe semanal…';
+    await ensureHtml2Canvas();await ensureScriptFromUrls(['https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'],()=>!!window.JSZip,'No se pudo cargar el generador Word.');
+    document.getElementById('reportMode').value='semanal';state.reportMode='semanal';state.deliveryMode='TOTAL';state.xf={ventas:{},delivery:{},sbf:{}};
+    for(const o of document.getElementById('stores').options)o.selected=stores.includes(o.value);
+    syncDowSelectFromToken('__ALL__');state.dowFilter='__ALL__';
+    await tab('resumen');
+    const label=week.replace(/(\d{4})-W(\d+)/,'S$2 $1');
+    parts.push({kind:'text',text:'Buenos días'},{kind:'text',text:'Comparto resultado de la semana '+label+'.'},{kind:'text',text:'Tiendas: '+stores.join(', ')+' · Todos los días · Datos del archivo cargado.'});
+    const read=id=>document.getElementById(id)?.textContent.trim()||'—';
+    parts.push({kind:'table',title:'Resumen semanal',rows:[['Indicador','Actual','Comparativo LY','Comparativo promedio'],...[
+      ['Sales','kpi_sales_cur','kpi_sales_delta_ly','kpi_sales_delta3lm'],['TX','kpi_tx','kpi_tx_delta_ly','kpi_tx_delta_prom'],['Drop','kpi_drop','kpi_drop_delta_ly',null],['Delivery','kpi_del','kpi_del_delta_ly','kpi_del_delta_prom'],['Sin Delivery','kpi_no_del','kpi_no_del_delta_ly','kpi_no_del_delta_prom']
+    ].map(([name,...keys])=>[name,...keys.map(k=>k?read(k):'—')])]});
+    parts.push({kind:'manual',title:'Proyección'},{kind:'manual',title:'Hallazgos'});
+    await tab('ventas');await chart('chart_mam','Sales AMPM SAL');
+    for(const store of stores)await chart('chart_mam_store_'+store,'Sales '+store);
+    await tab('sbf');await chart('chart_sbf_mam','TX SBF AMPM SAL');
+    for(const store of stores)await chart('chart_sbf_store_'+store,'TX SBF '+store);
+    const prev=getSelectedValues(document.getElementById('prevMonths'));
+    for(const group of [stores,...stores.map(s=>[s])]){
+      refreshExtraTables(week,prev,group,'sbf');await capture('#t_sbf_prov','Generales TX SBF — '+(group.length>1?'Total':group[0]));
+    }
+    refreshExtraTables(week,prev,stores,'sbf');
+    await tab('delivery');
+    const total=_sumSummarySales(week,stores),peya=getDeliveryChannelSales(resolveChannelLike('pedido')||'Pedido, YA',week,stores),uber=getDeliveryChannelSales(resolveChannelLike('uber')||'Uber, Eats',week,stores);
+    const share=n=>total?(100*n/total).toFixed(2)+'%':'—';
+    parts.push({kind:'table',page:true,title:'Delivery — Share',rows:[['Canal','Venta','Peso sobre la venta total'],['Pedidos Ya',money(peya),share(peya)],['Uber Eats',money(uber),share(uber)],['Delivery total',money(peya+uber),share(peya+uber)]]});
+    await chart('chart_delivery_share_mam','Share Delivery AMPM SAL');
+    for(const store of stores)await chart('chart_delivery_share_store_'+store,'Share Delivery '+store);
+    await capture('.deliveryPieRow','Share por categoría — Pedidos Ya y Uber Eats');
+    await chart('chart_delivery_bubble','Delivery por departamento');
+    await chart('chart_delivery_channel_12w','Pedidos Ya vs Uber Eats');
+    for(const [id,title] of [['delivery_split_dow_host','Delivery por día'],['delivery_split_fs_host','Delivery Food Service por horario'],['delivery_split_dept_host','Delivery por departamento — detalle']]){
+      const host=document.getElementById(id),wrap=host?.closest('.deliverySplitWrap');
+      if(!wrap)throw new Error('Falta '+title);
+      wrap.setAttribute('data-weekly-capture',id);await capture(`[data-weekly-capture="${id}"]`,title);wrap.removeAttribute('data-weekly-capture');
+    }
+    parts.push({kind:'manual',title:'Días de inventario'});
+    await tab('merma');await chart('chart_merma_4m','Merma');parts.push({kind:'text',text:'Saludos,'});
+    status.textContent='Generando el archivo Word…';
+    const blob=await buildWeeklyEmailDocx(parts,'Informe Semanal AMPM ESA '+label);
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Informe_Semanal_AMPM_ESA_'+label.replace(/ /g,'_')+'.docx';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);
+  }finally{
+    state.reportMode=original.reportMode;state.dowFilter=original.dowFilter;state.deliveryMode=original.deliveryMode;state.xf=original.xf;
+    for(const entry of saved)for(const o of document.getElementById(entry.id).options)o.selected=entry.values.includes(o.value);
+    try{document.querySelector(`.tabBtn[data-tab="${original.tab}"]`)?.click();refreshAll();}finally{
+      for(const [k,v] of savedStorage){if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}
+      scratch.remove();status.remove();window.__weeklyEmailExportBusy=false;
+    }
+  }
+}
+
       async function exportWordAsImage(){
 
         await ensureHtml2Canvas();if(!hasReportData()){
@@ -36284,6 +36407,7 @@ async function exportInnovationAsPptx(){
             const kind = opt.getAttribute('data-export');
             try{
               if(kind === 'word') await exportWordAsImage();
+              if(kind === 'weekly-email-word') await exportWeeklyEmailWord();
               if(kind === 'excel') exportExcel();
               if(kind === 'nilsen-week-xlsx') await exportNilsenWeekXlsx();
               if(kind === 'sbf-top3-xlsx') { if(typeof window.exportSbfTop3Xlsx === 'function') { window.exportSbfTop3Xlsx(); } else if(typeof exportSbfTop3Xlsx === 'function') { exportSbfTop3Xlsx(); } else { throw new Error('exportSbfTop3Xlsx no está disponible'); } }
