@@ -32544,17 +32544,81 @@ async function ensureJsPDF(){
 }
 
 // Weekly email export: live dashboard data, with editable manual sections.
+function weeklyEmailDailyHistory(currentRows, historicalRows){
+  // Filtering the compact detail can leave only recent exact dates. Fill missing
+  // store/day keys from Daily_Sales/Delivery, without adding or replacing scoped days.
+  const rows=new Map();
+  for(const source of [historicalRows,currentRows]){
+    const grouped=new Map();
+    for(const r of source||[]){
+      const d=r.d;
+      if(!(d instanceof Date)||isNaN(d.getTime())||!r.store) continue;
+      const date=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+      const key=r.store+'|'+date;
+      if(!grouped.has(key))grouped.set(key,{date,store:r.store,sales:0});
+      grouped.get(key).sales+=Number(r.sales||0);
+    }
+    for(const [key,value] of grouped)rows.set(key,value);
+  }
+  return [...rows.values()];
+}
+function weeklyEmailComparisons(week, stores, salesRows, deliveryRows, txRows){
+  const day=86400000, iso=d=>d.toISOString().slice(0,10), set=new Set(stores);
+  const dateOf=(key,dow=1)=>{const m=String(key).match(/^(\d{4})-W(\d{2})$/);if(!m)return null;const d=new Date(Date.UTC(+m[1],0,4));d.setUTCDate(d.getUTCDate()-(d.getUTCDay()||7)+1+(+m[2]-1)*7+dow-1);return d;};
+  const start=dateOf(week), end=new Date(+start+6*day), maps={sales:new Map(),delivery:new Map(),tx:new Map()};
+  const add=(m,k,v)=>m.set(k,(m.get(k)||0)+Number(v||0));
+  for(const r of salesRows)if(set.has(r.store)&&r.date)add(maps.sales,r.date,r.sales);
+  for(const r of deliveryRows)if(set.has(r.store)&&r.date)add(maps.delivery,r.date,r.sales);
+  for(const r of txRows){if(!set.has(r.store)||!Number(r.dow))continue;const d=dateOf(r.ym,Number(r.dow));if(d)add(maps.tx,iso(d),r.transactions);}
+  const dates=[...maps.sales.keys()].filter(d=>d>=iso(start)&&d<=iso(end)).sort();
+  const cut=dates.length?new Date(dates.at(-1)+'T00:00:00Z'):end;
+  const sum=(m,a,b)=>{let value=0,found=false;for(const [d,v] of m)if(d>=iso(a)&&d<=iso(b)){value+=v;found=true;}return found?value:null;};
+  const measure=(a,b)=>{const sales=sum(maps.sales,a,b),delivery=sum(maps.delivery,a,b),tx=sum(maps.tx,a,b);return {sales,delivery,tx,noDelivery:sales===null||delivery===null?null:sales-delivery,drop:tx&&sales!==null?sales/tx:null};};
+  const monthStart=d=>new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1));
+  const shiftedCut=(d,years,months)=>{const first=new Date(Date.UTC(d.getUTCFullYear()+years,d.getUTCMonth()+months,1));return new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth(),Math.min(d.getUTCDate(),new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate())));};
+  const lyStart=dateOf((+week.slice(0,4)-1)+week.slice(4));
+  const current=measure(start,cut), ly=measure(lyStart,new Date(+lyStart+6*day)),lw=measure(new Date(+start-7*day),new Date(+start-day));
+  const mtd=measure(monthStart(cut),cut), lyCut=shiftedCut(cut,-1,0),lmCut=shiftedCut(cut,0,-1);
+  const mtdLy=measure(monthStart(lyCut),lyCut),mtdLm=measure(monthStart(lmCut),lmCut);
+  const previous=Array.from({length:8},(_,i)=>measure(new Date(+start-(i+1)*7*day),new Date(+start-(i*7+1)*day)));
+  const div=(a,b)=>a===null||b===null||!b?null:a/b;
+  const rows=[['Delta Sales','sales'],['Delta TX','tx'],['Delta Drop','drop'],['Delta Delivery','delivery'],['Delta Sin Delivery','noDelivery']].map(([title,key])=>{
+    const values=previous.map(v=>v[key]);const average=values.every(v=>v!==null)?values.reduce((a,b)=>a+b,0)/8:null;
+    return {title,values:[div(current[key],ly[key]),div(mtd[key],mtdLy[key]),div(current[key],lw[key]),div(current[key],average),div(mtd[key],mtdLm[key])]};
+  });
+  return {rows,cut:iso(cut),share:div(current.delivery,current.sales)};
+}
+
 async function buildWeeklyEmailDocx(parts, title){
   const zip = new JSZip();
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const p = (text, style='Normal', page=false) => `<w:p><w:pPr><w:pStyle w:val="${style}"/>${page?'<w:pageBreakBefore/>':''}</w:pPr><w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`;
-  let body=p(title,'Title'), rels='', imageIndex=0;
+  let body='', rels='', imageIndex=0;
   for(const part of parts){
+    if(part.kind==='email-metrics'){
+      const widths=[2000,1700,2300,1600,1600,1800];
+      for(const row of part.rows){
+        const headers=row.headers||[row.title,'Delta LY S'+part.week.slice(-2),'Delta MTD LY','Delta LW','Delta Vs L8W','Delta MTD LM'];
+        const cells=['AMPM SAL',...row.values];
+        body+='<w:tbl><w:tblPr><w:tblW w:w="11000" w:type="dxa"/><w:jc w:val="left"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="15" w:type="dxa"/><w:bottom w:w="15" w:type="dxa"/><w:left w:w="40" w:type="dxa"/><w:right w:w="40" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>'+widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('')+'</w:tblGrid>';
+        [headers,cells].forEach((list,i)=>{body+='<w:tr><w:trPr><w:cantSplit/></w:trPr>'+list.map((v,j)=>{
+          const value=i&&j?(v===null?'':typeof v==='number'?v.toFixed(2):v):v;
+          const fill=i?(j?'FFFF00':'FFFFFF'):(!row.headers&&(j===1||j===2)?'305496':'0070C0');
+          const color=!i?'FFFFFF':!j?'000000':typeof v==='number'?(v>1?'0000FF':'FF0000'):(row.colors?.[j-1]||'0000FF');
+          return `<w:tc><w:tcPr><w:tcW w:w="${widths[j]}" w:type="dxa"/><w:shd w:fill="${fill}"/></w:tcPr><w:p><w:pPr><w:keepNext/><w:jc w:val="${i&&j?'right':'left'}"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:rPr>${!i||j?'<w:b/>':''}<w:sz w:val="20"/><w:color w:val="${color}"/></w:rPr><w:t xml:space="preserve">${esc(value)}</w:t></w:r></w:p></w:tc>`;
+        }).join('')+'</w:tr>';});
+        body+='</w:tbl><w:p><w:pPr><w:spacing w:after="100" w:line="120" w:lineRule="exact"/></w:pPr></w:p>';
+      }
+    }
     if(part.kind==='text') body+=p(part.text);
+    if(part.kind==='email-section'){
+      body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="200"/></w:pPr><w:r><w:rPr><w:b/><w:highlight w:val="yellow"/></w:rPr><w:t>'+esc(part.title)+'</w:t></w:r></w:p>';
+      for(const line of part.lines)body+='<w:p><w:pPr><w:spacing w:after="20"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(line)+'</w:t></w:r></w:p>';
+    }
     if(part.kind==='manual'){
-      body+=p(part.title,'Heading1',true);
-      // Real empty paragraphs remain editable in Word. Each manual section gets a page.
-      for(let i=0;i<14;i++) body+='<w:p><w:pPr><w:spacing w:after="180"/></w:pPr><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>';
+      body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="80"/></w:pPr><w:r><w:rPr><w:b/><w:highlight w:val="yellow"/></w:rPr><w:t>'+esc(part.title)+'</w:t></w:r></w:p>';
+      // Editable space follows the email section, without forcing a whole blank page.
+      for(let i=0;i<3;i++) body+='<w:p><w:pPr><w:spacing w:after="180"/></w:pPr><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>';
     }
     if(part.kind==='table'){
       body+=p(part.title,'Heading1',!!part.page);
@@ -32564,7 +32628,6 @@ async function buildWeeklyEmailDocx(parts, title){
       body+='</w:tbl>'+p('');
     }
     if(part.kind==='image'){
-      body+=p(part.title,'Heading1',true);
       if(part.note) body+=p(part.note);
       const i=++imageIndex, ratio=part.height/part.width;
       // Fit a complete chart/table on a landscape Letter page, without stretching.
@@ -32621,13 +32684,17 @@ async function exportWeeklyEmailWord(){
     syncDowSelectFromToken('__ALL__');state.dowFilter='__ALL__';
     await tab('resumen');
     const label=week.replace(/(\d{4})-W(\d+)/,'S$2 $1');
-    parts.push({kind:'text',text:'Buenos días'},{kind:'text',text:'Comparto resultado de la semana '+label+'.'},{kind:'text',text:'Tiendas: '+stores.join(', ')+' · Todos los días · Datos del archivo cargado.'});
-    const read=id=>document.getElementById(id)?.textContent.trim()||'—';
-    parts.push({kind:'table',title:'Resumen semanal',rows:[['Indicador','Actual','Comparativo LY','Comparativo promedio'],...[
-      ['Sales','kpi_sales_cur','kpi_sales_delta_ly','kpi_sales_delta3lm'],['TX','kpi_tx','kpi_tx_delta_ly','kpi_tx_delta_prom'],['Drop','kpi_drop','kpi_drop_delta_ly',null],['Delivery','kpi_del','kpi_del_delta_ly','kpi_del_delta_prom'],['Sin Delivery','kpi_no_del','kpi_no_del_delta_ly','kpi_no_del_delta_prom']
-    ].map(([name,...keys])=>[name,...keys.map(k=>k?read(k):'—')])]});
+    parts.push({kind:'text',text:'Comparto resultado de la semana S'+week.slice(-2)});
+    const salesHistory=weeklyEmailDailyHistory(state.dailySalesRows,state._paniniRawDailySalesRows||state._projectionDailySalesRows);
+    const deliveryHistory=weeklyEmailDailyHistory(state.dailyDeliveryRows,state._paniniRawDailyDeliveryRows);
+    const emailMetrics=weeklyEmailComparisons(week,stores,salesHistory,deliveryHistory,state.cuboTxRows||[]);
+    const operational={title:'Operativos',headers:['Operativos','Alcance Meta','Alcance Pago Intereses','Días Inventario','% Merma','Share Delivery'],values:[null,null,null,null,emailMetrics.share===null?null:(emailMetrics.share*100).toFixed(2)+'%'],colors:['0000FF','0000FF','0000FF','FF0000','FF0000']};
+    // Use the same total and rounding as the Inventory tab, for this export's stores/week.
+    refreshInventoryModule(week,stores);
+    operational.values[2]=Number.isFinite(state.lastDaysInv)?state.lastDaysInv.toFixed(0):'—';
+    parts.push({kind:'email-metrics',week,rows:[...emailMetrics.rows,operational]});
     parts.push({kind:'manual',title:'Proyección'},{kind:'manual',title:'Hallazgos'});
-    await tab('ventas');await chart('chart_mam','Sales AMPM SAL');
+    await tab('ventas');
     for(const store of stores)await chart('chart_mam_store_'+store,'Sales '+store);
     await tab('sbf');await chart('chart_sbf_mam','TX SBF AMPM SAL');
     for(const store of stores)await chart('chart_sbf_store_'+store,'TX SBF '+store);
@@ -32638,8 +32705,23 @@ async function exportWeeklyEmailWord(){
     refreshExtraTables(week,prev,stores,'sbf');
     await tab('delivery');
     const total=_sumSummarySales(week,stores),peya=getDeliveryChannelSales(resolveChannelLike('pedido')||'Pedido, YA',week,stores),uber=getDeliveryChannelSales(resolveChannelLike('uber')||'Uber, Eats',week,stores);
-    const share=n=>total?(100*n/total).toFixed(2)+'%':'—';
-    parts.push({kind:'table',page:true,title:'Delivery — Share',rows:[['Canal','Venta','Peso sobre la venta total'],['Pedidos Ya',money(peya),share(peya)],['Uber Eats',money(uber),share(uber)],['Delivery total',money(peya+uber),share(peya+uber)]]});
+    const share=n=>total?(100*n/total).toFixed(1)+'%':'—';
+    const turns={AM:{peya:0,uber:0},PM:{peya:0,uber:0}};
+    for(const row of state.cuboSalesRows||[]){
+      if(row.ym!==week||!stores.includes(row.store)||!(row.is_delivery===true||String(row.is_delivery)==='1'))continue;
+      const channel=String(row.delivery_channel||'').toLowerCase();
+      const key=channel.includes('uber')?'uber':channel.includes('pedido')?'peya':null;
+      const turn=normalizeFsBucket(row.daypart)?.group;
+      if(key&&turns[turn])turns[turn][key]+=Number(row.sales||0);
+    }
+    const versus=turn=>turns[turn].peya?Math.round(100*turns[turn].uber/turns[turn].peya)+'%':'—';
+    const uberAmount=Math.abs(uber)>=1000?'$'+(uber/1000).toFixed(1)+'k':money(uber);
+    parts.push({kind:'email-section',title:'Delivery – Share',lines:[
+      `Uber vende ${uberAmount}, Turno PM representa el ${versus('PM')} de la venta vs PEYA, turno AM representa el ${versus('AM')}`,
+      `PEYA – Share vs vta – ${share(peya)}`,
+      `Uber – Share vs vta – ${share(uber)}`,
+      `Total Share Delivery – ${share(peya+uber)}`
+    ]});
     await chart('chart_delivery_share_mam','Share Delivery AMPM SAL');
     for(const store of stores)await chart('chart_delivery_share_store_'+store,'Share Delivery '+store);
     await capture('.deliveryPieRow','Share por categoría — Pedidos Ya y Uber Eats');
@@ -32651,7 +32733,9 @@ async function exportWeeklyEmailWord(){
       wrap.setAttribute('data-weekly-capture',id);await capture(`[data-weekly-capture="${id}"]`,title);wrap.removeAttribute('data-weekly-capture');
     }
     parts.push({kind:'manual',title:'Días de inventario'});
-    await tab('merma');await chart('chart_merma_4m','Merma');parts.push({kind:'text',text:'Saludos,'});
+    await tab('merma');
+    try{const month=emailMetrics.cut.slice(0,7),m=sumMermaStoreMonth(stores,month);if(m&&m.sales)operational.values[3]=(-Math.abs(Number(m.mNeg||0)/m.sales)*100).toFixed(2)+'%';}catch(_e){}
+    await chart('chart_merma_4m','Merma');parts.push({kind:'text',text:'Saludos,'});
     status.textContent='Generando el archivo Word…';
     const blob=await buildWeeklyEmailDocx(parts,'Informe Semanal AMPM ESA '+label);
     const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Informe_Semanal_AMPM_ESA_'+label.replace(/ /g,'_')+'.docx';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);
