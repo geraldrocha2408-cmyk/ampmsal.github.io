@@ -32044,7 +32044,7 @@ renderShareTable({
         const padBottom = 16;
         const chipPadX = 10;
         const chipPadY = 6;
-        const titleFont = '900 18px Arial, Calibri, sans-serif';
+        let titleFont = '900 18px Arial, Calibri, sans-serif';
         const subtitleFont = '400 11px Arial, Calibri, sans-serif';
         const headFont = '700 11px Arial, Calibri, sans-serif';
         const weekFont = '700 10px Arial, Calibri, sans-serif';
@@ -32061,6 +32061,11 @@ renderShareTable({
         const titleMeasureCanvas = document.createElement('canvas');
         const tctx = titleMeasureCanvas.getContext('2d');
         tctx.font = titleFont;
+        const titleWidth=tctx.measureText(spec.title || '').width;
+        if(titleWidth>tableW-chipPadX*2){
+          titleFont=`900 ${Math.max(10,Math.floor(18*(tableW-chipPadX*2)/titleWidth))}px Arial, Calibri, sans-serif`;
+          tctx.font=titleFont;
+        }
         const chipTextW = Math.ceil(tctx.measureText(spec.title || '').width);
         const chipW = Math.min(Math.max(chipTextW + chipPadX*2, 180), tableW);
         const chipH = 18 + chipPadY*2;
@@ -32250,9 +32255,10 @@ renderShareTable({
           const charts = (window.state && window.state.chartSbfByStore) ? window.state.chartSbfByStore : {};
           const normKey = (v)=> String(v || '').replace(/[^A-Za-z0-9_-]+/g, '_');
           const chartKey = Object.keys(charts || {}).find(k => k === rankKey || normKey(k) === rankKey);
-          const chart = isGeneralSbf
+          const chartCanvasId=isGeneralSbf?'chart_sbf_mam':'chart_sbf_store_'+rankKey;
+          const chart = (typeof Chart!=='undefined' && typeof Chart.getChart==='function' ? Chart.getChart(chartCanvasId) : null) || (isGeneralSbf
             ? ((window.state && window.state.chartSbfMam) ? window.state.chartSbfMam : null)
-            : (chartKey ? charts[chartKey] : null);
+            : (chartKey ? charts[chartKey] : null));
           const srcCanvas = chart && chart.canvas ? chart.canvas : null;
           const srcImg = block.querySelector('.monthly-chart-viewport img, img');
           if(srcImg) await waitForImageDecode(srcImg);
@@ -32303,10 +32309,10 @@ renderShareTable({
           const chipH = 22;
           const rankH = 50;
           const targetPxW = 2828;
-          const targetPxH = 1360;
+          let targetPxH = 1360;
           const DPR = 2.2;
           const outW = targetPxW / DPR;
-          const outH = targetPxH / DPR;
+          let outH = targetPxH / DPR;
           const cssW = outW - padX * 2;
           const headerTitle = String(block.querySelector('.section h2')?.textContent || '').trim();
           const introNode = Array.from(block.children || []).find(ch => ch && ch.classList && ch.classList.contains('muted'));
@@ -32339,7 +32345,15 @@ renderShareTable({
           const titleH = headerTitle ? 26 : 0;
           const introH = introLines.length ? (introLines.length * 16 + 10) : 0;
           const chartSpaceH = outH - padTop - titleH - introH - rankH - padBottom;
-          const cssH = Math.max(300, Math.min(520, chartSpaceH));
+          const sourceW=Number(chart?.width||srcDrawable.naturalWidth||srcDrawable.width)||cssW;
+          const sourceH=Number(chart?.height||srcDrawable.naturalHeight||srcDrawable.height)||chartSpaceH;
+          // Store charts keep their original aspect ratio; the former fixed-height
+          // export stretched short charts vertically and magnified that in Word.
+          const cssH = isGeneralSbf ? Math.max(300, Math.min(520, chartSpaceH)) : cssW*sourceH/sourceW;
+          if(!isGeneralSbf){
+            outH=padTop+titleH+introH+cssH+rankH+padBottom;
+            targetPxH=Math.ceil(outH*DPR);
+          }
           const canvas = document.createElement('canvas');
           canvas.width = targetPxW;
           canvas.height = targetPxH;
@@ -32395,13 +32409,13 @@ renderShareTable({
           const areaRight = Number.isFinite(Number(chartArea.right)) ? Number(chartArea.right) : (chartW - 58);
           const getX = (i) => {
             let x = NaN;
-            try{ if(chart && Array.isArray(chart.$xPositions)) x = Number(chart.$xPositions[i]); }catch(_e){}
             try{
               if(chart && !Number.isFinite(x) && typeof chart.getDatasetMeta === 'function'){
                 const meta = chart.getDatasetMeta(0);
                 x = Number(meta && meta.data && meta.data[i] && meta.data[i].x);
               }
             }catch(_e){}
+            try{ if(!Number.isFinite(x)&&chart&&chart.scales?.x) x=Number(chart.scales.x.getPixelForValue(i)); }catch(_e){}
             if(!Number.isFinite(x)){
               x = areaLeft + (areaRight - areaLeft) * ((i + 0.5) / Math.max(1, labels.length));
             }
@@ -32611,6 +32625,7 @@ async function buildWeeklyEmailDocx(parts, title){
       }
     }
     if(part.kind==='text') body+=p(part.text);
+    if(part.kind==='note')body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="120"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>'+esc(part.text)+'</w:t></w:r></w:p>';
     if(part.kind==='email-section'){
       body+='<w:p><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="200"/></w:pPr><w:r><w:rPr><w:b/><w:highlight w:val="yellow"/></w:rPr><w:t>'+esc(part.title)+'</w:t></w:r></w:p>';
       for(const line of part.lines)body+='<w:p><w:pPr><w:spacing w:after="20"/></w:pPr><w:r><w:t xml:space="preserve">'+esc(line)+'</w:t></w:r></w:p>';
@@ -32631,10 +32646,10 @@ async function buildWeeklyEmailDocx(parts, title){
       if(part.note) body+=p(part.note);
       const i=++imageIndex, ratio=part.height/part.width;
       // Fit a complete chart/table on a landscape Letter page, without stretching.
-      const cx=Math.round(Math.min(9144000,4800000/ratio)), cy=Math.round(cx*ratio);
+      const cx=Math.round(Math.min(part.maxWidthEmu||9144000,7772400/ratio)), cy=Math.round(cx*ratio);
       zip.file(`word/media/chart${i}.png`,part.src.split(',')[1],{base64:true});
       rels+=`<Relationship Id="rId${i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart${i}.png"/>`;
-      body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:after="360"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i}" name="${esc(part.title)}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${i}" name="chart${i}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+      body+=`<w:p><w:pPr><w:jc w:val="left"/><w:ind w:left="0" w:right="0" w:firstLine="0"/><w:spacing w:before="240" w:after="360"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i}" name="${esc(part.title)}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${i}" name="chart${i}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
     }
   }
   const ns='http://schemas.openxmlformats.org/';
@@ -32642,7 +32657,7 @@ async function buildWeeklyEmailDocx(parts, title){
   zip.file('_rels/.rels',`<Relationships xmlns="${ns}package/2006/relationships"><Relationship Id="doc" Type="${ns}officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
   zip.file('word/_rels/document.xml.rels',`<Relationships xmlns="${ns}package/2006/relationships">${rels}<Relationship Id="styles" Type="${ns}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
   zip.file('word/styles.xml',`<w:styles xmlns:w="${ns}wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:after="160"/></w:pPr><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="22"/><w:color w:val="000000"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:after="240"/></w:pPr><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="000000"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="120" w:after="160"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/><w:color w:val="000000"/></w:rPr></w:style></w:styles>`);
-  zip.file('word/document.xml',`<w:document xmlns:w="${ns}wordprocessingml/2006/main" xmlns:r="${ns}officeDocument/2006/relationships" xmlns:wp="${ns}drawingml/2006/wordprocessingDrawing" xmlns:a="${ns}drawingml/2006/main" xmlns:pic="${ns}drawingml/2006/picture"><w:body>${body}<w:sectPr><w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720"/></w:sectPr></w:body></w:document>`);
+  zip.file('word/document.xml',`<w:document xmlns:w="${ns}wordprocessingml/2006/main" xmlns:r="${ns}officeDocument/2006/relationships" xmlns:wp="${ns}drawingml/2006/wordprocessingDrawing" xmlns:a="${ns}drawingml/2006/main" xmlns:pic="${ns}drawingml/2006/picture"><w:body>${body}<w:sectPr><w:pgSz w:w="21600" w:h="15840" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720"/></w:sectPr></w:body></w:document>`);
   return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
 
@@ -32669,11 +32684,17 @@ async function exportWeeklyEmailWord(){
     const source=document.querySelector(selector);
     if(!source) throw new Error('No se encontró la sección '+title);
     const block=createExportBlockShell(),clone=source.cloneNode(true);
-    block.style.width='1500px';clone.style.width='100%';clone.style.maxWidth='none';
+    // Canvas snapshots and rank positions retain their on-screen CSS dimensions.
+    // Keep their card at that same width instead of widening it to 1500px.
+    const sourceWidth=Math.ceil(source.getBoundingClientRect().width);
+    block.style.width=(sourceWidth>0?sourceWidth+34:1500)+'px';
+    clone.style.width='100%';clone.style.maxWidth='none';clone.style.boxSizing='border-box';
+    const isSplit=source.classList.contains('deliverySplitWrap');
+    if(isSplit&&source.previousElementSibling?.classList.contains('section'))block.appendChild(source.previousElementSibling.cloneNode(true));
     convertCanvasesToImages(clone);block.appendChild(clone);block.__exportCanvasReady=clone.__exportCanvasReady;
     const canvas=await renderBlockToSingleCanvas(block,scratch);
     if(!canvas?.width||!canvas?.height) throw new Error('La sección '+title+' está vacía.');
-    parts.push({kind:'image',title,src:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height});
+    parts.push({kind:'image',title,src:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height,...(isSplit?{maxWidthEmu:6400800}:source.querySelector('canvas')?{maxWidthEmu:12801600}:{})});
   }
   async function chart(id,title){const cv=document.getElementById(id);if(!cv)throw new Error('Falta '+title);const card=cv.closest('.chartCard')||cv.parentElement;card.setAttribute('data-weekly-capture',id);await capture(`[data-weekly-capture="${id}"]`,title);card.removeAttribute('data-weekly-capture');}
   try{
@@ -32725,6 +32746,7 @@ async function exportWeeklyEmailWord(){
     await chart('chart_delivery_share_mam','Share Delivery AMPM SAL');
     for(const store of stores)await chart('chart_delivery_share_store_'+store,'Share Delivery '+store);
     await capture('.deliveryPieRow','Share por categoría — Pedidos Ya y Uber Eats');
+    parts.push({kind:'note',text:'Rojo: es mayor la vta en Pedidos Ya, q en Uber. Y para el verde, es mayor la vta en Uber'});
     await chart('chart_delivery_bubble','Delivery por departamento');
     await chart('chart_delivery_channel_12w','Pedidos Ya vs Uber Eats');
     for(const [id,title] of [['delivery_split_dow_host','Delivery por día'],['delivery_split_fs_host','Delivery Food Service por horario'],['delivery_split_dept_host','Delivery por departamento — detalle']]){
@@ -32735,6 +32757,7 @@ async function exportWeeklyEmailWord(){
     parts.push({kind:'manual',title:'Días de inventario'});
     await tab('merma');
     try{const month=emailMetrics.cut.slice(0,7),m=sumMermaStoreMonth(stores,month);if(m&&m.sales)operational.values[3]=(-Math.abs(Number(m.mNeg||0)/m.sales)*100).toFixed(2)+'%';}catch(_e){}
+    parts.push({kind:'email-section',title:'Merma',lines:[]});
     await chart('chart_merma_4m','Merma');parts.push({kind:'text',text:'Saludos,'});
     status.textContent='Generando el archivo Word…';
     const blob=await buildWeeklyEmailDocx(parts,'Informe Semanal AMPM ESA '+label);
