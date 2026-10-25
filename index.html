@@ -4936,6 +4936,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <button class="tabBtn" data-tab="onepager" title="One Pager" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 4h8l4 4v12H7z"></path><path d="M15 4v4h4"></path><path d="M10 13h6"></path><path d="M10 17h6"></path></svg></span><span class="tabLabel">One Pager</span></button>
 <button class="tabBtn" data-tab="ventas" title="Ventas" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19V9"></path><path d="M12 19V5"></path><path d="M19 19v-8"></path></svg></span><span class="tabLabel">Ventas</span></button>
 <button class="tabBtn" data-tab="delivery" title="Delivery" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 16h2l2-5h6l3 5h2"></path><path d="M14 11h3l3 3"></path><circle cx="8" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span><span class="tabLabel">Delivery</span></button>
+<button class="tabBtn" data-tab="promociones" title="Promociones" type="button"><span class="tabIcon"><svg viewBox="0 0 24 24"><path d="M3 3h8l10 10-8 8L3 11z"></path><circle cx="7" cy="7" r="1"></circle></svg></span><span class="tabLabel">Promociones</span></button>
 <button class="tabBtn" data-tab="innovacion" title="Innovación" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a6 6 0 0 0-4 10c1 1 2 2 2 4h4c0-2 1-3 2-4a6 6 0 0 0-4-10z"></path></svg></span><span class="tabLabel">Innovación</span></button>
 <button class="tabBtn" data-tab="album" title="Álbum / Figuritas" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"></path><path d="M8 8h8"></path><path d="M8 12h5"></path><path d="M16 16h.01"></path></svg></span><span class="tabLabel">Álbum</span></button>
 <button class="tabBtn" data-tab="sbf" title="SBF" type="button"><span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 9 12 4l9 5"></path><path d="M5 10h14"></path><path d="M6.5 10v7"></path><path d="M10 10v7"></path><path d="M14 10v7"></path><path d="M17.5 10v7"></path><path d="M4 18h16"></path><path d="M3 20h18"></path></svg></span><span class="tabLabel">SBF</span></button>
@@ -8705,7 +8706,7 @@ function applyUnifiedModeUI(){
       chartDeliveryShareMam: null,
       chartDeliveryShareByStore: {},
       chartMerma4m: null,
-      _tabDirty: new Set(['resumen','onepager','ventas','delivery','innovacion','sbf','inventario','merma','prd0','cxc','hallazgos']),
+      _tabDirty: new Set(['resumen','onepager','ventas','delivery','promociones','innovacion','sbf','inventario','merma','prd0','cxc','hallazgos']),
       _lazyRefreshNonce: 0,
       _lastRenderedTabSig: Object.create(null),
       _lastChartRenderSig: Object.create(null)
@@ -8721,7 +8722,7 @@ function applyUnifiedModeUI(){
     state.monthlyXfSbfRows = [];
     state.monthlyXfEnabled = false;
 
-    const ALL_REPORT_TABS = ['resumen','onepager','ventas','delivery','innovacion','album','sbf','inventario','merma','prd0','cxc','hallazgos'];
+    const ALL_REPORT_TABS = ['resumen','onepager','ventas','delivery','promociones','innovacion','album','sbf','inventario','merma','prd0','cxc','hallazgos'];
 
     function parseHuesoSheet(wb){
       state.huesoRows = [];
@@ -12324,7 +12325,7 @@ try{
       return vals.length ? vals.map(v => dowLabel(v)).join(', ') : 'Todos';
     }
     function getChartDowBadgeText(tab){
-      const affected = ['resumen','ventas','delivery','innovacion','sbf','hallazgos'].includes(String(tab || '').trim());
+      const affected = ['resumen','ventas','delivery','promociones','innovacion','sbf','hallazgos'].includes(String(tab || '').trim());
       return affected
         ? `Día de semana visualizado: ${getGlobalDowLabel()}`
         : 'Vista acumulada: sin filtro por día';
@@ -71824,6 +71825,47 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     // Upgrade only the matching pre-12-pack dataset; never append to newer or different data.
     return signature(rows)===signature(regiaOriginalSnapshot)?rows.concat(regiaOriginalSnapshot.filter(r=>key(r)==='REGIALATA12PACK16ONZ')):rows;
   }
+  let impactChart=null;
+  function impactModel(rows,categories,mode,selectedPeriod,selectedStore){
+    const valid=rows.filter(r=>stores.includes(r.Store)&&String(r['Date Sold'])>='2026-10-14'&&String(r['Date Sold'])<='2026-11-18');
+    const periods=[...new Set(valid.map(r=>period(String(r['Date Sold']).slice(0,10),mode)))].sort();
+    const chosen=periods.includes(selectedPeriod)?selectedPeriod:periods[periods.length-1];
+    const match=r=>(selectedStore==='all'||r.Store===selectedStore)&&period(String(r['Date Sold']).slice(0,10),mode)===chosen;
+    const fields=['Total Sales','Regia Sales','Basket Sales','Basket TX','Total TX','Cross Sales','Missing TX Lines'];
+    const grouped=stores.filter(st=>selectedStore==='all'||st===selectedStore).map(Store=>Object.fromEntries([['Store',Store],...fields.map(f=>[f,0])]));
+    valid.filter(match).forEach(r=>{const g=grouped.find(g=>g.Store===r.Store);if(g)fields.forEach(f=>g[f]+=Number(r[f])||0);});
+    const total=Object.fromEntries([['Store','Total'],...fields.map(f=>[f,grouped.reduce((s,r)=>s+r[f],0)])]);
+    const cats=new Map();categories.filter(r=>stores.includes(r.Store)&&r.Category!=='__COVERAGE__'&&match(r)).forEach(r=>cats.set(r.Category,(cats.get(r.Category)||0)+(Number(r.Sales)||0)));
+    const positive=[...cats].filter(([,n])=>n>0.005).sort((a,b)=>b[1]-a[1]);
+    const slices=positive.slice(0,6);if(positive.length>6)slices.push(['Otras categorías',positive.slice(6).reduce((s,r)=>s+r[1],0)]);
+    return {periods,chosen,grouped,total,slices,positiveTotal:positive.reduce((s,r)=>s+r[1],0),negative:[...cats].filter(([,n])=>n<-.005)};
+  }
+  function renderImpact(root,wb){
+    let box=document.getElementById('regiaImpact');
+    if(!box){
+      box=document.createElement('section');box.id='regiaImpact';box.style.cssText='margin:22px 0;padding:18px;border:1px solid #dbe4ed;border-radius:12px';
+      box.innerHTML='<h3 style="margin-top:0">Impacto de Regia y ventas cruzadas</h3><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end"><label>Período <select id="regiaImpactPeriod"></select></label><label>Tienda <select id="regiaImpactStore"><option value="all">Todas las tiendas</option>'+stores.map(st=>'<option>'+st+'</option>').join('')+'</select></label></div><p id="regiaImpactStatus"></p><div id="regiaImpactSummary" style="overflow:auto"></div><div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:20px"><div style="flex:1 1 350px;min-width:0"><h4>Categorías compradas junto con Regia x6</h4><div style="height:320px;position:relative"><canvas id="regiaImpactPie"></canvas></div><p id="regiaImpactEmpty"></p></div><div id="regiaImpactCategories" style="flex:1 1 300px;align-self:center;overflow:auto"></div></div><p style="font-size:12px;line-height:1.5">Regia: venta de x6 y x12 del seguimiento, sin latas sueltas. Facturas con Regia x6: importe completo de cada factura que contiene el paquete original x6, contada una sola vez por tienda, fecha y número. Ambos pesos se calculan sobre la venta total de las tiendas y período seleccionados. Ventas cruzadas: otros productos de esas facturas, excluyendo Regia x6 y x12. Importes netos, con devoluciones y anulaciones registradas con su signo; el número de facturas incluye esos documentos. El pastel reparte las categorías con saldo neto positivo; los ajustes negativos se muestran aparte. Inicio: 14/10/2026 a las 12:00. Fin: 18/11/2026.</p>';
+      root.appendChild(box);
+      ['regiaImpactPeriod','regiaImpactStore'].forEach(id=>document.getElementById(id).onchange=()=>renderImpact(root,salesWb));
+    }
+    const rows=wb&&typeof innovationWorkbookSheetRows==='function'?innovationWorkbookSheetRows(wb,'Regia_Impact_Daily'):[];
+    const categories=wb&&typeof innovationWorkbookSheetRows==='function'?innovationWorkbookSheetRows(wb,'Regia_Cross_Daily'):[];
+    const mode=document.getElementById('regiaSalesMode').value,select=document.getElementById('regiaImpactPeriod'),store=document.getElementById('regiaImpactStore').value;
+    const m=impactModel(rows,categories,mode,select.value,store);
+    const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const money=n=>'$'+Number(n).toLocaleString('es-NI',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const pct=(n,d)=>d>0?fmt(n/d*100)+'%':'—';
+    select.innerHTML=m.periods.map(p=>'<option '+(p===m.chosen?'selected':'')+'>'+esc(p)+'</option>').join('');
+    if(impactChart){impactChart.destroy();impactChart=null;}
+    const available=rows.length>0&&categories.some(r=>r.Category==='__COVERAGE__');
+    document.getElementById('regiaImpactStatus').textContent=available?'Vista '+({day:'diaria',week:'semanal',month:'acumulada del mes',all:'acumulada de todo el seguimiento'}[mode])+' · '+m.chosen+' · Corte de datos: '+rows.reduce((d,r)=>String(r['Date Sold'])>d?String(r['Date Sold']):d,'')+(m.total['Missing TX Lines']?' · Hay líneas sin número de factura; el análisis de facturas requiere revisión.':''):'Este archivo no contiene el detalle de facturas de Regia. Vuelve a compactar y carga el archivo actualizado para ver el impacto.';
+    document.getElementById('regiaImpactSummary').innerHTML=available?'<table style="font-size:12px;width:100%"><thead><tr><th>Tienda</th><th>Venta total</th><th>Venta Regia / peso</th><th>Facturas con Regia x6</th><th>Venta de esas facturas / peso</th><th>Venta cruzada</th></tr></thead><tbody>'+m.grouped.concat(m.total).map(r=>'<tr'+(r.Store==='Total'?' class="total"':'')+'><td>'+r.Store+'</td><td>'+money(r['Total Sales'])+'</td><td>'+money(r['Regia Sales'])+'<br><b>'+pct(r['Regia Sales'],r['Total Sales'])+'</b></td><td>'+fmt(r['Basket TX'])+'</td><td>'+money(r['Basket Sales'])+'<br><b>'+pct(r['Basket Sales'],r['Total Sales'])+'</b></td><td>'+money(r['Cross Sales'])+'</td></tr>').join('')+'</tbody></table>':'';
+    const pie=document.getElementById('regiaImpactPie');pie.parentElement.style.display=available&&m.slices.length?'':'none';
+    document.getElementById('regiaImpactEmpty').textContent=available&&!m.slices.length?'No hay ventas cruzadas positivas en este período.':'';
+    document.getElementById('regiaImpactCategories').innerHTML=available?'<table style="font-size:12px;width:100%"><thead><tr><th>Categoría</th><th>Venta cruzada</th><th>Peso en pastel</th></tr></thead><tbody>'+m.slices.map(([cat,n])=>'<tr><td>'+esc(cat)+'</td><td>'+money(n)+'</td><td>'+pct(n,m.positiveTotal)+'</td></tr>').join('')+m.negative.map(([cat,n])=>'<tr><td>'+esc(cat)+' (ajuste neto)</td><td>'+money(n)+'</td><td>Fuera del pastel</td></tr>').join('')+'</tbody></table>':'';
+    if(available&&m.slices.length&&typeof Chart!=='undefined')impactChart=new Chart(pie.getContext('2d'),{type:'pie',data:{labels:m.slices.map(r=>r[0]),datasets:[{data:m.slices.map(r=>r[1]),backgroundColor:['#005EA7','#F58320','#259D85','#8464B8','#E8B32D','#CE5C75','#94A3B8'],borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+money(c.raw)+' ('+pct(c.raw,m.positiveTotal)+')'}}}},plugins:[{id:'regiaCrossLabels',afterDatasetsDraw(chart){const ctx=chart.ctx;ctx.save();ctx.font='bold 12px Arial';ctx.textAlign='center';ctx.textBaseline='middle';chart.getDatasetMeta(0).data.forEach((arc,i)=>{const n=m.slices[i][1];if(n/m.positiveTotal<.05)return;const angle=(arc.startAngle+arc.endAngle)/2,radius=arc.outerRadius*.76,p={x:arc.x+Math.cos(angle)*radius,y:arc.y+Math.sin(angle)*radius};const label=pct(n,m.positiveTotal);ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.45)';ctx.strokeText(label,p.x,p.y);ctx.fillStyle='#fff';ctx.fillText(label,p.x,p.y);});ctx.restore();}}]});
+  }
+
   function renderSales(root,wb){
     let panel=document.getElementById('regiaSalesControl');
     if(!panel){panel=document.createElement('div');panel.id='regiaSalesControl';panel.style.cssText='margin:20px 0;padding:18px 0;border-bottom:1px solid #CBD5E1';
@@ -71838,6 +71880,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     const sum=a=>a.reduce((x,y)=>x+y,0),cash=n=>'$'+fmt(n);
     document.getElementById('regiaSalesSummary').innerHTML='<table><thead><tr><th>Tienda</th><th>Compra<br>(paq. ×6)</th><th>Vendido<br>(paq.)</th><th>Pendiente<br>(paq.)</th><th>Venta $</th><th>Tienda</th><th>Pedidos Ya</th><th>Uber Eats</th><th>Delivery total</th></tr></thead><tbody>'+stores.concat('Total').map((st,i)=>{const val=a=>i===3?sum(a):a[i];const channelCell=(n,q)=>'<td>'+(!m.buckets.length?'Sin datos':'<b>'+fmt(q)+' paq.</b><br>'+cash(n)+'<br><b>'+(val(m.money)>0&&Math.abs(val(m.channels.unknown))<0.000001?fmt(n/val(m.money)*100)+'%':'—')+'</b>')+'</td>';return '<tr'+(i===3?' class="total"':'')+'><td>'+st+'</td><td>'+fmt(val(m.buy))+'</td><td>'+ (m.buckets.length?fmt(val(m.total)):'Sin datos')+'</td><td>'+(m.buckets.length?fmt(val(m.pending)):'Sin datos')+'</td><td>'+(m.buckets.length?cash(val(m.money)):'Sin datos')+'</td>'+['store','peya','uber'].map(k=>channelCell(val(m.channels[k]),val(m.channelQty[k]))).join('')+channelCell(val(m.channels.peya)+val(m.channels.uber),val(m.channelQty.peya)+val(m.channelQty.uber))+'</tr>';}).join('')+'</tbody></table>';
 
+    renderImpact(root,wb);
     if(salesChart){salesChart.destroy();salesChart=null;}
     const canvas=document.getElementById('regiaSalesCanvas');canvas.parentElement.style.display=m.buckets.length?'':'none';
     if(typeof Chart!=='undefined'&&m.buckets.length)salesChart=new Chart(canvas.getContext('2d'),{
@@ -71874,7 +71917,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     renderSales(root,wb);
   }
   function schedule(){clearTimeout(timer);timer=setTimeout(render,150);}
-  window.__regiaInventoryControl={lots,inventory,daysLeft,status,render,period,groupedCuts,salesModel,resolveRegiaPackRows};
+  window.__regiaInventoryControl={lots,inventory,daysLeft,status,render,period,groupedCuts,salesModel,resolveRegiaPackRows,impactModel};
   window.addEventListener('ampm:fileloaded',()=>{lastWb=null;schedule();});
   window.addEventListener('ampm:tabshown',schedule);
   document.addEventListener('click',e=>{if(e.target.closest('.tabBtn,#refresh,.applyBtn,#ampmStoreFloatApply'))schedule();});
@@ -71896,6 +71939,154 @@ body #regiaSalesStatus{font-size:13px;margin:12px 0;}
 #innovationHotPromoBudget .hotPromoInfoButton{display:block;width:24px;min-width:24px;height:24px;padding:0;border:1px solid #005EA7;border-radius:50%;background:#EAF4FC;color:#005EA7;font:bold 15px Georgia,serif;cursor:help;}
 #innovationHotPromoBudget .hotPromoInfoDetail{display:none;position:absolute;right:0;top:100%;width:310px;max-width:70vw;box-sizing:border-box;padding:14px;border-radius:10px;background:#11284A;color:white;line-height:1.5;text-align:left;box-shadow:0 6px 20px #0003;}
 #innovationHotPromoBudget .hotPromoInfo:hover .hotPromoInfoDetail,#innovationHotPromoBudget .hotPromoInfo:focus-within .hotPromoInfoDetail{display:block;}
+</style>
+<script type="text/plain" data-ampm-deferred="1" id="promotions-model">
+(function(global){
+ 'use strict';
+ const dayMs=86400000, date=s=>new Date(String(s).slice(0,10)+'T00:00:00Z'), iso=d=>d.toISOString().slice(0,10), dow=s=>date(s).getUTCDay()||7;
+ const shift=(s,n)=>iso(new Date(+date(s)+n*dayMs));
+ function range(key,cutoff){
+  if(/^\d{4}-\d{2}-\d{2}$/.test(key))return [key,key];
+  if(/^\d{4}-\d{2}$/.test(key)){const d=date(key+'-01');return [iso(d),iso(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)))];}
+  const m=String(key).match(/(\d{4})-[WS](\d{1,2})/);if(m){let d=new Date(Date.UTC(+m[1],0,4));d=new Date(+d-((d.getUTCDay()||7)-1)*dayMs+(+m[2]-1)*7*dayMs);return [iso(d),shift(iso(d),6)];}
+  return [cutoff,cutoff];
+ }
+ function build(data,filters){
+  const catalog=(data.Promo_Catalog||[]).map(p=>({...p,HasSales:Number(p.HasSales)||0,Discount:Number(p.Discount)||0})),cutoff=(data.Promo_Status||[])[0]?.Cutoff||'',bounds=range(filters.period,cutoff),end=bounds[1]<cutoff?bounds[1]:cutoff;
+  const storeSet=new Set(filters.stores?.length?filters.stores:['AMPM01','AMPM02','AMPM03']),days=[];
+  if(bounds[0]&&end)for(let d=bounds[0];d<=end;d=shift(d,1))if(!filters.dows?.length||filters.dows.map(Number).includes(dow(d)))days.push(d);
+  const channels=filters.channels?.length?filters.channels:['Tienda','Pedidos Ya','Uber Eats'];
+  const coverage=new Set((data.Promo_Coverage||[]).map(r=>r.Date+'|'+r.Store));
+  const sales=new Map((data.Promo_Sales||[]).map(r=>[[r.Date,r.Store,r.Channel,r.Item].join('|'),{sales:+r.Sales||0,qty:+r.Qty||0}]));
+  const candidates=new Map();catalog.forEach(p=>{const k=p.Item+'|'+p.Channel;if(!candidates.has(k))candidates.set(k,[]);candidates.get(k).push(p);});
+  const active=(p,d)=>d>=p.Start&&d<=p.End&&String(p.DOW).split(',').map(Number).includes(dow(d));
+  const visible=p=>(!filters.supplier||p.Supplier===filters.supplier)&&(!filters.category||p.Category===filters.category)&&(!filters.department||p.Department===filters.department)&&(!filters.search||(p.Description+' '+p.Item).toLowerCase().includes(filters.search.toLowerCase()))&&channels.includes(p.Channel);
+  const cells=[],overlaps=new Set(),missing=new Set();
+  const baseline=new Map();
+  function base(p,st,weekday){
+   const key=[p.Id,st,weekday].join('|');if(baseline.has(key))return baseline.get(key);
+   let n=0,s=0,q=0;
+   for(let d=shift(p.Start,-28);d<p.Start;d=shift(d,1)){
+    if(dow(d)!==weekday||!coverage.has(d+'|'+st))continue;
+    if((candidates.get(p.Item+'|'+p.Channel)||[]).some(other=>active(other,d)))continue;
+    const v=sales.get([d,st,p.Channel,p.Item].join('|'))||{sales:0,qty:0};n++;s+=v.sales;q+=v.qty;
+   }
+   const result={n,sales:n?s/n:0,qty:n?q/n:0};baseline.set(key,result);return result;
+  }
+  for(const [key,ps] of candidates){
+   if(!channels.includes(ps[0].Channel))continue;
+   for(const d of days){
+    const live=ps.filter(p=>active(p,d)).sort((a,b)=>b.Discount-a.Discount||b.Start.localeCompare(a.Start)||a.Id.localeCompare(b.Id));
+    if(!live.length)continue;
+    if(live.length>1)overlaps.add(key);
+    const p=live[0];if(!visible(p))continue;
+    for(const st of storeSet){
+     if(!coverage.has(d+'|'+st)){missing.add(d+'|'+st);continue;}
+     const v=sales.get([d,st,p.Channel,p.Item].join('|'))||{sales:0,qty:0};const b=base(p,st,dow(d));
+     cells.push({p,store:st,date:d,sales:v.sales,qty:v.qty,expectedSales:b.sales,expectedQty:b.qty,baseDays:b.n,comparable:b.n>=2&&!!p.HasSales});
+    }
+   }
+  }
+  function aggregate(list){
+   const comparable=list.filter(r=>r.comparable),sum=(a,k)=>a.reduce((s,r)=>s+r[k],0),v=sum(list,'sales'),q=sum(list,'qty'),e=sum(comparable,'expectedSales'),eq=sum(comparable,'expectedQty'),cs=sum(comparable,'sales'),cq=sum(comparable,'qty');
+   return {sales:v,qty:q,expectedSales:e,expectedQty:eq,comparableSales:cs,comparableQty:cq,deltaSales:e>0?cs/e:null,deltaQty:eq>0?cq/eq:null,increment:cs-e,coverage:list.length?comparable.length/list.length:0,days:new Set(list.map(r=>r.date)).size,count:list.length};
+  }
+  function group(key){const map=new Map();cells.forEach(r=>{const k=key(r);if(!map.has(k))map.set(k,[]);map.get(k).push(r);});return [...map].map(([key,rs])=>({key,...aggregate(rs),p:rs[0].p,store:rs[0].store}));}
+  const ranked=group(r=>r.p.Id+'|'+r.store).map(r=>({...r,status:!r.p.HasSales?'Sin cruce histórico':r.coverage<1?'Base incompleta':r.qty<=0&&r.expectedQty>0?'Sin venta neta':r.deltaQty===null?'Sin base positiva':r.deltaQty>1.05?'Crece volumen':r.deltaQty<.95?'Cae volumen':'Estable'})).sort((a,b)=>b.p.Discount-a.p.Discount||b.sales-a.sales);
+  const scope=(data.Promo_Denoms||[]).filter(r=>storeSet.has(r.Store)&&channels.includes(r.Channel)&&days.includes(r.Date));
+  const shares=field=>group(r=>r.p[field]).map(r=>{const denominator=scope.filter(x=>x[field]===r.key).reduce((s,x)=>s+(+x.Sales||0),0);return {...r,denominator,share:denominator>0?r.sales/denominator:null};}).sort((a,b)=>b.sales-a.sales);
+  return {cells,ranked,summary:aggregate(cells),stores:[...storeSet].map(key=>({key,...aggregate(cells.filter(r=>r.store===key))})),daily:days.map(key=>({key,...aggregate(cells.filter(r=>r.date===key))})),weekdays:[1,2,3,4,5,6,7].map(key=>({key,...aggregate(cells.filter(r=>dow(r.date)===key))})),categories:shares('Category'),departments:shares('Department'),bounds:[bounds[0],end],cutoff,overlaps:overlaps.size,missing:missing.size,promos:new Set(cells.map(r=>r.p.Id)).size,issues:(data.Promo_Status||[])[0]?.Issues||'',unmatched:catalog.filter(p=>!p.HasSales&&visible(p)),future:catalog.filter(p=>p.Start>end&&visible(p)).length};
+ }
+ global.PromotionsModel={build,range};
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script type="text/plain" data-ampm-deferred="1" id="promotions-ui">
+(function(){
+ 'use strict';
+ let timer,book=null,data=null,charts=[],page=0,lastModel;
+ const el=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const num=n=>n==null?'—':Number(n).toLocaleString('es-NI',{maximumFractionDigits:2}),cash=n=>n==null?'—':'$'+num(n),pct=n=>n==null?'—':num(n*100)+'%',delta=n=>n==null?'Sin base':num(n)+'×';
+ function table(headers,rows){return '<div class="promoScroll"><table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
+ function setup(){
+  if(el('promotionsPanel'))return;
+  const host=[...document.querySelectorAll('[data-tabpage="delivery"]')].filter(n=>!n.parentElement.closest('[data-tabpage="delivery"]')).pop();if(!host)return;
+  const root=document.createElement('section');root.id='promotionsPanel';root.dataset.tabpage='promociones';root.style.display='none';
+  root.innerHTML='<div class="promoHead"><div><h2>Promociones — seguimiento comercial</h2><p>Venta, volumen y desempeño por tienda durante la vigencia.</p></div><button id="promoExport" type="button">Descargar detalle CSV</button></div><p id="promoScope"></p><div class="promoFilters"><label>Proveedor<select id="promoSupplier"></select></label><label>Departamento<select id="promoDepartment"></select></label><label>Categoría<select id="promoCategory"></select></label><label>Canal<select id="promoChannel"><option value="">Todos</option><option>Tienda</option><option>Pedidos Ya</option><option>Uber Eats</option></select></label><label>Buscar producto<input id="promoSearch" placeholder="Nombre o código"></label></div><div id="promoMessage" role="status"></div><div id="promoKpis" class="promoKpis"></div><div class="promoGrid"><article><h3>Venta por tienda vs referencia previa</h3><div class="promoChart"><canvas id="promoStoresChart"></canvas></div></article><article><h3>Venta por fecha dentro del período</h3><div class="promoChart"><canvas id="promoTrendChart"></canvas></div></article></div><article><h3>¿Qué tiendas están creciendo en volumen?</h3><div id="promoStores"></div></article><article><div class="promoHead"><h3>Prioridad por descuento — producto, canal y tienda</h3><label>Mostrar<select id="promoStatus"><option value="">Todos los resultados</option><option>Crece volumen</option><option>Cae volumen</option><option>Sin venta neta</option><option>Base incompleta</option><option>Sin cruce histórico</option><option>Estable</option></select></label></div><p class="promoMuted">Orden: mayor descuento primero. La venta de un producto en un canal y fecha se asigna una sola vez.</p><div id="promoDetail"></div><div class="promoPager"><button id="promoPrev">Anterior</button><span id="promoPage"></span><button id="promoNext">Siguiente</button></div></article><div class="promoGrid"><article><h3>Impacto en la categoría</h3><div id="promoCategories"></div></article><article><h3>Impacto en el departamento</h3><div id="promoDepartments"></div></article></div><article><h3>Desempeño por día de semana</h3><div id="promoWeekdays"></div></article><details><summary>Cómo leer el seguimiento y calidad de los datos</summary><div id="promoQuality"></div><p>Referencia previa: promedio del mismo día de semana en los 28 días anteriores al inicio, por producto, canal y tienda. Se excluyen días con otra promoción conocida de ese producto y canal. Se requieren al menos dos días históricos comparables. Ceros de venta se incluyen cuando existe cobertura de datos de la tienda.</p><p>Delta = actual ÷ referencia; 1.20× significa 20% más. «Crece volumen» supera 1.05×; «Cae volumen» es menor a 0.95×; entre ambos se muestra estable. No es una prueba de causalidad ni de rentabilidad. Los indicadores comparativos usan únicamente los registros con base suficiente; se informa su cobertura.</p><p>Venta promocional significa venta del producto durante las fechas, días y canal de la promoción aprobada. No confirma descuento aplicado ni cumplimiento de combos por factura. Las unidades conservan la presentación vendida; no se equiparan cajas, latas y paquetes. Las devoluciones conservan su signo. Peso = venta de productos promocionados ÷ venta total de la categoría o departamento en el período, tiendas y canales seleccionados.</p><p>Si hay campañas simultáneas del mismo producto y canal, se prioriza el descuento mayor para evitar duplicar ventas. Los casos con fechas contradictorias quedan pendientes, fuera de los indicadores.</p></details>';
+  host.after(root);
+  ['promoSupplier','promoCategory','promoDepartment','promoChannel','promoStatus'].forEach(id=>el(id).onchange=()=>{page=0;render();});
+  el('promoSearch').oninput=()=>{page=0;schedule();};el('promoPrev').onclick=()=>{page=Math.max(0,page-1);renderDetail();};el('promoNext').onclick=()=>{page++;renderDetail();};
+  el('promoExport').onclick=()=>{if(!lastModel)return;const rows=[['Producto','Codigo','Proveedor','Canal','Tienda','Descuento','Venta','Unidades','Delta venta','Delta unidades','Cobertura','Estado'],...lastModel.ranked.map(r=>[r.p.Description,r.p.Item,r.p.Supplier,r.p.Channel,r.store,r.p.Discount,r.sales,r.qty,r.deltaSales,r.deltaQty,r.coverage,r.status])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Seguimiento_promociones.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+ }
+ function options(id,values){const node=el(id),old=node.value;node.innerHTML='<option value="">Todos</option>'+[...new Set(values)].sort().map(s=>'<option>'+escape(s)+'</option>').join('');if([...node.options].some(o=>o.value===old))node.value=old;}
+ function getFilters(){
+  let stores=[],dows=[],mode='diario',delivery='TOTAL';
+  try{stores=getSelectedStoresOrAll();}catch(e){}
+  try{dows=parseDowFilterValues(getGlobalDowFilter());}catch(e){}
+  try{mode=getUnifiedReportMode();delivery=state.deliveryMode||'TOTAL';}catch(e){}
+  let channels=delivery==='UBER'?['Uber Eats']:['PEYA','PEDIDOS','PYA'].includes(delivery)?['Pedidos Ya']:['Tienda','Pedidos Ya','Uber Eats'];
+  if(el('promoChannel').value)channels=channels.filter(c=>c===el('promoChannel').value);
+  return {stores,dows,mode,period:el('currentMonth')?.value||'',channels:channels.length?channels:['__NONE__'],supplier:el('promoSupplier').value,department:el('promoDepartment').value,category:el('promoCategory').value,search:el('promoSearch').value.trim()};
+ }
+ function renderDetail(){
+  if(!lastModel)return;const status=el('promoStatus').value,rows=lastModel.ranked.filter(r=>!status||r.status===status),pages=Math.max(1,Math.ceil(rows.length/30));page=Math.max(0,Math.min(page,pages-1));
+  el('promoDetail').innerHTML=table(['Producto / vigencia','Canal / tienda','Desc.','Venta $','Unidades','Ref. $¹','Δ venta¹','Δ unidades¹','Peso categoría','Peso depto.','Resultado'],rows.slice(page*30,(page+1)*30).map(r=>{
+   const f=getFilters(),denoms=data.Promo_Denoms.filter(x=>x.Store===r.store&&x.Channel===r.p.Channel&&x.Date>=lastModel.bounds[0]&&x.Date<=lastModel.bounds[1]&&(!f.dows.length||f.dows.map(Number).includes(new Date(x.Date+'T00:00:00Z').getUTCDay()||7)));
+   const cat=denoms.filter(x=>x.Category===r.p.Category).reduce((s,x)=>s+(+x.Sales||0),0),dep=denoms.filter(x=>x.Department===r.p.Department).reduce((s,x)=>s+(+x.Sales||0),0);
+   return ['<b>'+escape(r.p.Description)+'</b><small>'+escape(r.p.Start)+' → '+escape(r.p.End)+' · '+escape(r.p.Dynamic)+'</small>',escape(r.p.Channel)+'<br>'+escape(r.store),'<b>'+pct(r.p.Discount)+'</b>',cash(r.sales),num(r.qty),cash(r.expectedSales),delta(r.deltaSales),delta(r.deltaQty),pct(cat>0?r.sales/cat:null),pct(dep>0?r.sales/dep:null),'<span class="promoTag '+(r.status==='Crece volumen'?'promoGood':r.status==='Cae volumen'||r.status==='Sin venta neta'?'promoBad':'')+'">'+escape(r.status)+'</span><small>Base: '+pct(r.coverage)+'</small>'];
+  }));el('promoPage').textContent=rows.length+' resultados · página '+(page+1)+' de '+pages;el('promoPrev').disabled=page===0;el('promoNext').disabled=page>=pages-1;
+ }
+ function render(){
+  setup();if(!el('promotionsPanel'))return;
+  const active=document.body.getAttribute('data-active-tab')==='promociones'||document.querySelector('.tabBtn.active')?.dataset.tab==='promociones';el('promotionsPanel').style.display=active?'':'none';if(!active)return;
+  let wb;try{wb=state.__hallWorkbook;}catch(e){}
+  if(wb!==book){book=wb;data={};['Promo_Catalog','Promo_Sales','Promo_Denoms','Promo_Coverage','Promo_Status'].forEach(name=>data[name]=wb?innovationWorkbookSheetRows(wb,name):[]);options('promoSupplier',data.Promo_Catalog.map(p=>p.Supplier));options('promoCategory',data.Promo_Catalog.map(p=>p.Category));options('promoDepartment',data.Promo_Catalog.map(p=>p.Department));}
+  if(!data?.Promo_Catalog?.length){
+   el('promoMessage').textContent='Carga el compactado actualizado para consultar el catálogo y el seguimiento de promociones.';
+   charts.forEach(c=>c.destroy());charts=[];lastModel=null;
+   ['promoKpis','promoStores','promoDetail','promoCategories','promoDepartments','promoWeekdays','promoQuality','promoScope'].forEach(id=>el(id).innerHTML='');return;
+  }
+  const f=getFilters(),m=window.PromotionsModel.build(data,f);lastModel=m;
+  el('promoScope').textContent='Filtros generales: '+f.mode+' · '+(f.period||'último corte')+' · '+(f.stores.join(', ')||'Todas las tiendas')+' · '+(f.dows.length?'Días: '+f.dows.join(', '):'Todos los días')+' · Data hasta '+m.cutoff;
+  el('promoMessage').textContent=!m.cells.length?'Sin promociones con fechas válidas aplicables a este período y filtros.':m.issues?'Hay promociones con fechas contradictorias pendientes de revisión; consulta el detalle de calidad al final.':'';
+  const k=[['Venta durante promoción',cash(m.summary.sales),m.promos+' campañas/canales con vigencia'],['Unidades vendidas',num(m.summary.qty),'En la presentación de cada producto'],['Delta venta vs antes',delta(m.summary.deltaSales),'Cobertura comparable: '+pct(m.summary.coverage)],['Delta unidades vs antes',delta(m.summary.deltaQty),'Referencia: 4 semanas previas']];
+  el('promoKpis').innerHTML=k.map(([a,b,c])=>'<div><span>'+a+'</span><strong>'+b+'</strong><small>'+c+'</small></div>').join('');
+  el('promoStores').innerHTML=table(['Tienda','Venta $','Unidades','Ref. venta¹','Δ venta¹','Δ unidades¹','Diferencia $¹','Cobertura base','Lectura'],m.stores.map(r=>[r.key,cash(r.sales),num(r.qty),cash(r.expectedSales),delta(r.deltaSales),delta(r.deltaQty),cash(r.increment),pct(r.coverage),r.coverage<1?'Revisar base incompleta':r.deltaQty==null?'Sin base positiva':r.deltaQty>1.05?'Crece volumen':r.deltaQty<.95?'Cae volumen':'Estable']));
+  const shareTable=rows=>table(['Grupo','Venta promo','Venta total del grupo','Peso promo'],rows.map(r=>[escape(r.key),cash(r.sales),cash(r.denominator),pct(r.share)]));el('promoCategories').innerHTML=shareTable(m.categories);el('promoDepartments').innerHTML=shareTable(m.departments);
+  const names=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];el('promoWeekdays').innerHTML=table(['Día','Venta $','Unidades','Ref. venta¹','Δ venta¹','Δ unidades¹','Días observados'],m.weekdays.map(r=>[names[r.key-1],cash(r.sales),num(r.qty),cash(r.expectedSales),delta(r.deltaSales),delta(r.deltaQty),r.days]));
+  el('promoQuality').innerHTML='<p><b>¹ Referencia y deltas solo sobre registros comparables.</b> Cobertura: '+pct(m.summary.coverage)+'. Fechas sin cobertura de tienda: '+m.missing+'. Productos/canales con promociones superpuestas: '+m.overlaps+'.</p><ul>'+m.issues.split(' | ').filter(Boolean).map(s=>'<li>'+escape(s)+'</li>').join('')+'</ul><p>Sin coincidencias históricas de venta (no se asumen como cero confirmado): '+escape([...new Set(m.unmatched.map(p=>p.Description))].join(', ')||'Ninguno')+'.</p><p>Promociones futuras fuera del corte: '+m.future+'. Fuente: Promociones_Compacto, solo estados aprobados.</p>';
+  renderDetail();charts.forEach(c=>c.destroy());charts=[];
+  const chart=(id,rows)=>{
+   if(typeof Chart==='undefined')return;
+   charts.push(new Chart(el(id).getContext('2d'),{
+    type:'bar',
+    data:{labels:rows.map(r=>r.key),datasets:[
+     {label:'Venta con base comparable',data:rows.map(r=>r.comparableSales),backgroundColor:'#0869a8',proBarThemeSkip:true},
+     {label:'Referencia previa',data:rows.map(r=>r.expectedSales),backgroundColor:'#e9a541',proBarThemeSkip:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:18}},
+     plugins:{legend:{position:'bottom'},datalabels:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+cash(c.raw)}}},
+     scales:{y:{beginAtZero:true,grace:'15%',ticks:{callback:v=>cash(v)}},x:{grid:{display:false}}}
+    },
+    plugins:[{id:'promoValues',afterDatasetsDraw(chart){const ctx=chart.ctx;ctx.save();ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillStyle='#11284a';chart.data.datasets.forEach((ds,j)=>{if(!chart.isDatasetVisible(j))return;chart.getDatasetMeta(j).data.forEach((bar,i)=>{if(bar.width>=38&&ds.data[i])ctx.fillText(cash(ds.data[i]),bar.x,bar.y-6);});});ctx.restore();}}]
+   }));
+  };chart('promoStoresChart',m.stores);chart('promoTrendChart',m.daily);
+ }
+ function schedule(){clearTimeout(timer);timer=setTimeout(render,160);}
+ try{if(typeof refreshAll==='function'&&!refreshAll.__promoHook){const original=refreshAll;refreshAll=function(){const result=original.apply(this,arguments);schedule();return result;};refreshAll.__promoHook=true;}}catch(e){console.warn('Promociones: seguimiento de filtros',e);}
+ window.addEventListener('ampm:fileloaded',()=>{book=null;data=null;schedule();});window.addEventListener('ampm:tabshown',schedule);
+ document.addEventListener('click',e=>{if(e.target.closest('.tabBtn,.applyBtn,#refresh,#ampmStoreFloatApply'))schedule();});
+ document.addEventListener('change',e=>{if(['reportMode','currentMonth','stores','dowFilter','deliveryMode'].includes(e.target.id))schedule();});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+ window.__promotionsUI={render,getFilters};
+})();
+
+</script>
+<style id="promotions-style">#promotionsPanel{color:#11284a;background:#f3f6fa;padding:22px;border-radius:16px;margin:18px 0;font-size:13px}
+#promotionsPanel .promoHead{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}#promotionsPanel h2{margin:0;font-size:25px}#promotionsPanel h3{font-size:17px;margin:0 0 16px}#promotionsPanel p{line-height:1.5}
+#promotionsPanel .promoFilters{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}#promotionsPanel label{display:flex;flex-direction:column;gap:5px;font-size:12px}#promotionsPanel select,#promotionsPanel input{min-width:160px;max-width:280px;padding:9px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-size:13px}#promotionsPanel button{padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#11284a;cursor:pointer}
+#promotionsPanel .promoKpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}#promotionsPanel .promoKpis>div{background:white;border-top:4px solid #0879af;border-radius:12px;padding:18px}#promotionsPanel strong{display:block;font-size:27px;margin:9px 0}#promotionsPanel small{display:block;font-size:11px;color:#64748b;line-height:1.4;margin-top:4px}
+#promotionsPanel article,#promotionsPanel details{background:white;border:1px solid #dbe4ed;padding:18px;border-radius:12px;margin-bottom:20px;min-width:0}#promotionsPanel .promoGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}#promotionsPanel .promoChart{height:300px;position:relative}#promotionsPanel .promoScroll{overflow:auto;max-height:550px}#promotionsPanel table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto}#promotionsPanel th{background:#086c9c;color:white;padding:9px;position:sticky;top:0;white-space:normal;z-index:1}#promotionsPanel td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:right}#promotionsPanel td:first-child,#promotionsPanel th:first-child{text-align:left}#promotionsPanel tbody tr:nth-child(even){background:#f6f9fc}#promotionsPanel .promoTag{display:inline-block;padding:4px 7px;background:#e9eef5;border-radius:5px;white-space:nowrap}#promotionsPanel .promoGood{background:#e1f5e9;color:#166534}#promotionsPanel .promoBad{background:#fff0e5;color:#9a3412}#promotionsPanel .promoMuted{color:#64748b}#promoMessage{color:#92400e}#promotionsPanel .promoPager{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:14px}#promotionsPanel summary{cursor:pointer;font-weight:bold}@media(max-width:950px){#promotionsPanel .promoGrid{grid-template-columns:1fr}#promotionsPanel .promoKpis{grid-template-columns:1fr 1fr}}
 </style>
 </body>
 </html>
