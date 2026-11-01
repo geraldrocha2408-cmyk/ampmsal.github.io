@@ -5234,7 +5234,7 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="kpiCard orange" data-kpi="meta"><div class="kpiTitle">Meta Mensual</div><div class="kpiValue" id="kpi_meta">Pendiente</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_alcance">Alcance MTD: —</span><span class="kpiSub" id="kpi_delta_meta">Delta Meta: —</span></div></div>
 <div class="kpiCard blue" data-kpi="proj"><div class="kpiTitle">Proyección cierre mes</div><div class="kpiValue" id="kpi_proj">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_proj_vs_meta">Proy vs Meta: —</span><span class="kpiSub" id="kpi_proj_vs_ly">Proy vs LY: —</span></div></div>
 <div class="kpiCard orange" data-kpi="tx"><div class="kpiTitle">TX Diario</div><div class="kpiValue" id="kpi_tx">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_tx_delta_ly">Delta TX vs LY: —</span><span class="kpiSub" id="kpi_tx_delta_prom">Delta vs Prom S8: —</span></div></div>
-<div class="kpiCard blue" data-kpi="margin"><div class="kpiTitle">Margen Diario</div><div class="kpiValue" id="kpi_margin">Pendiente</div><div class="kpiSub" id="kpi_margin_meta">Meta Margen: 35%</div></div>
+<div class="kpiCard blue" data-kpi="margin"><div class="kpiTitle">Margen Diario</div><div class="kpiValue" id="kpi_margin">Pendiente</div><div class="kpiSub" id="kpi_margin_pct">Margen: —</div><div class="kpiSub" id="kpi_margin_meta">Meta Margen: 35%</div></div>
 <div class="kpiCard orange" data-kpi="del"><div class="kpiTitle">Vta Delivery</div><div class="kpiValue" id="kpi_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_del_delta_ly">Delta Delivery vs LY: —</span><span class="kpiSub" id="kpi_del_delta_prom">Delta vs Prom S8: —</span><span class="kpiSub" id="kpi_del_share_pill">% Delivery / Vta: —</span></div></div>
 <div class="kpiCard blue" data-kpi="no_del"><div class="kpiTitle">Vta sin Delivery</div><div class="kpiValue" id="kpi_no_del">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_no_del_delta_ly">Delta vs LY: —</span><span class="kpiSub" id="kpi_no_del_delta_prom">Delta vs Prom S8: —</span></div></div>
 <div class="kpiCard orange" data-kpi="drop"><div class="kpiTitle">Drop Diario</div><div class="kpiValue" id="kpi_drop">—</div><div class="kpiSubRow"><span class="kpiSub" id="kpi_drop_delta_ly">Delta Drop vs LY: —</span><span class="kpiSub" id="kpi_drop_delivery">Drop Delivery: —</span><span class="kpiSub" id="kpi_drop_delivery_delta_ly">Delta Delivery vs LY: —</span></div></div>
@@ -18200,7 +18200,7 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
         }
       }
 
-      const marginTxt = (document.getElementById('kpi_margin')||{}).textContent || '';
+      const marginTxt = (document.getElementById('kpi_margin_pct')||{}).textContent || '';
       const m2 = String(marginTxt).match(/(\d+(\.\d+)?)%/);
       const margin = m2 ? Number(m2[1]) : NaN;
       if(Number.isFinite(margin)){
@@ -21055,10 +21055,12 @@ if(projCal){
   if(hasGM && salesCur > 0){
     const gmCur = sumStores(getTotalGrossMargin, currentYm);
     const gmPctCur = gmCur / salesCur;
-    setText('kpi_margin', fmtPct(gmPctCur));
+    setText('kpi_margin', fmtMoney(gmCur));
+    setText('kpi_margin_pct', `Margen: ${fmtPct(gmPctCur)}`);
     markPending('kpi_margin', false);
   } else {
     setText('kpi_margin', '—');
+    setText('kpi_margin_pct', 'Margen: —');
     markPending('kpi_margin', true);
   }
 
@@ -60792,7 +60794,7 @@ function innovationOnePagerCreateBrandedShell(){
         tone = ratioTone(numFromText(textOf('kpi_tx_delta_ly')));
         break;
       case 'margin':
-        tone = higherBetterTone(pctFromText(valueText), pctFromText(textOf('kpi_margin_meta')) || 0.35, 0.97);
+        tone = higherBetterTone(pctFromText(textOf('kpi_margin_pct')), pctFromText(textOf('kpi_margin_meta')) || 0.35, 0.97);
         break;
       case 'del':
         tone = ratioTone(numFromText(textOf('kpi_del_delta_ly')));
