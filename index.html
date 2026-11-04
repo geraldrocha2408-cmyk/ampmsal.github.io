@@ -32255,12 +32255,15 @@ renderShareTable({
           const rankId = String(rankHost.id || '');
           const isGeneralSbf = rankId === 'rank_sbf_mam';
           const rankKey = rankId.replace(/^rank_sbf_store_/, '');
-          const charts = (window.state && window.state.chartSbfByStore) ? window.state.chartSbfByStore : {};
+          // The general SBF chart uses a custom canvas adapter, not Chart.js.
+          // Its state is lexical in the dashboard and also registered in AMPM_CHARTS.
+          const exportState = (typeof state !== 'undefined' && state) || window.state || {};
+          const charts = exportState.chartSbfByStore || {};
           const normKey = (v)=> String(v || '').replace(/[^A-Za-z0-9_-]+/g, '_');
           const chartKey = Object.keys(charts || {}).find(k => k === rankKey || normKey(k) === rankKey);
           const chartCanvasId=isGeneralSbf?'chart_sbf_mam':'chart_sbf_store_'+rankKey;
-          const chart = (typeof Chart!=='undefined' && typeof Chart.getChart==='function' ? Chart.getChart(chartCanvasId) : null) || (isGeneralSbf
-            ? ((window.state && window.state.chartSbfMam) ? window.state.chartSbfMam : null)
+          const chart = (typeof Chart!=='undefined' && typeof Chart.getChart==='function' ? Chart.getChart(chartCanvasId) : null) || (window.AMPM_CHARTS && window.AMPM_CHARTS[chartCanvasId]) || (isGeneralSbf
+            ? exportState.chartSbfMam
             : (chartKey ? charts[chartKey] : null));
           const srcCanvas = chart && chart.canvas ? chart.canvas : null;
           const srcImg = block.querySelector('.monthly-chart-viewport img, img');
@@ -32318,7 +32321,7 @@ renderShareTable({
           let outH = targetPxH / DPR;
           const cssW = outW - padX * 2;
           const headerTitle = String(block.querySelector('.section h2')?.textContent || '').trim();
-          const introNode = Array.from(block.children || []).find(ch => ch && ch.classList && ch.classList.contains('muted'));
+          const introNode = Array.from(block.children || []).find(ch => ch && ch.classList && ch.classList.contains('muted')) || block.querySelector('.chartCard > .muted');
           const introText = String(introNode?.textContent || '').replace(/\s+/g, ' ').trim();
 
           const measureCanvas = document.createElement('canvas');
@@ -32350,13 +32353,11 @@ renderShareTable({
           const chartSpaceH = outH - padTop - titleH - introH - rankH - padBottom;
           const sourceW=Number(chart?.width||srcDrawable.naturalWidth||srcDrawable.width)||cssW;
           const sourceH=Number(chart?.height||srcDrawable.naturalHeight||srcDrawable.height)||chartSpaceH;
-          // Store charts keep their original aspect ratio; the former fixed-height
-          // export stretched short charts vertically and magnified that in Word.
-          const cssH = isGeneralSbf ? Math.max(300, Math.min(520, chartSpaceH)) : cssW*sourceH/sourceW;
-          if(!isGeneralSbf){
-            outH=padTop+titleH+introH+cssH+rankH+padBottom;
-            targetPxH=Math.ceil(outH*DPR);
-          }
+          // Preserve the live chart proportions for both the general custom canvas
+          // and store charts; a fixed export height stretches bars and lettering.
+          const cssH = cssW*sourceH/sourceW;
+          outH=padTop+titleH+introH+cssH+rankH+padBottom;
+          targetPxH=Math.ceil(outH*DPR);
           const canvas = document.createElement('canvas');
           canvas.width = targetPxW;
           canvas.height = targetPxH;
@@ -32724,7 +32725,9 @@ async function exportWeeklyEmailWord(){
     for(const store of stores)await chart('chart_sbf_store_'+store,'TX SBF '+store);
     const prev=getSelectedValues(document.getElementById('prevMonths'));
     for(const group of [stores,...stores.map(s=>[s])]){
-      refreshExtraTables(week,prev,group,'sbf');await capture('#t_sbf_prov','Generales TX SBF — '+(group.length>1?'Total':group[0]));
+      refreshExtraTables(week,prev,group,'sbf');
+      parts.push({kind:'email-section',title:group.length>1?'AMPM SAL':group[0],lines:[]});
+      await capture('#t_sbf_prov','Generales TX SBF — '+(group.length>1?'Total':group[0]));
     }
     refreshExtraTables(week,prev,stores,'sbf');
     await tab('delivery');
@@ -69016,7 +69019,7 @@ body.report-mode-mensual #delivery_share_store_cards > .chartCard canvas{
     var section=byId('vapesHistorySection');if(!section){section=document.createElement('section');section.id='vapesHistorySection';section.innerHTML='<div class="vapesCardHead"><h3>Histórico Vapes por proveedor y tienda</h3><button type="button" class="btn" style="width:auto;flex:0 0 auto" id="vapesHistoryWord">Descargar Word</button></div><p id="vapesHistoryScope"></p>'+['sales','gm','qty','stores'].map(function(k){return '<div style="background:#fff;border-radius:14px;padding:14px;margin:14px 0"><div style="height:430px;position:relative"><canvas id="vapesHistory_'+k+'"></canvas></div></div>';}).join('');root.appendChild(section);byId('vapesHistoryWord').onclick=downloadVapesHistoryWord;}
     var model=vapesHistoryModel(sheets);local.historyModel=model;byId('vapesHistoryScope').textContent=model.scope+' · Hasta 52 períodos disponibles (15 en mensual)';byId('vapesHistoryWord').disabled=!model.periods.length;
     ['sales','gm','qty','stores'].forEach(function(metric,j){var id='vapesHistory_'+metric;try{charts[id].destroy();}catch(e){}var palette=[C.blue,C.orange,'#A5A5A5','#FFC000','#7C3AED'];var color=function(name,i){var n=norm(name);return /BNS/.test(n)?C.blue:/MYDAS/.test(n)?C.orange:/GSL/.test(n)?'#A5A5A5':/DISMO/.test(n)?'#FFC000':palette[i%palette.length];};
-      var byStore=metric==='stores',series=byStore?model.stores:model.providers,field=byStore?'sales':metric,storeColors={AMPM01:'#005FA8',AMPM02:'#F58320',AMPM03:'#A5A5A5'};
+      var byStore=metric==='stores',series=byStore?model.stores:model.providers,field=byStore?'sales':metric,storeColors={AMPM01:C.blue,AMPM02:C.orange,AMPM03:palette[2]};
       var totals=model.periods.map(function(p){return series.reduce(function(sum,g){return sum+(g[field][p]||0);},0);});
       charts[id]=new Chart(byId(id).getContext('2d'),{type:'bar',data:{labels:model.periods.map(function(p){var m=p.match(/(\d{4})-W(\d+)/);return m?['S'+m[2],m[1]]:p;}),datasets:series.map(function(g,i){return {label:g.name,data:model.periods.map(function(p){return g[field][p]||0;}),backgroundColor:byStore?(storeColors[g.name]||palette[i%palette.length]):color(g.name,i),proBarThemeSkip:true};})},options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:20}},interaction:{mode:'index',intersect:false},plugins:{title:{display:true,text:['Vapes Sales $','Vapes Margen $','Vapes QTY','Vapes · Venta por tienda ($)'][j],color:'#000',font:{weight:'bold',size:18}},legend:{position:'bottom',labels:{color:'#000',font:{weight:'bold',size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(metric==='qty'?fint(c.raw):money(c.raw))+' · '+(totals[c.dataIndex]?(num(c.raw)/totals[c.dataIndex]*100).toFixed(1)+'%':'—');},footer:function(items){return items.length?'Total: '+(metric==='qty'?fint(totals[items[0].dataIndex]):money(totals[items[0].dataIndex])):'';}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#000',font:{weight:'bold',size:10},maxRotation:0,autoSkip:false}},y:{stacked:true,beginAtZero:true,ticks:{color:'#000',font:{weight:'bold',size:11},callback:function(v){return metric==='qty'?fint(v):money(v);}}}}},plugins:[{id:'historyTotals',afterDatasetsDraw:function(chart){
         var ctx=chart.ctx;ctx.save();ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -70643,6 +70646,36 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
   }
   function weekKey(year, week){ return String(year)+'-W'+String(Number(week)||0).padStart(2,'0'); }
   function weekLabel(week){ return 'S'+String(Number(week)||0).padStart(2,'0'); }
+  function isoWeekStart(year,week){
+    var d=new Date(Date.UTC(year,0,4));
+    d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7)+(week-1)*7);
+    return d;
+  }
+  function isoWeeksInYear(year){ return Math.round((isoWeekStart(year+1,1)-isoWeekStart(year,1))/604800000); }
+  function weekShift(year,week,offset){
+    if(week<1 || week>isoWeeksInYear(year)) return null;
+    var d=isoWeekStart(year,week);d.setUTCDate(d.getUTCDate()+offset*7+3);
+    var y=d.getUTCFullYear(), w=Math.floor((d-isoWeekStart(y,1))/604800000)+1;
+    return {year:y,week:w,key:weekKey(y,w)};
+  }
+  function projectionDateKey(value){
+    if(value instanceof Date) return isNaN(value.getTime())?'':value.toISOString().slice(0,10);
+    if(typeof value==='number' && value>20000) return new Date(Math.round((value-25569)*86400000)).toISOString().slice(0,10);
+    var m=txt(value).match(/^\d{4}-\d{2}-\d{2}/);return m?m[0]:'';
+  }
+  function projectionWeekRange(year,week){
+    var start=isoWeekStart(year,week),end=new Date(+start+6*86400000);
+    var f=function(d){return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0');};
+    return f(start)+'–'+f(end);
+  }
+  function projectionTargetOptions(data,currentYear,mirrorYear){
+    var current=Array.from(data.weeksByYear[currentYear]||[]).sort(function(a,b){return a-b;});
+    var last=current.length?current[current.length-1]:1;
+    var past=Array.from(data.weeksByYear[mirrorYear]||[]).filter(function(w){return w<=last && w<=isoWeeksInYear(currentYear);}).sort(function(a,b){return a-b;});
+    var options=past.map(function(w){return {year:currentYear,week:w,key:weekKey(currentYear,w),future:false};});
+    for(var i=1;i<=10;i++){var p=weekShift(currentYear,last,i);p.future=true;options.push(p);}
+    return options;
+  }
   function sheetReal(wb,name){ try{ if(!wb || !Array.isArray(wb.SheetNames)) return name; var want=key(name); return wb.SheetNames.find(function(n){ return key(n)===want; }) || name; }catch(e){ return name; } }
   function wbRows(name){
     var st=appState(), wb=st && st.__hallWorkbook;
@@ -70655,6 +70688,10 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     return [];
   }
   function stamp(){ var st=appState(); return st && st.__hallWorkbookStamp ? st.__hallWorkbookStamp : 0; }
+  function projectionRows(){
+    var history=wbRows('Proyecciones_ROP_Semanal');
+    return history.length?history:wbRows('Cubo_Sales_DetailHallazgos');
+  }
   function activeStoresFromGlobal(){
     var arr=[];
     try{ if(typeof getSelectedStoresOrAll === 'function') arr=getSelectedStoresOrAll() || []; }catch(e){}
@@ -70681,14 +70718,20 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     sel.appendChild(o);
   }
   function allWeeksData(){
-    var rows=wbRows('Cubo_Sales_DetailHallazgos'), years={}, stores={};
+    var rows=projectionRows(), years={}, stores={}, cutByYear={};
+    if(local.weekDataRows===rows && local.weekData) return local.weekData;
     rows.forEach(function(r){
       var wk=weekFromValue(val(r,['YearWeek','Week','Semana']));
-      if(wk){ (years[wk.year]=years[wk.year]||new Set()).add(wk.week); }
+      if(wk){
+        (years[wk.year]=years[wk.year]||new Set()).add(wk.week);
+        var date=projectionDateKey(val(r,['Date Sold','LastDate','Date']));
+        if(date && (!cutByYear[wk.year] || date>cutByYear[wk.year])) cutByYear[wk.year]=date;
+      }
       var st=rowStore(r); if(st) stores[st]=true;
     });
     var outYears=Object.keys(years).map(Number).sort(function(a,b){ return a-b; });
-    return { years:outYears, weeksByYear:years, stores:Object.keys(stores).sort() };
+    local.weekDataRows=rows;
+    return local.weekData={ years:outYears, weeksByYear:years, stores:Object.keys(stores).sort(),cutByYear:cutByYear };
   }
   function supplierOptions(stores){
     var set=new Set(stores || []), found={};
@@ -70698,7 +70741,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       var sk=supplierKey(r), nm=supplierName(r);
       if(sk) found[sk]=nm;
     }
-    (wbRows('Cubo_Sales_DetailHallazgos') || []).forEach(take);
+    (projectionRows() || []).forEach(take);
     (wbRows('Inventario_Items') || []).forEach(take);
     return Object.keys(found).map(function(k){ return {key:k,name:found[k]}; }).sort(function(a,b){ return a.name.localeCompare(b.name); });
   }
@@ -70744,20 +70787,30 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     mirrorYear = Number(lySel.value) || mirrorYear;
     var currentWeeks=Array.from(data.weeksByYear[currentYear] || []).sort(function(a,b){ return a-b; });
     var mirrorWeeks=Array.from(data.weeksByYear[mirrorYear] || []).sort(function(a,b){ return a-b; });
-    var possible=mirrorWeeks.length ? mirrorWeeks : Array.from({length:53},function(_,i){return i+1;});
-    var maxCurrent=currentWeeks.length ? currentWeeks[currentWeeks.length-1] : 1;
-    var defaultTarget=Math.min(53, maxCurrent + 3);
-    var previousTarget=Number(tgtSel.value) || defaultTarget;
+    var possible=projectionTargetOptions(data,currentYear,mirrorYear);
+    var defaultTarget=possible.find(function(p){return p.future;});
+    var previousTarget=txt(tgtSel.value);
+    if(/^\d+$/.test(previousTarget)) previousTarget=weekKey(currentYear,Number(previousTarget));
+    if(!possible.some(function(p){return p.key===previousTarget;})) previousTarget=defaultTarget.key;
     tgtSel.innerHTML='';
-    possible.forEach(function(w){ addOpt(tgtSel,String(w),weekLabel(w),w===previousTarget); });
-    if(!tgtSel.value) tgtSel.value=String(defaultTarget);
-    var targetWeek=Number(tgtSel.value) || defaultTarget;
-    var oldWeeks=selectedMirrorWeeks();
-    var eligible=currentWeeks.filter(function(w){ return mirrorWeeks.indexOf(w)>=0 && w<targetWeek; });
+    [false,true].forEach(function(future){
+      var group=document.createElement('optgroup');group.label=future?'Próximas 10 semanas':'Semanas anteriores';
+      possible.filter(function(p){return p.future===future;}).forEach(function(p){
+        addOpt(group,p.key,weekLabel(p.week)+' '+p.year+' · '+projectionWeekRange(p.year,p.week),p.key===previousTarget);
+      });
+      if(group.children.length)tgtSel.appendChild(group);
+    });
+    tgtSel.value=previousTarget;
+    tgtSel.title=tgtSel.selectedOptions.length?tgtSel.selectedOptions[0].textContent:'';
+    var target=weekFromValue(tgtSel.value),targetWeek=target.week;
+    var oldWeeks=force?[]:selectedMirrorWeeks();
+    var eligible=currentWeeks.filter(function(w){ return mirrorWeeks.indexOf(w)>=0 && weekKey(currentYear,w)<target.key; });
     if(!eligible.length) eligible=currentWeeks.filter(function(w){ return mirrorWeeks.indexOf(w)>=0; });
-    var defWeeks=eligible.slice(-MIRROR_WEEK_LIMIT);
+    var cut=data.cutByYear[currentYear];
+    var isComplete=function(w){return !cut || new Date(+isoWeekStart(currentYear,w)+6*86400000).toISOString().slice(0,10)<=cut;};
+    var defWeeks=eligible.filter(isComplete).slice(-MIRROR_WEEK_LIMIT);
     wkSel.innerHTML='';
-    eligible.forEach(function(w){ addOpt(wkSel,String(w),weekLabel(w), oldWeeks.length ? oldWeeks.indexOf(w)>=0 : defWeeks.indexOf(w)>=0); });
+    eligible.forEach(function(w){ addOpt(wkSel,String(w),weekLabel(w)+(isComplete(w)?'':' · parcial'), oldWeeks.length ? oldWeeks.indexOf(w)>=0 : defWeeks.indexOf(w)>=0); });
     if(!selectValues(wkSel).length){
       Array.from(wkSel.options).forEach(function(o){ o.selected=defWeeks.indexOf(Number(o.value))>=0; });
     }
@@ -70799,12 +70852,13 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       '<div class="projControls">'+
         '<div class="projField"><label>Tienda</label><select class="projSelect" id="projStore"></select></div>'+
         '<div class="projField"><label>Supplier</label><select class="projSelect" id="projSupplierFilter"></select></div>'+
-        '<div class="projField"><label>Ano actual</label><select class="projSelect" id="projCurrentYear"></select></div>'+
-        '<div class="projField"><label>Ano espejo</label><select class="projSelect" id="projMirrorYear"></select></div>'+
+        '<div class="projField"><label>Año base actual</label><select class="projSelect" id="projCurrentYear"></select></div>'+
+        '<div class="projField"><label>Año base espejo</label><select class="projSelect" id="projMirrorYear"></select></div>'+
         '<div class="projField"><label>Semana a proyectar</label><select class="projSelect" id="projTargetWeek"></select></div>'+
         '<div class="projField"><label>Semanas espejo <span id="projMirrorCount"></span></label><select class="projSelect" id="projMirrorWeeks" multiple></select></div>'+
         '<div class="projActions"><label class="projCheck"><input type="checkbox" id="projOnlyDiff" checked> Solo diferencias ROP</label><button class="projBtn" id="projApply" type="button">Actualizar proyeccion</button><button class="projBtn secondary" id="projCsv" type="button">Descargar CSV</button></div>'+
       '</div>'+
+      '<div class="projNoData" id="projPeriodDetail" style="background:#eff6ff;border-color:#bfdbfe;color:#11284A"></div>'+
       '<div class="projNoData" id="projNoData" style="display:none"></div>'+
       '<div class="projSummary" id="projSummary"></div>'+
       '<div class="projCard"><div class="projCardHead"><div><h3>Tabla de proyeccion por supplier e item</h3><div class="sub" id="projTableSub">QTY proyectada y ROP nuevo calculado por tienda.</div></div><span class="projBadge" id="projRowsBadge">0 items</span></div><div class="projTableWrap"><table class="projTable" id="projTable"></table></div></div>';
@@ -70847,10 +70901,12 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     if(btn) btn.textContent='Actualizar proyeccion';
   }
   function readProjectionControls(){
+    var target=weekFromValue(byId('projTargetWeek') && byId('projTargetWeek').value);
     return {
       currentYear:Number(byId('projCurrentYear') && byId('projCurrentYear').value) || 0,
       mirrorYear:Number(byId('projMirrorYear') && byId('projMirrorYear').value) || 0,
-      targetWeek:Number(byId('projTargetWeek') && byId('projTargetWeek').value) || 0,
+      targetYear:target?target.year:Number(byId('projCurrentYear') && byId('projCurrentYear').value),
+      targetWeek:target?target.week:0,
       weeks:selectedMirrorWeeks(),
       stores:resolveStores(),
       supplierFilter:txt(byId('projSupplierFilter') && byId('projSupplierFilter').value),
@@ -70941,21 +70997,29 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     var cfg=config || local.applied || readProjectionControls();
     var currentYear=Number(cfg.currentYear) || 0;
     var mirrorYear=Number(cfg.mirrorYear) || 0;
+    var targetYear=Number(cfg.targetYear) || currentYear;
     var targetWeek=Number(cfg.targetWeek) || 0;
-    var preWeek=Math.max(1,targetWeek-1);
+    var targetMirrorYear=mirrorYear+(targetYear-currentYear);
+    var validTarget=targetWeek>0 && targetWeek<=isoWeeksInYear(targetMirrorYear);
+    var pre=validTarget?weekShift(targetMirrorYear,targetWeek,-1):null;
+    var preYear=pre?pre.year:targetMirrorYear, preWeek=pre?pre.week:0;
     var weeks=(cfg.weeks || []).slice();
     var stores=(cfg.stores || []).slice();
     var inv=inventoryMap(stores);
-    var rows=wbRows('Cubo_Sales_DetailHallazgos') || [];
+    var rows=projectionRows() || [];
     var itemMap={};
-    var wantedYears=new Set([currentYear,mirrorYear]);
-    var wantedWeeks=new Set(weeks.concat([targetWeek,preWeek]));
+    var wantedKeys=new Set();
+    weeks.forEach(function(w){wantedKeys.add(weekKey(currentYear,w));wantedKeys.add(weekKey(mirrorYear,w));});
+    var targetKey=weekKey(targetMirrorYear,targetWeek);
+    if(validTarget){wantedKeys.add(targetKey);wantedKeys.add(pre.key);}
+    var coverage=new Set();
     var storeSet=new Set(stores);
     rows.forEach(function(r){
       var st=rowStore(r);
       if(storeSet.size && !storeSet.has(st)) return;
       var wk=weekFromValue(val(r,['YearWeek','Week','Semana']));
-      if(!wk || !wantedYears.has(wk.year) || !wantedWeeks.has(wk.week)) return;
+      if(!wk || !wantedKeys.has(weekKey(wk.year,wk.week))) return;
+      coverage.add(st+'|'+weekKey(wk.year,wk.week));
       var sk=supplierKey(r), dk=descKey(r);
       if(!sk || !dk) return;
       var id=sk+'|'+dk;
@@ -70964,6 +71028,13 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       item.qty[p]=(item.qty[p]||0)+rowQty(r);
       item.sales[p]=(item.sales[p]||0)+rowSales(r);
     });
+    var missingPeriods=[];
+    if(!validTarget) missingPeriods.push('No existe '+weekLabel(targetWeek)+' en '+targetMirrorYear+' (calendario ISO).');
+    var checkedStores=stores.length?stores:Array.from(new Set(rows.map(rowStore).filter(Boolean)));
+    wantedKeys.forEach(function(p){checkedStores.forEach(function(st){if(!coverage.has(st+'|'+p))missingPeriods.push(st+' · '+p);});});
+    var targetAvailable=validTarget && checkedStores.length>0 && checkedStores.every(function(st){return coverage.has(st+'|'+targetKey);});
+    var model={currentYear:currentYear,mirrorYear:mirrorYear,targetYear:targetYear,targetMirrorYear:targetMirrorYear,targetWeek:targetWeek,preYear:preYear,preWeek:preWeek,weeks:weeks,stores:checkedStores,items:[],allItems:[],suppliers:[],onlyDiff:!!cfg.onlyDiff,targetAvailable:targetAvailable,missingPeriods:missingPeriods,unavailable:missingPeriods.length>0 || !weeks.length || !checkedStores.length};
+    if(model.unavailable) return model;
     Object.keys(itemMap).forEach(function(id){
       if(inv[id]) itemMap[id].inv=inv[id];
     });
@@ -70973,8 +71044,8 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
       var currentVals=weeks.map(function(w){ return num(it.qty[weekKey(currentYear,w)]); });
       var mirrorAvg=mirrorVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
       var currentAvg=currentVals.reduce(function(a,b){return a+b;},0)/(weeks.length||1);
-      var targetLy=num(it.qty[weekKey(mirrorYear,targetWeek)]);
-      var preLy=num(it.qty[weekKey(mirrorYear,preWeek)]);
+      var targetLy=num(it.qty[targetKey]);
+      var preLy=num(it.qty[pre.key]);
       var factorRaw=mirrorAvg>0 ? targetLy/mirrorAvg : ((targetLy>0 || currentAvg>0) ? DELTA_FALLBACK : 0);
       var factor=Math.min(factorRaw, DELTA_CAP);
       var projection=currentAvg*factor;
@@ -71008,7 +71079,8 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     var bySupplier={};
     displayItems.forEach(function(r){ (bySupplier[r.supplierKey]=bySupplier[r.supplierKey]||{name:r.supplier, sales:0, items:[]}).items.push(r); bySupplier[r.supplierKey].sales+=r.salesCurrent; });
     var suppliers=Object.keys(bySupplier).map(function(k){ bySupplier[k].key=k; return bySupplier[k]; }).sort(function(a,b){ return b.sales-a.sales; });
-    return {currentYear:currentYear, mirrorYear:mirrorYear, targetWeek:targetWeek, preWeek:preWeek, weeks:weeks, stores:stores, items:displayItems, allItems:items, suppliers:suppliers, onlyDiff:onlyDiff};
+    model.items=displayItems; model.allItems=items; model.suppliers=suppliers;
+    return model;
   }
   function sumArr(rows, prop){ return rows.reduce(function(a,r){ return a+num(r[prop]); },0); }
   function renderSummary(model){
@@ -71016,16 +71088,18 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     var qtyProj=sumArr(model.items,'projection'), ropNew=sumArr(model.items,'ropNuevo'), ropOld=sumArr(model.items,'ropActual'), exist=sumArr(model.items,'exist'), sales=sumArr(model.items,'salesCurrent');
     node.innerHTML=
       '<div class="projKpi"><span>Tienda</span><b>'+esc(model.stores.length===1?storeLabel(model.stores[0]):model.stores.length+' tiendas')+'</b><small>'+esc(model.stores.join(', ') || 'Sin filtro')+'</small></div>'+
-      '<div class="projKpi orange"><span>Semana objetivo</span><b>'+esc(weekLabel(model.targetWeek))+'</b><small>Pre-semana '+esc(weekLabel(model.preWeek))+'</small></div>'+
-      '<div class="projKpi"><span>Items con ROP</span><b>'+fmtInt(model.items.length)+'</b><small>'+fmtInt(model.allItems.length)+' items evaluados</small></div>'+
-      '<div class="projKpi green"><span>Proyeccion QTY</span><b>'+fmtInt(qtyProj)+'</b><small>Venta base '+fmtMoney(sales)+'</small></div>'+
-      '<div class="projKpi red"><span>ROP nuevo</span><b>'+fmtInt(ropNew)+'</b><small>Dif vs ROP actual '+fmtInt(ropNew-ropOld)+' | Exist '+fmtInt(exist)+'</small></div>';
+      '<div class="projKpi orange"><span>Semana objetivo</span><b>'+esc(weekLabel(model.targetWeek)+' '+model.targetYear)+'</b><small>'+esc(projectionWeekRange(model.targetYear,model.targetWeek))+'</small></div>'+
+      '<div class="projKpi"><span>Items con ROP</span><b>'+(model.unavailable?'—':fmtInt(model.items.length))+'</b><small>'+(model.unavailable?'Falta histórico':fmtInt(model.allItems.length)+' items evaluados')+'</small></div>'+
+      '<div class="projKpi green"><span>Proyección QTY</span><b>'+(model.unavailable?'—':fmtInt(qtyProj))+'</b><small>'+(model.unavailable?'Sin cálculo':('Venta base '+fmtMoney(sales)))+'</small></div>'+
+      '<div class="projKpi red"><span>ROP nuevo</span><b>'+(model.unavailable?'—':fmtInt(ropNew))+'</b><small>'+(model.unavailable?'Sin cálculo':('Dif vs ROP actual '+fmtInt(ropNew-ropOld)+' | Exist '+fmtInt(exist)))+'</small></div>';
     var badge=byId('projScopeBadge');
     if(badge) badge.textContent='Espejo '+model.mirrorYear+' vs '+model.currentYear+' | '+model.weeks.map(weekLabel).join(', ');
     var rowsBadge=byId('projRowsBadge');
     if(rowsBadge) rowsBadge.textContent=fmtInt(model.items.length)+' items';
     var sub=byId('projTableSub');
     if(sub) sub.textContent='Ordenado por supplier y venta actual. Proyeccion en QTY.';
+    var detail=byId('projPeriodDetail');
+    if(detail) detail.innerHTML='<b>Objetivo: '+esc(weekLabel(model.targetWeek)+' '+model.targetYear)+' · '+esc(projectionWeekRange(model.targetYear,model.targetWeek))+'</b><br>Venta histórica: '+esc(weekLabel(model.targetWeek)+' '+model.targetMirrorYear)+(model.targetAvailable?' · '+esc(projectionWeekRange(model.targetMirrorYear,model.targetWeek)):' · sin histórico equivalente')+'. Tendencia: '+esc(model.weeks.map(weekLabel).join(', '))+' de '+model.currentYear+' frente a '+model.mirrorYear+'.<br>La proyección aplica esa tendencia a la venta de la semana histórica. Se conserva el tope de estacionalidad de 3.5; cada «i» explica el cálculo.';
   }
   function supplierTotalRows(items, weeks){
     var total={mirrorVals:weeks.map(function(){return 0;}),currentVals:weeks.map(function(){return 0;}),mirrorAvg:0,currentAvg:0,targetLy:0,preLy:0,factor:0,projection:0,maxBase:0,ropAdd:0,ropActual:0,plan:0,exist:0,ropNuevo:0,diff:0,salesCurrent:0};
@@ -71079,8 +71153,8 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     h1.push('<th class="projHeadGroup rop" colspan="2">ROP</th>');
     model.weeks.forEach(function(w,i){ h2.push('<th class="projColMirror '+(i===0?'projStart':'')+'">'+weekLabel(w)+'</th>'); });
     model.weeks.forEach(function(w,i){ h2.push('<th class="projColCurrent '+(i===0?'projStart':'')+'">'+weekLabel(w)+'</th>'); });
-    h2.push('<th class="projColImpact projStart">Pre<br>'+weekLabel(model.preWeek)+'</th>');
-    h2.push('<th class="projColImpact">Obj<br>'+weekLabel(model.targetWeek)+'</th>');
+    h2.push('<th class="projColImpact projStart">Pre<br>'+ (model.preWeek?weekLabel(model.preWeek)+'<br>'+model.preYear:'—')+'</th>');
+    h2.push('<th class="projColImpact">Obj<br>'+weekLabel(model.targetWeek)+'<br>'+model.targetMirrorYear+'</th>');
     h2.push('<th class="projColCalc projStart">Delta'+infoIcon('Semana objetivo espejo dividido entre el promedio de semanas espejo. Si no hay base espejo, usa 1.15. Tope maximo: 3.5.')+'</th><th class="projColCalc">Prom'+infoIcon('Promedio de QTY de las semanas base del ano actual seleccionadas.')+'</th><th class="projColCalc">Proy'+infoIcon('Promedio actual multiplicado por Delta. Si Delta real supera 3.5, usa 3.5.')+'</th><th class="projColCalc">Max'+infoIcon('Mayor valor entre Proy, semana objetivo espejo, pre-semana espejo y semanas base actuales.')+'</th>');
     h2.push('<th class="projColInv projStart">ROP<br>act</th><th class="projColInv">Plan</th><th class="projColInv">Exist</th>');
     h2.push('<th class="projColRop projStart">ROP<br>nuevo'+infoIcon('General: Max + Prom QTY. Constancia/Inversiones Vida: Max + 50% del Prom QTY. Si Plan es mayor, usa Plan.')+'</th><th class="projColRop">Dif'+infoIcon('ROP nuevo menos ROP actual. Verde sube ROP; rojo baja ROP.')+'</th>');
@@ -71108,7 +71182,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     installTab();
     installPage();
     var no=byId('projNoData');
-    var sales=wbRows('Cubo_Sales_DetailHallazgos');
+    var sales=projectionRows();
     if(!sales || !sales.length){
       if(no){ no.style.display=''; no.textContent='Carga primero el Cubo_Semanal_Compactado.xlsx para calcular proyecciones.'; }
       return;
@@ -71120,12 +71194,14 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     if(applyPending || !local.applied) local.applied=readProjectionControls();
     var model=buildModel(local.applied);
     local.rows=model;
-    if(model.weeks.length !== MIRROR_WEEK_LIMIT && no){
-      no.style.display='';
-      no.textContent='Selecciona '+MIRROR_WEEK_LIMIT+' semanas espejo. El calculo puede verse con '+model.weeks.length+', pero la base ideal son '+MIRROR_WEEK_LIMIT+'.';
-    }else if(no){
-      no.style.display='none';
-    }
+    var warnings=[];
+    if(model.unavailable) warnings.push('No se calcula la proyección: falta histórico completo para '+(model.missingPeriods.join('; ') || 'las semanas seleccionadas')+'.');
+    if(model.weeks.length!==MIRROR_WEEK_LIMIT) warnings.push('Selecciona '+MIRROR_WEEK_LIMIT+' semanas base para comparar.');
+    var cut=allWeeksData().cutByYear[model.currentYear];
+    var partial=model.weeks.filter(function(w){var d=isoWeekStart(model.currentYear,w);d.setUTCDate(d.getUTCDate()+6);return cut && d.toISOString().slice(0,10)>cut;});
+    if(partial.length) warnings.push('Base parcial: '+partial.map(weekLabel).join(', ')+'. Corte de datos: '+cut+'. Puede reducir la proyección; usa semanas completas.');
+    if(no){no.style.display=warnings.length?'':'none';no.textContent=warnings.join(' ');}
+    var csv=byId('projCsv');if(csv) csv.disabled=model.unavailable;
     renderSummary(model);
     renderTable(model);
     if(applyPending || !local.pending) clearProjectionPending();
@@ -71137,10 +71213,11 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
   function csvCell(v){ v=txt(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
   function downloadCsv(){
     var model=local.rows || buildModel();
+    if(model.unavailable) return;
     var headers=['Supplier','Item'].concat(
       model.weeks.map(function(w){return model.mirrorYear+' '+weekLabel(w);}),
       model.weeks.map(function(w){return model.currentYear+' '+weekLabel(w);}),
-      [model.mirrorYear+' '+weekLabel(model.preWeek),model.mirrorYear+' '+weekLabel(model.targetWeek),'Delta','Prom '+model.currentYear,'Proy QTY','Max base','ROP actual','Plan','Exist','ROP nuevo','Dif ROP']
+      [model.preYear+' '+weekLabel(model.preWeek),model.targetMirrorYear+' '+weekLabel(model.targetWeek),'Delta estacional','Prom '+model.currentYear,'Proy QTY '+model.targetYear+' '+weekLabel(model.targetWeek),'Max base','ROP actual','Plan','Exist','ROP nuevo','Dif ROP']
     );
     var lines=[headers.map(csvCell).join(',')];
     model.suppliers.forEach(function(s){
@@ -71153,7 +71230,7 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
     var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='Proyecciones_ROP_'+Date.now()+'.csv';
+    a.download='Proyecciones_ROP_'+weekKey(model.targetYear,model.targetWeek)+'.csv';
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
