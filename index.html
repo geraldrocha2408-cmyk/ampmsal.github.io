@@ -72102,8 +72102,163 @@ body #regiaSalesStatus{font-size:13px;margin:12px 0;}
   const allSales=scope.reduce((s,r)=>s+(+r.Sales||0),0);
   return {cells,ranked,campaigns,allSales,summary:aggregate(cells),stores:[...storeSet].map(key=>({key,...aggregate(cells.filter(r=>r.store===key))})),daily:days.map(key=>({key,...aggregate(cells.filter(r=>r.date===key))})),weekdays:[1,2,3,4,5,6,7].map(key=>({key,...aggregate(cells.filter(r=>dow(r.date)===key))})),categories:shares('Category'),departments:shares('Department'),bounds:[bounds[0],end],cutoff,overlaps:overlaps.size,missing:missing.size,promos:new Set(cells.map(r=>r.p.Id)).size,issues:(data.Promo_Status||[])[0]?.Issues||'',unmatched:catalog.filter(p=>!p.HasSales&&visible(p)),future:catalog.filter(p=>p.Start>end&&visible(p)).length};
  }
- global.PromotionsModel={build,range};
+ function buildDebits(data,filters={}){
+  // A month is independent of the weekly/MTD comparison cut. Dates and winners
+  // still come from the same catalogue rules as the commercial follow-up.
+  const cutoff=String((data.Promo_Status||[])[0]?.Cutoff||'').slice(0,10);
+  const requested=String(filters.month||filters.period||cutoff).slice(0,7);
+  const month=/^\d{4}-(0[1-9]|1[0-2])$/.test(requested)?requested:cutoff.slice(0,7);
+  const rawPercent=filters.adjustmentPct==null?100:Number(filters.adjustmentPct);
+  const adjustmentPct=Math.min(100,Math.max(0,Number.isFinite(rawPercent)?rawPercent:100));
+  const model=build(data,{...filters,period:month,endDate:cutoff});
+  const hasInvoiceData=Array.isArray(data.Promo_Invoice_Qty)&&(data.Promo_Invoice_Qty.length>0||Number(data.Promo_Status?.[0]?.InvoiceSchema)===1);
+  const hist=new Map(),keyOf=r=>[r.Date,r.Store,r.Channel,r.Item].join('|');
+  for(const r of data.Promo_Invoice_Qty||[]){
+   const key=keyOf(r);if(!hist.has(key))hist.set(key,[]);hist.get(key).push(r);
+  }
+  const clean=n=>Math.abs(n)<1e-9?0:Math.round(n*1e6)/1e6;
+  const groups=(q,size)=>Math.sign(q)*Math.floor((Math.abs(q)+1e-7)/size);
+  const cells=model.cells.map(c=>{
+   const size=Number(c.p.PackSize),packSize=Number.isInteger(size)&&size>0?size:null;
+   const records=hist.get([c.date,c.store,c.p.Channel,c.p.Item].join('|'))||[];
+   let knownQty=0,knownPacks=0,invoiceCount=0,missingTXQty=0,missingTXLines=0,invalidHistogram=false;
+   for(const r of records){
+    const q=Number(r.Qty),count=Number(r.InvoiceCount),missingQty=Number(r.MissingTXQty||0),missingLines=Number(r.MissingTXLines||0);
+    if(![q,count,missingQty,missingLines].every(Number.isFinite)||count<0||!Number.isInteger(count)||missingLines<0){invalidHistogram=true;continue;}
+    knownQty+=q*count;invoiceCount+=count;missingTXQty+=missingQty;missingTXLines+=missingLines;
+    if(packSize>1)knownPacks+=groups(q,packSize)*count;
+   }
+   const reconciled=hasInvoiceData&&!invalidHistogram&&Math.abs(knownQty+missingTXQty-c.qty)<Math.max(1e-4,invoiceCount*1e-6);
+   const complete=hasInvoiceData&&reconciled&&!missingTXLines&&!c.missingCurrent&&!!packSize;
+   return {...c,packSize,knownQty:clean(knownQty),knownPacks:clean(knownPacks),invoiceCount,missingTXQty:clean(missingTXQty),missingTXLines,invalidHistogram,reconciled,complete,
+    packs:packSize>1&&complete?clean(knownPacks):null,
+    looseQty:packSize>1&&complete?clean(c.qty-knownPacks*packSize):null};
+  });
+  const selectedStores=filters.stores?.length?[...new Set(filters.stores)]:['AMPM01','AMPM02','AMPM03'];
+  function aggregate(list){
+   const sum=field=>clean(list.reduce((s,c)=>s+(Number(c[field])||0),0));
+   const qty=sum('qty'),sales=sum('sales'),packCells=list.filter(c=>c.packSize>1);
+   const complete=list.every(c=>c.complete),packsComplete=packCells.every(c=>c.complete);
+   const adjustedQty=clean(qty*adjustmentPct/100);
+   return {sales,qty,adjustmentPct,adjustedQty,
+    adjustedPromos:list.every(c=>c.packSize)?clean(list.reduce((s,c)=>s+c.qty*adjustmentPct/100/c.packSize,0)):null,
+    packs:packCells.length&&packsComplete?clean(packCells.reduce((s,c)=>s+c.packs,0)):null,
+    knownPacks:clean(packCells.reduce((s,c)=>s+c.knownPacks,0)),
+    looseQty:packCells.length&&packsComplete?clean(packCells.reduce((s,c)=>s+c.looseQty,0)):null,
+    knownQty:sum('knownQty'),invoiceCount:sum('invoiceCount'),missingTXQty:sum('missingTXQty'),missingTXLines:sum('missingTXLines'),
+    complete,reconciled:list.every(c=>c.reconciled),missingCurrent:list.filter(c=>c.missingCurrent).length,
+    currentCoverage:list.length?list.filter(c=>!c.missingCurrent).length/list.length:0,
+    dates:[...new Set(list.map(c=>c.date))].sort(),observed:[...new Set(list.filter(c=>!c.missingCurrent).map(c=>c.date))].sort(),
+    hasMovement:list.some(c=>c.qty!==0||c.sales!==0||c.invoiceCount||c.missingTXLines)};
+  }
+  const campaignMap=new Map();
+  cells.forEach(c=>{const key=String(c.p.Id).split('-')[0]+'|'+(c.packSize||'unknown');if(!campaignMap.has(key))campaignMap.set(key,[]);campaignMap.get(key).push(c);});
+  const rows=[...campaignMap].map(([key,list])=>{
+   const p=list[0].p,packSize=list[0].packSize,stats=aggregate(list),warnings=[];
+   if(!hasInvoiceData)warnings.push('Actualiza el cubo para disponer del conteo por factura.');
+   if(!packSize)warnings.push('Falta el tamaño de la promoción en el catálogo.');
+   if(stats.missingTXLines)warnings.push(stats.missingTXLines+' líneas sin factura: packs reales incompletos.');
+   if(hasInvoiceData&&!stats.reconciled)warnings.push('El detalle de facturas no concilia con las unidades vendidas.');
+   if(stats.missingCurrent)warnings.push('Faltan datos de tienda en algunos días de vigencia.');
+   if(list.some(c=>Number(c.p.DateConflict)))warnings.push('Vigencias distintas en el catálogo; se usan '+p.DateSource+'.');
+   if(list.some(c=>Number(c.p.DOWConflict)))warnings.push('Días distintos en el texto alternativo; se usa el patrón de días de Inicio / Fin.');
+   const channels=[...new Map(list.map(c=>[c.p.Channel,c.p])).values()];
+   return {key,p,packSize,...stats,channels,warnings,
+    stores:selectedStores.map(store=>({store,...aggregate(list.filter(c=>c.store===store))})),
+    details:channels.map(promo=>({channel:promo.Channel,dynamic:promo.Dynamic,start:promo.Start,end:promo.End,dows:String(promo.DOW).split(',').map(Number),dates:[...new Set(list.filter(c=>c.p.Channel===promo.Channel).map(c=>c.date))].sort()}))};
+  }).filter(r=>r.hasMovement).sort((a,b)=>b.sales-a.sales||a.p.Description.localeCompare(b.p.Description));
+  const activeKeys=new Set(rows.map(r=>r.key));
+  const soldCells=cells.filter(c=>activeKeys.has(String(c.p.Id).split('-')[0]+'|'+(c.packSize||'unknown')));
+  const packSizes=[...new Set(rows.map(r=>r.packSize).filter(Boolean))].sort((a,b)=>a-b);
+  const summary=aggregate(soldCells);
+  summary.byPackSize=packSizes.map(packSize=>({packSize,...aggregate(soldCells.filter(c=>c.packSize===packSize))}));
+  const warnings=[];
+  if(!hasInvoiceData)warnings.push('Actualiza el cubo: falta el detalle por factura para contar packs reales.');
+  if(summary.missingTXLines)warnings.push(summary.missingTXLines+' líneas sin factura: el conteo de packs no está completo.');
+  if(hasInvoiceData&&!summary.reconciled)warnings.push('Hay diferencias entre el detalle por factura y las unidades: revisa las promociones señaladas.');
+  if(summary.missingCurrent)warnings.push('Faltan datos en algunos días/tiendas; se muestran solo las unidades disponibles.');
+  const conflicts=rows.filter(r=>r.channels.some(p=>+p.DateConflict||+p.DOWConflict)).length;
+  if(conflicts)warnings.push(conflicts+' promociones tienen fechas o días distintos en el texto alternativo; se aplican Inicio / Fin y su patrón de días. Ver detalle de cada fila.');
+  if(model.overlaps)warnings.push('Hay campañas superpuestas; cada venta se atribuye una sola vez a la de mayor descuento.');
+  return {month,bounds:model.bounds,cutoff,adjustmentPct,hasInvoiceData,rows,summary,warnings,overlaps:model.overlaps,missing:model.missing,issues:model.issues,
+   stores:selectedStores.map(store=>({store,...aggregate(soldCells.filter(c=>c.store===store))})),
+   excludedWithoutMovement:campaignMap.size-rows.length};
+ }
+ global.PromotionsModel={build,range,buildDebits};
 })(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script type="text/plain" data-ampm-deferred="1" id="promotions-debits-ui">
+(function(global){
+ 'use strict';
+ let source=null,scope=null,model=null,monthPinned=false,lastGeneralMonth='';
+ const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const fmt=n=>n==null?'—':Number(n).toLocaleString('es-NI',{maximumFractionDigits:2}),money=n=>n==null?'—':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
+ const storeNames=['AMPM01','AMPM02','AMPM03'],dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+ function monthLabel(s){return new Date(s+'-15T12:00:00Z').toLocaleDateString('es-NI',{month:'long',year:'numeric',timeZone:'UTC'});}
+ function setup(){
+  if($('promoDebits'))return;
+  const parent=$('promotionsPanel');if(!parent)return;
+  const node=document.createElement('article');node.id='promoDebits';
+  node.innerHTML='<div class="promoHead"><div><span class="debitsEyebrow">CIERRE MENSUAL · BASE PARA DÉBITOS</span><h3>Unidades y promociones vendidas</h3></div><button type="button" id="debitsExport">Descargar cantidades CSV</button></div><div class="debitsControls"><label>Mes a liquidar<select id="debitsMonth"></select></label><label>Porcentaje general de unidades<div class="debitsPercent"><input id="debitsPercent" type="number" min="0" max="100" step="0.01" value="100" inputmode="decimal" aria-describedby="debitsPercentHelp"><span>%</span></div></label><button type="button" id="debitsApply">Aplicar a todas</button><span id="debitsSaved" role="status"></span></div><p id="debitsPercentHelp" class="promoMuted">El porcentaje se aplica a todas las unidades elegibles, incluidas las sueltas. Ejemplo: 100 unidades × 80% = 80 unidades ajustadas; en una promo x2 equivalen a 40 promociones.</p><p id="debitsScope"></p><div id="debitsKpis" class="debitsKpis"></div><p id="debitsNotice" role="status"></p><div id="debitsTable"></div><details class="debitsMethod"><summary>Reglas del cierre y detalle del cálculo</summary><p>Se incluye únicamente la intersección del mes, la vigencia de la promoción aprobada, sus días habilitados y el corte de datos. Se mantienen los filtros de tienda, proveedor, departamento, categoría, canal, búsqueda y día de semana. El selector de semana de arriba no recorta este cierre mensual.</p><p>Packs reales: se suman las líneas del mismo producto dentro de cada factura y se cuentan los grupos completos. En una promoción x2, 5 unidades en una factura son 2 packs y 1 unidad suelta. No se juntan unidades de facturas diferentes. El tamaño se toma del catálogo: una presentación comercial de 6 latas puede ser una sola unidad de una promoción.</p><p>Unidades ajustadas = unidades totales × porcentaje. Promociones equivalentes ajustadas = unidades ajustadas ÷ tamaño promocional; pueden tener decimales y no representan packs reales. No se modifica la venta original ni su monto. Las devoluciones conservan su signo y se netean por factura/producto; no reconstruyen una promoción de una factura anterior.</p><p>La regla de packs acredita cantidades por factura, no que se haya aplicado el descuento en caja. Campañas superpuestas del mismo producto/canal se atribuyen una sola vez: mayor descuento, luego inicio más reciente. Los montos de venta son los del cubo; esta exportación de cantidades no calcula subsidios ni cargos al proveedor.</p></details>';
+  parent.append(node);
+  $('debitsMonth').onchange=()=>{monthPinned=true;loadPercent();render();};
+  $('debitsApply').onclick=applyPercent;
+  $('debitsPercent').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();applyPercent();}};
+  $('debitsPercent').oninput=()=>{$('debitsSaved').textContent='Cambio pendiente de aplicar';};
+  $('debitsExport').onclick=exportCsv;
+ }
+ const storageKey=()=> 'ampm_promo_debits_pct_v1_'+$('debitsMonth').value;
+ function loadPercent(){let value=100;try{const raw=localStorage.getItem(storageKey());if(raw!==null&&Number.isFinite(+raw)&&+raw>=0&&+raw<=100)value=+raw;}catch(e){}$('debitsPercent').value=value;$('debitsPercent').dataset.applied=String(value);$('debitsSaved').textContent='';}
+ function applyPercent(){const input=$('debitsPercent');if(input.value===''||!input.checkValidity()){input.reportValidity();$('debitsSaved').textContent='Ingresa un porcentaje entre 0 y 100.';return;}input.dataset.applied=input.value;let saved=true;try{localStorage.setItem(storageKey(),input.value);}catch(e){saved=false;}render();$('debitsSaved').textContent=saved?'Aplicado a todas · guardado para este mes en este navegador':'Aplicado a todas · no se pudo guardar en este navegador';}
+ function update(data,filters){
+  setup();if(!$('promoDebits'))return;source=data;scope=filters;
+  const cutoff=data?.Promo_Status?.[0]?.Cutoff||'',starts=(data?.Promo_Catalog||[]).map(p=>p.Start).filter(Boolean).sort();
+  if(!cutoff||!starts.length){$('promoDebits').hidden=true;model=null;return;}$('promoDebits').hidden=false;
+  const months=[];for(let d=new Date(starts[0].slice(0,7)+'-01T00:00:00Z');d.toISOString().slice(0,7)<=cutoff.slice(0,7);d.setUTCMonth(d.getUTCMonth()+1))months.push(d.toISOString().slice(0,7));
+  const select=$('debitsMonth'),old=select.value;
+  let general='';const current=$('currentMonth')?.value||'';if(/^\d{4}-\d{2}$/.test(current))general=current;
+  if(general&&general!==lastGeneralMonth){monthPinned=false;lastGeneralMonth=general;}
+  const chosen=monthPinned&&months.includes(old)?old:months.includes(general)?general:months.includes(old)?old:cutoff.slice(0,7);
+  select.innerHTML=months.reverse().map(m=>'<option value="'+m+'">'+esc(monthLabel(m))+'</option>').join('');select.value=chosen;
+  if(old!==chosen||!$('debitsPercent').dataset.applied)loadPercent();
+  render();
+ }
+ function visibleRows(){return (model?.rows||[]).filter(r=>Math.abs(r.qty||0)>1e-7||Math.abs(r.sales||0)>1e-7||Math.abs(r.knownPacks||r.packs||0)>1e-7);}
+ function metric(label,value,help,accent){return '<div class="'+(accent?'debitsAdjusted':'')+'"><span>'+label+'</span><b>'+value+'</b><small>'+help+'</small></div>';}
+ function dateDetail(r){
+  return '<details class="debitsDates"><summary>Vigencia, días y canales</summary>'+r.channels.map(p=>'<p><b>'+esc(p.Channel)+'</b> · '+esc(p.Dynamic)+'<br>'+esc(p.Start)+' → '+esc(p.End)+'<br>'+esc(String(p.DOW).split(',').map(n=>dayNames[+n-1]).join(', '))+(+p.DateConflict||+p.DOWConflict?'<br><span class="debitsWarning">Texto alternativo: '+esc(p.AltStart)+' → '+esc(p.AltEnd)+'; '+esc(String(p.AltDOW||p.DOW).split(',').map(n=>dayNames[+n-1]).join(', '))+'</span>':'')+'</p>').join('')+'<p>Fechas incluidas: '+esc((r.dates||[]).join(', ')||'Sin fechas')+'</p>'+(r.warnings||[]).map(w=>'<p class="debitsWarning">'+esc(w)+'</p>').join('')+'</details>';
+ }
+ function render(){
+  if(!source||!scope||!$('debitsMonth').value)return;
+  model=global.PromotionsModel.buildDebits(source,{...scope,month:$('debitsMonth').value,adjustmentPct:Number($('debitsPercent').dataset.applied??100)});
+  const rows=visibleRows(),s=model.summary;
+  $('debitsScope').textContent=monthLabel($('debitsMonth').value)+' · '+model.bounds.join(' → ')+' · '+(scope.stores?.join(', ')||'Todas las tiendas')+' · '+(scope.channels?.join(', ')||'Todos los canales')+' · '+(scope.dows?.length?'Días del filtro: '+scope.dows.map(n=>dayNames[+n-1]).join(', '):'Todos los días habilitados de cada promoción')+'.';
+  const groups=rows.filter(r=>r.packSize>1),knownGroups=groups.every(r=>r.packs!=null),packs=knownGroups?groups.reduce((n,r)=>n+r.packs,0):null;
+  $('debitsKpis').innerHTML=metric('Unidades totales',fmt(s.qty),rows.length+' promociones con movimiento · '+money(s.sales),false)+metric('Packs reales x2 / x3 / x4',fmt(packs),'Grupos completos por factura; no incluye promos de una unidad',false)+metric('Unidades ajustadas',fmt(s.adjustedQty),fmt(model.adjustmentPct)+'% de todas las unidades elegibles',true)+metric('Promos equivalentes ajustadas',fmt(s.adjustedPromos),'Unidades ajustadas ÷ tamaño de cada promoción',true);
+  const warnings=model.warnings||[];
+  $('debitsNotice').className=warnings.length?'debitsWarning':'promoMuted';
+  $('debitsNotice').textContent=warnings.length?warnings.join(' '):'Unidades conciliadas con el detalle por factura. Valores netos, sin redondear a packs completos el ajuste.';
+  if(!rows.length){$('debitsTable').innerHTML='<p class="debitsEmpty">No hay ventas de promociones dentro de este mes y los filtros seleccionados.</p>';$('debitsExport').disabled=true;return;}$('debitsExport').disabled=false;
+  const headers=['Promoción / vigencia','AMPM01','AMPM02','AMPM03','Total unidades / $','Packs reales','Sueltas','Ajuste %','Unidades ajustadas','Promos equiv.'];
+  const td=(value,i)=>'<td data-label="'+headers[i]+'">'+value+'</td>';
+  const body=rows.map(r=>{
+   const cells=['<b>'+esc(r.p.Description)+'</b><small>'+esc(r.p.Supplier)+' · '+esc(r.p.Item)+'</small><span class="promoTag">'+(r.packSize>1?'Promo x'+fmt(r.packSize):r.packSize===1?'Promo por unidad':'Tamaño sin definir')+'</span>'+dateDetail(r),...storeNames.map(st=>{const v=r.stores.find(x=>(x.store||x.key)===st);return v?'<b>'+fmt(v.qty)+'</b><small>unidades'+(r.packSize>1?'<br>'+fmt(v.packs)+' packs':'')+'</small>':'<small>Fuera del filtro</small>';}),'<b>'+fmt(r.qty)+'</b><small>'+money(r.sales)+'</small>',r.packSize>1?'<b>'+fmt(r.packs)+'</b><small>'+(r.packs==null?'Detalle incompleto':'x'+r.packSize+' por factura')+'</small>':'<small>No aplica</small>',r.packSize>1?fmt(r.looseQty):'—','<span class="debitsPctTag">'+fmt(model.adjustmentPct)+'%</span>','<b>'+fmt(r.adjustedQty)+'</b>','<b>'+fmt(r.adjustedPromos)+'</b><small>'+(r.packSize>1?'equivalentes x'+r.packSize:'promos de 1 unidad')+'</small>'];
+   return '<tr>'+cells.map(td).join('')+'</tr>';
+  }).join('');
+  const totals=['Total del mes filtrado',...storeNames.map(st=>fmt(model.stores.find(v=>v.store===st)?.qty??null)),fmt(s.qty),fmt(packs),knownGroups?fmt(groups.reduce((n,r)=>n+(r.looseQty||0),0)):'—',fmt(model.adjustmentPct)+'%',fmt(s.adjustedQty),fmt(s.adjustedPromos)];
+  $('debitsTable').innerHTML='<div class="debitsScroll"><table><colgroup><col style="width:26%"><col span="3" style="width:8%"><col style="width:10%"><col style="width:8%"><col style="width:6%"><col style="width:7%"><col style="width:10%"><col style="width:9%"></colgroup><thead><tr>'+headers.map(h=>'<th scope="col">'+h+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody><tfoot><tr>'+totals.map(td).join('')+'</tr></tfoot></table></div>';
+ }
+ function exportCsv(){
+  if(!model)return;
+  const columns=['Mes','Desde','Hasta','Producto','Codigo','Proveedor','Categoria','Departamento','Canales','Vigencia inicio','Vigencia fin','Dias habilitados por canal','Fechas incluidas','Tamano promocional','Unidades totales','Venta neta $','Packs reales por factura','Unidades sueltas','Porcentaje ajuste','Unidades ajustadas','Promociones equivalentes ajustadas',...storeNames.flatMap(st=>['Unidades '+st,'Packs '+st]),'Validacion'];
+  const rows=[columns,...visibleRows().map(r=>[$('debitsMonth').value,...model.bounds,r.p.Description,r.p.Item,r.p.Supplier,r.p.Category,r.p.Department,r.channels.map(p=>p.Channel).join(' | '),r.p.Start,r.p.End,r.channels.map(p=>p.Channel+': '+String(p.DOW).split(',').map(n=>dayNames[+n-1]).join(', ')).join(' | '),r.dates.join(' | '),r.packSize,r.qty,r.sales,r.packSize>1?r.packs:null,r.packSize>1?r.looseQty:null,model.adjustmentPct,r.adjustedQty,r.adjustedPromos,...storeNames.flatMap(st=>{const v=r.stores.find(x=>(x.store||x.key)===st);return [v?.qty??null,r.packSize>1?v?.packs??null:null];}),(r.warnings||[]).join(' | ')])];
+  const total=Array(columns.length).fill('');total[0]=model.month;total[1]=model.bounds[0];total[2]=model.bounds[1];total[3]='TOTAL DEL MES FILTRADO';total[14]=model.summary.qty;total[15]=model.summary.sales;total[16]=model.summary.packs;total[17]=model.summary.looseQty;total[18]=model.adjustmentPct;total[19]=model.summary.adjustedQty;total[20]=model.summary.adjustedPromos;storeNames.forEach((st,i)=>{const v=model.stores.find(x=>x.store===st);total[21+i*2]=v?.qty??'';total[22+i*2]=v?.packs??'';});total[columns.length-1]=(model.warnings||[]).join(' | ');rows.push(total);
+  const csv=rows.map(row=>row.map(v=>{let text=typeof v==='number'?String(Math.round(v*1e6)/1e6):String(v??'');if(typeof v==='string'&&/^[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Promociones_debitos_'+$('debitsMonth').value+'_'+model.adjustmentPct+'pct.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ }
+ global.PromotionsDebitsUI={update,render,getModel:()=>model};
+})(window);
 
 </script>
 <script type="text/plain" data-ampm-deferred="1" id="promotions-ui">
@@ -72167,13 +72322,15 @@ body #regiaSalesStatus{font-size:13px;margin:12px 0;}
   setup();if(!el('promotionsPanel'))return;
   const active=document.body.getAttribute('data-active-tab')==='promociones'||document.querySelector('.tabBtn.active')?.dataset.tab==='promociones';el('promotionsPanel').style.display=active?'':'none';if(!active)return;
   let wb;try{wb=state.__hallWorkbook;}catch(e){}
-  if(wb!==book){book=wb;data={};['Promo_Catalog','Promo_Sales','Promo_Denoms','Promo_Coverage','Promo_Status'].forEach(name=>data[name]=wb?innovationWorkbookSheetRows(wb,name):[]);options('promoSupplier',data.Promo_Catalog.map(p=>p.Supplier));options('promoCategory',data.Promo_Catalog.map(p=>p.Category));options('promoDepartment',data.Promo_Catalog.map(p=>p.Department));updateWeeks();}
+  if(wb!==book){book=wb;data={};['Promo_Catalog','Promo_Sales','Promo_Invoice_Qty','Promo_Denoms','Promo_Coverage','Promo_Status'].forEach(name=>data[name]=wb?innovationWorkbookSheetRows(wb,name):[]);options('promoSupplier',data.Promo_Catalog.map(p=>p.Supplier));options('promoCategory',data.Promo_Catalog.map(p=>p.Category));options('promoDepartment',data.Promo_Catalog.map(p=>p.Department));updateWeeks();}
   if(!data?.Promo_Catalog?.length){
+   window.PromotionsDebitsUI?.update(data||{},getFilters());
    el('promoMessage').textContent='Carga el compactado actualizado para consultar el catálogo y el seguimiento de promociones.';
    charts.forEach(c=>c.destroy());charts=[];lastModel=null;
    ['promoPeriodCompare','promoWeeklyTable','promoTopImpactFoot','promoRiskEmpty','promoLeadersEmpty','promoTopImpact','promoWeeklyNote','promoAlerts','promoBaseline','promoKpis','promoStores','promoDetail','promoCategories','promoDepartments','promoWeekdays','promoQuality','promoScope'].forEach(id=>el(id).innerHTML='');return;
   }
   const f=getFilters(),m=window.PromotionsModel.build(data,f);lastModel=m;
+  window.PromotionsDebitsUI?.update(data,f);
   el('promoScope').textContent=(f.view==='mtd'?'MTD · acumulado del mes':'Semana seleccionada')+' · '+m.bounds[0]+' → '+m.bounds[1]+' · '+(f.stores.join(', ')||'Todas las tiendas')+' · '+(f.dows.length?'Días: '+f.dows.join(', '):'Todos los días')+' · Canales: '+(f.channels.includes('__NONE__')?'sin coincidencia':f.channels.join(', '))+' · Data hasta '+m.cutoff;
   el('promoMessage').textContent=!m.cells.length?'Sin promociones con fechas válidas aplicables a este período y filtros.':m.issues?'Las fechas Inicio / Fin gobiernan el seguimiento. Hay diferencias con el texto de vigencia; se conservan en calidad de datos.':'';
   const k=[['Venta durante promoción',cash(m.summary.sales),m.campaigns.length+' promociones · '+pct(m.allSales>0?m.summary.sales/m.allSales:null)+' de la venta total'],['Unidades vendidas',num(m.summary.qty),'En la presentación de cada producto'],['Variación de venta vs antes',growth(m.summary.deltaSales),'De '+cash(m.summary.expectedSales)+' a '+cash(m.summary.comparableSales)+' con base disponible'],['Variación de unidades vs antes',growth(m.summary.deltaQty),'De '+num(m.summary.expectedQty)+' a '+num(m.summary.comparableQty)+' unidades con base disponible']];
@@ -72235,6 +72392,50 @@ body #regiaSalesStatus{font-size:13px;margin:12px 0;}
 
 </script>
 <style id="promotions-style">#promotionsPanel{color:#11284a;background:#f3f6fa;padding:22px;border-radius:16px;margin:18px 0;font-size:13px}
+
+/* Monthly reconciliation remains readable inside the report's content width. */
+#promotionsPanel #promoDebits{border-top:4px solid #0874ad;margin-top:28px;padding:20px;scroll-margin-top:20px}
+#promotionsPanel #promoDebits .debitsEyebrow{display:block;color:#0874ad;letter-spacing:.06em;font-size:10px;font-weight:800;margin-bottom:8px}
+#promotionsPanel #promoDebits h3{font-size:21px;margin:0 0 8px}
+#promotionsPanel #promoDebits .debitsControls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin:18px 0 8px}
+#promotionsPanel #promoDebits button{width:auto!important;flex:0 0 auto;max-width:100%}
+#promotionsPanel #promoDebits .debitsPercent{display:flex;align-items:center;gap:8px}
+#promotionsPanel #promoDebits #debitsPercent{width:100px;min-width:0;max-width:100px}
+#promotionsPanel #promoDebits #debitsApply{background:#0874ad;color:#fff;font-weight:bold;min-height:38px}
+#promotionsPanel #promoDebits #debitsSaved{font-size:11px;color:#365b70;align-self:center}
+#promotionsPanel #promoDebits #debitsScope{background:#edf5fa;border-left:3px solid #0874ad;padding:10px 12px;font-size:12px}
+#promotionsPanel #promoDebits .debitsKpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+#promotionsPanel #promoDebits .debitsKpis>div{border:1px solid #dbe4ed;border-radius:9px;padding:14px;background:#f8fafc;min-width:0}
+#promotionsPanel #promoDebits .debitsKpis span{font-size:11px;font-weight:bold}
+#promotionsPanel #promoDebits .debitsKpis b{display:block;font-size:25px;margin:7px 0}
+#promotionsPanel #promoDebits .debitsKpis small{font-size:10px}
+#promotionsPanel #promoDebits .debitsKpis .debitsAdjusted{background:#eaf7ef;border-color:#badcc7}
+#promotionsPanel #promoDebits .debitsWarning{color:#854d0e;background:#fff8e6;border-radius:6px;padding:8px;font-size:11px;line-height:1.5}
+#promotionsPanel #promoDebits .debitsScroll{overflow:auto;max-height:620px;scrollbar-gutter:stable;max-width:100%;min-width:0}
+#promotionsPanel #promoDebits table{table-layout:fixed!important;min-width:0!important;width:100%!important;border-collapse:collapse;border-radius:0!important;overflow:visible!important}
+#promotionsPanel #promoDebits th,#promotionsPanel #promoDebits td{box-sizing:border-box;white-space:normal!important;overflow-wrap:anywhere;min-width:0!important;padding:9px 5px;font-size:11px;vertical-align:top;text-align:right;line-height:1.4}
+#promotionsPanel #promoDebits th:first-child,#promotionsPanel #promoDebits td:first-child{text-align:left}
+#promotionsPanel #promoDebits thead{position:sticky;top:0;z-index:3}
+#promotionsPanel #promoDebits thead th{vertical-align:middle}
+#promotionsPanel #promoDebits td:nth-last-child(-n+2){background:rgba(228,245,235,.6);color:#166534}
+#promotionsPanel #promoDebits small{font-size:10px;line-height:1.4}
+#promotionsPanel #promoDebits tfoot td{background:#fff200;color:#11284a;font-weight:800;border-top:2px solid #c2cfdb}
+#promotionsPanel #promoDebits .debitsPctTag{color:#166534;background:#e1f5e9;border-radius:5px;padding:3px 5px;display:inline-block;white-space:nowrap}
+#promotionsPanel #promoDebits .debitsDates{padding:0;margin:7px 0 0;border:0;background:transparent;font-size:10px}
+#promotionsPanel #promoDebits .debitsDates summary{font-size:10px;color:#0874ad}
+#promotionsPanel #promoDebits .debitsDates p{font-size:10px;margin:8px 0;overflow-wrap:anywhere}
+#promotionsPanel #promoDebits .debitsMethod{margin:16px 0 0;padding:12px;font-size:12px;background:#f8fafc}
+@container promotions (max-width:950px){#promotionsPanel #promoDebits .debitsKpis{grid-template-columns:repeat(2,minmax(0,1fr))}#promotionsPanel #promoDebits th,#promotionsPanel #promoDebits td{font-size:10px;padding:8px 3px}}
+@container promotions (max-width:700px){
+ #promotionsPanel #promoDebits{padding:12px}
+ #promotionsPanel #promoDebits table,#promotionsPanel #promoDebits tbody,#promotionsPanel #promoDebits tfoot{display:block}
+ #promotionsPanel #promoDebits thead,#promotionsPanel #promoDebits colgroup{display:none}
+ #promotionsPanel #promoDebits tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:10px;border:1px solid #dbe4ed;border-radius:8px;margin-bottom:10px}
+ #promotionsPanel #promoDebits td{display:block;width:auto!important;text-align:left;border:0;padding:4px;font-size:11px}
+ #promotionsPanel #promoDebits td:first-child{grid-column:1/-1}
+ #promotionsPanel #promoDebits td:not(:first-child)::before{content:attr(data-label);display:block;font-size:9px;color:#64748b;margin-bottom:4px}
+ #promotionsPanel #promoDebits tfoot tr{background:#fff200}
+}
 #promotionsPanel .promoHead{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}#promotionsPanel h2{margin:0;font-size:25px}#promotionsPanel h3{font-size:17px;margin:0 0 16px}#promotionsPanel p{line-height:1.5}
 #promotionsPanel .promoFilters{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}#promotionsPanel label{display:flex;flex-direction:column;gap:5px;font-size:12px}#promotionsPanel select,#promotionsPanel input{min-width:160px;max-width:280px;padding:9px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-size:13px}#promotionsPanel button{padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#11284a;cursor:pointer}
 #promotionsPanel .promoKpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}#promotionsPanel .promoKpis>div{background:white;border-top:4px solid #0879af;border-radius:12px;padding:18px}#promotionsPanel strong{display:block;font-size:27px;margin:9px 0}#promotionsPanel small{display:block;font-size:11px;color:#64748b;line-height:1.4;margin-top:4px}
