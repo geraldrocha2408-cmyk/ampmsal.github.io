@@ -20777,6 +20777,94 @@ function _sumSummaryTx(periodKey, storeList, opts){
   return (storeList || []).reduce((acc, st) => acc + Number(getTotalTx(st, periodKey) || 0), 0);
 }
 
+function getSummaryPeriodCoverage(periodKey, storeList, metric){
+  // Dates outside the imported source are unknown, not zero sales. A date inside
+  // the source range may legitimately have zero activity and must remain zero.
+  const result = {known:false, empty:false, partial:false, covered:0, missing:0, unknown:0, cuts:[]};
+  if(!isDailyReport()) return result;
+  const week = normalizeYm(periodKey);
+  if(!/^\d{4}-W\d{2}$/.test(week)) return result;
+  const stores = Array.from(_summaryStoreSet(storeList));
+  const dows = getActiveDowNumbers();
+  const metricKey = String(metric || 'SALES').toUpperCase();
+  const ranges = state.metricDateRanges instanceof Map ? state.metricDateRanges : new Map();
+  const toDay = value => {
+    const d = value && typeof value.getFullYear === 'function' ? value : toDateTime(value);
+    return d && Number.isFinite(+d) ? new Date(d.getFullYear(),d.getMonth(),d.getDate()) : null;
+  };
+  const fallback = new Map();
+  if(metricKey === 'SALES'){
+    // Compatibility with older cubes that do not include Data_Ranges.
+    const dailyRows = state._projectionDailySalesRows?.length ? state._projectionDailySalesRows : (state.dailySalesRows || []);
+    dailyRows.forEach(row => {
+      const store = String(row.store || '').trim().toUpperCase();
+      if(!stores.includes(store) || ranges.has('SALES|'+store)) return;
+      const day = toDay(row.d); if(!day) return;
+      const rec = fallback.get(store);
+      if(!rec) fallback.set(store,{min:day,max:day});
+      else { if(day<rec.min) rec.min=day; if(day>rec.max) rec.max=day; }
+    });
+  }
+  stores.forEach(store => {
+    const record = ranges.get(metricKey+'|'+store) || fallback.get(store);
+    const min = toDay(record && record.min), max = toDay(record && record.max);
+    if(!min || !max){ result.unknown += dows.length; return; }
+    result.cuts.push({store,date:max});
+    dows.forEach(dow => {
+      const day = isoWeekKeyDowToDate(week,dow);
+      if(!day){ result.unknown++; return; }
+      if(day>=min && day<=max) result.covered++; else result.missing++;
+    });
+  });
+  result.known = result.covered+result.missing>0;
+  result.empty = result.known && !result.covered && !result.unknown;
+  result.partial = result.missing>0 && result.covered>0;
+  return result;
+}
+function applySummaryDataAvailability(periodKey, stores){
+  const sales = getSummaryPeriodCoverage(periodKey,stores,'SALES');
+  const sbf = getSummaryPeriodCoverage(periodKey,stores,'SBF');
+  const salesIds = ['kpi_sales_cur','kpi_tx','kpi_del','kpi_no_del','kpi_drop','kpi_margin'];
+  const allIds = [...salesIds,'kpi_tx_sbf'];
+  allIds.forEach(id => { const card=el(id)?.closest('.kpiCard'); if(card) card.removeAttribute('data-no-current-data'); });
+  const noData = id => {
+    setText(id,'Sin datos');
+    const card=el(id)?.closest('.kpiCard'); if(card) card.setAttribute('data-no-current-data','1');
+  };
+  const clearPill = id => { const node=el(id); if(node) node.textContent=String(node.textContent||'').replace(/:.*/,': —'); };
+  if(sales.empty){
+    salesIds.forEach(noData);
+    ['kpi_sales_delta3lm','kpi_sales_deltalm','kpi_sales_delta_ly','kpi_tx_delta_ly','kpi_tx_delta_prom',
+     'kpi_del_delta_ly','kpi_del_delta_prom','kpi_del_share_pill','kpi_no_del_delta_ly','kpi_no_del_delta_prom',
+     'kpi_drop_delta_ly','kpi_drop_delivery','kpi_drop_delivery_delta_ly','kpi_margin_pct'].forEach(clearPill);
+  }
+  if(sbf.empty){ noData('kpi_tx_sbf'); ['kpi_tx_sbf_note','kpi_tx_sbf_delta_prom'].forEach(clearPill); }
+  const formatDate = d => [String(d.getDate()).padStart(2,'0'),String(d.getMonth()+1).padStart(2,'0'),d.getFullYear()].join('/');
+  const cutoffText = coverage => {
+    const dates = [...new Set(coverage.cuts.map(r=>formatDate(r.date)))];
+    return dates.length===1 ? dates[0] : coverage.cuts.map(r=>r.store+': '+formatDate(r.date)).join(' · ');
+  };
+  const messages=[];
+  if(sales.empty) messages.push('Sin datos de venta para '+getGlobalDowLabel()+' en '+fmtWeekLabel(periodKey)+'. El archivo contiene ventas hasta '+cutoffText(sales)+'.');
+  else if(sales.partial) messages.push('Período parcial: las ventas están cargadas hasta '+cutoffText(sales)+'. Los importes corresponden a los días disponibles del filtro; los días posteriores aún no están cargados.');
+  if(sbf.empty) messages.push('SBF: sin datos para esos días; corte '+cutoffText(sbf)+'.');
+  else if(sbf.partial && !sales.partial) messages.push('SBF parcial: datos hasta '+cutoffText(sbf)+'.');
+  let notice=el('summaryDataNotice');
+  if(!notice && messages.length){
+    const board=el('kpiBoard');
+    if(board){
+      notice=document.createElement('div');notice.id='summaryDataNotice';notice.setAttribute('role','status');notice.setAttribute('data-tabpage','resumen');
+      notice.style.cssText='margin:10px 12px 16px;padding:12px 16px;border-left:4px solid #e58b22;border-radius:8px;background:#fff6e8;color:#694315;font-size:13px;line-height:1.5';
+      board.before(notice);
+    }
+  }
+  if(notice){
+    notice.textContent=messages.join(' ');notice.hidden=!messages.length;
+    const activeTab = document.body?.getAttribute('data-active-tab') || 'resumen';
+    notice.style.display = activeTab === 'resumen' ? '' : 'none';
+  }
+  return {sales,sbf};
+}
 function refreshKpiDashboard(currentYm, prevYms, storeList){
   const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
   if(!currentYm || !stores.length) return;
@@ -20811,18 +20899,10 @@ function refreshKpiDashboard(currentYm, prevYms, storeList){
   const txLY  = sumTxScoped(lyYm);
   const txPrevTotals = prevSorted.map(ym => sumTxScoped(ym));
   const txProm = txPrevTotals.length ? (txPrevTotals.reduce((a,b)=>a+b,0) / txPrevTotals.length) : NaN;
-  if(txCur){
-    setText('kpi_tx', int(txCur));
-    setText('kpi_tx_delta_ly', `Delta TX vs LY: ${(txLY) ? (txCur/txLY).toFixed(2) : '—'}`);
-    setText('kpi_tx_delta_prom', `Delta vs ${compareLabel}: ${promRatio(txCur, txProm)}`);
-  } else {
-    const tx = _kpiTotalsFromTable('t_tx_store', currentYm, prevYms);
-    if(tx && tx.cur){
-      setText('kpi_tx', tx.cur);
-      setText('kpi_tx_delta_ly', `Delta TX vs LY: ${tx.deltaLY || '—'}`);
-      setText('kpi_tx_delta_prom', `Delta vs ${compareLabel}: ${tx.deltaProm || '—'}`);
-    }
-  }
+  // Zero is a valid scoped result. Never restore a value from a stale/hidden table.
+  setText('kpi_tx', int(txCur));
+  setText('kpi_tx_delta_ly', `Delta TX vs LY: ${(txLY) ? (txCur/txLY).toFixed(2) : '—'}`);
+  setText('kpi_tx_delta_prom', `Delta vs ${compareLabel}: ${promRatio(txCur, txProm)}`);
 
   const delCur = sumSalesScoped(currentYm, {delivery:true});
   const delLY  = sumSalesScoped(lyYm, {delivery:true});
@@ -21166,6 +21246,7 @@ if(pctVta != null){
   }
 
   try{ renderExecutiveRadar(currentYm, prevYms, stores); }catch(e){ console.warn('Radar Ejecutivo error', e); }
+  applySummaryDataAvailability(currentYm,stores);
 }
     function _sevLetter(sev){ return (sev||'g').toUpperCase(); }
 
@@ -60771,6 +60852,7 @@ function innovationOnePagerCreateBrandedShell(){
 
   function analyzeCard(card){
     if(!card) return {tone:'pending', label:'Pendiente'};
+    if(card.getAttribute('data-no-current-data') === '1') return {tone:'pending', label:'Sin datos'};
     const key = card.getAttribute('data-kpi') || '';
     const valueEl = card.querySelector('.kpiValue');
     const valueText = valueEl ? String(valueEl.textContent || '').trim() : '';
@@ -60843,6 +60925,8 @@ function innovationOnePagerCreateBrandedShell(){
   function toneForSub(text){
     const t = String(text || '').trim();
     if(!t || /pendiente|^—$/i.test(t)) return 'pending';
+    // A missing comparison must not read the 8 in "Prom S8" as a delta.
+    if(/:\s*—\s*$/.test(t)) return 'pending';
     if(/Proy vs Meta/i.test(t)){
       return higherBetterTone(pctFromText(t), 1, 0.985);
     }
@@ -60897,7 +60981,7 @@ function innovationOnePagerCreateBrandedShell(){
         sub.classList.add('is-' + toneForSub(sub.textContent));
       });
 
-      if(card.classList.contains('kpiPending')){
+      if(card.classList.contains('kpiPending') && card.getAttribute('data-no-current-data') !== '1'){
         card.setAttribute('data-status', 'pending');
         if(labelNode) labelNode.textContent = 'Pendiente';
       }
