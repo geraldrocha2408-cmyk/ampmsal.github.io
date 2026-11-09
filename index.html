@@ -5726,6 +5726,36 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div class="innovationGrid" data-tabpage="innovacion" id="innovationHotDrinksGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:16px">
 <div class="chartCard" style="background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:8px;min-width:0"><div id="innovationHotPromoBudget" style="display:flex;justify-content:flex-end;padding:0 4px;font-size:12px" aria-live="polite"></div><div style="position:relative;height:390px"><canvas id="chart_innovation_hot_drinks_qty" aria-label="Bebidas nuevas 8 oz en promociones 2x1"></canvas></div></div>
 <div class="chartCard" style="background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:8px;min-width:0"><div style="position:relative;height:390px"><canvas id="chart_innovation_hot_drinks_sales" aria-label="Aporte de nuevas bebidas a ventas de Bebidas Calientes"></canvas></div></div>
+</div><div class="fsQtyWrap" data-tabpage="innovacion" id="fsQtyStoreWrap">
+<style>
+  body.ampmExporting [data-ampm-no-export]{ display:none !important; }
+  .fsQtyWrap{ margin:14px 0 4px; }
+  .fsQtyDetails{ background:#fff; border:1px solid rgba(15,23,42,.10); border-radius:14px; padding:10px 14px; }
+  .fsQtyDetails > summary{ cursor:pointer; font-weight:800; color:#11284A; font-size:15px; list-style:none; display:flex; align-items:center; gap:8px; }
+  .fsQtyDetails > summary::-webkit-details-marker{ display:none; }
+  .fsQtyDetails > summary::before{ content:'\25B8'; color:#F58320; font-size:14px; transition:transform .15s; }
+  .fsQtyDetails[open] > summary::before{ transform:rotate(90deg); }
+  .fsQtyNote{ color:#64748b; font-size:12px; font-weight:600; margin:8px 0 10px; }
+  .fsQtyGrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr)); gap:16px; }
+  .fsQtyCard{ min-width:0; overflow-x:auto; }
+  .fsQtyTable{ width:100%; border-collapse:collapse; font-size:12px; table-layout:auto; }
+  .fsQtyTable caption{ text-align:left; font-weight:800; color:#11284A; padding:0 0 6px; }
+  .fsQtyTable th{ background:#DCE6F1; color:#11284A; font-weight:800; padding:4px 6px; text-align:right; border-bottom:1px solid #9FB6D5; }
+  .fsQtyTable th:first-child{ text-align:left; }
+  .fsQtyTable td{ padding:3px 5px; text-align:right; border-bottom:1px solid #EEF2F7; font-weight:500; white-space:nowrap; }
+  .fsQtyTable th{ white-space:nowrap; }
+  .fsQtyTable td:first-child{ text-align:left; padding-left:18px; white-space:normal; min-width:150px; }
+  .fsQtyTable tr.fsQtyCat td{ font-weight:800; background:#F5F8FC; }
+  .fsQtyTable tr.fsQtyCat td:first-child{ padding-left:6px; }
+  .fsQtyTable tr.fsQtyTotal td{ font-weight:800; background:#DCE6F1; border-top:1px solid #9FB6D5; }
+  .fsQtyTable tr.fsQtyTotal td:first-child{ padding-left:6px; }
+  .fsQtyTable td.fsQtyStat, .fsQtyTable th.fsQtyStat{ background:#FFF6EC; }
+</style>
+<details class="fsQtyDetails" data-ampm-no-export="1">
+<summary>Unidades por tienda — Matahambrita, Repostería y Yogurt (últimas 4 semanas)</summary>
+<div class="fsQtyNote" id="fsQtyStoreNote"></div>
+<div class="fsQtyGrid" id="fsQtyStoreHost"></div>
+</details>
 </div><div class="innovationFsExecSection" data-tabpage="innovacion" id="innovation_fs_exec_section">
 <div class="innovationFsExecHeader">
 <div class="innovationFsExecHeaderLeft">
@@ -6065,6 +6095,18 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 <div style="position:relative; width:100%; height:420px">
 <canvas aria-label="SBF TX por Hora vs promedio comparable" id="chart_sbf_hour_s8"></canvas>
 </div>
+</div><div class="section invTitle" data-tabpage="inventario"><h2>Días de Inventario — Últimas 25 semanas</h2></div><div class="invWeeklySummary" data-tabpage="inventario" id="invWeeklySummary"></div><div class="invWeeklyRow" data-tabpage="inventario">
+<style>
+  .invWeeklySummary{ padding:0 16px; font-weight:700; color:#11284A; }
+  .invWeeklyRow{ display:grid; grid-template-columns:minmax(0,3fr) minmax(300px,1fr); gap:18px; padding:10px 16px 18px; align-items:stretch; }
+  .invWeeklyRow .chartCard{ background:#ffffff; border:1px solid rgba(15,23,42,.12); border-radius:14px; padding:14px 14px 8px; }
+  .invWeeklyTitle{ text-align:center; color:#1F3864; font-weight:800; font-size:20px; margin:2px 0 2px; }
+  .invWeeklyNote{ text-align:center; color:#64748b; font-size:12px; font-weight:600; min-height:16px; margin-bottom:4px; }
+  .invWeeklyCanvas{ position:relative; width:100%; height:420px; }
+  @media (max-width: 1100px){ .invWeeklyRow{ grid-template-columns:minmax(0,1fr); } }
+</style>
+<div class="chartCard invWeeklyCard"><div class="invWeeklyTitle">Dias Inventario AMPM SAL</div><div class="invWeeklyNote" id="invWeeklyNote"></div><div class="invWeeklyCanvas"><canvas aria-label="Días de inventario AMPM SAL últimas 25 semanas" id="chart_inv_weekly"></canvas></div></div>
+<div class="chartCard invWeeklyStoreCard"><div class="invWeeklyTitle">Dias Inventario x Tienda</div><div class="invWeeklyNote" id="invWeeklyStoreNote"></div><div class="invWeeklyCanvas"><canvas aria-label="Días de inventario por tienda" id="chart_inv_weekly_store"></canvas></div></div>
 </div><div class="section invTitle" data-tabpage="inventario"><h2>Inventario — Por Store (snapshot + COGS 4W)</h2></div><div class="invRow" data-tabpage="inventario">
 <div class="card invChartCard" style="margin-top:10px; padding:12px 12px 2px; height:420px; max-height:420px; position:relative; overflow:hidden;">
 <div class="muted" style="margin:0 0 8px; font-weight:700;">Barras = Monto Inv (Amount). Línea = Días Inv (Inv * 28 / COGS 4W).</div>
@@ -9222,6 +9264,8 @@ function refreshInventoryBubbleOnly(){
       state.cogsStoreDeptWeek = new Map(); // key: `${store}|${deptKey}` -> Map(ym -> cogs)
       state.invStoreDept = new Map();      // key: `${store}|${deptKey}` -> amount snapshot
       state.invStoreTotal = new Map();
+      state.invWeeklyHist = [];
+      state.invWeeklyLast = null;
       state.invDeptTotal = new Map();
       state.deptDisplay = new Map();
       state.invWeeksManual = false;
@@ -10584,6 +10628,20 @@ parseMetricDateRangesSheet(wb);
             }
           }
         } catch(e){ console.warn('Inventario_StoreDept parse failed', e); }
+      }
+
+      state.invWeeklyHist = [];
+      if (wb && hasSheet(wb, 'Inventario_Semanal')){
+        try{
+          const rw = sheetRows(wb, 'Inventario_Semanal', {defval:null}) || [];
+          state.invWeeklyHist = rw.map(r=>({
+            week:String(r.YearWeek ?? '').trim(),
+            store:String(r.Store ?? '').trim().toUpperCase(),
+            cogs:Number(r.COGS4W ?? 0) || 0,
+            amount:Number(r.Amount ?? 0) || 0,
+            fuente:String(r.Fuente ?? '').trim()
+          })).filter(r=>/^\d{4}-W\d{2}$/.test(r.week) && r.store && r.cogs > 0);
+        } catch(e){ console.warn('Inventario_Semanal parse failed', e); }
       }
 
       if (wb && hasSheet(wb, 'Cubo_COGS_StoreDept')){
@@ -19883,7 +19941,181 @@ function buildMermaBubbleDataset(stores, baseCm, mode){
       }
     }
 
+    // Días de Inventario semanal (histórico en hoja Inventario_Semanal).
+    // Semanas pasadas = valor guardado. Última semana = COGS de las semanas base
+    // elegidas en el filtro "Inventario — semanas base"; Días = Monto * 7 * semanas / COGS.
+    function renderInvWeeklyCharts(currentYm){
+      const STORES = ['AMPM01','AMPM02','AMPM03'];
+      const STORE_NAMES = {AMPM01:'Proceres', AMPM02:'Tuscania', AMPM03:'Masferrer'};
+      const hist = Array.isArray(state.invWeeklyHist) ? state.invWeeklyHist : [];
+      const noteEl = document.getElementById('invWeeklyNote');
+      const storeNoteEl = document.getElementById('invWeeklyStoreNote');
+      const summaryEl = document.getElementById('invWeeklySummary');
+      const destroy = key => { if(state[key]){ try{ state[key].destroy(); }catch(_e){} state[key] = null; } };
+      destroy('_chartInvWeekly'); destroy('_chartInvWeeklyStore');
+      state.invWeeklyLast = {hasData:false, hasStores:false, text:'', days:null};
+      const totals = hist.filter(r=>r.store === 'TOTAL').sort((a,b)=>a.week.localeCompare(b.week));
+      if(!totals.length){
+        if(noteEl) noteEl.textContent = 'Sin histórico semanal: el cubo no trae la hoja Inventario_Semanal.';
+        if(storeNoteEl) storeNoteEl.textContent = '';
+        if(summaryEl) summaryEl.textContent = '';
+        return state.invWeeklyLast;
+      }
+      const latestWeek = totals[totals.length-1].week;
+      const endWeek = /^\d{4}-W\d{2}$/.test(String(currentYm||'')) ? String(currentYm) : latestWeek;
+      const points = totals.filter(r=>r.week <= endWeek).slice(-25).map(r=>({week:r.week, cogs:r.cogs, amount:r.amount, factor:28}));
+      if(!points.length){
+        if(noteEl) noteEl.textContent = 'Sin histórico para la semana seleccionada.';
+        return state.invWeeklyLast;
+      }
+      const last = points[points.length-1];
+      const label = w => 'S' + String(w).slice(-2);
+      // Última semana capturada: recalcular COGS con las semanas base del filtro.
+      let baseWeeks = [];
+      const storeRows = new Map(hist.filter(r=>r.week === last.week && STORES.includes(r.store)).map(r=>[r.store, {cogs:r.cogs, amount:r.amount, factor:28}]));
+      if(last.week === latestWeek && state.cogsStoreWeek && state.cogsStoreWeek.size){
+        try{ baseWeeks = getInvCogsWeeks(new Set(STORES), getInvWeeks(last.week)) || []; }catch(_e){ baseWeeks = []; }
+        baseWeeks = baseWeeks.filter(w=>/^\d{4}-W\d{2}$/.test(w));
+        if(baseWeeks.length){
+          const storeCogs = s => baseWeeks.reduce((acc,w)=> acc + (Number(state.cogsStoreWeek.get(s)?.get(w) || 0) || 0), 0);
+          const total = STORES.reduce((acc,s)=> acc + storeCogs(s), 0);
+          if(total > 0){
+            last.cogs = total; last.factor = 7 * baseWeeks.length;
+            for(const s of STORES){ if(storeRows.has(s)){ const r = storeRows.get(s); r.cogs = storeCogs(s); r.factor = last.factor; } }
+          }else baseWeeks = [];
+        }
+      }
+      const days = p => p.cogs > 0 ? p.amount * p.factor / p.cogs : null;
+      const k = v => Number(v || 0) / 1000;
+      const labelsPlugin = (opts) => ({
+        id:'invWeeklyLabels',
+        afterDatasetsDraw(chart){
+          const ctx = chart.ctx;
+          const box = (text, x, y, fill, color, size) => {
+            ctx.save();
+            ctx.font = `800 ${size}px Calibri, Arial, sans-serif`;
+            const w = ctx.measureText(text).width + 8, h = size + 6;
+            ctx.fillStyle = fill; ctx.fillRect(x - w/2, y - h/2, w, h);
+            ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y + 0.5); ctx.restore();
+          };
+          chart.data.datasets.forEach((ds, i)=>{
+            const meta = chart.getDatasetMeta(i);
+            if(meta.hidden || !ds._labelMode) return;
+            meta.data.forEach((el, j)=>{
+              const v = ds.data[j];
+              if(v === null || v === undefined || !isFinite(v)) return;
+              const text = Math.round(v).toString();
+              if(ds._labelMode === 'dias') box(text, el.x, el.y - opts.diasOffset, 'rgba(242,242,242,.95)', '#111111', opts.diasSize);
+              if(ds._labelMode === 'base') box(text, el.x, chart.scales.y.getPixelForValue(0) - 14, '#FFFFFF', '#111111', opts.barSize);
+              if(ds._labelMode === 'top') box(text, el.x, el.y + 14, '#FFFFFF', '#111111', opts.barSize);
+            });
+          });
+        }
+      });
+      const band = vals => {
+        const ok = vals.filter(v=>v !== null && isFinite(v));
+        if(!ok.length) return {min:0, max:40};
+        const lo = Math.min(...ok), hi = Math.max(...ok), r = Math.max(hi - lo, 3);
+        return {min: lo - r * 3.2, max: hi + r * 0.45};
+      };
+      const tooltip = {callbacks:{label:(ctx)=>{
+        const ds = ctx.dataset; if(ds._skipTooltip) return null;
+        const v = ctx.parsed.y;
+        if(ds.yAxisID === 'y1') return ` ${ds.label}: ${isFinite(v) ? v.toFixed(1) : '—'}`;
+        return ` ${ds.label}: ${money(v * 1000)}`;
+      }}};
+
+      // Gráfica 1: tendencia 25 semanas
+      const diasArr = points.map(days);
+      const n = diasArr.length, xs = diasArr.map((_,i)=>i);
+      const valid = xs.filter(i=>diasArr[i] !== null);
+      let trend = diasArr.map(()=>null);
+      if(valid.length >= 2){
+        const mx = valid.reduce((a,i)=>a+i,0)/valid.length, my = valid.reduce((a,i)=>a+diasArr[i],0)/valid.length;
+        const sxx = valid.reduce((a,i)=>a+(i-mx)*(i-mx),0), sxy = valid.reduce((a,i)=>a+(i-mx)*(diasArr[i]-my),0);
+        const slope = sxx ? sxy/sxx : 0;
+        trend = xs.map(i=> my + slope*(i-mx));
+      }
+      const maxBar = Math.max(...points.map(p=>Math.max(k(p.cogs), k(p.amount))), 1);
+      const b1 = band(diasArr);
+      const canvas = document.getElementById('chart_inv_weekly');
+      if(canvas && typeof Chart !== 'undefined'){
+        state._chartInvWeekly = new Chart(canvas.getContext('2d'), {
+          type:'bar',
+          data:{ labels: points.map(p=>label(p.week)), datasets:[
+            {type:'line', label:'Dias Inv', data:diasArr, yAxisID:'y1', showLine:false, pointStyle:'rectRot', pointRadius:6, pointHoverRadius:7, backgroundColor:'#A6A6A6', borderColor:'#A6A6A6', order:0, _labelMode:'dias'},
+            {type:'line', label:'Tendencia', data:trend, yAxisID:'y1', borderColor:'#A6A6A6', borderDash:[2,4], borderWidth:2, pointRadius:0, pointHoverRadius:0, order:1, _skipTooltip:true},
+            {type:'bar', label:'COGS 4W', data:points.map(p=>k(p.cogs)), backgroundColor:'#FF6D00', grouped:false, proBarThemeSkip:true, barPercentage:0.62, categoryPercentage:0.9, order:2},
+            {type:'bar', label:'Monto Inv', data:points.map(p=>k(p.amount)), backgroundColor:'#2F5597', grouped:false, proBarThemeSkip:true, barPercentage:0.62, categoryPercentage:0.9, order:3}
+          ]},
+          options:{
+            responsive:true, maintainAspectRatio:false, animation:false,
+            interaction:{mode:'index', intersect:false},
+            plugins:{ legend:{position:'bottom', labels:{filter:item=>item.text !== 'Tendencia', usePointStyle:true}}, tooltip, valueLabels:false },
+            scales:{
+              x:{grid:{display:false}, ticks:{autoSkip:false, maxRotation:90, minRotation:points.length > 16 ? 90 : 0, font:{weight:'700'}}},
+              y:{beginAtZero:true, max:Math.ceil(maxBar*1.6/20)*20, title:{display:true, text:'Millares'}, ticks:{callback:v=>Number(v).toFixed(0)}},
+              y1:{display:false, min:b1.min, max:b1.max}
+            }
+          },
+          plugins:[labelsPlugin({diasOffset:16, diasSize:12, barSize:12})]
+        });
+      }
+
+      // Gráfica 2: por tienda, semana seleccionada
+      const storeCanvas = document.getElementById('chart_inv_weekly_store');
+      const storeList = STORES.filter(s=>storeRows.has(s));
+      if(storeCanvas && typeof Chart !== 'undefined' && storeList.length){
+        const rows = storeList.map(s=>storeRows.get(s));
+        const sd = rows.map(days);
+        const b2 = band(sd);
+        const maxStore = Math.max(...rows.map(r=>Math.max(k(r.cogs), k(r.amount))), 1);
+        state._chartInvWeeklyStore = new Chart(storeCanvas.getContext('2d'), {
+          type:'bar',
+          data:{ labels: storeList.map(s=>[s + '-', STORE_NAMES[s] || '']), datasets:[
+            {type:'line', label:'Dias Inv', data:sd, yAxisID:'y1', showLine:false, pointStyle:'rectRot', pointRadius:7, backgroundColor:'#A6A6A6', borderColor:'#A6A6A6', order:0, _labelMode:'dias'},
+            {type:'bar', label:'COGS 4W', data:rows.map(r=>k(r.cogs)), backgroundColor:'#FF6D00', grouped:false, proBarThemeSkip:true, barPercentage:0.55, categoryPercentage:0.9, order:2, _labelMode:'base'},
+            {type:'bar', label:'Monto Inv', data:rows.map(r=>k(r.amount)), backgroundColor:'#2F5597', grouped:false, proBarThemeSkip:true, barPercentage:0.55, categoryPercentage:0.9, order:3, _labelMode:'top'}
+          ]},
+          options:{
+            responsive:true, maintainAspectRatio:false, animation:false,
+            interaction:{mode:'index', intersect:false},
+            plugins:{ legend:{position:'bottom', labels:{usePointStyle:true}}, tooltip, valueLabels:false },
+            scales:{
+              x:{grid:{display:false}, ticks:{font:{weight:'700'}}},
+              y:{beginAtZero:true, max:Math.ceil(maxStore*1.6/5)*5, title:{display:true, text:'MILLARES'}, ticks:{callback:v=>Number(v).toFixed(0)}},
+              y1:{display:false, min:b2.min, max:b2.max}
+            }
+          },
+          plugins:[labelsPlugin({diasOffset:20, diasSize:15, barSize:13})]
+        });
+      }
+
+      const baseText = baseWeeks.length ? `${label(last.week)} con COGS de semanas base: ${baseWeeks.map(label).join(', ')}` : `${label(last.week)} según histórico guardado`;
+      if(noteEl) noteEl.textContent = `Barras en miles · Días Inv = Monto Inv × 7 × semanas / COGS · ${baseText}`;
+      if(storeNoteEl) storeNoteEl.textContent = storeList.length ? `Semana ${label(last.week)}` : `Sin detalle por tienda para ${label(last.week)} (se guarda desde S45).`;
+
+      // Resumen para el correo: última semana vs anterior.
+      let text = '';
+      const dNow = days(last);
+      if(points.length >= 2 && dNow !== null){
+        const prev = points[points.length-2], dPrev = days(prev);
+        const r0 = Math.round(dPrev), r1 = Math.round(dNow);
+        const move = (delta) => `${delta >= 0 ? 'sube' : 'baja'} ${Math.abs(delta/1000).toFixed(1)}k`;
+        const diasText = r0 === r1 ? `se mantiene en ${r1} días` : `${r1 > r0 ? 'sube' : 'baja'} de ${r0} a ${r1} días`;
+        text = `Días de inventario ${diasText}, COGS ${move(last.cogs - prev.cogs)}, amount ${move(last.amount - prev.amount)}`;
+      }else if(dNow !== null){
+        text = `Días de inventario en ${Math.round(dNow)} días`;
+      }
+      if(summaryEl) summaryEl.textContent = text;
+      state.invWeeklyLast = {hasData:true, hasStores:storeList.length > 0, text, days:dNow, week:last.week};
+      return state.invWeeklyLast;
+    }
+    try{ window.renderInvWeeklyCharts = renderInvWeeklyCharts; }catch(_e){}
+
     function refreshInventoryModule(currentYm, storeList){
+      try{ renderInvWeeklyCharts(currentYm); }catch(e){ console.warn('Inventario semanal error', e); }
       const tbodyStore = document.getElementById('tbody_inv_store');
       const tbodyDept  = document.getElementById('tbody_inv_dept');
       if(!tbodyDept) return;
@@ -32841,7 +33073,16 @@ async function exportWeeklyEmailWord(){
       if(!wrap)throw new Error('Falta '+title);
       wrap.setAttribute('data-weekly-capture',id);await capture(`[data-weekly-capture="${id}"]`,title);wrap.removeAttribute('data-weekly-capture');
     }
-    parts.push({kind:'manual',title:'Días de inventario'});
+    await tab('inventario');
+    const invWeekly=(typeof window.renderInvWeeklyCharts==='function'?window.renderInvWeeklyCharts(week):null)||state.invWeeklyLast||{};
+    await _sleep(300);
+    parts.push({kind:'email-section',title:'Días de inventario',lines:[invWeekly.text||'Sin histórico semanal de inventario en el cubo.']});
+    if(invWeekly.hasData){
+      // La tabla Operativos usa el mismo valor que la sección y la gráfica.
+      if(Number.isFinite(invWeekly.days)&&invWeekly.week===week)operational.values[2]=invWeekly.days.toFixed(0);
+      await chart('chart_inv_weekly','Dias Inventario AMPM SAL');
+      if(invWeekly.hasStores)await chart('chart_inv_weekly_store','Dias Inventario x Tienda');
+    }
     await tab('merma');
     try{const month=emailMetrics.cut.slice(0,7),m=sumMermaStoreMonth(stores,month);if(m&&m.sales)operational.values[3]=(-Math.abs(Number(m.mNeg||0)/m.sales)*100).toFixed(2)+'%';}catch(_e){}
     parts.push({kind:'email-section',title:'Merma',lines:[]});
@@ -36599,6 +36840,7 @@ async function exportInnovationAsPptx(){
             if(!opt) return;
             hide();
             const kind = opt.getAttribute('data-export');
+            document.body.classList.add('ampmExporting');
             try{
               if(kind === 'word') await exportWordAsImage();
               if(kind === 'weekly-email-word') await exportWeeklyEmailWord();
@@ -36611,6 +36853,8 @@ async function exportInnovationAsPptx(){
             }catch(err){
               console.error(err);
               alert('Error al exportar: ' + (err?.message || err));
+            }finally{
+              document.body.classList.remove('ampmExporting');
             }
           });
         }
@@ -38408,6 +38652,84 @@ function renderInnovationHotPromoBudget(rows, periods){
   const cutoff=periods.slice().sort().pop(),budget=innovationHotPromoBudget(rows,cutoff,isMonthlyReport());
   const number=n=>Number(n).toLocaleString('es-NI',{maximumFractionDigits:1});
   host.innerHTML='<div class="hotPromoInfo"><button type="button" class="hotPromoInfoButton" aria-label="Ver presupuesto y promociones pendientes" aria-describedby="hotPromoInfoDetail">i</button><div role="tooltip" id="hotPromoInfoDetail" class="hotPromoInfoDetail"><b>Promociones 2×1 — presupuesto total</b>'+budget.map((b,i)=>'<div style="margin-top:10px"><b>'+(i?'Chocolate caliente':'Cappuccino sin azúcar')+'</b><br>Presupuesto: '+b.target+' · Vendidas: '+(cutoff?number(b.sold):'—')+'<br><strong>Faltan: '+(cutoff?number(b.remaining):'—')+' promos</strong><br><small>'+Object.entries(b.byStore).map(([st,q])=>st+': '+number(q)).join(' · ')+'</small></div>').join('')+'<div style="margin-top:10px;font-size:11px">Acumulado disponible hasta '+(cutoff||'—')+' · 3 tiendas · todos los días.<br>Presentaciones de 8 oz: unidades ÷ 2.</div></div></div>';
+}
+
+// Cuadro de unidades por tienda (como la tabla dinámica "Suma de Qty Sold 2").
+// Combos y packs se convierten al producto base con la hoja Conversion
+// (Qty / QTY), igual que "Descripcion" y "Qty Sold 2" del Excel.
+function renderFsQtyStoreTables(storeList){
+  const host = document.getElementById('fsQtyStoreHost');
+  const note = document.getElementById('fsQtyStoreNote');
+  if(!host) return;
+  const CATS = [['MATAHAMBRITA','Matahambrita'],['REPOSTERIA','Repostería'],['YOGURT','Yogurt']];
+  const EXCLUDED_SUPPLIERS = /LACTEOS DEL CORRAL|POZUELO/i;
+  const norm = v => String(v ?? '').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'');
+  const rows = (typeof innovationFoodServiceDetailRows === 'function' ? innovationFoodServiceDetailRows() : []) || [];
+  if(!rows.length){ host.innerHTML = '<div class="muted">Sin detalle Food Service en el cubo.</div>'; if(note) note.textContent=''; return; }
+  const weekKey = d => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = t.getUTCFullYear(); const w = Math.ceil(((t - Date.UTC(y,0,1)) / 86400000 + 1) / 7); return `${y}-W${String(w).padStart(2,'0')}`; };
+  const monday = key => { const m = String(key).match(/^(\d{4})-W(\d{2})$/); if(!m) return null; const d = new Date(Date.UTC(+m[1],0,4)); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay()||7) - 1) + (+m[2]-1)*7); return d; };
+  const current = String(document.getElementById('currentMonth')?.value || '').trim();
+  let endWeek = /^\d{4}-W\d{2}$/.test(current) ? current : '';
+  if(!endWeek){
+    const thursdayMonth = w => new Date(monday(w).getTime()+3*86400000).toISOString().slice(0,7);
+    const inMonth = rows.map(r=>String(r.YearWeek||'')).filter(w=>/^\d{4}-W\d{2}$/.test(w) && (!/^\d{4}-\d{2}$/.test(current) || thursdayMonth(w) === current));
+    endWeek = inMonth.sort().pop() || rows.map(r=>String(r.YearWeek||'')).filter(Boolean).sort().pop() || '';
+  }
+  const end = monday(endWeek);
+  if(!end){ host.innerHTML = '<div class="muted">Selecciona una semana.</div>'; return; }
+  const weeks = [3,2,1,0].map(i => weekKey(new Date(end.getTime() - i*7*86400000)));
+  const conv = state.convMap instanceof Map ? state.convMap : new Map();
+  const keyOf = v => (typeof normSkuKey === 'function') ? normSkuKey(v) : norm(v);
+  const resolveCache = new Map();
+  const resolve = desc => {
+    if(resolveCache.has(desc)) return resolveCache.get(desc);
+    let cur = desc, factor = 1; const seen = new Set();
+    for(let i=0;i<5;i++){
+      const k = keyOf(cur); if(!k || seen.has(k)) break; seen.add(k);
+      const hit = conv.get(k); if(!hit || !(hit.factor > 0)) break;
+      if(keyOf(hit.parent) === k) break;
+      cur = hit.parent; factor *= hit.factor;
+    }
+    const out = {desc:String(cur).trim(), factor}; resolveCache.set(desc, out); return out;
+  };
+  const allowedStores = (storeList && storeList.length ? storeList : (typeof getSelectedStoresOrAll === 'function' ? getSelectedStoresOrAll() : ['AMPM01','AMPM02','AMPM03'])).map(s=>String(s).trim().toUpperCase()).filter(s=>/^AMPM0\d$/.test(s)).sort();
+  const weekPos = new Map(weeks.map((w,i)=>[w,i]));
+  const data = new Map(); // store -> cat -> desc -> [q x4]
+  for(const r of rows){
+    const store = String(r.Store || r.store || '').trim().toUpperCase();
+    if(!allowedStores.includes(store)) continue;
+    const pos = weekPos.get(String(r.YearWeek || r.week || '').trim()); if(pos === undefined) continue;
+    const cat = CATS.find(([k]) => k === norm(r.Category || r.category)); if(!cat) continue;
+    if(EXCLUDED_SUPPLIERS.test(String(r.Supplier || r.supplier || ''))) continue;
+    const {desc, factor} = resolve(String(r.Description || r.description || '').trim());
+    if(!desc || /^(combo|\d)/i.test(desc)) continue; // combos sin conversión y paquetes promocionales
+    const qty = (Number(r['Qty Sold'] ?? r.qty ?? 0) || 0) / factor;
+    if(!data.has(store)) data.set(store, new Map());
+    const byCat = data.get(store); if(!byCat.has(cat[1])) byCat.set(cat[1], new Map());
+    const byDesc = byCat.get(cat[1]); const label = byDesc.has(norm(desc)) ? byDesc.get(norm(desc)).label : desc;
+    if(!byDesc.has(norm(desc))) byDesc.set(norm(desc), {label, q:[0,0,0,0]});
+    byDesc.get(norm(desc)).q[pos] += qty;
+  }
+  const fmt = v => (Math.abs(v) < 1e-9) ? '' : (Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)) : v.toFixed(1));
+  const stats = q => { const vals = q.filter(v => Math.abs(v) > 1e-9); if(!vals.length) return ['','']; const max = Math.max(...vals), avg = vals.reduce((a,b)=>a+b,0)/vals.length; return [fmt(max), String(Math.round(avg))]; };
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const line = (cls, label, q) => { const [mx, av] = stats(q); return `<tr class="${cls}"><td>${esc(label)}</td>${q.map(v=>`<td>${fmt(v)}</td>`).join('')}<td class="fsQtyStat">${mx}</td><td class="fsQtyStat">${av}</td></tr>`; };
+  const tables = allowedStores.map(store => {
+    const byCat = data.get(store) || new Map();
+    const total = [0,0,0,0]; let body = '';
+    for(const [, catLabel] of CATS){
+      const items = byCat.get(catLabel); if(!items || !items.size) continue;
+      const sub = [0,0,0,0];
+      const list = Array.from(items.values()).sort((a,b)=>a.label.localeCompare(b.label,'es'));
+      list.forEach(it => it.q.forEach((v,i)=>{ sub[i]+=v; total[i]+=v; }));
+      body += line('fsQtyCat', catLabel, sub) + list.map(it => line('', it.label, it.q)).join('');
+    }
+    if(!body) body = '<tr><td colspan="7" class="muted">Sin ventas en estas semanas.</td></tr>';
+    else body += line('fsQtyTotal', 'Total general', total);
+    return `<div class="fsQtyCard"><table class="fsQtyTable"><caption>${esc(store)}</caption><thead><tr><th>Descripción</th>${weeks.map(w=>`<th>${w.slice(-2)}</th>`).join('')}<th class="fsQtyStat">Max</th><th class="fsQtyStat">Promedio</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  });
+  host.innerHTML = tables.join('');
+  if(note) note.textContent = `Semanas ${weeks.map(w=>'S'+w.slice(-2)).join(', ')} · Unidades con combos convertidos al producto base (hoja Conversion) · Max y Promedio sobre semanas con venta · No sale en Word ni PowerPoint`;
 }
 
 function renderInnovationHotDrinks(storeList, periods){
@@ -42006,6 +42328,7 @@ function renderInnovationCharts(storeList){
   runComboRender();
   renderInnovationPostresCharts(storeList, periods);
   renderInnovationHotDrinks(storeList, periods);
+  try{ renderFsQtyStoreTables(storeList); }catch(e){ console.warn('FS qty tienda failed', e); }
   renderInnovationFoodServiceExecutive(storeList);
   renderInnovationFoodServiceDeliveryExecutive(storeList);
   renderInnovationFsCategoryOnePagers(storeList);
@@ -43229,6 +43552,7 @@ callback:(v)=> axisMoneyCompact1(v)
         }else if(activeTab === 'cxc'){
           if(canvasIsReady('chart_cxc_8w')){ try{ if (typeof renderCxc8wChart === 'function') renderCxc8wChart(storeList); }catch(e){} }
         }else if(activeTab === 'inventario'){
+          try{ if(canvasIsReady('chart_inv_weekly') && typeof window.renderInvWeeklyCharts === 'function') window.renderInvWeeklyCharts(el('currentMonth')?.value); }catch(e){}
           if(canvasIsReady('chart_inv_store') || canvasIsReady('chart_inv_bubble')){
             try{ if (typeof renderInvStoreChart === 'function') renderInvStoreChart(storeList); }catch(e){}
             try{ if (canvasIsReady('chart_inv_bubble') && typeof renderInventoryBubbleChart === 'function') renderInventoryBubbleChart(storeList, el('currentMonth')?.value); }catch(e){}
