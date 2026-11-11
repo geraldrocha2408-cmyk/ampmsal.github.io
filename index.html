@@ -71663,6 +71663,692 @@ body:not(.menu-collapsed) .vapesRoot .vapesSkuInvRow{
 })();
 </script>
 
+<style id="ampm-planimetria-admin-style">
+.planiRoot{padding:0 16px 28px;color:#11284A}
+.planiHero{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:16px;padding:16px 18px;margin:12px 0}
+.planiHero h2{margin:0 0 4px;font-size:22px;color:#11284A}
+.planiHero p{margin:0;color:#475569;font-weight:600;font-size:13px}
+.planiBadge{display:inline-block;background:#eff6ff;border:1px solid #bfdbfe;color:#11284A;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;white-space:nowrap}
+.planiKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:12px}
+.planiKpi{background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:12px 14px}
+.planiKpi span{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b}
+.planiKpi b{display:block;font-size:24px;margin-top:4px}
+.planiKpi small{color:#64748b;font-weight:600}
+.planiKpi.warn b{color:#C2410C}
+.planiKpi.info b{color:#005EA7}
+.planiBar{display:none;align-items:center;justify-content:space-between;gap:12px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-weight:700}
+.planiBar.show{display:flex}
+.planiBar.ok{background:#ECFDF5;border-color:#6EE7B7}
+.planiCard{background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.planiCardHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.planiCardHead h3{margin:0;font-size:17px}
+.planiSub{color:#64748b;font-size:12px;font-weight:600;margin-top:3px}
+.planiFilters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}
+.planiFilters input[type=search]{flex:1 1 320px;min-width:220px;border:1px solid #CBD5E1;border-radius:10px;padding:9px 12px;font-size:14px}
+.planiFilters select,.planiCardHead select{border:1px solid #CBD5E1;border-radius:10px;padding:8px 10px;font-size:13px;background:#fff}
+.planiCheck{font-size:13px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+.planiTableWrap{overflow:auto;max-height:560px;border:1px solid #E2E8F0;border-radius:12px}
+.planiTable{width:100%;border-collapse:collapse;font-size:12.5px}
+.planiTable th{position:sticky;top:0;background:#0B6E9E;color:#fff;font-weight:800;padding:7px 8px;text-align:left;white-space:nowrap;z-index:1}
+.planiTable td{padding:6px 8px;border-bottom:1px solid #EEF2F7;vertical-align:middle}
+.planiTable td.num,.planiTable th.num{text-align:right;white-space:nowrap}
+.planiTable tr:hover td{background:#F8FAFC}
+.planiTable .desc b{display:block;color:#11284A}
+.planiTable .desc small{display:block;color:#64748b;font-weight:600}
+.planiTable .desc em{display:block;color:#C2410C;font-style:normal;font-weight:700;font-size:11px}
+.planiTable .desc i{display:block;color:#1E40AF;font-style:normal;font-weight:700;font-size:11px}
+.planiPill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;white-space:nowrap}
+.planiPill.con{background:#DCFCE7;color:#166534}
+.planiPill.sin{background:#FEE2E2;color:#B91C1C}
+.planiPill.cero{background:#FEF3C7;color:#92400E}
+.planiPill.pend{background:#DBEAFE;color:#1E40AF}
+.planiPill.nuevo{background:#EDE9FE;color:#5B21B6}
+.planiEdit{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.planiEdit input{width:74px;border:1px solid #CBD5E1;border-radius:8px;padding:5px 7px;text-align:right;font-size:13px}
+.planiBtn{border:0;border-radius:10px;background:#F58320;color:#fff;font-weight:800;padding:8px 14px;cursor:pointer;font-size:13px}
+.planiBtn.small{padding:5px 10px;font-size:12px}
+.planiBtn.secondary{background:#E2E8F0;color:#11284A}
+.planiBtn:disabled{opacity:.5;cursor:default}
+.planiMore{margin-top:10px}
+.planiEmpty{padding:18px;color:#64748b;font-weight:700;text-align:center}
+details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
+#planiRoot .planiTable th,#planiRoot .planiTable td{text-align:left}
+#planiRoot .planiTable th.num,#planiRoot .planiTable td.num{text-align:right}
+#planiRoot .planiTable td.desc{min-width:220px;max-width:360px;white-space:normal}
+#planiRoot .planiTable td.code{white-space:nowrap;font-variant-numeric:tabular-nums;color:#334155}
+#planiRoot .planiTable td.stat{min-width:120px}
+#planiRoot .planiTable td.stat .planiPill{margin:1px 0}
+#planiRoot select{width:auto !important;min-width:190px;max-width:100%}
+#planiRoot .planiFilters input[type=search]{width:auto}
+#planiRoot .planiEdit{justify-content:flex-start}
+#planiRoot .planiTableWrap{max-height:70vh;overflow:auto}
+#planiRoot .planiTable{overflow:visible !important;border-collapse:separate;border-spacing:0}
+#planiRoot .planiTable thead th{position:sticky !important;top:0;z-index:3;box-shadow:0 1px 0 rgba(15,23,42,.18)}
+#planiRoot .planiTable th.chk,#planiRoot .planiTable td.chk{width:34px;text-align:center}
+#planiRoot .planiTable input[type=checkbox]{width:16px;height:16px;cursor:pointer}
+.planiActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.planiPill.del{background:#FEE2E2;color:#991B1B}
+.planiPill.ok{background:#DCFCE7;color:#166534}
+.planiDays{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid rgba(15,23,42,.10);border-radius:14px;padding:10px 16px;margin-bottom:14px;font-weight:800}
+@media (max-width:760px){.planiRoot{padding:0 10px 20px}.planiHero{flex-direction:column}}
+</style>
+<script id="ampm-planimetria-admin-v1">
+(function(){
+  'use strict';
+  if(window.__AMPM_PLANI_ADMIN_V1__) return;
+  window.__AMPM_PLANI_ADMIN_V1__ = true;
+  // Pestaña solo para Administrador. Cada ajuste guardado se escribe directo en la carpeta
+  // Informe Compactado/ajustes_planimetria (Ajustes_Planimetria_pendientes.json) usando el
+  // acceso a carpetas de Chrome/Edge; la compactación del día siguiente lo aplica a Planimetria.csv.
+  // Solo se listan productos con ROP mayor a 0.
+  var TAB = 'planimetria';
+  var AUTH_KEY = 'ampm_report_auth_v1';
+  var PENDING_KEY = 'ampm_planimetria_pendientes_v1';
+  var STORE_NAMES = { AMPM01:'Proceres', AMPM02:'Tuscania', AMPM03:'Masferrer' };
+  var PAGE = 200;
+  var FOLDER_NAME = 'ajustes_planimetria';
+  var FILE_NAME = 'Ajustes_Planimetria_pendientes.json';
+  var local = { timer:0, stamp:null, rows:[], all:[], byKey:{}, log:[], hasSheet:false, limit:PAGE, selA:new Set(), selB:new Set(), selBSig:'', confirmDel:0,
+                dir:null, dirStatus:'none', dirLoaded:false, dirError:'' };
+
+  function byId(id){ return document.getElementById(id); }
+  function appState(){ try{ if(typeof state !== 'undefined' && state) return state; }catch(e){} try{ return window.state || null; }catch(e){ return null; } }
+  function txt(v){ return String(v == null ? '' : v).trim(); }
+  function num(v){ var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function esc(v){ return txt(v).replace(/[&<>'"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]; }); }
+  function norm(v){ try{ return txt(v).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/&/g,' Y ').replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim(); }catch(e){ return txt(v).toUpperCase(); } }
+  function key(v){ return norm(v).replace(/\s+/g,''); }
+  function fmt(v){ if(v === null || v === '' || v === undefined) return '—'; var n = Number(v); if(!Number.isFinite(n)) return '—'; return Number.isInteger(n) ? n.toLocaleString('en-US') : n.toLocaleString('en-US',{maximumFractionDigits:2}); }
+  function storeLabel(s){ return STORE_NAMES[s] ? s+' '+STORE_NAMES[s] : s; }
+  function money(v){ if(v === null || v === '' || v === undefined || !Number.isFinite(Number(v))) return '—'; return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function rowKey(store, supplier, desc){ return txt(store).toUpperCase()+'|'+key(supplier)+'|'+key(desc); }
+
+  function isAdmin(){
+    try{
+      var s = JSON.parse(sessionStorage.getItem(AUTH_KEY) || 'null');
+      return !!(s && txt(s.user).toLowerCase() === 'admin' && document.body && document.body.classList.contains('auth-ok'));
+    }catch(e){ return false; }
+  }
+  function sheetReal(wb,name){ try{ if(!wb || !Array.isArray(wb.SheetNames)) return null; var want=key(name); return wb.SheetNames.find(function(n){ return key(n)===want; }) || null; }catch(e){ return null; } }
+  function wbRows(name){
+    var st=appState(), wb=st && st.__hallWorkbook;
+    if(!wb) return null;
+    var real=sheetReal(wb,name);
+    if(!real) return null;
+    try{ if(wb.__rowsBySheet && Array.isArray(wb.__rowsBySheet[real])) return wb.__rowsBySheet[real]; }catch(e){}
+    try{ if(typeof innovationWorkbookSheetRows === 'function') return innovationWorkbookSheetRows(wb, real) || []; }catch(e){}
+    try{ if(typeof sheetRows === 'function') return sheetRows(wb, real, {defval:null, raw:true}) || []; }catch(e){}
+    try{ if(wb.Sheets && wb.Sheets[real] && window.XLSX) return XLSX.utils.sheet_to_json(wb.Sheets[real], {defval:null, raw:true}) || []; }catch(e){}
+    return [];
+  }
+  function stamp(){ var st=appState(); return st && st.__hallWorkbookStamp ? st.__hallWorkbookStamp : (st && st.__hallWorkbook ? 'wb' : 0); }
+
+  // ---------- Pendientes (en este navegador) ----------
+  function loadPending(){ try{ var a = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+  function savePending(list){ try{ localStorage.setItem(PENDING_KEY, JSON.stringify(list)); }catch(e){} }
+  function pendingByKey(){ var m = {}; loadPending().forEach(function(p){ m[rowKey(p.store,p.supplier,p.description)] = p; }); return m; }
+  function newId(){ return 'pl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+  function localIso(d){ d = d || new Date(); var z = function(n){ return String(n).padStart(2,'0'); }; return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds()); }
+
+  function isInCarpeta(p){ return !!(p.enCarpeta || p.descargado); }
+
+  // ---------- Carpeta ajustes_planimetria (acceso a carpetas de Chrome/Edge) ----------
+  function fsSupported(){ return typeof window.showDirectoryPicker === 'function'; }
+  function idb(){
+    return new Promise(function(res, rej){
+      var r = indexedDB.open('ampm_planimetria_fs', 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore('handles'); };
+      r.onsuccess = function(){ res(r.result); };
+      r.onerror = function(){ rej(r.error); };
+    });
+  }
+  function idbGet(k){ return idb().then(function(db){ return new Promise(function(res, rej){ var t = db.transaction('handles','readonly').objectStore('handles').get(k); t.onsuccess = function(){ res(t.result || null); }; t.onerror = function(){ rej(t.error); }; }); }); }
+  function idbSet(k, v){ return idb().then(function(db){ return new Promise(function(res, rej){ var t = db.transaction('handles','readwrite').objectStore('handles').put(v, k); t.onsuccess = function(){ res(true); }; t.onerror = function(){ rej(t.error); }; }); }); }
+  async function permission(handle, ask){
+    try{
+      if(!handle.queryPermission) return 'granted';
+      var opts = {mode:'readwrite'};
+      var st = await handle.queryPermission(opts);
+      if(st !== 'granted' && ask && handle.requestPermission) st = await handle.requestPermission(opts);
+      return st === 'granted' ? 'granted' : 'prompt';
+    }catch(e){ return 'prompt'; }
+  }
+  async function loadDir(){
+    if(local.dirLoaded) return;
+    local.dirLoaded = true;
+    if(!fsSupported()){ local.dirStatus = 'unsupported'; return; }
+    try{ local.dir = await idbGet('dir'); }catch(e){ local.dir = null; }
+    local.dirStatus = local.dir ? await permission(local.dir, false) : 'none';
+  }
+  async function resolveTarget(picked){
+    if(txt(picked.name).toLowerCase() === FOLDER_NAME) return picked;
+    try{ await picked.getFileHandle('publicar_github.py'); }catch(e){ return null; }
+    return await picked.getDirectoryHandle(FOLDER_NAME, {create:true});
+  }
+  function payload(list){
+    return { tipo:'ajustes_planimetria', version:1, generado:localIso(), usuario:'admin',
+      ajustes:list.map(function(p){ var c = Object.assign({}, p); ['descargado','descargadoEn','enCarpeta','enCarpetaEn'].forEach(function(f){ delete c[f]; }); return c; }) };
+  }
+  async function linkFolder(){
+    if(!fsSupported()){ local.dirStatus = 'unsupported'; render(); return; }
+    try{
+      var picked = await window.showDirectoryPicker({id:'ampm-planimetria', mode:'readwrite'});
+      var dir = await resolveTarget(picked);
+      if(!dir){ local.dirError = 'Esa carpeta no es la del Informe Compactado. Elige "Informe Compactado" o su subcarpeta "ajustes_planimetria".'; render(); return; }
+      local.dir = dir; local.dirStatus = 'granted'; local.dirError = '';
+      try{ await idbSet('dir', dir); }catch(e){}
+      await syncFolder(false);
+    }catch(e){
+      if(!(e && e.name === 'AbortError')) local.dirError = 'No se pudo vincular la carpeta: '+(e && e.message || e);
+    }
+    render();
+  }
+  // Escribe todos los pendientes en la carpeta (un solo archivo acumulado).
+  async function syncFolder(ask){
+    await loadDir();
+    if(!local.dir) return false;
+    local.dirStatus = await permission(local.dir, ask);
+    if(local.dirStatus !== 'granted') return false;
+    var list = loadPending();
+    try{
+      if(list.length){
+        var fh = await local.dir.getFileHandle(FILE_NAME, {create:true});
+        var w = await fh.createWritable();
+        await w.write(JSON.stringify(payload(list), null, 2));
+        await w.close();
+      }else{
+        try{ await local.dir.removeEntry(FILE_NAME); }catch(e){}
+      }
+      var now = localIso();
+      var ids = new Set(list.map(function(p){ return p.id; }));
+      savePending(loadPending().map(function(p){ return ids.has(p.id) ? Object.assign({}, p, {enCarpeta:true, enCarpetaEn:now}) : p; }));
+      local.dirError = '';
+      return true;
+    }catch(e){
+      local.dirError = 'No se pudo escribir en la carpeta: '+(e && e.message || e);
+      return false;
+    }
+  }
+  function downloadFallback(){
+    var list = loadPending();
+    if(!list.length) return;
+    var now = new Date(), z = function(n){ return String(n).padStart(2,'0'); };
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(payload(list), null, 2)], {type:'application/json'}));
+    a.download = 'Ajustes_Planimetria_'+now.getFullYear()+z(now.getMonth()+1)+z(now.getDate())+'_'+z(now.getHours())+z(now.getMinutes())+z(now.getSeconds())+'.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+
+  // ---------- Datos del cubo ----------
+  function load(force){
+    var s = stamp();
+    if(!force && local.stamp === s && local.stamp) return;
+    local.stamp = s;
+    var raw = wbRows('Planimetria_Admin');
+    local.hasSheet = Array.isArray(raw);
+    var hasRop = !!(raw && raw.length && ('ROP' in raw[0]));
+    local.all = (raw || []).map(function(r){
+      var plan = r.Planimetria === '' || r.Planimetria == null ? null : num(r.Planimetria);
+      var row = {
+        store: txt(r.Store).toUpperCase(), dept: txt(r.Department), cat: txt(r.Category), sup: txt(r.Supplier),
+        marca: txt(r.Marca), desc: txt(r.Description), code: txt(r.Codigo), plan: plan, estado: txt(r.Estado),
+        otro: txt(r.OtroProveedor), cost: r.Costo === '' || r.Costo == null ? null : num(r.Costo), planCalc: r.PlanCalculo === '' || r.PlanCalculo == null ? null : num(r.PlanCalculo), skuCalc: txt(r.SkuCalculo), rop: r.ROP === '' || r.ROP == null ? null : num(r.ROP), restock: r.RestockLvl === '' || r.RestockLvl == null ? null : num(r.RestockLvl),
+        exist: r.Existencia === '' || r.Existencia == null ? null : num(r.Existencia), activo: num(r.Activo) === 1,
+        qty28: num(r.Qty28d), first: txt(r.PrimeraVenta), last: txt(r.UltimaVenta), nuevo: num(r.Nuevo) === 1,
+        ajuste: txt(r.UltimoAjuste),
+        inact: num(r.Inactivo) === 1, inactCompra: num(r.InactivoCompra) === 1,
+        enInv: r.EnInventario == null || r.EnInventario === '' ? true : num(r.EnInventario) === 1
+      };
+      row.k = rowKey(row.store, row.sup, row.desc);
+      row.search = norm([row.store, STORE_NAMES[row.store] || '', row.desc, row.code, row.sup, row.marca, row.cat, row.dept].join(' '));
+      return row;
+    });
+    // Lista principal: solo productos con ROP. Las listas de limpieza usan todas las filas.
+    local.rows = hasRop ? local.all.filter(function(r){ return r.rop != null && r.rop > 0; }) : local.all;
+    local.byKey = {};
+    local.all.forEach(function(r){ local.byKey[r.k] = r; });
+    local.log = (wbRows('Planimetria_Ajustes') || []).slice().reverse();
+    // Lo que ya aplicó la compactación sale de pendientes.
+    var applied = new Set(local.log.map(function(r){ return txt(r.Id); }).filter(Boolean));
+    if(applied.size){
+      var list = loadPending(), kept = list.filter(function(p){ return !applied.has(p.id); });
+      if(kept.length !== list.length) savePending(kept);
+    }
+  }
+
+  // ---------- Página ----------
+  function installTab(){
+    var btn = document.querySelector('.tabBtn[data-tab="'+TAB+'"]');
+    if(!isAdmin()){
+      if(btn) btn.remove();
+      var root = byId('planiRoot');
+      if(root) root.style.display = 'none';
+      return false;
+    }
+    var tabs = document.querySelector('.tabsbar .tabs') || document.querySelector('.tabs');
+    if(!tabs) return false;
+    if(!btn){
+      btn = document.createElement('button');
+      btn.className = 'tabBtn';
+      btn.dataset.tab = TAB;
+      btn.dataset.short = 'PL';
+      btn.type = 'button';
+      btn.title = 'Planimetría (Administrador)';
+      var after = document.querySelector('.tabBtn[data-tab="proyecciones"]') || document.querySelector('.tabBtn[data-tab="criticos"]');
+      if(after && after.parentNode) after.parentNode.insertBefore(btn, after.nextSibling); else tabs.appendChild(btn);
+      btn.innerHTML = '<span class="tabIcon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M3 15h18"></path><path d="M9 4v16"></path><path d="M15 4v16"></path></svg></span><span class="tabLabel">Planimetría</span>';
+      btn.onclick = function(ev){ ev.preventDefault(); showTab(); };
+    }
+    return true;
+  }
+  function installPage(){
+    if(byId('planiRoot')) return;
+    var root = document.createElement('div');
+    root.id = 'planiRoot';
+    root.className = 'planiRoot';
+    root.setAttribute('data-tabpage', TAB);
+    root.style.display = 'none';
+    root.innerHTML =
+      '<div class="planiHero"><div><h2>Planimetría — Ajustes</h2><p>Solo Administrador · solo productos con ROP. Lo que guardes hoy queda en la carpeta ajustes_planimetria y se aplica en la compactación de mañana.</p></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="planiBadge" id="planiFolder">Carpeta sin vincular</span><span class="planiBadge" id="planiStamp">Sin cubo cargado</span></div></div>'+
+      '<div class="planiKpis" id="planiKpis"></div>'+
+      '<div class="planiBar" id="planiBar"><span id="planiBarText"></span><span style="display:flex;gap:8px"><button class="planiBtn" id="planiLink" type="button">Vincular carpeta</button><button class="planiBtn" id="planiSync" type="button">Guardar en carpeta</button><button class="planiBtn secondary" id="planiFallback" type="button">Descargar archivo</button></span></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Productos nuevos sin planimetría</h3><div class="planiSub">Activos con ROP, primera venta en las últimas 8 semanas y sin planimetría (o en 0) en su tienda. Los más recientes primero.</div></div><select id="planiNewStore"></select></div><div class="planiTableWrap"><table class="planiTable" id="planiNewTable"></table></div></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Buscar y editar planimetría</h3><div class="planiSub">Escribe parte de la descripción, código, proveedor, marca o categoría. Cambia el número y presiona Guardar.</div></div></div>'+
+        '<div class="planiFilters"><input type="search" id="planiSearch" placeholder="Buscar: descripción, código, proveedor, marca o categoría" autocomplete="off">'+
+        '<select id="planiStore"></select>'+
+        '<select id="planiEstado"><option value="">Todos los estados</option><option value="Con planimetria">Con planimetría</option><option value="Sin planimetria">Sin planimetría</option><option value="Planimetria en 0">Planimetría en 0</option><option value="__pend">Con ajuste pendiente</option><option value="__nuevo">Nuevos</option></select>'+
+        '<select id="planiDept"></select>'+
+        '<label class="planiCheck"><input type="checkbox" id="planiInactivos"> Incluir inactivos</label></div>'+
+        '<div class="planiSub" id="planiCount"></div>'+
+        '<div class="planiTableWrap"><table class="planiTable" id="planiSearchTable"></table></div>'+
+        '<button class="planiBtn secondary planiMore" id="planiMore" type="button">Ver más</button></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Ajustes pendientes de compactación</h3><div class="planiSub">Cada vez que guardas, la lista completa se escribe en Informe Compactado/ajustes_planimetria/Ajustes_Planimetria_pendientes.json. La compactación del día siguiente la aplica y los pendientes desaparecen al cargar el cubo nuevo.</div></div><button class="planiBtn" id="planiDownload" type="button">Guardar en carpeta</button></div><div class="planiTableWrap"><table class="planiTable" id="planiPendingTable"></table></div></div>'+
+      '<div class="planiDays">Sin venta desde hace más de <select id="planiSinVentaDias"><option value="60">60 días</option><option value="90" selected>90 días</option><option value="120">120 días</option><option value="180">180 días</option><option value="365">365 días</option></select><span class="planiSub" id="planiCorte" style="margin:0"></span></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Con planimetría y sin venta</h3><div class="planiSub">Productos con planimetría que no venden en el período (o que nunca vendieron). Selecciona los que quieras quitar y elimínalos de la planimetría: se aplica en la próxima compactación. Ojo: sin planimetría, los cálculos usan el Restock del inventario como piso.</div></div><div class="planiActions"><select id="planiCleanAStore"></select><button class="planiBtn" id="planiDeleteSel" type="button">Eliminar seleccionados de planimetría</button></div></div><div class="planiSub" id="planiCleanACount"></div><div class="planiTableWrap"><table class="planiTable" id="planiCleanATable"></table></div></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Con ROP, sin venta y todavía activos para facturación</h3><div class="planiSub">Para que no salgan en el sistema de facturación deben tener los dos inactivos (Inactivo e Inactivo compra), y para bloquearlos la existencia debe estar en 0. Vienen marcados los que ya están en 0.</div></div><div class="planiActions"><select id="planiCleanBStore"></select><button class="planiBtn" id="planiExcelBloqueo" type="button">Descargar Excel para bloqueo</button></div></div><div class="planiSub" id="planiCleanBCount"></div><div class="planiTableWrap"><table class="planiTable" id="planiCleanBTable"></table></div></div>'+
+      '<details class="planiCard"><summary>Últimos ajustes aplicados por la compactación</summary><div class="planiTableWrap" style="margin-top:10px"><table class="planiTable" id="planiLogTable"></table></div></details>';
+    (byId('noteBox') || document.querySelector('.ampm-mainInner') || document.body).appendChild(root);
+    var rerender = function(){ local.limit = PAGE; schedule(60); };
+    var search = byId('planiSearch'), t = 0;
+    search.addEventListener('input', function(){ clearTimeout(t); t = setTimeout(rerender, 220); });
+    ['planiStore','planiEstado','planiDept','planiInactivos','planiNewStore'].forEach(function(id){ byId(id).addEventListener('change', rerender); });
+    ['planiSinVentaDias','planiCleanAStore','planiCleanBStore'].forEach(function(id){ byId(id).addEventListener('change', function(){ local.selA.clear(); renderClean(); }); });
+    byId('planiDeleteSel').addEventListener('click', deleteSelected);
+    byId('planiExcelBloqueo').addEventListener('click', downloadBloqueo);
+    root.addEventListener('change', function(ev){
+      var t = ev.target;
+      if(!t || t.type !== 'checkbox') return;
+      var a = t.getAttribute('data-sel-a'), b = t.getAttribute('data-sel-b');
+      if(a){ if(t.checked) local.selA.add(a); else local.selA.delete(a); updateCleanCounts(); }
+      if(b){ if(t.checked) local.selB.add(b); else local.selB.delete(b); updateCleanCounts(); }
+      if(t.id === 'planiAllA' || t.id === 'planiAllB'){
+        var isA = t.id === 'planiAllA', set = isA ? local.selA : local.selB;
+        root.querySelectorAll(isA ? 'input[data-sel-a]' : 'input[data-sel-b]').forEach(function(c){ c.checked = t.checked; var k = c.getAttribute(isA ? 'data-sel-a' : 'data-sel-b'); if(t.checked) set.add(k); else set.delete(k); });
+        updateCleanCounts();
+      }
+    });
+    byId('planiMore').addEventListener('click', function(){ local.limit += PAGE; render(); });
+    byId('planiDownload').addEventListener('click', saveToFolderClick);
+    byId('planiLink').addEventListener('click', linkFolder);
+    byId('planiSync').addEventListener('click', saveToFolderClick);
+    byId('planiFallback').addEventListener('click', downloadFallback);
+    root.addEventListener('click', function(ev){
+      var save = ev.target.closest('[data-plani-save]');
+      if(save){ saveRow(save.getAttribute('data-plani-save'), save); return; }
+      var del = ev.target.closest('[data-plani-remove]');
+      if(del){ removePending(del.getAttribute('data-plani-remove')); }
+    });
+    root.addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter' && ev.target.matches && ev.target.matches('input[data-plani-input]')){
+        ev.preventDefault();
+        var btn = ev.target.parentNode.querySelector('[data-plani-save]');
+        if(btn) saveRow(btn.getAttribute('data-plani-save'), btn);
+      }
+    });
+  }
+  function setContext(){
+    try{
+      var k=byId('ampmContextKicker'), t=byId('ampmContextTitle'), s=byId('ampmContextSubtitle'), tab=byId('ampmContextTab'), chips=byId('ampmContextChips');
+      if(k) k.textContent='Administración';
+      if(t) t.textContent='Planimetría';
+      if(tab) tab.textContent='Planimetría';
+      if(s) s.textContent='Ajustes que se aplican en la próxima compactación.';
+      if(chips) chips.innerHTML='<span class="chip">Usuario <b>Administrador</b></span>';
+    }catch(e){}
+  }
+  function showTab(){
+    if(!installTab()) return;
+    installPage();
+    document.querySelectorAll('.tabBtn').forEach(function(b){ b.classList.toggle('active', txt(b.dataset.tab) === TAB); });
+    try{ document.body.setAttribute('data-active-tab', TAB); }catch(e){}
+    try{ var st=appState(); if(st){ st.tab=TAB; st._lastActiveTab=TAB; } localStorage.setItem('ampm_tab', TAB); }catch(e){}
+    document.querySelectorAll('[data-tabpage]').forEach(function(n){
+      n.style.display = txt(n.getAttribute('data-tabpage')).toLowerCase() === TAB ? 'block' : 'none';
+    });
+    setContext();
+    try{ window.dispatchEvent(new CustomEvent('ampm:tabshown',{detail:{tab:TAB}})); }catch(e){}
+    schedule(40);
+  }
+
+  // ---------- Render ----------
+  function estadoPill(r, p){
+    if(p && p.accion === 'eliminar') return '<span class="planiPill del">Pendiente: eliminar</span>';
+    if(p) return '<span class="planiPill pend">Pendiente → '+fmt(p.nuevo)+'</span>';
+    var cls = r.estado === 'Con planimetria' ? 'con' : (r.estado === 'Planimetria en 0' ? 'cero' : 'sin');
+    var label = r.estado === 'Con planimetria' ? 'Con planimetría' : (r.estado === 'Planimetria en 0' ? 'En 0' : 'Sin planimetría');
+    return '<span class="planiPill '+cls+'">'+label+'</span>'+(r.nuevo ? '<br><span class="planiPill nuevo">Nuevo</span>' : '');
+  }
+  function descCell(r){
+    return '<td class="desc"><b>'+esc(r.desc)+'</b><small>'+esc([r.sup, r.cat, r.marca].filter(Boolean).join(' · '))+'</small>'+
+      (r.otro ? '<em>Tiene planimetría con otro proveedor: '+esc(r.otro)+'</em>' : '')+calcNote(r)+(r.activo ? '' : '<em>Inactivo</em>')+'</td>';
+  }
+  // Valor que de verdad usan Inventario / ROP ideal / Días ideal (hoja Inventario_Items del cubo).
+  function calcNote(r){
+    if(r.planCalc == null) return '';
+    var own = r.plan == null ? 0 : Number(r.plan);
+    if(r.skuCalc) return '<i>En cálculos: '+fmt(r.planCalc)+' como '+esc(r.skuCalc)+'</i>';
+    if(own <= 0 && r.planCalc > 0) return '<i>En cálculos usa el Restock del inventario: '+fmt(r.planCalc)+'</i>';
+    if(Math.abs(r.planCalc - own) > 0.001) return '<i>En cálculos: '+fmt(r.planCalc)+'</i>';
+    return '';
+  }
+  function editCell(r, p){
+    var value = p ? (p.accion === 'eliminar' ? '' : p.nuevo) : (r.plan == null ? '' : r.plan);
+    return '<td><div class="planiEdit"><input type="number" min="0" step="1" inputmode="numeric" data-plani-input="'+esc(r.k)+'" value="'+esc(value)+'" aria-label="Nueva planimetría '+esc(r.desc)+'"><button class="planiBtn small" type="button" data-plani-save="'+esc(r.k)+'">Guardar</button></div></td>';
+  }
+  function fillSelect(id, values, label, keepValue){
+    var sel = byId(id); if(!sel) return;
+    var cur = keepValue != null ? keepValue : sel.value;
+    sel.innerHTML = '<option value="">'+esc(label)+'</option>' + values.map(function(v){ return '<option value="'+esc(v.value)+'">'+esc(v.text)+'</option>'; }).join('');
+    if(values.some(function(v){ return v.value === cur; })) sel.value = cur;
+  }
+  function render(){
+    if(!isAdmin()) return;
+    installPage();
+    if(!local.dirLoaded){ loadDir().then(function(){ render(); }); return; }
+    load(false);
+    var pend = pendingByKey(), pendList = loadPending();
+    var stamp = byId('planiStamp');
+    if(!local.hasSheet){
+      if(stamp) stamp.textContent = 'Falta hoja en el cubo';
+      byId('planiKpis').innerHTML = '';
+      byId('planiNewTable').innerHTML = '<tr><td class="planiEmpty">El cubo cargado todavía no trae la hoja Planimetria_Admin. Aparece después de la próxima compactación.</td></tr>';
+      byId('planiSearchTable').innerHTML = '';
+      byId('planiCount').textContent = '';
+      byId('planiMore').style.display = 'none';
+      renderFolderState(pendList, pendList.filter(function(p){ return !isInCarpeta(p); }).length);
+      renderPending(pendList);
+      renderLog();
+      return;
+    }
+    var stores = Array.from(new Set(local.rows.map(function(r){ return r.store; }))).sort();
+    var depts = Array.from(new Set(local.rows.map(function(r){ return r.dept; }).filter(Boolean))).sort();
+    fillSelect('planiStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
+    fillSelect('planiNewStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
+    fillSelect('planiDept', depts.map(function(d){ return {value:d, text:d}; }), 'Todos los departamentos');
+    var activos = local.rows.filter(function(r){ return r.activo; });
+    var conPlan = activos.filter(function(r){ return r.estado === 'Con planimetria'; }).length;
+    var sinPlan = activos.length - conPlan;
+    var nuevos = activos.filter(function(r){ return r.nuevo && r.estado !== 'Con planimetria'; });
+    var lastLog = local.log[0];
+    if(stamp) stamp.textContent = lastLog ? 'Último ajuste aplicado: '+txt(lastLog.AplicadoEn).slice(0,10) : 'Sin ajustes aplicados aún';
+    var notDownloaded = pendList.filter(function(p){ return !isInCarpeta(p); }).length;
+    byId('planiKpis').innerHTML =
+      '<div class="planiKpi"><span>Activos con planimetría</span><b>'+fmt(conPlan)+'</b><small>de '+fmt(activos.length)+' productos activos con ROP</small></div>'+
+      '<div class="planiKpi warn"><span>Activos sin planimetría</span><b>'+fmt(sinPlan)+'</b><small>Sin fila o en 0 para su tienda</small></div>'+
+      '<div class="planiKpi warn"><span>Nuevos sin planimetría</span><b>'+fmt(nuevos.length)+'</b><small>Primera venta en 8 semanas</small></div>'+
+      '<div class="planiKpi info"><span>Ajustes pendientes</span><b>'+fmt(pendList.length)+'</b><small>'+(notDownloaded ? fmt(notDownloaded)+' sin guardar en carpeta' : (pendList.length ? 'Guardados en carpeta' : 'Sin pendientes'))+'</small></div>';
+    renderFolderState(pendList, notDownloaded);
+
+    // Nuevos sin planimetría
+    var newStore = byId('planiNewStore').value;
+    var nlist = nuevos.filter(function(r){ return !newStore || r.store === newStore; })
+      .sort(function(a,b){ return b.first.localeCompare(a.first) || a.store.localeCompare(b.store) || a.desc.localeCompare(b.desc); });
+    byId('planiNewTable').innerHTML = nlist.length
+      ? '<thead><tr><th>Tienda</th><th>Producto</th><th>Código</th><th>1ª venta</th><th class="num">Venta 4S</th><th class="num">Exist.</th><th class="num">ROP</th><th class="num">Costo</th><th>Estado</th><th>Planimetría</th></tr></thead><tbody>'+
+        nlist.map(function(r){ var p = pend[r.k]; return '<tr><td>'+esc(r.store)+'</td>'+descCell(r)+'<td class="code">'+esc(r.code)+'</td><td class="code">'+esc(r.first)+'</td><td class="num">'+fmt(r.qty28)+'</td><td class="num">'+fmt(r.exist)+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td><td class="stat">'+estadoPill(r,p)+'</td>'+editCell(r,p)+'</tr>'; }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">No hay productos nuevos sin planimetría'+(newStore ? ' en '+esc(newStore) : '')+'.</td></tr>';
+
+    // Buscar
+    var q = norm(byId('planiSearch').value), store = byId('planiStore').value, estado = byId('planiEstado').value, dept = byId('planiDept').value, inact = byId('planiInactivos').checked;
+    var words = q ? q.split(' ') : [];
+    var list = local.rows.filter(function(r){
+      if(!inact && !r.activo && !pend[r.k]) return false;
+      if(store && r.store !== store) return false;
+      if(dept && r.dept !== dept) return false;
+      if(estado === '__pend'){ if(!pend[r.k]) return false; }
+      else if(estado === '__nuevo'){ if(!r.nuevo) return false; }
+      else if(estado && r.estado !== estado) return false;
+      for(var i=0;i<words.length;i++){ if(r.search.indexOf(words[i]) < 0) return false; }
+      return true;
+    }).sort(function(a,b){ return a.desc.localeCompare(b.desc) || a.store.localeCompare(b.store); });
+    var shown = list.slice(0, local.limit);
+    byId('planiCount').textContent = list.length ? 'Mostrando '+fmt(shown.length)+' de '+fmt(list.length)+' productos' : '';
+    byId('planiSearchTable').innerHTML = shown.length
+      ? '<thead><tr><th>Tienda</th><th>Producto</th><th>Código</th><th>Departamento</th><th class="num">Planimetría</th><th>Estado</th><th class="num">Exist.</th><th class="num">Venta 4S</th><th class="num">ROP</th><th class="num">Costo</th><th>Nueva planimetría</th></tr></thead><tbody>'+
+        shown.map(function(r){ var p = pend[r.k]; return '<tr><td>'+esc(r.store)+'</td>'+descCell(r)+'<td class="code">'+esc(r.code)+'</td><td>'+esc(r.dept)+'</td><td class="num"><b>'+fmt(r.plan)+'</b></td><td class="stat">'+estadoPill(r,p)+'</td><td class="num">'+fmt(r.exist)+'</td><td class="num">'+fmt(r.qty28)+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td>'+editCell(r,p)+'</tr>'; }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">Sin resultados con esos filtros.</td></tr>';
+    byId('planiMore').style.display = list.length > shown.length ? '' : 'none';
+    renderClean();
+    renderPending(pendList);
+    renderLog();
+  }
+  function renderFolderState(pendList, notSaved){
+    var folder = byId('planiFolder'), bar = byId('planiBar'), text = byId('planiBarText');
+    var st = local.dirStatus, msg = '', ok = false;
+    if(folder) folder.textContent = st === 'unsupported' ? 'Navegador sin acceso a carpetas'
+      : (local.dir ? 'Carpeta: '+txt(local.dir.name)+(st === 'granted' ? '' : ' (falta permiso)') : 'Carpeta sin vincular');
+    var showLink = false, showSync = false, showFallback = false;
+    if(local.dirError){ msg = local.dirError; showLink = st !== 'unsupported'; }
+    else if(st === 'unsupported'){ msg = 'Este navegador no permite guardar en carpetas. Abre el informe en Chrome o Edge para que los ajustes queden en ajustes_planimetria.'; showFallback = pendList.length > 0; }
+    else if(!local.dir){ msg = 'Vincula una sola vez la carpeta "Informe Compactado" (o su subcarpeta ajustes_planimetria) para que cada ajuste quede guardado ahí.'; showLink = true; }
+    else if(notSaved){ msg = notSaved+' ajuste(s) aún no están en la carpeta. Presiona "Guardar en carpeta" y da permiso si el navegador lo pide.'; showSync = true; }
+    else if(pendList.length){ msg = pendList.length+' ajuste(s) guardados en '+txt(local.dir.name)+(local.lastSaved ? ' (último guardado '+hhmm(local.lastSaved)+')' : '')+': se aplican en la próxima compactación.'; ok = true; }
+    bar.classList.toggle('show', !!msg);
+    bar.classList.toggle('ok', ok);
+    text.textContent = msg;
+    byId('planiLink').style.display = showLink ? '' : 'none';
+    byId('planiSync').style.display = showSync ? '' : 'none';
+    byId('planiFallback').style.display = showFallback ? '' : 'none';
+  }
+  function cleanModel(){
+    var days = Number(byId('planiSinVentaDias').value) || 90;
+    var cut = '';
+    local.all.forEach(function(r){ if(r.last > cut) cut = r.last; });
+    var lim = '';
+    if(cut){ var d = new Date(cut+'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - days); lim = d.toISOString().slice(0,10); }
+    var sinVenta = function(r){ return !r.last || (lim && r.last < lim); };
+    var sa = byId('planiCleanAStore').value, sb = byId('planiCleanBStore').value;
+    var sort = function(a,b){ return a.store.localeCompare(b.store) || a.desc.localeCompare(b.desc); };
+    var A = local.all.filter(function(r){ return r.plan != null && r.plan > 0 && sinVenta(r) && (!sa || r.store === sa); }).sort(sort);
+    var B = local.rows.filter(function(r){ return r.enInv && sinVenta(r) && !(r.inact && r.inactCompra) && (!sb || r.store === sb); }).sort(sort);
+    return {days:days, cut:cut, A:A, B:B};
+  }
+  function yesNo(v){ return v ? 'Sí' : '<b style="color:#B91C1C">No</b>'; }
+  function renderClean(){
+    if(!byId('planiCleanATable')) return;
+    var pend = pendingByKey(), m = cleanModel();
+    var stores = Array.from(new Set(local.all.map(function(r){ return r.store; }))).sort();
+    fillSelect('planiCleanAStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
+    fillSelect('planiCleanBStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
+    byId('planiCorte').textContent = m.cut ? 'Última venta en los datos: '+m.cut : '';
+    // Lista A
+    var keysA = new Set(m.A.map(function(r){ return r.k; }));
+    Array.from(local.selA).forEach(function(k){ if(!keysA.has(k)) local.selA.delete(k); });
+    byId('planiCleanATable').innerHTML = m.A.length
+      ? '<thead><tr><th class="chk"><input type="checkbox" id="planiAllA" aria-label="Seleccionar todos"></th><th>Tienda</th><th>Producto</th><th>Código</th><th class="num">Planimetría</th><th>Última venta</th><th class="num">Exist.</th><th class="num">ROP</th><th class="num">Costo</th><th>Inactivo</th><th>Inact. compra</th><th>Estado</th></tr></thead><tbody>'+
+        m.A.map(function(r){ var p = pend[r.k]; return '<tr><td class="chk"><input type="checkbox" data-sel-a="'+esc(r.k)+'"'+(local.selA.has(r.k)?' checked':'')+'></td><td>'+esc(r.store)+'</td>'+descCell(r)+'<td class="code">'+esc(r.code)+'</td><td class="num"><b>'+fmt(r.plan)+'</b></td><td class="code">'+(r.last ? esc(r.last) : 'Sin venta registrada')+'</td><td class="num">'+(r.enInv ? fmt(r.exist) : '—')+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td><td>'+(r.enInv ? (r.inact ? 'Sí' : 'No') : 'No está en inventario')+'</td><td>'+(r.enInv ? (r.inactCompra ? 'Sí' : 'No') : '—')+'</td><td class="stat">'+(p ? estadoPill(r,p) : '')+'</td></tr>'; }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">No hay productos con planimetría sin venta en este período.</td></tr>';
+    // Lista B: por defecto se marcan los que ya están en 0
+    var sig = m.days+'|'+byId('planiCleanBStore').value+'|'+local.stamp;
+    if(sig !== local.selBSig){ local.selBSig = sig; local.selB = new Set(m.B.filter(function(r){ return (r.exist || 0) === 0; }).map(function(r){ return r.k; })); }
+    byId('planiCleanBTable').innerHTML = m.B.length
+      ? '<thead><tr><th class="chk"><input type="checkbox" id="planiAllB" aria-label="Seleccionar todos"></th><th>Tienda</th><th>Código de barra</th><th>Producto</th><th>Última venta</th><th class="num">Exist.</th><th class="num">ROP</th><th class="num">Costo</th><th>Inactivo</th><th>Inact. compra</th><th>Bloqueo</th></tr></thead><tbody>'+
+        m.B.map(function(r){ var ready = (r.exist || 0) === 0; return '<tr><td class="chk"><input type="checkbox" data-sel-b="'+esc(r.k)+'"'+(local.selB.has(r.k)?' checked':'')+'></td><td>'+esc(r.store)+'</td><td class="code">'+esc(r.code)+'</td>'+descCell(r)+'<td class="code">'+(r.last ? esc(r.last) : 'Sin venta registrada')+'</td><td class="num">'+fmt(r.exist)+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td><td>'+yesNo(r.inact)+'</td><td>'+yesNo(r.inactCompra)+'</td><td class="stat">'+(ready ? '<span class="planiPill ok">Lista para bloquear</span>' : '<span class="planiPill cero">Dejar existencia en 0 ('+fmt(r.exist)+')</span>')+'</td></tr>'; }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">No hay productos con ROP sin venta que sigan activos en este período.</td></tr>';
+    local._clean = m;
+    updateCleanCounts();
+  }
+  function updateCleanCounts(){
+    var m = local._clean; if(!m) return;
+    var readyB = m.B.filter(function(r){ return (r.exist || 0) === 0; }).length;
+    byId('planiCleanACount').textContent = fmt(m.A.length)+' productos · '+fmt(local.selA.size)+' seleccionados';
+    byId('planiCleanBCount').textContent = fmt(m.B.length)+' productos · '+fmt(readyB)+' con existencia 0 · '+fmt(local.selB.size)+' seleccionados para el Excel';
+    var del = byId('planiDeleteSel');
+    if(del && !local.confirmDel){ del.textContent = 'Eliminar seleccionados de planimetría'+(local.selA.size ? ' ('+local.selA.size+')' : ''); del.disabled = !local.selA.size; }
+    var xl = byId('planiExcelBloqueo');
+    if(xl){ xl.textContent = 'Descargar Excel para bloqueo'+(local.selB.size ? ' ('+local.selB.size+')' : ''); xl.disabled = !local.selB.size; }
+    var allA = byId('planiAllA'); if(allA) allA.checked = m.A.length > 0 && m.A.every(function(r){ return local.selA.has(r.k); });
+    var allB = byId('planiAllB'); if(allB) allB.checked = m.B.length > 0 && m.B.every(function(r){ return local.selB.has(r.k); });
+  }
+  function deleteSelected(){
+    var btn = byId('planiDeleteSel');
+    if(!local.selA.size) return;
+    // Doble clic de confirmación (sin ventanas emergentes).
+    if(!local.confirmDel){
+      local.confirmDel = setTimeout(function(){ local.confirmDel = 0; updateCleanCounts(); }, 5000);
+      btn.textContent = 'Confirmar: eliminar '+local.selA.size+' de planimetría';
+      return;
+    }
+    clearTimeout(local.confirmDel); local.confirmDel = 0;
+    var keys = new Set(local.selA), now = localIso();
+    var list = loadPending().filter(function(p){ return !keys.has(rowKey(p.store,p.supplier,p.description)); });
+    keys.forEach(function(k){
+      var r = local.byKey[k]; if(!r) return;
+      list.push({ id:newId(), fecha:now, usuario:'admin', store:r.store, supplier:r.sup, description:r.desc,
+                  department:r.dept, category:r.cat, marca:r.marca, code:r.code,
+                  anterior:r.plan == null ? '' : r.plan, nuevo:null, accion:'eliminar', nota:'Sin venta', enCarpeta:false });
+    });
+    savePending(list);
+    local.selA.clear();
+    syncFolder(true).then(render);
+  }
+  async function downloadBloqueo(){
+    var m = local._clean; if(!m) return;
+    var rows = m.B.filter(function(r){ return local.selB.has(r.k); });
+    if(!rows.length) return;
+    var stamp = localIso().slice(0,10).replace(/-/g,'');
+    var header = ['Código de barra','Descripción','Proveedor','Tienda'];
+    try{
+      if(typeof ensureExcelJS === 'function') await ensureExcelJS();
+      var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Bloqueo');
+      ws.columns = [{header:header[0], key:'c', width:18},{header:header[1], key:'d', width:42},{header:header[2], key:'p', width:38},{header:header[3], key:'t', width:10}];
+      ws.getRow(1).font = {bold:true, color:{argb:'FFFFFFFF'}};
+      ws.getRow(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF0B6E9E'}};
+      ws.getColumn(1).numFmt = '@';
+      rows.forEach(function(r){ ws.addRow({c:String(r.code), d:r.desc, p:r.sup, t:r.store}); });
+      ws.views = [{state:'frozen', ySplit:1}];
+      var buf = await wb.xlsx.writeBuffer();
+      var blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Bloqueo_sin_venta_'+stamp+'.xlsx';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+    }catch(e){
+      // Respaldo si no carga la librería de Excel: CSV que abre en Excel.
+      var cell = function(v){ v = txt(v); return '"'+v.replace(/"/g,'""')+'"'; };
+      var csv = [header.map(cell).join(',')].concat(rows.map(function(r){ return ['="'+txt(r.code)+'"', cell(r.desc), cell(r.sup), cell(r.store)].join(','); })).join('\r\n');
+      var b = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+      var l = document.createElement('a'); l.href = URL.createObjectURL(b); l.download = 'Bloqueo_sin_venta_'+stamp+'.csv';
+      document.body.appendChild(l); l.click(); setTimeout(function(){ URL.revokeObjectURL(l.href); l.remove(); }, 800);
+    }
+  }
+  function renderPending(list){
+    var table = byId('planiPendingTable');
+    var dl = byId('planiDownload');
+    if(dl && !dl.__planiLabel) dl.disabled = !list.length;
+    table.innerHTML = list.length
+      ? '<thead><tr><th>Tienda</th><th>Producto</th><th class="num">Costo</th><th class="num">Anterior</th><th class="num">Nuevo</th><th>Guardado</th><th>Estado</th><th></th></tr></thead><tbody>'+
+        list.slice().sort(function(a,b){ return txt(b.fecha).localeCompare(txt(a.fecha)); }).map(function(p){
+          return '<tr><td>'+esc(p.store)+'</td><td class="desc"><b>'+esc(p.description)+'</b><small>'+esc(p.supplier)+'</small></td><td class="num">'+money((local.byKey[rowKey(p.store,p.supplier,p.description)] || {}).cost)+'</td><td class="num">'+fmt(p.anterior)+'</td><td class="num"><b>'+(p.accion === 'eliminar' ? 'Eliminar' : fmt(p.nuevo))+'</b></td><td>'+esc(txt(p.fecha).replace('T',' ').slice(0,16))+'</td><td>'+(isInCarpeta(p) ? '<span class="planiPill con">En carpeta · se aplica en la próxima compactación</span>' : '<span class="planiPill cero">Sin guardar en carpeta</span>')+'</td><td><button class="planiBtn small secondary" type="button" data-plani-remove="'+esc(p.id)+'">Quitar</button></td></tr>';
+        }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">No hay ajustes pendientes.</td></tr>';
+  }
+  function renderLog(){
+    var rows = local.log.slice(0, 300);
+    byId('planiLogTable').innerHTML = rows.length
+      ? '<thead><tr><th>Aplicado</th><th>Tienda</th><th>Producto</th><th class="num">Anterior</th><th class="num">Nuevo</th><th>Acción</th></tr></thead><tbody>'+
+        rows.map(function(r){ return '<tr><td>'+esc(txt(r.AplicadoEn).replace('T',' ').slice(0,16))+'</td><td>'+esc(r.Store)+'</td><td class="desc"><b>'+esc(r.Description)+'</b><small>'+esc(r.Supplier)+'</small></td><td class="num">'+fmt(r.Anterior)+'</td><td class="num"><b>'+fmt(r.Nuevo)+'</b></td><td>'+esc(r.Accion)+'</td></tr>'; }).join('')+'</tbody>'
+      : '<tr><td class="planiEmpty">Todavía no hay ajustes aplicados.</td></tr>';
+  }
+
+  // ---------- Acciones ----------
+  function flash(btn, text, ok, ms){
+    if(!btn) return;
+    var old = btn.__planiLabel || btn.textContent;
+    btn.__planiLabel = old;
+    btn.textContent = text;
+    btn.style.background = ok ? '#16A34A' : '#DC2626';
+    clearTimeout(btn.__planiFlash);
+    btn.__planiFlash = setTimeout(function(){ btn.textContent = btn.__planiLabel; btn.__planiLabel = null; btn.style.background = ''; }, ms || 1100);
+  }
+  function hhmm(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  // Botón "Guardar en carpeta": confirma en pantalla cuántos ajustes quedaron escritos y a qué hora.
+  function saveToFolderClick(ev){
+    var btn = ev && ev.currentTarget;
+    if(!local.dir){ linkFolder(); return; }
+    var n = loadPending().length;
+    if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
+    syncFolder(true).then(function(ok){
+      if(btn){ btn.disabled = false; btn.textContent = 'Guardar en carpeta'; }
+      if(ok){ local.lastSaved = new Date(); local.lastSavedCount = n; }
+      render();
+      var target = btn && document.body.contains(btn) ? btn : byId('planiDownload');
+      if(ok) flash(target, n ? 'Guardado en la carpeta: '+n+' ajuste(s) · '+hhmm(local.lastSaved) : 'Carpeta actualizada · sin ajustes pendientes', true, 3500);
+      else flash(target, local.dirError ? 'No se pudo guardar: revisa el aviso de arriba' : 'Falta permiso: presiona de nuevo y acepta', false, 3500);
+    });
+  }
+  function saveRow(k, btn){
+    var r = local.byKey[k];
+    var input = btn && btn.parentNode ? btn.parentNode.querySelector('input[data-plani-input]') : null;
+    if(!r || !input) return;
+    var rawValue = txt(input.value);
+    var value = Number(rawValue);
+    if(rawValue === '' || !Number.isFinite(value) || value < 0 || value > 100000){ flash(btn, 'Valor inválido', false); input.focus(); return; }
+    value = Math.round(value * 100) / 100;
+    var list = loadPending();
+    var hadPending = list.some(function(p){ return rowKey(p.store,p.supplier,p.description) === k; });
+    list = list.filter(function(p){ return rowKey(p.store,p.supplier,p.description) !== k; });
+    var changed = r.plan == null || Number(r.plan) !== value;
+    if(changed){
+      list.push({ id:newId(), fecha:localIso(), usuario:'admin', store:r.store, supplier:r.sup, description:r.desc,
+                  department:r.dept, category:r.cat, marca:r.marca, code:r.code,
+                  anterior:r.plan == null ? '' : r.plan, nuevo:value, nota:'', enCarpeta:false });
+    }
+    if(!changed && !hadPending){ flash(btn, 'Sin cambio', true); return; }
+    savePending(list);
+    flash(btn, 'Guardado', true);
+    syncFolder(true).then(function(saved){ if(saved){ local.lastSaved = new Date(); flash(btn, 'En carpeta', true, 1500); } else flash(btn, local.dir ? 'Falta permiso' : 'Vincula carpeta', false, 2000); setTimeout(render, 1600); });
+  }
+  function removePending(id){
+    savePending(loadPending().filter(function(p){ return p.id !== id; }));
+    syncFolder(true).then(render);
+  }
+  function schedule(ms){
+    clearTimeout(local.timer);
+    local.timer = setTimeout(function(){ try{ if((document.body.getAttribute('data-active-tab')||'') === TAB) render(); }catch(e){ console.warn('Planimetría render error', e); } }, ms == null ? 120 : ms);
+  }
+  function syncAdmin(){
+    var admin = installTab();
+    if(!admin && (document.body.getAttribute('data-active-tab')||'') === TAB){
+      var first = document.querySelector('.tabBtn[data-tab="resumen"]');
+      if(first) first.click();
+    }
+  }
+  function bind(){
+    // Un usuario que no es admin nunca arranca en esta pestaña.
+    try{ if(localStorage.getItem('ampm_tab') === TAB && !isAdmin()) localStorage.setItem('ampm_tab','resumen'); }catch(e){}
+    syncAdmin();
+    try{ new MutationObserver(function(){ syncAdmin(); }).observe(document.body, {attributes:true, attributeFilter:['class']}); }catch(e){}
+    window.addEventListener('ampm:fileloaded', function(){ local.stamp = null; local.limit = PAGE; schedule(200); }, {passive:true});
+    window.addEventListener('ampm:tabshown', function(ev){ try{ if(txt(ev.detail && ev.detail.tab).toLowerCase() === TAB) schedule(60); }catch(e){} }, {passive:true});
+    window.addEventListener('storage', function(ev){ if(ev.key === PENDING_KEY) schedule(60); });
+    try{ if(localStorage.getItem('ampm_tab') === TAB && isAdmin()) setTimeout(showTab, 600); }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, {once:true});
+  else bind();
+  window.showPlanimetriaAdminTab = showTab;
+})();
+</script>
+
 <style>
 .innovationHotdogSpecialtyGrid{margin-top:0;}
 .innovationHotdogSpecialtyGrid .innovationChartWrap{height:330px;}
