@@ -71966,14 +71966,14 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
       '<div class="planiCard"><div class="planiCardHead"><div><h3>Ajustes pendientes de compactación</h3><div class="planiSub">Cada vez que guardas, la lista completa se escribe en Informe Compactado/ajustes_planimetria/Ajustes_Planimetria_pendientes.json. La compactación del día siguiente la aplica y los pendientes desaparecen al cargar el cubo nuevo.</div></div><button class="planiBtn" id="planiDownload" type="button">Guardar en carpeta</button></div><div class="planiTableWrap"><table class="planiTable" id="planiPendingTable"></table></div></div>'+
       '<div class="planiDays">Sin venta desde hace más de <select id="planiSinVentaDias"><option value="60">60 días</option><option value="90" selected>90 días</option><option value="120">120 días</option><option value="180">180 días</option><option value="365">365 días</option></select><span class="planiSub" id="planiCorte" style="margin:0"></span></div>'+
       '<div class="planiCard"><div class="planiCardHead"><div><h3>Con planimetría y sin venta</h3><div class="planiSub">Productos con planimetría que no venden en el período (o que nunca vendieron). Selecciona los que quieras quitar y elimínalos de la planimetría: se aplica en la próxima compactación. Ojo: sin planimetría, los cálculos usan el Restock del inventario como piso.</div></div><div class="planiActions"><select id="planiCleanAStore"></select><button class="planiBtn" id="planiDeleteSel" type="button">Eliminar seleccionados de planimetría</button></div></div><div class="planiSub" id="planiCleanACount"></div><div class="planiTableWrap"><table class="planiTable" id="planiCleanATable"></table></div></div>'+
-      '<div class="planiCard"><div class="planiCardHead"><div><h3>Con ROP, sin venta y todavía activos para facturación</h3><div class="planiSub">Para que no salgan en el sistema de facturación deben tener los dos inactivos (Inactivo e Inactivo compra), y para bloquearlos la existencia debe estar en 0. Vienen marcados los que ya están en 0.</div></div><div class="planiActions"><select id="planiCleanBStore"></select><button class="planiBtn" id="planiExcelBloqueo" type="button">Descargar Excel para bloqueo</button></div></div><div class="planiSub" id="planiCleanBCount"></div><div class="planiTableWrap"><table class="planiTable" id="planiCleanBTable"></table></div></div>'+
+      '<div class="planiCard"><div class="planiCardHead"><div><h3>Con ROP, sin venta y todavía activos para facturación (general, por código de barra)</h3><div class="planiSub">Inactivar un producto lo inactiva en todas las tiendas, por eso esta lista suma las tres: sin venta en ninguna tienda en el período, con ROP en al menos una y todavía sin los dos inactivos (Inactivo e Inactivo compra). Para bloquearlo, la existencia total debe estar en 0. Vienen marcados los que ya están en 0.</div></div><div class="planiActions"><button class="planiBtn" id="planiExcelBloqueo" type="button">Descargar Excel para bloqueo</button></div></div><div class="planiSub" id="planiCleanBCount"></div><div class="planiTableWrap"><table class="planiTable" id="planiCleanBTable"></table></div></div>'+
       '<details class="planiCard"><summary>Últimos ajustes aplicados por la compactación</summary><div class="planiTableWrap" style="margin-top:10px"><table class="planiTable" id="planiLogTable"></table></div></details>';
     (byId('noteBox') || document.querySelector('.ampm-mainInner') || document.body).appendChild(root);
     var rerender = function(){ local.limit = PAGE; schedule(60); };
     var search = byId('planiSearch'), t = 0;
     search.addEventListener('input', function(){ clearTimeout(t); t = setTimeout(rerender, 220); });
     ['planiStore','planiEstado','planiDept','planiInactivos','planiNewStore'].forEach(function(id){ byId(id).addEventListener('change', rerender); });
-    ['planiSinVentaDias','planiCleanAStore','planiCleanBStore'].forEach(function(id){ byId(id).addEventListener('change', function(){ local.selA.clear(); renderClean(); }); });
+    ['planiSinVentaDias','planiCleanAStore'].forEach(function(id){ byId(id).addEventListener('change', function(){ local.selA.clear(); renderClean(); }); });
     byId('planiDeleteSel').addEventListener('click', deleteSelected);
     byId('planiExcelBloqueo').addEventListener('click', downloadBloqueo);
     root.addEventListener('change', function(ev){
@@ -72158,10 +72158,30 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
     var lim = '';
     if(cut){ var d = new Date(cut+'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - days); lim = d.toISOString().slice(0,10); }
     var sinVenta = function(r){ return !r.last || (lim && r.last < lim); };
-    var sa = byId('planiCleanAStore').value, sb = byId('planiCleanBStore').value;
+    var sa = byId('planiCleanAStore').value;
     var sort = function(a,b){ return a.store.localeCompare(b.store) || a.desc.localeCompare(b.desc); };
     var A = local.all.filter(function(r){ return r.plan != null && r.plan > 0 && sinVenta(r) && (!sa || r.store === sa); }).sort(sort);
-    var B = local.rows.filter(function(r){ return r.enInv && sinVenta(r) && !(r.inact && r.inactCompra) && (!sb || r.store === sb); }).sort(sort);
+    // Lista B general: una fila por código de barra sumando las tres tiendas.
+    var groups = {};
+    local.all.forEach(function(r){
+      if(!r.enInv) return;
+      var gk = r.code ? 'C|'+key(r.code) : 'D|'+key(r.sup)+'|'+key(r.desc);
+      var g = groups[gk] || (groups[gk] = {k:gk, code:r.code, desc:r.desc, sup:r.sup, cat:r.cat, marca:r.marca, otro:'', planCalc:null, activo:true,
+        last:'', exist:0, cost:null, rops:[], stocks:[], stores:[], anyRop:false, n:0, inactN:0, inactCompraN:0});
+      g.n += 1;
+      g.stores.push(r.store.replace('AMPM',''));
+      if(r.last > g.last) g.last = r.last;
+      g.exist += r.exist || 0;
+      if((r.exist || 0) !== 0) g.stocks.push(r.store+': '+fmt(r.exist));
+      if(r.rop != null && r.rop > 0){ g.anyRop = true; g.rops.push(r.store.replace('AMPM','')+': '+fmt(r.rop)); }
+      if(r.inact) g.inactN += 1;
+      if(r.inactCompra) g.inactCompraN += 1;
+      if(g.cost == null && r.cost != null) g.cost = r.cost;
+    });
+    var B = Object.keys(groups).map(function(k){ return groups[k]; }).filter(function(g){
+      return g.anyRop && sinVenta(g) && !(g.inactN === g.n && g.inactCompraN === g.n);
+    }).sort(function(a,b){ return a.desc.localeCompare(b.desc); });
+    B.forEach(function(g){ g.cat = [g.cat, 'Tiendas: '+g.stores.sort().join(', ')].filter(Boolean).join(' · '); });
     return {days:days, cut:cut, A:A, B:B};
   }
   function yesNo(v){ return v ? 'Sí' : '<b style="color:#B91C1C">No</b>'; }
@@ -72170,7 +72190,6 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
     var pend = pendingByKey(), m = cleanModel();
     var stores = Array.from(new Set(local.all.map(function(r){ return r.store; }))).sort();
     fillSelect('planiCleanAStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
-    fillSelect('planiCleanBStore', stores.map(function(s){ return {value:s, text:storeLabel(s)}; }), 'Todas las tiendas');
     byId('planiCorte').textContent = m.cut ? 'Última venta en los datos: '+m.cut : '';
     // Lista A
     var keysA = new Set(m.A.map(function(r){ return r.k; }));
@@ -72180,20 +72199,21 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
         m.A.map(function(r){ var p = pend[r.k]; return '<tr><td class="chk"><input type="checkbox" data-sel-a="'+esc(r.k)+'"'+(local.selA.has(r.k)?' checked':'')+'></td><td>'+esc(r.store)+'</td>'+descCell(r)+'<td class="code">'+esc(r.code)+'</td><td class="num"><b>'+fmt(r.plan)+'</b></td><td class="code">'+(r.last ? esc(r.last) : 'Sin venta registrada')+'</td><td class="num">'+(r.enInv ? fmt(r.exist) : '—')+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td><td>'+(r.enInv ? (r.inact ? 'Sí' : 'No') : 'No está en inventario')+'</td><td>'+(r.enInv ? (r.inactCompra ? 'Sí' : 'No') : '—')+'</td><td class="stat">'+(p ? estadoPill(r,p) : '')+'</td></tr>'; }).join('')+'</tbody>'
       : '<tr><td class="planiEmpty">No hay productos con planimetría sin venta en este período.</td></tr>';
     // Lista B: por defecto se marcan los que ya están en 0
-    var sig = m.days+'|'+byId('planiCleanBStore').value+'|'+local.stamp;
-    if(sig !== local.selBSig){ local.selBSig = sig; local.selB = new Set(m.B.filter(function(r){ return (r.exist || 0) === 0; }).map(function(r){ return r.k; })); }
+    var sig = m.days+'|'+local.stamp;
+    if(sig !== local.selBSig){ local.selBSig = sig; local.selB = new Set(m.B.filter(function(r){ return r.exist === 0; }).map(function(r){ return r.k; })); }
+    var flag = function(n, total){ return n === total ? 'Sí' : (n === 0 ? '<b style="color:#B91C1C">No</b>' : '<b style="color:#C2410C">Solo '+n+' de '+total+'</b>'); };
     byId('planiCleanBTable').innerHTML = m.B.length
-      ? '<thead><tr><th class="chk"><input type="checkbox" id="planiAllB" aria-label="Seleccionar todos"></th><th>Tienda</th><th>Código de barra</th><th>Producto</th><th>Última venta</th><th class="num">Exist.</th><th class="num">ROP</th><th class="num">Costo</th><th>Inactivo</th><th>Inact. compra</th><th>Bloqueo</th></tr></thead><tbody>'+
-        m.B.map(function(r){ var ready = (r.exist || 0) === 0; return '<tr><td class="chk"><input type="checkbox" data-sel-b="'+esc(r.k)+'"'+(local.selB.has(r.k)?' checked':'')+'></td><td>'+esc(r.store)+'</td><td class="code">'+esc(r.code)+'</td>'+descCell(r)+'<td class="code">'+(r.last ? esc(r.last) : 'Sin venta registrada')+'</td><td class="num">'+fmt(r.exist)+'</td><td class="num">'+fmt(r.rop)+'</td><td class="num">'+money(r.cost)+'</td><td>'+yesNo(r.inact)+'</td><td>'+yesNo(r.inactCompra)+'</td><td class="stat">'+(ready ? '<span class="planiPill ok">Lista para bloquear</span>' : '<span class="planiPill cero">Dejar existencia en 0 ('+fmt(r.exist)+')</span>')+'</td></tr>'; }).join('')+'</tbody>'
+      ? '<thead><tr><th class="chk"><input type="checkbox" id="planiAllB" aria-label="Seleccionar todos"></th><th>Código de barra</th><th>Producto</th><th>Última venta (cadena)</th><th class="num">Exist. total</th><th>ROP por tienda</th><th class="num">Costo</th><th>Inactivo</th><th>Inact. compra</th><th>Bloqueo</th></tr></thead><tbody>'+
+        m.B.map(function(r){ var ready = r.exist === 0; return '<tr><td class="chk"><input type="checkbox" data-sel-b="'+esc(r.k)+'"'+(local.selB.has(r.k)?' checked':'')+'></td><td class="code">'+esc(r.code)+'</td>'+descCell(r)+'<td class="code">'+(r.last ? esc(r.last) : 'Sin venta registrada')+'</td><td class="num">'+fmt(r.exist)+'</td><td class="code">'+esc(r.rops.join(' · '))+'</td><td class="num">'+money(r.cost)+'</td><td>'+flag(r.inactN, r.n)+'</td><td>'+flag(r.inactCompraN, r.n)+'</td><td class="stat">'+(ready ? '<span class="planiPill ok">Lista para bloquear</span>' : '<span class="planiPill cero">Dejar existencia en 0: '+esc(r.stocks.join(', '))+'</span>')+'</td></tr>'; }).join('')+'</tbody>'
       : '<tr><td class="planiEmpty">No hay productos con ROP sin venta que sigan activos en este período.</td></tr>';
     local._clean = m;
     updateCleanCounts();
   }
   function updateCleanCounts(){
     var m = local._clean; if(!m) return;
-    var readyB = m.B.filter(function(r){ return (r.exist || 0) === 0; }).length;
+    var readyB = m.B.filter(function(r){ return r.exist === 0; }).length;
     byId('planiCleanACount').textContent = fmt(m.A.length)+' productos · '+fmt(local.selA.size)+' seleccionados';
-    byId('planiCleanBCount').textContent = fmt(m.B.length)+' productos · '+fmt(readyB)+' con existencia 0 · '+fmt(local.selB.size)+' seleccionados para el Excel';
+    byId('planiCleanBCount').textContent = fmt(m.B.length)+' productos (general) · '+fmt(readyB)+' con existencia total 0 · '+fmt(local.selB.size)+' seleccionados para el Excel';
     var del = byId('planiDeleteSel');
     if(del && !local.confirmDel){ del.textContent = 'Eliminar seleccionados de planimetría'+(local.selA.size ? ' ('+local.selA.size+')' : ''); del.disabled = !local.selA.size; }
     var xl = byId('planiExcelBloqueo');
@@ -72228,15 +72248,15 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
     var rows = m.B.filter(function(r){ return local.selB.has(r.k); });
     if(!rows.length) return;
     var stamp = localIso().slice(0,10).replace(/-/g,'');
-    var header = ['Código de barra','Descripción','Proveedor','Tienda'];
+    var header = ['Código de barra','Descripción','Proveedor'];
     try{
       if(typeof ensureExcelJS === 'function') await ensureExcelJS();
       var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Bloqueo');
-      ws.columns = [{header:header[0], key:'c', width:18},{header:header[1], key:'d', width:42},{header:header[2], key:'p', width:38},{header:header[3], key:'t', width:10}];
+      ws.columns = [{header:header[0], key:'c', width:18},{header:header[1], key:'d', width:42},{header:header[2], key:'p', width:38}];
       ws.getRow(1).font = {bold:true, color:{argb:'FFFFFFFF'}};
       ws.getRow(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF0B6E9E'}};
       ws.getColumn(1).numFmt = '@';
-      rows.forEach(function(r){ ws.addRow({c:String(r.code), d:r.desc, p:r.sup, t:r.store}); });
+      rows.forEach(function(r){ ws.addRow({c:String(r.code), d:r.desc, p:r.sup}); });
       ws.views = [{state:'frozen', ySplit:1}];
       var buf = await wb.xlsx.writeBuffer();
       var blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -72245,7 +72265,7 @@ details.planiCard > summary{cursor:pointer;font-weight:800;font-size:16px}
     }catch(e){
       // Respaldo si no carga la librería de Excel: CSV que abre en Excel.
       var cell = function(v){ v = txt(v); return '"'+v.replace(/"/g,'""')+'"'; };
-      var csv = [header.map(cell).join(',')].concat(rows.map(function(r){ return ['="'+txt(r.code)+'"', cell(r.desc), cell(r.sup), cell(r.store)].join(','); })).join('\r\n');
+      var csv = [header.map(cell).join(',')].concat(rows.map(function(r){ return ['="'+txt(r.code)+'"', cell(r.desc), cell(r.sup)].join(','); })).join('\r\n');
       var b = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
       var l = document.createElement('a'); l.href = URL.createObjectURL(b); l.download = 'Bloqueo_sin_venta_'+stamp+'.csv';
       document.body.appendChild(l); l.click(); setTimeout(function(){ URL.revokeObjectURL(l.href); l.remove(); }, 800);
