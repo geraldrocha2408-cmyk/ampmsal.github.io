@@ -20140,15 +20140,30 @@ return;
       let selectedIdealMeta = null;
       const scopedDetailCogsByStore = new Map();
       const scopedDetailCogsByStoreDept = new Map();
-      if(isPaniniExcluded() && invScope.detailRows && invScope.detailRows.length){
-        invScope.detailRows.forEach(r=>{
+      // PANINI excluida: el COGS sigue siendo el total del cubo para las semanas base
+      // (igual que la grafica de Dias de Inventario); solo se descuenta el COGS de PANINI.
+      // Antes se usaba el COGS por producto del inventario, que omite lo vendido sin
+      // existencia propia (Food Service, cigarros sueltos, agotados) e ignoraba las semanas.
+      if(isPaniniExcluded() && Array.isArray(state.invDetail) && state.invDetail.length){
+        const panStore = new Map(), panDept = new Map();
+        state.invDetail.forEach(r=>{
+          if(rowPassesPaniniFilter(r)) return;
           const st = String(r && r.store || '').trim().toUpperCase();
+          if(!st || !storeSet.has(st)) return;
           const dk = stripAccents(String(r && r.deptKey || r && r.deptRaw || '')).trim();
           const cogs = Number(r && r.cogs4w || 0) || 0;
-          if(st && cogs){
-            scopedDetailCogsByStore.set(st, Number(scopedDetailCogsByStore.get(st) || 0) + cogs);
-            if(dk) scopedDetailCogsByStoreDept.set(`${st}|${dk}`, Number(scopedDetailCogsByStoreDept.get(`${st}|${dk}`) || 0) + cogs);
-          }
+          if(!cogs) return;
+          panStore.set(st, Number(panStore.get(st) || 0) + cogs);
+          if(dk) panDept.set(`${st}|${dk}`, Number(panDept.get(`${st}|${dk}`) || 0) + cogs);
+        });
+        const sumWeeks = m => { let s = 0; if(m) for(const w of weeks){ s += Number(m.get(w) ?? 0) || 0; } return s; };
+        panStore.forEach((pan, st)=>{
+          const base = sumWeeks(state.cogsStoreWeek.get(st));
+          if(base > pan) scopedDetailCogsByStore.set(st, base - pan);
+        });
+        panDept.forEach((pan, key)=>{
+          const base = sumWeeks(state.cogsStoreDeptWeek && state.cogsStoreDeptWeek.get(key));
+          if(base > pan) scopedDetailCogsByStoreDept.set(key, base - pan);
         });
       }
 
@@ -24732,7 +24747,6 @@ function getInventoryBubbleData(storeList, currentYm){
       }
 
       const resolveRowCogs = (r)=>{
-        if(isPaniniExcluded()) return Number(r.cogs4w || 0) || 0;
         const deptKey = `${String(r.store||'').trim().toUpperCase()}|${String(r.deptKey||'').trim()}`;
         const selected = Number(deptSelectedCogs.get(deptKey) || 0);
         if (!(selected > 0)) return Number(r.cogs4w || 0) || 0;
