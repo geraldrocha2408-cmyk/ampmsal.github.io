@@ -4715,6 +4715,21 @@ body[data-active-tab="inventario"] .invStockSearchTable tbody{padding-bottom:8px
 }
 </style>
 
+
+<style id="ampm-kpi-record-style">
+#kpiBoard .kpiCard.kpiRecordOn{ box-shadow:0 0 0 2px #f5c542, 0 10px 28px rgba(245,197,66,.45) !important; animation:kpiRecordGlow 2.4s ease-in-out infinite; }
+@keyframes kpiRecordGlow{ 0%,100%{ box-shadow:0 0 0 2px #f5c542, 0 8px 22px rgba(245,197,66,.35);} 50%{ box-shadow:0 0 0 3px #ffd95a, 0 12px 34px rgba(245,197,66,.65);} }
+#kpiBoard .kpiRecordBar{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+#kpiBoard .kpiRecordPill{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:800; line-height:1.4;
+  background:linear-gradient(135deg,#fff3c4,#f5c542); color:#5a3d00; border:1px solid #e0a800; box-shadow:0 2px 6px rgba(0,0,0,.18); white-space:normal; max-width:100%; box-sizing:border-box; }
+#kpiBoard .kpiRecordPill.store{ background:linear-gradient(135deg,#fffbe8,#ffe58a); font-weight:700; }
+#kpiBoard .kpiRecordPill .ico{ display:inline-block; animation:kpiRecordPop 1.6s ease-in-out infinite; }
+@keyframes kpiRecordPop{ 0%,100%{ transform:scale(1) rotate(0);} 30%{ transform:scale(1.25) rotate(-10deg);} 60%{ transform:scale(1.1) rotate(8deg);} }
+#kpiBoard .kpiRecordConfetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:inherit; }
+#kpiBoard .kpiRecordConfetti i{ position:absolute; top:-10px; width:6px; height:10px; border-radius:2px; opacity:.9; animation:kpiConfettiFall 2.8s linear forwards; }
+@keyframes kpiConfettiFall{ to{ transform:translateY(240px) rotate(540deg); opacity:0; } }
+@media (prefers-reduced-motion: reduce){ #kpiBoard .kpiCard.kpiRecordOn, #kpiBoard .kpiRecordPill .ico, #kpiBoard .kpiRecordConfetti i{ animation:none !important; } }
+</style>
 </head>
 <body>
 <div aria-hidden="false" id="ampmAuthGate">
@@ -21112,6 +21127,144 @@ function applySummaryDataAvailability(periodKey, stores){
   }
   return {sales,sbf};
 }
+// Récord semanal del año en curso (total y por tienda) para Venta Semanal y TX SBF.
+const KPI_RECORD_STORE_NAMES = {AMPM01:'Próceres', AMPM02:'Tuscania', AMPM03:'Masferrer'};
+// Venta diaria por tienda (todo el año) para semanas que el cubo semanal ya no trae.
+function _kpiRecordDailyWeekMap(){
+  const rows = (Array.isArray(state._projectionDailySalesRows) && state._projectionDailySalesRows.length)
+    ? state._projectionDailySalesRows : (Array.isArray(state.dailySalesRows) ? state.dailySalesRows : []);
+  if(state._kpiRecordDailyCache && state._kpiRecordDailyCache.src === rows) return state._kpiRecordDailyCache.map;
+  const map = new Map();
+  rows.forEach(r => {
+    const d0 = r && r.d instanceof Date ? r.d : new Date(r && r.d);
+    if(!d0 || isNaN(d0.getTime())) return;
+    const iso = dateToIsoWeekUTC(new Date(Date.UTC(d0.getFullYear(), d0.getMonth(), d0.getDate())));
+    const wk = iso.y + '-W' + String(iso.w).padStart(2, '0');
+    const st = String(r.store || '').trim().toUpperCase();
+    if(!map.has(st)) map.set(st, new Map());
+    const m = map.get(st);
+    m.set(wk, Number(m.get(wk) || 0) + (Number(r.sales || 0) || 0));
+  });
+  state._kpiRecordDailyCache = {src: rows, map};
+  return map;
+}
+// Historico semanal completo desde hojas del cubo: venta (Proyecciones_ROP_Semanal, respeta PANINI)
+// y TX SBF (SBF_Semanal). Se usan solo para semanas que el cubo semanal ya no trae.
+function _kpiRecordSheetWeekMap(kind){
+  const wb = state.__hallWorkbook;
+  if(!wb) return new Map();
+  const sig = kind + '|' + (isPaniniExcluded() ? 'x' : 'i');
+  state._kpiRecordSheetCache = state._kpiRecordSheetCache || {};
+  const cached = state._kpiRecordSheetCache[sig];
+  if(cached && cached.wb === wb) return cached.map;
+  const map = new Map();
+  try{
+    const name = kind === 'sbf' ? 'SBF_Semanal' : 'Proyecciones_ROP_Semanal';
+    const rows = (wb.__rowsBySheet && Array.isArray(wb.__rowsBySheet[name])) ? wb.__rowsBySheet[name]
+      : (hasSheet(wb, name) ? (sheetRows(wb, name, {defval:null, raw:true}) || []) : []);
+    rows.forEach(r => {
+      const w = String(r && r.YearWeek || '').trim();
+      const st = String(r && r.Store || '').trim().toUpperCase();
+      if(!/^\d{4}-W\d{2}$/.test(w) || !st) return;
+      if(kind !== 'sbf' && !rowPassesPaniniFilter(r)) return;
+      const v = Number(kind === 'sbf' ? r.TX : r.Sales) || 0;
+      if(!map.has(st)) map.set(st, new Map());
+      const m = map.get(st);
+      m.set(w, Number(m.get(w) || 0) + v);
+    });
+  }catch(e){ console.warn('Record semanal hoja', e); }
+  state._kpiRecordSheetCache[sig] = {wb, map};
+  return map;
+}
+function _kpiRecordWeeks(currentYm){
+  const m = /^(\d{4})-W(\d{2})$/.exec(String(currentYm || ''));
+  if(!m) return [];
+  const set = new Set();
+  [_kpiRecordDailyWeekMap(), _kpiRecordSheetWeekMap('sales'), _kpiRecordSheetWeekMap('sbf')].forEach(src =>
+    src.forEach(wm => wm.forEach((_v, w) => { if(w.startsWith(m[1] + '-W') && w < currentYm) set.add(w); })));
+  const sel = el('currentMonth');
+  if(sel) Array.from(sel.options || []).forEach(o => { const v = String(o.value || ''); if(v.startsWith(m[1] + '-W') && v < currentYm) set.add(v); });
+  return Array.from(set).sort();
+}
+function _kpiRecordCheck(currentYm, weeks, valueFn){
+  const cur = Number(valueFn(currentYm) || 0) || 0;
+  let best = 0, bestWeek = '', withData = 0;
+  weeks.forEach(w => { const v = Number(valueFn(w) || 0) || 0; if(v > 0) withData++; if(v > best){ best = v; bestWeek = w; } });
+  return {isRecord: cur > 0 && withData >= 4 && cur > best, cur, best, bestWeek};
+}
+function _kpiRecordRender(valueId, info, storeHits, fmt, year){
+  const valueEl = el(valueId);
+  const card = valueEl ? valueEl.closest('.kpiCard') : null;
+  if(!card) return;
+  card.querySelectorAll('.kpiRecordBar,.kpiRecordConfetti').forEach(n => n.remove());
+  card.classList.remove('kpiRecordOn');
+  if(!info || (!info.isRecord && !storeHits.length)) return;
+  const bar = document.createElement('div');
+  bar.className = 'kpiRecordBar';
+  if(info.isRecord){
+    const p = document.createElement('span');
+    p.className = 'kpiRecordPill';
+    p.title = 'Récord semanal ' + year + '. Récord anterior: ' + (info.bestWeek ? fmtWeekLabel(info.bestWeek) : '—') + ' con ' + fmt(info.best);
+    p.innerHTML = '<span class="ico">🏆</span>Récord ' + year + ' · antes ' + (info.bestWeek ? 'S' + info.bestWeek.slice(-2) : '—') + ' ' + fmt(info.best);
+    bar.appendChild(p);
+  }
+  storeHits.forEach(h => {
+    const p = document.createElement('span');
+    p.className = 'kpiRecordPill store';
+    p.title = 'Récord semanal ' + year + ' de ' + h.name + ': ' + fmt(h.cur) + ' (antes ' + (h.bestWeek ? fmtWeekLabel(h.bestWeek) : '—') + ' ' + fmt(h.best) + ')';
+    p.innerHTML = '<span class="ico">🎉</span>Récord ' + h.name + ' ' + fmt(h.cur);
+    bar.appendChild(p);
+  });
+  const row = card.querySelector('.kpiSubRow');
+  if(row) row.insertAdjacentElement('afterend', bar); else card.appendChild(bar);
+  card.classList.add('kpiRecordOn');
+  if(getComputedStyle(card).position === 'static') card.style.position = 'relative';
+  const conf = document.createElement('div');
+  conf.className = 'kpiRecordConfetti';
+  const colors = ['#f5c542','#ff6b00','#22c55e','#3b82f6','#ef4444','#ffffff'];
+  for(let i = 0; i < 26; i++){
+    const c = document.createElement('i');
+    c.style.left = (Math.random() * 100).toFixed(1) + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = (Math.random() * 0.9).toFixed(2) + 's';
+    conf.appendChild(c);
+  }
+  card.appendChild(conf);
+  setTimeout(() => conf.remove(), 4200);
+}
+function renderKpiWeeklyRecords(currentYm, stores){
+  const clear = () => { _kpiRecordRender('kpi_sales_cur', null, [], String, ''); _kpiRecordRender('kpi_tx_sbf', null, [], String, ''); };
+  try{
+    if(!isWeeklyReport() || (typeof getGlobalDowFilter === 'function' && getGlobalDowFilter() !== '__ALL__')) return clear();
+    const weeks = _kpiRecordWeeks(currentYm);
+    if(weeks.length < 4) return clear();
+    const year = String(currentYm).slice(0, 4);
+    const list = (stores || []).map(s => String(s || '').trim().toUpperCase()).filter(Boolean);
+    const specs = [
+      {id:'kpi_sales_cur', fmt:v => money(v), value:(w, sts) => {
+        const v = Number(_sumSummarySales(w, sts) || 0) || 0;
+        if(v > 0 || w === currentYm) return v;
+        const hist = _kpiRecordSheetWeekMap('sales');
+        const daily = _kpiRecordDailyWeekMap();
+        return sts.reduce((acc, st) => {
+          const h = Number(hist.get(st)?.get(w) || 0) || 0;
+          return acc + (h > 0 ? h : (Number(daily.get(st)?.get(w) || 0) || 0));
+        }, 0);
+      }},
+      {id:'kpi_tx_sbf', fmt:v => fmtInt(v), value:(w, sts) => {
+        const v = Number(_sumSummaryTx(w, sts, {sbf:true}) || 0) || 0;
+        if(v > 0 || w === currentYm) return v;
+        const hist = _kpiRecordSheetWeekMap('sbf');
+        return sts.reduce((acc, st) => acc + (Number(hist.get(st)?.get(w) || 0) || 0), 0);
+      }}
+    ];
+    specs.forEach(spec => {
+      const total = _kpiRecordCheck(currentYm, weeks, w => spec.value(w, list));
+      // General = record del total; con una tienda filtrada, el total ya es esa tienda.
+      _kpiRecordRender(spec.id, total, [], spec.fmt, year);
+    });
+  }catch(e){ console.warn('Record semanal', e); }
+}
 function refreshKpiDashboard(currentYm, prevYms, storeList){
   const stores = (storeList && storeList.length) ? storeList : (state.stores || []);
   if(!currentYm || !stores.length) return;
@@ -21473,6 +21626,7 @@ if(projCal){
     setText('kpi_tx_sbf_note', 'Delta vs LY: —');
     setText('kpi_tx_sbf_delta_prom', `Delta vs ${compareLabel}: —`);
   }
+  renderKpiWeeklyRecords(currentYm, stores);
 
   const dcAps = sumExtra('DC APS $', false);
   if(dcAps != null){ setText('kpi_dc_aps', fmtMoney(dcAps)); markPending('kpi_dc_aps', false); }
